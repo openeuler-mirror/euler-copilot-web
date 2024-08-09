@@ -1,7 +1,7 @@
 {
   "productName": "eulercopilot-client",
-  "version": "0.0.0",
-  "identifier": "com.tauri.dev",
+  "version": "1.0.0",
+  "identifier": "org.openeuler.eulercopilot",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -11,9 +11,12 @@
   "app": {
     "windows": [
       {
-        "title": "eulercopilot-client",
+        "title": "EulerCopilot",
+        "decorations": false,
+        "alwaysOnTop": true,
         "width": 800,
-        "height": 600
+        "height": 600,
+        "center": true
       }
     ],
     "security": {
