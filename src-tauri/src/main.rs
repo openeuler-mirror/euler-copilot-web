@@ -3,7 +3,7 @@
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
-use tauri::{Manager, WindowEvent};
+use tauri::Manager;
 
 #[cfg(desktop)]
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
@@ -16,6 +16,8 @@ fn greet(name: &str) -> String {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
+        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
             let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
@@ -25,15 +27,6 @@ fn main() {
                 .items(&[&quit, &hide, &show])
                 .build()
                 .unwrap();
-
-            let window = app.get_webview_window("main").unwrap();
-            let window_hider = window.clone();
-            window.on_window_event(move |event| match event {
-                WindowEvent::Focused(false) => {
-                    window_hider.hide().unwrap()
-                }
-                _ => {}
-            });
 
             let _ = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -49,35 +42,42 @@ fn main() {
                         dbg!("menu item show clicked");
                         let window = app.get_webview_window("main").unwrap();
                         window.show().unwrap();
+                        window.set_always_on_top(true).unwrap();
                         window.set_focus().unwrap();
                     }
                     _ => {}
                 })
                 .build(app);
 
-            #[cfg(desktop)]
-            {
-                let ctrl_o_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyO);
-                app.handle().plugin(
-                    tauri_plugin_global_shortcut::Builder::new().with_handler(
-                    move |app, shortcut, _event| {
+            let ctrl_o_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyO);
+            let escape = Shortcut::new(None, Code::Escape);
+            app.handle().plugin(
+                tauri_plugin_global_shortcut::Builder::new().with_handler(
+                move |app, shortcut, _event| {
                     println!("{:?}", shortcut);
-                        if shortcut == &ctrl_o_shortcut {
-                            dbg!("Ctrl-O Detected!");
-                            let window = app.get_webview_window("main").unwrap();
+                    let window = app.get_webview_window("main").unwrap();
+                    if shortcut == &ctrl_o_shortcut {
+                        dbg!("Ctrl-O Detected!");
+                        if window.is_visible().unwrap() && window.is_focused().unwrap() {
+                            window.hide().unwrap();
+                        } else if !window.is_visible().unwrap() {
                             window.show().unwrap();
                             window.set_focus().unwrap();
+                            window.set_always_on_top(true).unwrap();
                         }
-                    })
-                    .build(),
-                )?;
-                app.global_shortcut().register(ctrl_o_shortcut)?;
-            }
+                    }
+                    if shortcut == &escape && window.is_visible().unwrap() {
+                        dbg!("Escape Detected!");
+                        window.hide().unwrap();
+                    }
+                })
+                .build(),
+            )?;
+            app.global_shortcut().register(ctrl_o_shortcut)?;
+            app.global_shortcut().register(escape)?;
 
             Ok(())
         })
-        // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        // .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
