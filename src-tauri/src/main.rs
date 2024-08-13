@@ -42,8 +42,8 @@ fn main() {
                         dbg!("menu item show clicked");
                         let window = app.get_webview_window("main").unwrap();
                         window.show().unwrap();
-                        window.set_always_on_top(true).unwrap();
                         window.set_focus().unwrap();
+                        window.set_always_on_top(true).unwrap();
                     }
                     _ => {}
                 })
@@ -52,26 +52,26 @@ fn main() {
             let ctrl_o_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyO);
             let escape = Shortcut::new(None, Code::Escape);
             app.handle().plugin(
-                tauri_plugin_global_shortcut::Builder::new().with_handler(
-                move |app, shortcut, _event| {
-                    println!("{:?}", shortcut);
-                    let window = app.get_webview_window("main").unwrap();
-                    if shortcut == &ctrl_o_shortcut {
-                        dbg!("Ctrl-O Detected!");
-                        if window.is_visible().unwrap() && window.is_focused().unwrap() {
-                            window.hide().unwrap();
-                        } else if !window.is_visible().unwrap() {
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
-                            window.set_always_on_top(true).unwrap();
+                tauri_plugin_global_shortcut::Builder::new()
+                    .with_handler(move |app, shortcut, _event| {
+                        println!("{:?}", shortcut);
+                        let window = app.get_webview_window("main").unwrap();
+                        if shortcut == &ctrl_o_shortcut {
+                            dbg!("Ctrl-O Detected!");
+                            if window.is_visible().unwrap() && window.is_focused().unwrap() {
+                                window.hide().unwrap();
+                            } else if !window.is_visible().unwrap() {
+                                window.show().unwrap();
+                                window.set_focus().unwrap();
+                                window.set_always_on_top(true).unwrap();
+                            }
                         }
-                    }
-                    if shortcut == &escape && window.is_visible().unwrap() {
-                        dbg!("Escape Detected!");
-                        window.hide().unwrap();
-                    }
-                })
-                .build(),
+                        if shortcut == &escape && window.is_visible().unwrap() {
+                            dbg!("Escape Detected!");
+                            window.hide().unwrap();
+                        }
+                    })
+                    .build(),
             )?;
             app.global_shortcut().register(ctrl_o_shortcut)?;
             app.global_shortcut().register(escape)?;
