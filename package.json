@@ -4,9 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "dev": "RUST_BACKTRACE=1 tauri dev",
+    "build": "tauri build",
+    "vite:dev": "vite dev",
+    "vite:build": "vue-tsc --noEmit && vite build",
+    "ts-check": "vue-tsc --noEmit",
     "preview": "vite preview",
+    "check": "cd src-tauri && cargo check",
     "tauri": "tauri"
   },
   "dependencies": {
