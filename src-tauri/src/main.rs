@@ -6,7 +6,7 @@ use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
 
 #[cfg(desktop)]
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -53,22 +53,24 @@ fn main() {
             let escape = Shortcut::new(None, Code::Escape);
             app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
-                    .with_handler(move |app, shortcut, _event| {
-                        println!("{:?}", shortcut);
-                        let window = app.get_webview_window("main").unwrap();
-                        if shortcut == &ctrl_o_shortcut {
-                            dbg!("Ctrl-O Detected!");
-                            if window.is_visible().unwrap() && window.is_focused().unwrap() {
-                                window.hide().unwrap();
-                            } else if !window.is_visible().unwrap() {
-                                window.show().unwrap();
-                                window.set_focus().unwrap();
-                                window.set_always_on_top(true).unwrap();
+                    .with_handler(move |app, shortcut, event| {
+                        dbg!("{:?}", shortcut);
+                        if event.state == ShortcutState::Pressed {
+                            let window = app.get_webview_window("main").unwrap();
+                            if shortcut == &ctrl_o_shortcut {
+                                dbg!("Ctrl-O Pressed!");
+                                if window.is_visible().unwrap() && window.is_focused().unwrap() {
+                                    window.hide().unwrap();
+                                } else if !window.is_visible().unwrap() {
+                                    window.show().unwrap();
+                                    window.set_focus().unwrap();
+                                    window.set_always_on_top(true).unwrap();
+                                }
                             }
-                        }
-                        if shortcut == &escape && window.is_visible().unwrap() {
-                            dbg!("Escape Detected!");
-                            window.hide().unwrap();
+                            if shortcut == &escape && window.is_visible().unwrap() {
+                                dbg!("Escape Pressed!");
+                                window.hide().unwrap();
+                            }
                         }
                     })
                     .build(),
