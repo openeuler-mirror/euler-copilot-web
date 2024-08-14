@@ -54,23 +54,18 @@ fn main() {
             app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
                     .with_handler(move |app, shortcut, event| {
-                        dbg!("{:?}", shortcut);
-                        if event.state == ShortcutState::Pressed {
-                            let window = app.get_webview_window("main").unwrap();
-                            if shortcut == &ctrl_o_shortcut {
-                                dbg!("Ctrl-O Pressed!");
-                                if window.is_visible().unwrap() && window.is_focused().unwrap() {
-                                    window.hide().unwrap();
-                                } else if !window.is_visible().unwrap() {
-                                    window.show().unwrap();
-                                    window.set_focus().unwrap();
-                                    window.set_always_on_top(true).unwrap();
-                                }
-                            }
-                            if shortcut == &escape && window.is_visible().unwrap() {
-                                dbg!("Escape Pressed!");
-                                window.hide().unwrap();
-                            }
+                        #[cfg(debug_assertions)]
+                        println!("{:?} {} {:?}", shortcut.mods, shortcut.key, event.state);
+                        let window = app.get_webview_window("main").unwrap();
+                        let ctrl_o_pressed = shortcut == &ctrl_o_shortcut && event.state == ShortcutState::Pressed;
+                        let escape_pressed = shortcut == &escape && event.state == ShortcutState::Pressed;
+                        let window_visible = window.is_visible().unwrap();
+                        if (ctrl_o_pressed || escape_pressed) && window_visible {
+                            window.hide().unwrap();
+                        } else if ctrl_o_pressed && !window_visible {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                            window.set_always_on_top(true).unwrap();
                         }
                     })
                     .build(),
