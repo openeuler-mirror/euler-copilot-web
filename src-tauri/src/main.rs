@@ -3,7 +3,10 @@
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
-use tauri::{Manager, WindowEvent};
+use tauri::Manager;
+
+#[cfg(not(target_os = "linux"))]
+use tauri::WindowEvent;
 
 #[cfg(desktop)]
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
@@ -28,14 +31,17 @@ fn main() {
                 .build()
                 .unwrap();
 
-            let window = app.get_webview_window("main").unwrap();
-            let w = window.clone();
-            window.on_window_event(move |event| match event {
-                WindowEvent::Focused(false) => {
-                    w.hide().unwrap();
-                }
-                _ => {}
-            });
+            #[cfg(not(target_os = "linux"))]
+            {
+                let window = app.get_webview_window("main").unwrap();
+                let w = window.clone();
+                window.on_window_event(move |event| match event {
+                    WindowEvent::Focused(false) => {
+                        w.hide().unwrap();
+                    }
+                    _ => {}
+                });
+            }
 
             let _ = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
