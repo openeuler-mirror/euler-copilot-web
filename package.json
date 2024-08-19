@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
     "tauri:release": "tauri build --release",
-    "cargo:check": "cd src-tauri && cargo check"
+    "cargo:check": "cd src-tauri && cargo check",
+    "update": "pnpm update && cd src-tauri && cargo update"
   },
   "dependencies": {
     "@tauri-apps/api": "2.0.0-rc.0",
