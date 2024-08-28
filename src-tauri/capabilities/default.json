@@ -8,6 +8,9 @@
   "permissions": [
     "core:path:default",
     "core:event:default",
+    "core:window:allow-center",
+    "core:window:allow-set-focus",
+    "core:window:allow-show",
     "core:window:default",
     "core:app:default",
     "core:image:default",

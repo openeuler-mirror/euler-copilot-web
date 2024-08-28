@@ -10,6 +10,7 @@
     "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
     "tauri:release": "tauri build --release",
     "cargo:check": "cd src-tauri && cargo check",
+    "cargo:clean": "cd src-tauri && cargo clean",
     "update": "pnpm update && cd src-tauri && cargo update"
   },
   "dependencies": {
@@ -22,7 +23,7 @@
     "@tauri-apps/cli": "2.0.0-rc.3",
     "@vitejs/plugin-vue": "^5.1.2",
     "typescript": "^5.5.4",
-    "vite": "^5.4.1",
+    "vite": "^5.4.2",
     "vue-tsc": "^2.0.29"
   }
 }
