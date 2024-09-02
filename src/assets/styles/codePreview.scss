@@ -1,0 +1,115 @@
+#markdown-preview {
+
+  .hljs{
+    color: var(--o-text-color-secondary);
+  }
+  //markdown text size
+  p{
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  table {
+    border-collapse: collapse;
+    margin: 16px 0;
+  }
+
+  /* 表头样式 */
+  thead {
+    background-color: var(--o-bg-color-light);
+    color: var(--o-text-color-secondary);
+  }
+  thead th {
+    text-align: left;
+    padding: 7px;
+    white-space: nowrap;
+  }
+
+  /* 表格主体样式 */
+  tbody tr {
+    transition: background-color 0.3s ease;
+  }
+  tbody tr:nth-child(even) {
+    background-color: var(--o-bg-color-light);
+  }
+  tbody td {
+    padding: 3px 24px 3px 7px;
+    text-align: left;
+    vertical-align: middle;
+    color: var(--o-text-color-primarys);
+  }
+
+  @media screen and (max-width: 600px) {
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      display: block;
+    }
+
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+
+    tr {
+      margin-bottom: 1rem;
+    }
+
+    td {
+      border: none;
+      position: relative;
+      padding-left: 50%;
+    }
+
+    td:before {
+      content: attr(data-label);
+      position: absolute;
+      left: 10px;
+      top: 0;
+      width: 45%;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+  }
+  pre {
+    overflow-wrap: break-word;
+    word-break: break-all;
+    white-space: pre-wrap; /* 保持缩进同时允许换行 */
+    margin: 8px 0px;
+    .code-toolbar {
+      background-color: var(--o-bash-bg);
+      color: var(--o-text-color-primarys);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 12px 0 12px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+        Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      .pre-copy {
+        cursor: pointer;
+        svg {
+          vertical-align: middle;
+        }
+        &:hover {
+          color: var(--o-text-color-secondary);
+        }
+      }
+    }
+    code {
+      background-color: var(--o-bash-bg);
+      border-radius: 0 0 8px 8px;
+    }
+  }
+
+  a {
+    color: #6395fd;
+    &:hover {
+      color: #7aa5ff;
+    }
+  }
+}

@@ -1,0 +1,90 @@
+<svg width="140.000000" height="90.000000" viewBox="0 0 140 90" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<linearGradient id="paint_linear_8_9140_0" x1="25.879143" y1="16.690264" x2="25.879143" y2="35.809143" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#7C8084"/>
+			<stop offset="0.140000" stop-color="#7A7E82" stop-opacity="0.949020"/>
+			<stop offset="0.330000" stop-color="#74787D" stop-opacity="0.831373"/>
+			<stop offset="0.550000" stop-color="#6B6F73" stop-opacity="0.619608"/>
+			<stop offset="0.780000" stop-color="#5E6267" stop-opacity="0.329412"/>
+			<stop offset="1.000000" stop-color="#4F5359" stop-opacity="0.000000"/>
+		</linearGradient>
+		<linearGradient id="paint_linear_8_9142_0" x1="105.608047" y1="10.427767" x2="105.608047" y2="62.275864" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#B8BDC6"/>
+			<stop offset="0.110000" stop-color="#BABFC8" stop-opacity="0.968627"/>
+			<stop offset="0.260000" stop-color="#BFC4CC" stop-opacity="0.878431"/>
+			<stop offset="0.420000" stop-color="#C8CCD3" stop-opacity="0.741176"/>
+			<stop offset="0.610000" stop-color="#D4D7DE" stop-opacity="0.549020"/>
+			<stop offset="0.800000" stop-color="#E3E5EB" stop-opacity="0.301961"/>
+			<stop offset="1.000000" stop-color="#F5F6FA" stop-opacity="0.000000"/>
+		</linearGradient>
+	</defs>
+	<g opacity="0.000000">
+		<rect id="矩形" width="140.000000" height="90.000000" fill="#D8D8D8" fill-opacity="1.000000"/>
+		<rect id="矩形" x="0.500000" y="0.500000" width="139.000000" height="89.000000" stroke="#979797" stroke-opacity="0" stroke-width="1.000000"/>
+	</g>
+	<g opacity="0.500000">
+		<g opacity="0.300000">
+			<rect id="矩形" x="14.901184" y="16.083008" width="21.960199" height="18.472721" fill="url(#paint_linear_8_9140_0)" fill-opacity="1.000000"/>
+		</g>
+	</g>
+	<g opacity="0.500000">
+		<g opacity="0.200000">
+			<rect id="矩形" x="75.833679" y="8.783203" width="59.548725" height="50.093319" fill="url(#paint_linear_8_9142_0)" fill-opacity="1.000000"/>
+		</g>
+		<g opacity="0.300000">
+			<rect id="矩形" x="75.833679" y="8.783203" width="59.548725" height="2.593269" fill="#FFFFFF" fill-opacity="1.000000"/>
+		</g>
+		<g opacity="0.600000">
+			<rect id="矩形" x="129.384705" y="9.496094" width="1.071020" height="1.080529" fill="#E1E4EA" fill-opacity="1.000000"/>
+		</g>
+		<g opacity="0.600000">
+			<rect id="矩形" x="131.348938" y="9.496094" width="1.071020" height="1.080529" fill="#E1E4EA" fill-opacity="1.000000"/>
+		</g>
+		<g opacity="0.600000">
+			<rect id="矩形" x="133.313171" y="9.496094" width="1.071020" height="1.080529" fill="#E1E4EA" fill-opacity="1.000000"/>
+		</g>
+	</g>
+	<path id="路径" d="M138.24 40.16C130.7 36.27 124.02 37.38 125.72 46.75C127.43 56.12 126.62 64.07 119.43 62.77C112.23 61.48 105.04 43.86 103.85 29.79C102.66 15.72 78.79 -3.4 67.79 7.68C67.79 7.68 64.6 11.61 64.9 18.83" stroke="#658EFC" stroke-opacity="0.984314" stroke-width="1.000000" stroke-dasharray="3 2"/>
+	<g opacity="0.400000">
+		<path id="路径" d="M112.74 75.64L112.74 22.66L29.2 22.66L29.2 75.64L68.89 75.64L68.89 84.97L56.07 84.97C55.52 84.97 55.08 85.41 55.08 85.96C55.08 86.51 55.52 86.96 56.07 86.96L86.1 86.96C86.46 86.96 86.78 86.77 86.96 86.46C87.13 86.15 87.13 85.77 86.96 85.47C86.78 85.16 86.46 84.97 86.1 84.97L73.28 84.97L73.28 75.64L112.74 75.64Z" fill="#F4F5F7" fill-opacity="0" fill-rule="evenodd"/>
+		<path id="路径" d="M113.45 21.95C113.26 21.75 113.02 21.66 112.74 21.66L29.2 21.66C28.93 21.66 28.69 21.75 28.5 21.95C28.3 22.14 28.2 22.38 28.2 22.66L28.2 75.64C28.2 75.92 28.3 76.15 28.5 76.35C28.69 76.54 28.93 76.64 29.2 76.64L67.89 76.64L67.89 83.97L56.07 83.97C55.79 83.97 55.54 84.02 55.31 84.11C55.07 84.21 54.85 84.36 54.66 84.56C54.47 84.75 54.32 84.96 54.23 85.19C54.13 85.43 54.08 85.69 54.08 85.96C54.08 86.63 54.25 87.13 54.58 87.46C54.91 87.79 55.41 87.96 56.07 87.96L86.1 87.96C86.48 87.96 86.82 87.87 87.1 87.71C87.39 87.54 87.63 87.29 87.83 86.96C88.01 86.62 88.11 86.29 88.11 85.96C88.11 85.63 88.01 85.3 87.83 84.97C87.63 84.63 87.39 84.38 87.1 84.22C86.82 84.05 86.48 83.97 86.1 83.97L74.28 83.97L74.28 76.64L112.74 76.64C113.02 76.64 113.26 76.54 113.45 76.35C113.65 76.15 113.74 75.92 113.74 75.64L113.74 22.66C113.74 22.38 113.65 22.14 113.45 21.95ZM74.28 75.64L112.74 75.64L112.74 22.66L29.2 22.66L29.2 75.64L68.89 75.64L68.89 84.97L56.07 84.97C55.52 84.97 55.08 85.41 55.08 85.96C55.08 86.51 55.52 86.96 56.07 86.96L86.1 86.96C86.46 86.96 86.78 86.77 86.96 86.46C87.13 86.15 87.13 85.77 86.96 85.47C86.78 85.16 86.46 84.97 86.1 84.97L73.28 84.97L73.28 75.64L74.28 75.64Z" fill="#A8B3D3" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<rect id="矩形" x="29.209778" y="22.626953" width="83.539574" height="47.327164" fill="#FBFDFF" fill-opacity="0"/>
+		<rect id="矩形" x="28.709778" y="22.126953" width="84.539574" height="48.327164" stroke="#A8B3D3" stroke-opacity="1.000000" stroke-width="1.000000"/>
+	</g>
+	<g opacity="0.400000">
+		<path id="路径" d="M33.04 28.07L109.72 28.07" stroke="#A8B3D3" stroke-opacity="1.000000" stroke-width="1.000000" stroke-linejoin="round" stroke-linecap="round"/>
+	</g>
+	<g opacity="0.600000">
+		<rect id="矩形" x="106.132812" y="24.681641" width="1.272372" height="1.283668" fill="#A8B3D3" fill-opacity="1.000000"/>
+	</g>
+	<g opacity="0.600000">
+		<rect id="矩形" x="103.804443" y="24.681641" width="1.272372" height="1.283668" fill="#A8B3D3" fill-opacity="1.000000"/>
+	</g>
+	<g opacity="0.600000">
+		<rect id="矩形" x="108.465515" y="24.681641" width="1.272372" height="1.283668" fill="#A8B3D3" fill-opacity="1.000000"/>
+	</g>
+	<g opacity="0.500000">
+		<path id="路径" d="M135.06 45.29C136.39 47.05 134.41 49.04 132.67 47.7L132.67 47.7C131.34 45.94 133.31 43.95 135.06 45.29Z" fill="#DCE4F4" fill-opacity="0.100000" fill-rule="evenodd"/>
+		<path id="路径" d="M132.67 47.7L132.67 47.7C131.34 45.94 133.31 43.95 135.06 45.29C136.39 47.05 134.41 49.04 132.67 47.7Z" stroke="#A8B3D3" stroke-opacity="1.000000" stroke-width="1.000000" stroke-linejoin="round"/>
+	</g>
+	<path id="路径" d="M84.27 48.38L92.57 50.32L92.6 50.27L84.5 48.37L84.27 48.38Z" fill="#B8BDC6" fill-opacity="0" fill-rule="evenodd"/>
+	<path id="路径" d="M92.57 50.32L92.6 50.27L84.5 48.37L84.27 48.38L92.57 50.32Z" stroke="#53575E" stroke-opacity="1.000000" stroke-width="1.000000" stroke-linejoin="round"/>
+	<path id="路径" d="M57.69 48.38L49.38 50.32L49.36 50.27L57.45 48.37L57.69 48.38Z" fill="#B8BDC6" fill-opacity="0" fill-rule="evenodd"/>
+	<path id="路径" d="M49.38 50.32L49.36 50.27L57.45 48.37L57.69 48.38L49.38 50.32Z" stroke="#53575E" stroke-opacity="1.000000" stroke-width="1.000000" stroke-linejoin="round"/>
+	<rect id="矩形" x="57.611328" y="48.379883" width="26.904026" height="13.182452" fill="#DCE4F4" fill-opacity="0.100000"/>
+	<rect id="矩形" x="57.611328" y="48.379883" width="26.904026" height="13.182452" stroke="#53575E" stroke-opacity="1.000000" stroke-width="1.000000"/>
+	<path id="路径" d="M84.51 48.37L57.61 48.37L54.81 56.15L86.86 56.15L84.51 48.37Z" fill="#4F5052" fill-opacity="1.000000" fill-rule="evenodd"/>
+	<path id="路径" d="M57.61 48.37L54.81 56.15L86.86 56.15L84.51 48.37L57.61 48.37Z" stroke="#53575E" stroke-opacity="1.000000" stroke-width="1.000000"/>
+	<rect id="矩形" x="71.982544" y="41.529785" width="1.741566" height="6.323279" transform="rotate(179.9 71.982544 41.529785)" fill="#658EFC" fill-opacity="0.984314"/>
+	<rect id="矩形" x="76.725220" y="43.797852" width="1.772601" height="6.307066" transform="rotate(-139.916 76.725220 43.797852)" fill="#658EFC" fill-opacity="0.984314"/>
+	<rect id="矩形" x="61.437134" y="39.003906" width="1.772680" height="6.306892" transform="rotate(-40.2745 61.437134 39.003906)" fill="#658EFC" fill-opacity="0.984314"/>
+	<g opacity="0.500000">
+		<circle id="椭圆形" cx="17.999695" cy="62.000000" r="2.000000" fill="#DCE4F4" fill-opacity="0.100000"/>
+		<circle id="椭圆形" cx="17.999695" cy="62.000000" r="2.000000" stroke="#A8B3D3" stroke-opacity="1.000000" stroke-width="1.000000" stroke-linejoin="round"/>
+	</g>
+	<path id="路径" d="M68.25 26.13C72.17 31.26 77.91 42.33 49.81 37.89C38.45 36.09 13 29.66 6.47 34.95C-0.43 40.53 4.18 45.63 4.18 45.63" stroke="#658EFC" stroke-opacity="0.984314" stroke-width="1.000000" stroke-dasharray="3 2"/>
+	<path id="椭圆形" d="M6.86 47.35C6.86 46.44 6.13 45.71 5.23 45.71C4.33 45.71 3.6 46.44 3.6 47.35C3.6 48.26 4.33 49 5.23 49C6.13 49 6.86 48.26 6.86 47.35Z" stroke="#0077FF" stroke-opacity="1.000000" stroke-width="0.750000" stroke-dasharray="4 4"/>
+</svg>

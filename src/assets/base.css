@@ -1,0 +1,38 @@
+@font-face {
+  font-family: 'HarmonyOS_Sans_SC_Medium';
+  src: url('./fonts/HarmonyOS_Sans_SC_Medium.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+* {
+  font-family: HarmonyOS_Sans_SC_Medium, 'Helvetica Neue', Helvetica, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+li {
+  list-style-type: none;
+  cursor: pointer;
+}
+textarea {
+  resize: none;
+}
+svg:focus {
+  outline: none;
+}
+
+body {
+  min-height: 100vh;
+  transition: color 0.5s, background-color 0.5s;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  background-color: #f5f5f6;
+}
