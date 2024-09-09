@@ -19,7 +19,15 @@
     "core:tray:default",
     "shell:allow-open",
     "shell:allow-execute",
-    "global-shortcut:default"
+    "global-shortcut:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http:116.63.144.61:30007"
+        }
+      ]
+    }
   ],
   "platforms": [
     "linux",

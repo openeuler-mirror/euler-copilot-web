@@ -19,6 +19,7 @@ fn greet(name: &str) -> String {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
@@ -72,8 +73,10 @@ fn main() {
                         #[cfg(debug_assertions)]
                         println!("{:?} {} {:?}", shortcut.mods, shortcut.key, event.state);
                         let window = app.get_webview_window("main").unwrap();
-                        let ctrl_o_pressed = shortcut == &ctrl_o_shortcut && event.state == ShortcutState::Released;
-                        let escape_pressed = shortcut == &escape && event.state == ShortcutState::Released;
+                        let ctrl_o_pressed =
+                            shortcut == &ctrl_o_shortcut && event.state == ShortcutState::Released;
+                        let escape_pressed =
+                            shortcut == &escape && event.state == ShortcutState::Released;
                         let window_visible = window.is_visible().unwrap();
                         if (ctrl_o_pressed || escape_pressed) && window_visible {
                             window.hide().unwrap();
