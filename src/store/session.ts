@@ -18,9 +18,9 @@ import {
 } from 'src/views/dialogue/types';
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
+// import { http } from 'src/apis/http';
+import { fetch } from '@tauri-apps/plugin-http';
 
-const STREAM_URL = '/api/get_stream_answer';
-const RAG_STREAM_URL = '/api/get_stream_answer';
 let controller = new AbortController();
 export const useSessionStore = defineStore('session', () => {
   // #region ----------------------------------------< scroll >--------------------------------------
@@ -62,6 +62,7 @@ export const useSessionStore = defineStore('session', () => {
       user_selected_plugins?: any,
       sessionId?: string;
       qaRecordId?: string;
+      user_selected_flow?:string;
     },
     ind?: number
   ): Promise<void> => {
@@ -75,38 +76,45 @@ export const useSessionStore = defineStore('session', () => {
     const headers = {
       user: JSON.stringify({ userName: 'openEuler' }),
     };
-    headers['Content-Type'] = 'application/json; charset=UTF-8';
-    headers['X-CSRF-Token'] = `${sessionStorage.getItem('csrftk')}`;
-
+    const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
+  // 让每个请求携带自定义 token 请根据实际情况自行修改
+    headers['Authorization'] = `Bearer ${apikey}`;
+    if(sessionStorage.getItem('cookie')){
+//      headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
+    headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
+    headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
+    }
     try {
+      const headers = new Headers();
+      const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
+      headers.append('Authorization',`Bearer ${apikey}`)
+      headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
+      headers.append('Cookie',`ECSESSION=${sessionStorage.getItem('cookie')}`);
+      headers.append('Content-Type','application/json; charset=UTF-8');
       let resp;
-      if (!Object.keys(params.user_selected_plugins.value).length) {
-        resp = await fetch(RAG_STREAM_URL, {
+      // if (params.user_selected_flow) {
+        if(sessionStorage.getItem('cookie')){
+          document.cookie=`ECSESSION=${sessionStorage.getItem('cookie')};path=/`;
+          headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
+        }
+         resp = await fetch('http://116.63.164.87:30007/api/client/chat', {
           signal: controller.signal,
           method: 'POST',
           keepalive:true,
           headers: headers,
           body: JSON.stringify({
             question: params.question,
-            session_id: params.sessionId,
-            qa_record_id: params.qaRecordId,
+            conversation_id: params.sessionId,
+            // record_id: params.qaRecordId,
+            // record_id: '',
+            // files: [],
+            user_selected_plugins: [],
+            session_id:sessionStorage.getItem('cookie'),
+            user_selected_flow:params.user_selected_flow,
+            // flow_id: '',
+            // language:"zh",
           }),
         });
-      } else {
-        resp = await fetch(STREAM_URL, {
-          signal: controller.signal,
-          keepalive:true,          
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({
-            question: params.question,
-            session_id: params.sessionId,
-            qa_record_id: params.qaRecordId,
-            user_selected_plugins: params.user_selected_plugins.value,
-          }),
-        });
-      }
-      
       const isServiceOk = await handleServiceStatus(resp.status, params, ind);
       if (!isServiceOk) {
         return;
@@ -262,13 +270,9 @@ export const useSessionStore = defineStore('session', () => {
     question: string,
     user_selected_plugins?: any[],
     regenerateInd?: number,
-    qaRecordId?: string
+    qaRecordId?: string,
+    user_selected_flow?:string,
   ): Promise<void> => {
-    const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
-    if (conversationList.value.length === 0) {
-      // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
-      updateSessionTitle({ sessionId: currentSelectedSession, title: question.slice(0,19) });
-    }
     if (regenerateInd) {
       // 重新生成，指定某个回答，修改默认索引
       (conversationList.value[regenerateInd] as RobotConversationItem).message.push('');//123
@@ -300,7 +304,17 @@ export const useSessionStore = defineStore('session', () => {
     }
     isAnswerGenerating.value = true;
     scrollBottom();
-    user_selected_plugins ? 
+    if(user_selected_flow){
+      await getStream(
+        {
+          question,
+          qaRecordId,
+          user_selected_plugins,
+          user_selected_flow,
+        },
+        regenerateInd ?? undefined
+      )
+    }else if(user_selected_plugins){
       await getStream(
         {
           question,
@@ -308,7 +322,8 @@ export const useSessionStore = defineStore('session', () => {
           user_selected_plugins,
         },
         regenerateInd ?? undefined
-      ) :
+      )
+    }else{
       await getStream(
         {
           question,
@@ -316,7 +331,8 @@ export const useSessionStore = defineStore('session', () => {
         },
         regenerateInd ?? undefined
       );
-  };
+    }
+    }
   /**
    * 暂停流式返回
    */
@@ -419,7 +435,7 @@ export const useSessionStore = defineStore('session', () => {
             isSupport: false,
             isFinish: true,
             recordId: record.record_id,
-            sessionId:record.session_id,
+            sessionId:record.conversation_id,
             groupId:record.group_id,
           }
         );

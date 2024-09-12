@@ -10,7 +10,7 @@
 import { get, put, post } from 'src/apis/server';
 
 import type { FcResponse } from 'src/apis/server';
-const BASE_URL = '/api/sessions';
+const BASE_URL = '/api/client/conversation';
 
 /**
  * 停止生成
@@ -21,13 +21,13 @@ export const stopGeneraterion = (): Promise<
     any,
     (
       | FcResponse<{
-          // session_id: string;
+          // conversation_id: string;
         }>
       | undefined
     )
   ]
 > => {
-  return post(`/api/sessions/stop_generation`);
+  return post(`/api/client/stop`);
 };
 
 /**
@@ -40,7 +40,7 @@ export const getSessionRecord = (): Promise<
     (
       | FcResponse<
           Array<{
-            session_id: string;
+            conversation_id: string;
             title: string;
             created_time: Date;
           }>
@@ -61,7 +61,7 @@ export const createSession = (): Promise<
     any,
     (
       | FcResponse<{
-          session_id: string;
+          conversation_id: string;
         }>
       | undefined
     )
@@ -73,7 +73,7 @@ export const createSession = (): Promise<
  * 更新会话标题
  * @param params
  * {
- *    session_id:（number）会话id
+ *    conversation_id:（number）会话id
  *    title：（string）会话标题
  * }
  * @returns
@@ -87,7 +87,7 @@ export const updateSession = (
     (
       | FcResponse<
           Array<{
-            session_id: string;
+            conversation_id: string;
           }>
         >
       | undefined
@@ -95,7 +95,7 @@ export const updateSession = (
   ]
 > => {
   return put(BASE_URL, data, {
-    session_id: params.sessionId,
+    conversation_id: params.sessionId,
   });
 };
 
@@ -105,8 +105,8 @@ export const updateSession = (
  * @returns
  */
 export const deleteSession = (params: {
-  session_id_list: string[];
-}): Promise<[any, FcResponse<Array<{ session_id_list: string[] }>> | undefined]> => {
+  conversation_id_list: string[];
+}): Promise<[any, FcResponse<Array<{ conversation_id_list: string[] }>> | undefined]> => {
   return post(`${BASE_URL}/delete`, params);
 };
 
@@ -122,7 +122,7 @@ export const getHistoryConversation = (
     (
       | FcResponse<
           Array<{
-            session_id: string;
+            conversation_id: string;
             record_id: string;
             question: string;
             answer: string;
@@ -135,7 +135,7 @@ export const getHistoryConversation = (
     )
   ]
 > => {
-  return get('/api/qa_record', { session_id: sessionId });
+  return get('/api/qa_record', { conversation_id: sessionId });
 };
 
 /**
@@ -170,7 +170,7 @@ export const getRecognitionMode = (): Promise<
           plugin_name: string
         }>>
       | undefined)]> => {
-  return get('api/plugin');
+  return get('api/client/plugin');
 }
 
 export const sessionApi = {

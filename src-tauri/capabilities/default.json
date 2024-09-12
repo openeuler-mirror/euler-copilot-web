@@ -24,7 +24,16 @@
       "identifier": "http:default",
       "allow": [
         {
-          "url": "http:116.63.144.61:30007"
+          "url": "http:116.63.144.61:30007/*"
+        },
+        {
+          "url": "http:116.63.164.87:30007/*"
+        },
+        {
+          "url": "http://localhost:1420/*"
+        },
+        {
+          "url": "http://localhost:1420/api/client/chat"
         }
       ]
     }

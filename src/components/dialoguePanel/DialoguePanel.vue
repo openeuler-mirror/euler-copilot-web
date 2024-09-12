@@ -14,7 +14,6 @@ import { onMounted,watch,onBeforeUnmount } from 'vue';
 export interface DialoguePanelProps {
   cid: string;
   // 用来区分是用户还是ai的输入
-  type: DialoguePanelType;
   // 文本内容
   content?: string[] | string;
   // 当前选中的第n次回答的索引，默认是最新回答
@@ -35,7 +34,7 @@ export interface DialoguePanelProps {
   recordList?:string[] | undefined;
   //
   isLikeList?:number[] | undefined;
-  search_suggestions?:string[] | undefined;
+  search_suggestions?:any;
 }
 const themeStore = useChangeThemeStore();
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
@@ -64,6 +63,7 @@ const emits = defineEmits<{
   (
     e: 'handleSendMessage',
     question:string,
+    user_selected_flow?:any
   ): void;
 }>();
 
@@ -243,12 +243,22 @@ onBeforeUnmount(() => {
   index.value = 0;
 })
 
-const selectQuestion = (event) => {
-  let name = event.target.innerText;
-  let question = event.target.innerText;
-  emits('handleSendMessage',question);
+// const selectQuestion = (event) => {
+//   let name = event.target.innerText;
+//   let question = event.target.innerText;
+//   emits('handleSendMessage',question);
+// };
 
-};
+const selectQuestion = (item:object) => {
+  let question = item.question;
+  let user_selected_flow = item.id;
+  if(user_selected_flow){
+    emits('handleSendMessage',question,user_selected_flow);
+  }else{
+    emits('handleSendMessage',question);
+  }
+}
+  
 
 </script>
 <template>
@@ -416,7 +426,7 @@ const selectQuestion = (event) => {
         <ul class='search-suggestions_value'>
           <li class='value'
           v-for="(item, index) in props.search_suggestions" >
-          <p @click='selectQuestion'>{{item}}</p></li>
+          <p @click='selectQuestion(item)'><p class='test' v-if='item.name'>#{{item.name}}</p>{{item.question}}</p></li>
         </ul>
       </div>
     </div>
@@ -425,6 +435,15 @@ const selectQuestion = (event) => {
 </template>
 
 <style lang="scss">
+.test{
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 14px;
+  background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
+ background-clip: text;
+ color: transparent;
+ line-height: 32px;
+}
 .el-popper[role=tooltip].is-dark, .el-popper[role=tooltip].is-light {
   background-color: var(--o-bg-color-base);
 }
@@ -576,7 +595,7 @@ const selectQuestion = (event) => {
 .dialogue-panel {
   // padding-right: 25px;
   // padding: 0px 15%;
-  // width:1000px;
+  width:calc(100% - 48px);
   &__user {
     position: relative;
     margin-bottom: 24px;

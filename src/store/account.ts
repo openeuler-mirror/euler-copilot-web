@@ -11,7 +11,6 @@ import { defineStore } from 'pinia';
 import { reactive } from 'vue';
 import { api } from 'src/apis';
 import { useRouter } from 'vue-router';
-import { LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
 import { successMsg } from 'src/components/Message';
 
 export const useAccountStore = defineStore('account', () => {

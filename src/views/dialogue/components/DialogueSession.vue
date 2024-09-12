@@ -4,7 +4,6 @@ import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import InitalPanel from './InitalPanel.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
-
 import type { ConversationItem, RobotConversationItem } from '../types';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
@@ -158,17 +157,21 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (question:string) => {
+ const handleSendMessage = async (question: string, user_selected_flow?: string[]) => {
   if (isAnswerGenerating.value) return;
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
-  // const question = dialogueInput.value;
   dialogueInput.value = '';
   if (!currentSelectedSession.value) {
     await generateSession();
   }
-  await sendQuestion(question, user_selected_plugins);
+  if (user_selected_flow) {
+    await sendQuestion(question, undefined, undefined, undefined, user_selected_flow);
+  } else {
+    await sendQuestion(question, user_selected_plugins.value, undefined, undefined, undefined);
+  }
 };
+
 
 /**
  * 处理鼠标事件
@@ -263,24 +266,6 @@ const selectQuestion = (event) => {
   dialogueInput.value = event.target.innerText;
 };
 
-const getMode = async () => {
-  if (modeOptions.value.length === 1) {
-    const [_, res] = await api.getRecognitionMode();
-    if (!_ && res) {
-      res.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.plugin_name,
-          disabled: false
-        };
-        opt ? modeOptions.value.push(opt) : '';
-      });
-    }
-  } else {
-    return;
-  }
-};
-
 const setOptionDisabled = () => {
   if (selectMode.value.length === 0) {
     modeOptions.value.map(item => {
@@ -372,6 +357,11 @@ watch(selectMode, (newValue, oldValue) => {
   });
 });
 
+const createNewSession = async (): Promise<void> => {
+      conversationList.value = [];
+      await generateSession();
+      
+  };
 
 
 /**
@@ -431,8 +421,7 @@ watch(selectMode, (newValue, oldValue) => {
             <el-option v-for="item in modeOptions" :key="item.value" :label="item.label" :value="item.value"
               :disabled="item.disabled" />
           </el-select>
-          <!-- <el-switch v-model="isTermShow" style="margin-left: 10px"
-                     active-text="智能shell"></el-switch> -->
+          <img class='renew_btn' @click='createNewSession()' v-if="isAnswerGenerating || dialogueInput.length <= 0" src="/src/assets/images/createIcon.svg"alt="" />
         </div>
         <!-- 输入框 -->
         <div class="dialogue-session-bottom-sendbox">
@@ -467,6 +456,11 @@ watch(selectMode, (newValue, oldValue) => {
 </template>
 
 <style lang="scss" scoped>
+
+.renew_btn{
+  position: absolute;
+  left: calc(100% - 70px);
+}
 
 .dialogue-panel__stop {
     display: flex;
@@ -570,10 +564,11 @@ button[disabled]:hover {
     margin-top: 24px;
     height: auto;
     // width: 1000px;
+    width: calc(100% - 48px);
 
     &-sendbox {
       background-color: var(--o-bg-color-base);
-      height: 40px;
+      // height: 40px;
       border-radius: 8px;
       // padding: 16px 24px;
       padding: 11px;
@@ -685,7 +680,9 @@ button[disabled]:hover {
   }
 
   div {
-    height: 32px;
+    height: 28px;
+    position: absolute;
+    right: 32px;
     margin-left: 8px;
     cursor: pointer;
     padding-top: 8px;

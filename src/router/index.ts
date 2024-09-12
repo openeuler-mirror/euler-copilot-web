@@ -22,8 +22,8 @@ const router = createRouter({
     {
       path: '/login',
       name: 'dialogue-login',
-      component: (): Promise<typeof import('src/views/dialogue/dialogueView.vue')> =>
-        import('src/views/dialogue/dialogueView.vue'),
+      component: (): Promise<typeof import('src/views/dialogue/loginView.vue')> =>
+        import('src/views/dialogue/loginView.vue'),
     },
     {
       path: '/404',

@@ -32,7 +32,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
-      loginHandler()
+      router.replace('/')
     } else {
       errorMsg('登录失败');
       return false
@@ -67,15 +67,15 @@ const loginHandler = async () => {
         <div class="login">
           <el-form ref="ruleFormRef" style="max-width: 600px" :model="ruleForm" status-icon :rules="rules"
             label-width="auto" class="demo-ruleForm">
-            <el-form-item label="User" prop="account">
+            <el-form-item label="EulerCopilot服务地址" prop="account">
               <el-input v-model="ruleForm.account" />
             </el-form-item>
-            <el-form-item label="Password" prop="passwd">
+            <el-form-item label="API KEY" prop="passwd">
               <el-input v-model="ruleForm.passwd" type="password" autocomplete="off" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="submitForm(ruleFormRef)">
-                login
+              <el-button class='button' type="primary" @click="submitForm(ruleFormRef)">
+                提交
               </el-button>
             </el-form-item>
           </el-form>
@@ -89,6 +89,11 @@ const loginHandler = async () => {
 </template>
 
 <style lang="scss">
+
+.button{
+  left: 50%;
+  position: relative;
+}
 .popper-class {
   padding: 3px 0 !important;
 
@@ -99,6 +104,11 @@ const loginHandler = async () => {
 }
 </style>
 <style lang="scss" scoped>
+
+.login {
+  top: 25%;
+  position: relative;
+}
 .dialogue {
   height: 100vh;
   width: 100vw;
@@ -108,35 +118,38 @@ const loginHandler = async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
+  background-image: var(--o-bg-image);
+  background-size: cover;
   &-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 40px;
+    height: 48px;
     padding: 0 24px;
-    background-color: #fff;
-
+    background-color: var(--o-bg-color-base);
     span {
+      align-items: center;
       display: flex;
       align-content: center;
       vertical-align: top;
       font-size: 16px;
-
+      height: 48px;
       img {
         width: 24px;
-        height: 24px;
+        height: 48px;
         border-radius: 50%;
       }
 
       h4 {
+        font-size: 18px;
         margin-left: 5px;
+        color: var(--o-text-color-primary);
       }
     }
 
     .avatar {
       width: 24px;
-      height: 24px;
+      height: 48px;
       border-radius: 50%;
       cursor: pointer;
 
@@ -144,18 +157,29 @@ const loginHandler = async () => {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
     }
+
+    .header-right {
+      display: flex;
+
+      .mode {
+        margin-right: 18px;
+      }
+    }
   }
 
   &-container {
     display: flex;
-    padding: 10px 24px 10px 24px;
-    height: calc(100% - 60px);
+    padding: 16px 24px 16px 24px;
+    height: calc(100% - 70px);
     justify-content: space-between;
 
     &-main {
       display: flex;
       flex: 1;
     }
+  }
+  &-footer{
+    margin-bottom: 12px;
   }
 }
 </style>

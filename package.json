@@ -15,12 +15,11 @@
   },
   "dependencies": {
     "@computing/opendesign2": "file:lib\\opendesign2-2.0.11.tgz",
-    "@tauri-apps/api": "2.0.0-rc.0",
+    "@tauri-apps/api": "^1.6.0",
+    "@tauri-apps/plugin-fs": "^2.0.0-rc.2",
     "@tauri-apps/plugin-global-shortcut": "2.0.0-rc.0",
     "@tauri-apps/plugin-http": "2.0.0-rc.2",
     "@tauri-apps/plugin-shell": "2.0.0-rc.0",
-    "vue": "^3.4.37",
-    "vue-router": "^4.4.3",
     "axios": "1.6.1",
     "dayjs": "1.11.9",
     "echarts": "5.4.3",
@@ -31,10 +30,12 @@
     "sass": "1.62.0",
     "typescript": "4.9.5",
     "vite": "4.1.5",
+    "vue": "^3.4.37",
+    "vue-router": "^4.4.3",
     "xss": "1.0.14"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "2.0.0-rc.3",
+    "@tauri-apps/cli": "^2.0.0-rc.12",
     "@vitejs/plugin-vue": "^5.1.2",
     "typescript": "^5.5.4",
     "vite": "^5.4.2",

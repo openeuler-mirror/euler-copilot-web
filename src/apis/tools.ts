@@ -23,11 +23,13 @@ export const handleChangeRequestHeader = (
   config: InternalAxiosRequestConfig<any>
 ): InternalAxiosRequestConfig<any> => {
   config.headers['Content-Type'] = 'application/json; charset=UTF-8';
-  // 让每个请求携带自定义 token 请根据实际情况自行修改
-  if (sessionStorage.getItem('csrftk')) {
-    const token = sessionStorage.getItem('csrftk');
-    config.headers['X-CSRF-Token'] = `${token}`;
+  //全局获取apikey
+  const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
+  if(sessionStorage.getItem('cookie')){
+      document.cookie=`ECSESSION=${sessionStorage.getItem('cookie')};path=/`;
   }
+  
+  config.headers['Authorization'] = `Bearer ${apikey}`;
   return config;
 };
 

@@ -14,22 +14,35 @@ import type { FcResponse } from 'src/apis/server';
  * 验证用户信息
  * @returns
  */
-export const authorizeUser = (): Promise<
+export const getCookie = (): Promise<
   [
     any,
     (
       | FcResponse<{
-          user_sub: string;
-          username: string;
-          organization: string;
-          revision_number: string | null;
-        }>
-      | undefined
+      }> | undefined
     )
   ]
 > => {
-  return get('/api/auth/user');
-  return get('/api/auth/user');
+  return post('/api/client/session');
+};
+
+/**
+ * 验证用户信息
+ * @returns
+ */
+export const getSession = ( session_id: string
+
+): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+        session_id:string,
+      }> | undefined
+    )
+  ]
+> => {
+  return post('/api/client/session',{session_id});
 };
 
 /**
@@ -38,101 +51,11 @@ export const authorizeUser = (): Promise<
  */
 export const authorizeLogout = (): Promise<[any, FcResponse<unknown> | undefined]> => {
   return get('/api/authorize/logout');
-  return get('/api/authorize/logout');
 };
 
-/**
- * 登录
- * @returns
- */
-export const login = (
-  code: string
-): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          csrf_token: string;
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return get('/api/authorize/login', { code });
-  return get('/api/authorize/login', { code });
-  
-};
-
-/**
- * USER登录
- * @returns
- */
-export const userLogin = (
-  passwd: string,
-  account:string,
-): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          csrf_token: string;
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return post('/api/authorize/login', { passwd,account });
-};
-
-/**
- * 刷新token
- * @returns
- */
-export const refreshToken = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          csrf_token: string;
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return get('/api/authorize/refresh_token');
-  return get('/api/authorize/refresh_token');
-};
-
-/**
- * 更新签署服务协议版本
- * @param revisionNumber
- * @returns
- */
-export const updateRevision = (
-  revisionNumber: number | string
-): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          user_sub: string;
-          username: string;
-          organization: string;
-          revision_number: string | null;
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return post('/api/authorize/update_revision_number', { revision_num: revisionNumber });
-  return post('/api/authorize/update_revision_number', { revision_num: revisionNumber });
-};
 
 export const accountApi = {
-  authorizeUser,
+  getCookie,
+  getSession,
   authorizeLogout,
-  login,
-  userLogin,
-  refreshToken,
-  updateRevision,
 };

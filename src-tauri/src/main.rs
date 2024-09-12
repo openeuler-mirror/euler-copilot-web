@@ -34,14 +34,14 @@ fn main() {
 
             #[cfg(not(target_os = "linux"))]
             {
-                let window = app.get_webview_window("main").unwrap();
-                let w = window.clone();
-                window.on_window_event(move |event| match event {
-                    WindowEvent::Focused(false) => {
-                        w.hide().unwrap();
-                    }
-                    _ => {}
-                });
+                // let window = app.get_webview_window("main").unwrap();
+                // let w = window.clone();
+                // window.on_window_event(move |event| match event {
+                //     WindowEvent::Focused(false) => {
+                //         w.hide().unwrap();
+                //     }
+                //     _ => {}
+                // });
             }
 
             let _ = TrayIconBuilder::new()
@@ -80,10 +80,13 @@ fn main() {
                         let window_visible = window.is_visible().unwrap();
                         if (ctrl_o_pressed || escape_pressed) && window_visible {
                             window.hide().unwrap();
+                            dbg!("menu item show clicked?????");
+
                         } else if ctrl_o_pressed && !window_visible {
                             window.show().unwrap();
-                            window.set_focus().unwrap();
+                            // window.set_focus().unwrap();
                             window.set_always_on_top(true).unwrap();
+                            dbg!("menu item show clicked?????");
                         }
                     })
                     .build(),

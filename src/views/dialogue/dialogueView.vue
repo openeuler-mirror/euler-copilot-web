@@ -5,22 +5,25 @@ import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import { useHistorySessionStore, useSessionStore, useAccountStore, useChangeThemeStore } from 'src/store';
 import DialogueSession from './components/DialogueSession.vue';
-import DialogueTool from './components/DialogueTool.vue';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
-import { onBeforeMount,reactive } from 'vue';
+import { reactive } from 'vue';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { api } from 'src/apis';
-import { refreshToken, stopGeneraterion } from 'src/apis/paths';
+import { stopGeneraterion } from 'src/apis/paths';
+// import { open, BaseDirectory } from "@tauri-apps/plugin-fs"
+// import { open, SeekMode, BaseDirectory } from '@tauri-apps/plugin-fs';
+// import { open } from '@tauri-apps/api/fs'
+import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs';
+// Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch;
 const router = useRouter();
 const route = useRoute();
-const { getUserInfo, logout, updateAgreement } = useAccountStore();
+const {logout, updateAgreement } = useAccountStore();
 const { userinfo } = storeToRefs(useAccountStore());
-const { getHistorySession } = useHistorySessionStore();
 const { historySession } = storeToRefs(useHistorySessionStore());
 const { conversationList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
@@ -45,6 +48,7 @@ const loginDialogVisible = ref(false);
  */
 
 const initCopilot = async (): Promise<void> => {
+// await writeTextFile('app.conf', 'file contents', { dir: BaseDirectory.AppConfig });
   if(sessionStorage.getItem('theme')){
     themeStore.theme = sessionStorage.getItem('theme');
   }
@@ -53,27 +57,13 @@ const initCopilot = async (): Promise<void> => {
   }
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
-    const isLogin = await getUserInfo();
-    if (isLogin) {
+    const [_ , res] = await api.getCookie();
+    if (!_ && res) {
+      const cookie = res.result.session_id;
+      sessionStorage.setItem('cookie',cookie);
       userinfo.value.status = true;
-      await getHistorySession();
-      await handleAgreement(userinfo.value.revsionNumber);
       await getModeOptions();
       await stopGeneraterion();
-    }else{
-      if(sessionStorage.getItem('csrftk')){
-        const store = useAccountStore(); 
-        // 开始refreshtoken
-        await store.refreshAccessToken().then(() => {
-          getUserInfo();
-          getHistorySession();
-          getModeOptions();
-          stopGeneraterion();
-        })
-      }else{
-        userinfo.value.status = false;
-        loginDialogVisible.value = true;
-      }
     }
     return;
   }
@@ -143,38 +133,6 @@ const changeTheme = () => {
   themeStore.$patch({theme: theme});
 };
 
-const createApi = async() => {
-  console.log('createSuccess');
-  apikey.value = '23232adasjdadsadkasdsakkjkj23';
-  revoke.value = false;
-  let action = 'create'
-  await api.getApiKey();
-  await api.changeApiKey({action});
-}
-
-const updateApi = async() => {
-  console.log('updateApi');
-  apikey.value = '23232adasjdadsadkasdsakkjkj23';
-  let action = 'update'
-  await api.changeApiKey({action});
-  revoke.value = false;
-}
-
-const revokeApi = async() => {
-  console.log('revokeApi');
-  let action = 'revoke'
-  await api.changeApiKey({action});
-  revoke.value = true;
-  apikey.value = false;
-  hidden.value = false;
-}
-
-const handleDialogClose = () => {
-  apikey.value = false;
-  hidden.value = true;
-  apikeyVisible.value = false;
-}
-
 onMounted(() => {
   if (sessionStorage.getItem('theme')) {
     document.body.setAttribute('theme', sessionStorage.getItem('theme'));
@@ -191,38 +149,12 @@ watch(
   }
 );
 
-
-// onBeforeMount(() => {
-//   initCopilot();
-// });
-
 watch(() => userinfo.value.status, () => {
   if(!userinfo.value.status){
     // loginDialogVisible.value = true;
   }
   }
 );
-
-const ruleForm = reactive({
-  passwd: '',
-  account: '',
-});
-
-const userLoginHandler = async () => {
-  const passwd = ruleForm.passwd;
-  const account = ruleForm.account;
-  const store = useAccountStore();
-  const res = await store.userLogin(passwd,account);
-    if (res) {
-      successMsg('登陆成功');
-      // loginDialogVisible.value = false;
-      router.push('/');
-      await getHistorySession();
-      await getModeOptions();
-    }else{
-      errorMsg('登录失败，请重新登陆');
-    }
-};
 
 const getModeOptions = async() => {
   await api.getRecognitionMode().then(data => {
@@ -279,47 +211,6 @@ const getModeOptions = async() => {
     <EulerDialog :visible="dialogVisible" :content="agreement" agreement-name="《服务协议》" @submit="handleSubmit">
     </EulerDialog>
   </div>
-  <el-dialog 
-    class="apikey" 
-    v-model="apikeyVisible" 
-    title="提示"
-    width="50%" 
-    align-center
-    :before-close='handleDialogClose'
-    >
-    <div class="apikey_view">
-      <el-alert v-if='apikey' class='apikey_view_alert' type="info" :show-icon='true' :closable='false'>此API
-        KEY只展示一次，请复制后妥善保存</el-alert>
-      <div class='apikey_view_main'>
-        <div class='main'>
-          <div class='main_view' v-if="!apikey&&hidden">
-            <span>******************************</span>
-          </div>
-          <div class='main_view' v-else-if='!apikey'>
-            <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
-            <img v-else src="src/assets/svgs/light_null.svg" alt="">
-            <span>暂无可用的apikey</span>
-          </div>
-          <div class='main_view' v-else>
-            <div class='main_view_span'>
-              <div>qdqwuidwqyeqiueywueyqwuieywqiuqyeq</div>
-            </div>
-          </div>
-          <div v-if='apikey'>
-            <el-button type='primary'>复制</el-button>
-            <el-button @click='revokeApi'>撤销</el-button>
-          </div>
-          <div v-else-if='!apikey&&!revoke'>
-            <el-button type='primary' @click='updateApi'>刷新</el-button>
-            <el-button @click='revokeApi'>撤销</el-button>
-          </div>
-          <div v-else>
-            <el-button type='primary' @click='createApi'>新建apikey</el-button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </el-dialog>
 </template>
 
 <style lang="scss">
@@ -470,7 +361,7 @@ const getModeOptions = async() => {
   &-container {
     display: flex;
     padding: 16px 24px 16px 24px;
-    height: calc(100% - 60px);
+    height: calc(100% - 70px);
     justify-content: space-between;
 
     &-main {

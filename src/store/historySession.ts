@@ -14,6 +14,7 @@ import { storeToRefs } from 'pinia';
 import { useSessionStore } from '.';
 import type { SessionItem } from 'src/components/sessionCard/type';
 import { successMsg } from 'src/components/Message';
+
 export interface HistorySessionItem {
   sessionId: string;
   title: string;
@@ -26,7 +27,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   const currentSelectedSession = ref<string>('');
   /**
    * 选择历史会话
-   * @param session_id 会话id
+   * @param conversation_id 会话id
    */
   const changeSession = async (sessionId: string): Promise<void> => {
     const { isAnswerGenerating } = useSessionStore();
@@ -76,7 +77,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
 
   /**
    * 清空选择会话列表
-   * @param session_id 会话id
+   * @param conversation_id 会话id
    */
   const initSessionList = (): void => {
     selectedSessionIds.value = [];
@@ -90,7 +91,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     const { conversationList } = storeToRefs(useSessionStore());
     if (!_ && res) {
       historySession.value = res.result.reverse().map((item) => ({
-        sessionId: item.session_id,
+        sessionId: item.conversation_id,
         createdTime: item.created_time,
         title: item.title,
       }));
@@ -98,7 +99,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
         await generateSession();
       }
       if (!currentSelectedSession.value) {
-        currentSelectedSession.value = res.result[0]?.session_id;
+        currentSelectedSession.value = res.result[0]?.conversation_id;
       }
       if (currentSelectedSession.value) {
         const { getConversation, isAnswerGenerating } = useSessionStore();
@@ -131,7 +132,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     if (_) {
       return false;
     }
-    await getHistorySession();
+    // await getHistorySession();
     return true;
   };
 
@@ -147,7 +148,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
           currentSelectedSession.value = sId;
         }
         successMsg('已是最新对话');
-        await getHistorySession();
+        // await getHistorySession();
       } else {
         await generateSession();
       }
@@ -161,8 +162,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   const generateSession = async (): Promise<void> => {
     const [_, res] = await api.createSession();
     if (!_ && res) {
-      currentSelectedSession.value = res.result.session_id;
-      await getHistorySession();
+      currentSelectedSession.value = res.result.conversation_id;
     }
   };
 
