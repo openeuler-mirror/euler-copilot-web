@@ -1,7 +1,7 @@
 {
   "productName": "eulercopilot-client",
   "version": "1.0.0",
-  "identifier": "org.openeuler.eulercopilot",
+  "identifier": "org.openEuler.Copilot.Desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,11 +13,14 @@
       {
         "title": "EulerCopilot",
         "decorations": false,
-        "alwaysOnTop": true,
         "skipTaskbar": true,
-        "width": 800,
-        "height": 600,
-        "center": true
+        "width": 360,
+        "height": 680,
+        "minWidth": 360,
+        "minHeight": 680,
+        "maxWidth": 720,
+        "resizable": true,
+        "shadow": true
       }
     ],
     "security": {

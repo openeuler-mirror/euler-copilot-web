@@ -1,3 +1,5 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
+
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -5,23 +7,22 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
 
-#[cfg(not(target_os = "linux"))]
-use tauri::WindowEvent;
+// #[cfg(not(target_os = "linux"))]
+// use tauri::WindowEvent;
 
 #[cfg(desktop)]
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_positioner::{WindowExt, Position};
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+mod chat;
+mod config;
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_positioner::init())
         .setup(|app| {
             let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
             let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
@@ -32,17 +33,17 @@ fn main() {
                 .build()
                 .unwrap();
 
-            #[cfg(not(target_os = "linux"))]
-            {
-                // let window = app.get_webview_window("main").unwrap();
-                // let w = window.clone();
-                // window.on_window_event(move |event| match event {
-                //     WindowEvent::Focused(false) => {
-                //         w.hide().unwrap();
-                //     }
-                //     _ => {}
-                // });
-            }
+            // #[cfg(not(target_os = "linux"))]
+            // {
+            //     let window = app.get_webview_window("main").unwrap();
+            //     let w = window.clone();
+            //     window.on_window_event(move |event| match event {
+            //         WindowEvent::Focused(false) => {
+            //             w.hide().unwrap();
+            //         }
+            //         _ => {}
+            //     });
+            // }
 
             let _ = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -58,8 +59,8 @@ fn main() {
                         dbg!("menu item show clicked");
                         let window = app.get_webview_window("main").unwrap();
                         window.show().unwrap();
+                        window.move_window(Position::TopRight).unwrap();
                         window.set_focus().unwrap();
-                        window.set_always_on_top(true).unwrap();
                     }
                     _ => {}
                 })
@@ -70,8 +71,10 @@ fn main() {
             app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
                     .with_handler(move |app, shortcut, event| {
+
                         #[cfg(debug_assertions)]
                         println!("{:?} {} {:?}", shortcut.mods, shortcut.key, event.state);
+
                         let window = app.get_webview_window("main").unwrap();
                         let ctrl_o_pressed =
                             shortcut == &ctrl_o_shortcut && event.state == ShortcutState::Released;
@@ -80,13 +83,10 @@ fn main() {
                         let window_visible = window.is_visible().unwrap();
                         if (ctrl_o_pressed || escape_pressed) && window_visible {
                             window.hide().unwrap();
-                            dbg!("menu item show clicked?????");
-
                         } else if ctrl_o_pressed && !window_visible {
                             window.show().unwrap();
-                            // window.set_focus().unwrap();
-                            window.set_always_on_top(true).unwrap();
-                            dbg!("menu item show clicked?????");
+                            window.move_window(Position::TopRight).unwrap();
+                            window.set_focus().unwrap();
                         }
                     })
                     .build(),
@@ -96,7 +96,14 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            chat::create_conversation,
+            chat::refresh_session_id,
+            chat::receive_stream,
+            chat::stop,
+            config::get_api_key,
+            config::update_config
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
