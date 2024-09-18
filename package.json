@@ -14,9 +14,9 @@
     "update": "pnpm update && cd src-tauri && cargo update"
   },
   "dependencies": {
-    "@computing/opendesign2": "file:lib\\opendesign2-2.0.11.tgz",
+    "@computing/opendesign2": "file:lib/opendesign2-2.0.11.tgz",
     "@tauri-apps/api": "^1.6.0",
-    "@tauri-apps/plugin-fs": "^2.0.0-rc.2",
+    "@tauri-apps/plugin-fs": "2.0.0-rc.2",
     "@tauri-apps/plugin-global-shortcut": "2.0.0-rc.0",
     "@tauri-apps/plugin-http": "2.0.0-rc.2",
     "@tauri-apps/plugin-shell": "2.0.0-rc.0",
@@ -25,20 +25,18 @@
     "echarts": "5.4.3",
     "element-plus": "2.3.12",
     "highlight.js": "11.4.0",
-    "marked": "4.3",
+    "marked": "~4.3.0",
     "pinia": "2.1.6",
     "sass": "1.62.0",
-    "typescript": "4.9.5",
-    "vite": "4.1.5",
-    "vue": "^3.4.37",
-    "vue-router": "^4.4.3",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.6",
+    "vue": "^3.5.6",
+    "vue-router": "^4.4.5",
     "xss": "1.0.14"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.0.0-rc.12",
-    "@vitejs/plugin-vue": "^5.1.2",
-    "typescript": "^5.5.4",
-    "vite": "^5.4.2",
-    "vue-tsc": "^2.0.29"
+    "@tauri-apps/cli": "2.0.0-rc.16",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "vue-tsc": "^2.1.6"
   }
 }
