@@ -3,7 +3,7 @@
 use futures_util::StreamExt;
 use reqwest::{header, Client};
 use serde_json::{json, Value};
-use tauri::{AppHandle, Emitter, Runtime};
+use tauri::{AppHandle, Manager, Runtime};
 use url::Url;
 
 use crate::config::{get_api_key, get_base_url};
@@ -187,8 +187,7 @@ fn parse_json_payload(json_value: &Value) -> String {
 }
 
 fn emit_message<R: Runtime>(app: &AppHandle<R>, message: &str) {
-    app.emit_to(
-        "main",
+    app.emit_all(
         "fetch-stream-data",
         StreamPayload {
             message: message.to_string(),

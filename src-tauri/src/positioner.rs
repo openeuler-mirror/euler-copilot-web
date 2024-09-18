@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-use tauri::{PhysicalPosition, PhysicalSize, Result, Runtime, WebviewWindow, Window};
+use tauri::{PhysicalPosition, PhysicalSize, Result, Runtime, Window};
 
 /// A [`Window`] extension that provides extra methods related to positioning.
 pub trait WindowExt {
@@ -14,11 +14,6 @@ pub trait WindowExt {
     fn setup_window_pos(&self) -> Result<()>;
 }
 
-impl<R: Runtime> WindowExt for WebviewWindow<R> {
-    fn setup_window_pos(&self) -> Result<()> {
-        self.as_ref().window().setup_window_pos()
-    }
-}
 impl<R: Runtime> WindowExt for Window<R> {
     fn setup_window_pos(&self) -> Result<()> {
         let window_padding = 24;

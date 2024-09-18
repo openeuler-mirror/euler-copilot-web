@@ -8,20 +8,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-rc", features = [] }
+tauri-build = { version = "1", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-rc", features = ["tray-icon"] }
+tauri = { version = "1", features = ["shell-open", "global-shortcut-all", "system-tray"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-http = "2.0.0-rc"
-reqwest = { version = "0.12.7", features = ["stream"] }
+reqwest = { version = "0.12.7", features = ["stream", "json"] }
 futures-util = "0.3.30"
 anyhow = "1.0.88"
 dirs = "5.0.1"
 url = "2.5.2"
 
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-global-shortcut = "2.0.0-rc"
-tauri-plugin-single-instance = "2.0.0-rc"
-tauri-plugin-shell = "2.0.0-rc"
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
