@@ -3,26 +3,24 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use positioner::WindowExt;
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
 use tauri::WindowEvent;
 
-#[cfg(desktop)]
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
-use tauri_plugin_positioner::{WindowExt, Position};
-
 mod chat;
 mod config;
+mod positioner;
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_positioner::init())
         .setup(|app| {
             let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
             let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
@@ -59,7 +57,7 @@ fn main() {
                         dbg!("menu item show clicked");
                         let window = app.get_webview_window("main").unwrap();
                         window.show().unwrap();
-                        window.move_window(Position::TopRight).unwrap();
+                        window.setup_window_pos().unwrap();
                         window.set_focus().unwrap();
                     }
                     _ => {}
@@ -85,7 +83,7 @@ fn main() {
                             window.hide().unwrap();
                         } else if ctrl_o_pressed && !window_visible {
                             window.show().unwrap();
-                            window.move_window(Position::TopRight).unwrap();
+                            window.setup_window_pos().unwrap();
                             window.set_focus().unwrap();
                         }
                     })
