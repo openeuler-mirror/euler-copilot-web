@@ -17,6 +17,7 @@ pub trait WindowExt {
 impl<R: Runtime> WindowExt for Window<R> {
     fn setup_window_pos(&self) -> Result<()> {
         let window_padding = 24;
+        let window_vertical_offset = 192;
 
         let screen = self.current_monitor()?.unwrap();
         let screen_position = screen.position();
@@ -31,12 +32,12 @@ impl<R: Runtime> WindowExt for Window<R> {
 
         let physical_pos = PhysicalPosition {
             x: screen_position.x + (screen_size.width - window_size.width - window_padding),
-            y: screen_position.y + window_padding,
+            y: screen_position.y + window_vertical_offset,
         };
 
         let physical_size = PhysicalSize::<u32> {
             width: window_size.width as u32,
-            height: (screen_size.height - 2 * window_padding) as u32,
+            height: (screen_size.height - 2 * window_vertical_offset) as u32,
         };
 
         self.set_position(tauri::Position::Physical(physical_pos))?;
