@@ -20,21 +20,24 @@ pub async fn receive_stream<R: Runtime>(
     question: &str,
     language: &str,
     conversation: &str,
-    plugin: &str,
+    plugin: Option<&str>,
 ) -> Result<String, String> {
     let mut url = Url::parse(&get_base_url()).unwrap();
     url.set_path("api/client/chat");
     println!("Chat API URL: {}", url);
 
-    let data = json!({
+    let mut data = json!({
         "session_id": session,
         "question": question,
         "language": language,
         "conversation_id": conversation,
-        "user_selected_plugins": [
-            plugin
-        ],
     });
+
+    if let Some(plugin) = plugin {
+        if !plugin.is_empty() {
+            data["user_selected_plugins"] = json!([plugin]);
+        }
+    }
 
     let cookie = format!("ECSESSION={};", session);
 
@@ -62,7 +65,9 @@ pub async fn receive_stream<R: Runtime>(
                 println!("Received bytes: {}", bytes.len());
                 let chunk = String::from_utf8_lossy(&bytes);
                 println!("Received chunk: {}", chunk);
-                if let Some(json_str) = chunk.strip_prefix("data: ") {
+                if let Some(mut json_str) = chunk.strip_prefix("data: ") {
+                    json_str = json_str.trim();
+                    println!("Received JSON: {}", json_str);
                     match json_str {
                         "[ERROR]" | "[SENSITIVE]" | "[DONE]" => emit_message(&app, json_str),
                         _ => {
