@@ -14,7 +14,7 @@ import type { FcResponse } from 'src/apis/server';
  * 验证用户信息
  * @returns
  */
-export const getCookie = (): Promise<
+export const getSessionID = (): Promise<
   [
     any,
     (
@@ -30,9 +30,7 @@ export const getCookie = (): Promise<
  * 验证用户信息
  * @returns
  */
-export const getSession = ( session_id: string
-
-): Promise<
+export const updateSessionID = ( session_id: string ): Promise<
   [
     any,
     (
@@ -45,17 +43,7 @@ export const getSession = ( session_id: string
   return post('/api/client/session',{session_id});
 };
 
-/**
- * 退出登录
- * @returns
- */
-export const authorizeLogout = (): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get('/api/authorize/logout');
-};
-
-
 export const accountApi = {
-  getCookie,
-  getSession,
-  authorizeLogout,
+  getSessionID,
+  updateSessionID,
 };

@@ -28,10 +28,18 @@ pub fn get_api_key() -> String {
 }
 
 #[tauri::command]
-pub fn update_config(url: &str, api_key: &str) -> Result<(), String> {
+pub fn update_config(url: Option<&str>, api_key: Option<&str>) -> Result<(), String> {
     let mut config = Config::load().unwrap_or_else(|_| Config::default());
-    config.framework_url = url.to_string();
-    config.framework_api_key = api_key.to_string();
+    if let Some(url) = url {
+        if !url.is_empty() {
+            config.framework_url = url.to_string();
+        }
+    }
+    if let Some(api_key) = api_key {
+        if !api_key.is_empty() {
+            config.framework_api_key = api_key.to_string();
+        }
+    }
     config.save().map_err(|e| e.to_string())
 }
 

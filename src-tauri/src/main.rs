@@ -15,11 +15,14 @@ mod config;
 mod positioner;
 
 fn main() {
-    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    let hide = CustomMenuItem::new("hide".to_string(), "Hide");
-    let show = CustomMenuItem::new("show".to_string(), "Show");
+    let settings = CustomMenuItem::new("settings".to_string(), "设置");
+    let quit = CustomMenuItem::new("quit".to_string(), "退出");
+    let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
+    let show = CustomMenuItem::new("show".to_string(), "显示窗口");
     let tray_menu = SystemTrayMenu::new()
         .add_item(quit)
+        .add_native_item(SystemTrayMenuItem::Separator)
+        .add_item(settings)
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(show)
         .add_item(hide);
@@ -27,9 +30,7 @@ fn main() {
     let tray = SystemTray::new().with_menu(tray_menu);
 
     let app = tauri::Builder::default()
-        // .plugin(tauri_plugin_http::init())
         // .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
-        // .plugin(tauri_plugin_shell::init())
         .system_tray(tray)
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::DoubleClick { .. } => {
@@ -49,11 +50,19 @@ fn main() {
                     let window = app.get_window("main").unwrap();
                     window.hide().unwrap();
                 }
+                "settings" => {
+                    dbg!("menu item settings clicked");
+                    show_settings_window(app);
+                }
                 _ => {}
             },
             _ => {}
         })
         .setup(|_app| {
+            let api_key = config::get_api_key();
+            if api_key.is_empty() {
+                show_welcome_window(_app);
+            }
             #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
             {
                 let window = _app.get_window("main").unwrap();
@@ -119,4 +128,36 @@ fn show_main_window(app_handle: &AppHandle) {
     }
 }
 
-fn show_welcome_window(app: App) {}
+fn show_welcome_window(app: &App) {
+    tauri::WindowBuilder::new(
+        app,
+        "welcome", // 窗口的唯一标识符
+        tauri::WindowUrl::App("/welcome".into())
+    )
+    .title("欢迎")
+    .resizable(false)
+    .maximizable(false)
+    .minimizable(false)
+    .title_bar_style(tauri::TitleBarStyle::Transparent)
+    .inner_size(600., 400.)
+    .center()
+    .build()
+    .expect("无法创建欢迎窗口");
+}
+
+fn show_settings_window(app_handle: &AppHandle) {
+    tauri::WindowBuilder::new(
+        app_handle,
+        "settings",
+        tauri::WindowUrl::App("/settings".into()),
+    )
+    .title("设置")
+    .resizable(false)
+    .maximizable(false)
+    .minimizable(false)
+    .title_bar_style(tauri::TitleBarStyle::Transparent)
+    .inner_size(400., 300.)
+    .center()
+    .build()
+    .expect("无法创建设置窗口");
+}

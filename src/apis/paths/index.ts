@@ -10,5 +10,4 @@
 export * from './account';
 export * from './session';
 export * from './external';
-export * from './apikey';
 

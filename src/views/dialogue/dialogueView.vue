@@ -13,10 +13,6 @@ import { reactive } from 'vue';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { api } from 'src/apis';
 import { stopGeneraterion } from 'src/apis/paths';
-// import { open, BaseDirectory } from "@tauri-apps/plugin-fs"
-// import { open, SeekMode, BaseDirectory } from '@tauri-apps/plugin-fs';
-// import { open } from '@tauri-apps/api/fs'
-import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs';
 // Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch;
@@ -28,10 +24,6 @@ const { historySession } = storeToRefs(useHistorySessionStore());
 const { conversationList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
 const dialogVisible = ref(false);
-const apikeyVisible = ref(false);
-const apikey = ref();
-const hidden = ref(false);
-const revoke = ref(true);
 const modeOptions = reactive([
   {
     label: '自动识别',
@@ -40,7 +32,7 @@ const modeOptions = reactive([
   },
 ]);
 
-const isDark = ref(sessionStorage.getItem('theme') === 'dark');
+const isDark = ref(localStorage.getItem('theme') === 'dark');
 const loginDialogVisible = ref(false);
 
 /**
@@ -49,18 +41,18 @@ const loginDialogVisible = ref(false);
 
 const initCopilot = async (): Promise<void> => {
 // await writeTextFile('app.conf', 'file contents', { dir: BaseDirectory.AppConfig });
-  if(sessionStorage.getItem('theme')){
-    themeStore.theme = sessionStorage.getItem('theme');
+  if(localStorage.getItem('theme')){
+    themeStore.theme = localStorage.getItem('theme');
   }
   else {
-    sessionStorage.setItem('theme', 'dark');
+    localStorage.setItem('theme', 'dark');
   }
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
-    const [_ , res] = await api.getCookie();
+    const [_ , res] = await api.getSessionID();
     if (!_ && res) {
       const cookie = res.result.session_id;
-      sessionStorage.setItem('cookie',cookie);
+      localStorage.setItem('cookie',cookie);
       userinfo.value.status = true;
       await getModeOptions();
       await stopGeneraterion();
@@ -128,14 +120,14 @@ const changeTheme = () => {
   isDark.value ? document.body.setAttribute('theme', 'dark') :
     document.body.setAttribute('theme', 'light');
   const theme = isDark.value ? 'dark' : 'light';
-  sessionStorage.setItem('theme',theme);
+  localStorage.setItem('theme',theme);
   themeStore.theme = theme;
   themeStore.$patch({theme: theme});
 };
 
 onMounted(() => {
-  if (sessionStorage.getItem('theme')) {
-    document.body.setAttribute('theme', sessionStorage.getItem('theme'));
+  if (localStorage.getItem('theme')) {
+    document.body.setAttribute('theme', localStorage.getItem('theme'));
   }
 });
 

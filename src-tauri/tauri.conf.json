@@ -27,7 +27,15 @@
       },
       "shell": {
         "all": false,
-        "open": true
+        "execute": true,
+        "open": true,
+        "scope": [
+          {
+            "name": "docker",
+            "cmd": "docker",
+            "args": true
+          }
+        ]
       }
     },
     "windows": [

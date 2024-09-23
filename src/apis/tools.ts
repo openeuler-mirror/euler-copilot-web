@@ -7,16 +7,11 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { ElNotification, ElMessageBox } from 'element-plus';
-import { CALLBACK_URL, LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
+import { ElNotification } from 'element-plus';
 import { useAccountStore } from 'src/store';
-import { server } from './server';
 
-import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type { InternalAxiosRequestConfig } from 'axios';
 import { storeToRefs } from 'pinia';
-import { refreshToken } from './paths';
-
-
 
 // 修改请求头
 export const handleChangeRequestHeader = (
@@ -25,8 +20,8 @@ export const handleChangeRequestHeader = (
   config.headers['Content-Type'] = 'application/json; charset=UTF-8';
   //全局获取apikey
   const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
-  if(sessionStorage.getItem('cookie')){
-      document.cookie=`ECSESSION=${sessionStorage.getItem('cookie')};path=/`;
+  if(localStorage.getItem('cookie')){
+      document.cookie=`ECSESSION=${localStorage.getItem('cookie')};path=/`;
   }
   
   config.headers['Authorization'] = `Bearer ${apikey}`;
@@ -112,57 +107,3 @@ export const handleGeneralError = (
   }
   return true;
 };
-
-//单例对象
-let refreshTokenPromise  = null;
-const refreshToken = async(originalRequest) => {  
-  //不在刷新状态
-  if (refreshTokenPromise) { 
-    return ; 
-   } 
-  //不在刷新状态
-    refreshTokenPromise =new Promise(async (resolve, reject) => { 
-      //执行逻辑 
-        const store = useAccountStore(); 
-        // 开始refreshtoken
-        await store.refreshAccessToken().then(()=>{
-        server(originalRequest);
-        return true;
-        }).catch((e) => {
-          refreshTokenPromise = null;
-          return false;
-        }) 
-    })
-  // 返回Promise，确保后续调用也能等待同一个刷新令牌操作完成  
-  return refreshTokenPromise;  
-}
-/**
- * 处理状态码错误
- */
-export const handleStatusError = async (  
-  error: AxiosError<any>  
-): Promise<AxiosResponse<any, any>[] | undefined> => {  
-  if (!error.response) {  
-    // 如果没有响应，可能是网络问题或其他非HTTP错误，直接返回错误  
-    return Promise.reject(error);  
-  }  
-  
-  const { status } = error.response;  
-  if ([401, 403, 460].includes(status)) {  
-    const originalRequest = error.config;  
-    if (originalRequest.url === '/api/authorize/refresh_token') {  
-      // 长token过期,需要重新登录
-      handleAuthorize(status);  
-      return Promise.reject(error.response);  
-    }  
-    if (originalRequest.url === '/api/auth/user') {  
-      return;  
-    }  
-    const suc = await refreshToken(originalRequest);
-    if(!suc){
-      return Promise.reject(error.response);
-    }
-    return server(originalRequest);
-  }    
-  return Promise.reject(error.response);  
-};  

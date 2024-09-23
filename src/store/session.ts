@@ -18,8 +18,12 @@ import {
 } from 'src/views/dialogue/types';
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
-// import { http } from 'src/apis/http';
-import { fetch } from '@tauri-apps/plugin-http';
+import { invoke } from '@tauri-apps/api/tauri';
+import { listen } from "@tauri-apps/api/event";
+
+interface StreamPayload {
+  message: string;
+}
 
 let controller = new AbortController();
 export const useSessionStore = defineStore('session', () => {
@@ -70,63 +74,60 @@ export const useSessionStore = defineStore('session', () => {
     params.sessionId = currentSelectedSession;
     // 当前问答在整个问答记录中的索引
     const answerIndex = ind ?? conversationList.value.length - 1;
-    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+    // const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
 
     controller = new AbortController();
-    const headers = {
-      user: JSON.stringify({ userName: 'openEuler' }),
-    };
-    const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
-  // 让每个请求携带自定义 token 请根据实际情况自行修改
-    headers['Authorization'] = `Bearer ${apikey}`;
-    if(sessionStorage.getItem('cookie')){
-//      headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
-    headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
-    headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
-    }
+    const sessionId = await invoke("refresh_session_id", {
+      sessionId: params.sessionId,
+    });
+    console.log(sessionId)
     try {
-      const headers = new Headers();
-      const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
-      headers.append('Authorization',`Bearer ${apikey}`)
-      headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
-      headers.append('Cookie',`ECSESSION=${sessionStorage.getItem('cookie')}`);
-      headers.append('Content-Type','application/json; charset=UTF-8');
       let resp;
       // if (params.user_selected_flow) {
-        if(sessionStorage.getItem('cookie')){
-          document.cookie=`ECSESSION=${sessionStorage.getItem('cookie')};path=/`;
-          headers['Cookie'] = `ECSESSION=${sessionStorage.getItem('cookie')}`;
-        }
-         resp = await fetch('http://116.63.164.87:30007/api/client/chat', {
-          signal: controller.signal,
-          method: 'POST',
-          keepalive:true,
-          headers: headers,
-          body: JSON.stringify({
-            question: params.question,
-            conversation_id: params.sessionId,
-            // record_id: params.qaRecordId,
-            // record_id: '',
-            // files: [],
-            user_selected_plugins: [],
-            session_id:sessionStorage.getItem('cookie'),
-            user_selected_flow:params.user_selected_flow,
-            // flow_id: '',
-            // language:"zh",
-          }),
-        });
-      const isServiceOk = await handleServiceStatus(resp.status, params, ind);
-      if (!isServiceOk) {
-        return;
-      }
-      if (!resp.ok) {
-        throw new Error(`HTTP error! status: ${resp.status}`);
-      }
-      if (!resp.body) {
-        throw new Error(`HTTP error, body not exits`);
-      }
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder('utf-8');
+      // resp = await fetch('http://116.63.164.87:30007/api/client/chat', {
+      //   signal: controller.signal,
+      //   method: 'POST',
+      //   keepalive:true,
+      //   headers: headers,
+      //   body: Body.json({
+      //     question: params.question,
+      //     conversation_id: params.sessionId,
+      //     // record_id: params.qaRecordId,
+      //     // record_id: '',
+      //     // files: [],
+      //     user_selected_plugins: [],
+      //     session_id:localStorage.getItem('cookie'),
+      //     user_selected_flow:params.user_selected_flow,
+      //     // flow_id: '',
+      //     // language:"zh",
+      //   }),
+      // });
+      resp = await invoke("receive_stream", {
+        session: localStorage.getItem('cookie'),
+        question: params.question,
+        language:"zh",
+        conversation: params.sessionId,
+        // record_id: params.qaRecordId,
+        plugin: "",
+        // user_selected_flow: params.user_selected_flow,
+        // flow_id: '',
+      })
+      console.log(resp);
+      listen<StreamPayload>("fetch-stream-data", (event) => {
+        console.log(event.payload.message);
+      });
+      // const isServiceOk = await handleServiceStatus(resp.status, params, ind);
+      // if (!isServiceOk) {
+      //   return;
+      // }
+      // if (!resp.ok) {
+      //   throw new Error(`HTTP error! status: ${resp.status}`);
+      // }
+      // if (!resp.body) {
+      //   throw new Error(`HTTP error, body not exits`);
+      // }
+      // const reader = resp.body.getReader();
+      // const decoder = new TextDecoder('utf-8');
 
       let isEnd = true;
       isPaused.value = false;
@@ -136,48 +137,48 @@ export const useSessionStore = defineStore('session', () => {
           isAnswerGenerating.value = false;
           break;
         }
-        const { done, value } = await reader.read();
-        const decodedValue = decoder.decode(value, { stream: true });
-        const isLegal = judgeMessage(answerIndex, decodedValue);
-        if (!isLegal) {
-          isEnd = false;
-          break;
-        }
+        // const { done, value } = await reader.read();
+        // const decodedValue = decoder.decode(value, { stream: true });
+        // const isLegal = judgeMessage(answerIndex, decodedValue);
+        // if (!isLegal) {
+        //   isEnd = false;
+        //   break;
+        // }
 
-        if (done) {
-          // 传输结束
-          conversationItem.isFinish = true;
-          isEnd = false;
-          isAnswerGenerating.value = false;
-          break;
-        }
-        const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
+        // if (done) {
+        //   // 传输结束
+        //   conversationItem.isFinish = true;
+        //   isEnd = false;
+        //   isAnswerGenerating.value = false;
+        //   break;
+        // }
+        // const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
 
-        lines.forEach((line) => {
-          const message = JSON.parse(line.replace(/^data:\s*/, '').trim());
-          if ('qa_record_id' in message) {
-            conversationItem.recordId = message.qa_record_id;
-          } else if ('search_suggestions' in message) {
-            conversationItem.search_suggestions = message.search_suggestions;
-          }else {
-            if (message.content.startsWith('<<<') && message.content.endWith('>>>')) {
-              const obj = extractAttributesFromMarker(message.content);
-              if (obj) {
-                conversationItem.message[conversationItem.currentInd] += `## ${obj.title} \n`;
-                conversationItem.message[
-                  conversationItem.currentInd
-                ] += `<iframe src="${obj.link}" frameborder="0" width="100%" height="300"></iframe>`;
-              }
-            } else {
-              conversationItem.message[conversationItem.currentInd] += message.content;
-            }
-            if(dialogueRef.value.scrollHeight - (dialogueRef.value.clientHeight+dialogueRef.value.scrollTop) >= 2){
-              return
-            }else{
-              scrollBottom();
-            }
-          }
-        });
+        // lines.forEach((line) => {
+        //   const message = JSON.parse(line.replace(/^data:\s*/, '').trim());
+        //   if ('qa_record_id' in message) {
+        //     conversationItem.recordId = message.qa_record_id;
+        //   } else if ('search_suggestions' in message) {
+        //     conversationItem.search_suggestions = message.search_suggestions;
+        //   }else {
+        //     if (message.content.startsWith('<<<') && message.content.endWith('>>>')) {
+        //       const obj = extractAttributesFromMarker(message.content);
+        //       if (obj) {
+        //         conversationItem.message[conversationItem.currentInd] += `## ${obj.title} \n`;
+        //         conversationItem.message[
+        //           conversationItem.currentInd
+        //         ] += `<iframe src="${obj.link}" frameborder="0" width="100%" height="300"></iframe>`;
+        //       }
+        //     } else {
+        //       conversationItem.message[conversationItem.currentInd] += message.content;
+        //     }
+        //     if(dialogueRef.value.scrollHeight - (dialogueRef.value.clientHeight+dialogueRef.value.scrollTop) >= 2){
+        //       return
+        //     }else{
+        //       scrollBottom();
+        //     }
+        //   }
+        // });
       }
     } catch (err: any) {
       console.log(err);
@@ -225,10 +226,10 @@ export const useSessionStore = defineStore('session', () => {
     if (status === 401 || status === 403) {
       // 鉴权失败重发
       const store = useAccountStore();
-      const res = await store.refreshAccessToken();
-      if (res) {
-        await getStream(params, ind);
-      }
+      // const res = await store.refreshAccessToken();
+      // if (res) {
+      //   await getStream(params, ind);
+      // }
       return false;
     } else if (status === 429) {
       throw new Error(`HTTP error, Rate limit exceeded`);
@@ -470,8 +471,8 @@ export const useSessionStore = defineStore('session', () => {
 
 export const useChangeThemeStore = defineStore('theme', () => {
   const theme = ref('');
-  if(sessionStorage.getItem('theme')){
-    theme.value = sessionStorage.getItem('theme');
+  if(localStorage.getItem('theme')){
+    theme.value = localStorage.getItem('theme');
   }else{
     theme.value = 'dark'
   }

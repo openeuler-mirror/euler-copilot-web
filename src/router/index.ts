@@ -7,8 +7,8 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
+
 import { createRouter, createWebHistory } from 'vue-router';
-import NotFoundComponent from 'src/views/404.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,19 +20,16 @@ const router = createRouter({
         import('src/views/dialogue/dialogueView.vue'),
     },
     {
-      path: '/login',
-      name: 'dialogue-login',
-      component: (): Promise<typeof import('src/views/dialogue/loginView.vue')> =>
-        import('src/views/dialogue/loginView.vue'),
+      path: '/welcome',
+      name: 'welcome',
+      component: (): Promise<typeof import('src/views/welcomeView.vue')> =>
+        import('src/views/welcomeView.vue'),
     },
     {
-      path: '/404',
-      component: NotFoundComponent,
-      name: 'NotFound',
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/404',
+      path: '/settings',
+      name: 'settings',
+      component: (): Promise<typeof import('src/views/settingsView.vue')> =>
+        import('src/views/settingsView.vue'),
     },
   ],
 });
