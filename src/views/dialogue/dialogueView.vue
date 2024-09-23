@@ -3,7 +3,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
-import { useHistorySessionStore, useSessionStore, useAccountStore, useChangeThemeStore } from 'src/store';
+import { useHistorySessionStore, useSessionStore, useChangeThemeStore } from 'src/store';
 import DialogueSession from './components/DialogueSession.vue';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
@@ -18,8 +18,6 @@ import { stopGeneraterion } from 'src/apis/paths';
 window.onHtmlEventDispatch = onHtmlEventDispatch;
 const router = useRouter();
 const route = useRoute();
-const {logout, updateAgreement } = useAccountStore();
-const { userinfo } = storeToRefs(useAccountStore());
 const { historySession } = storeToRefs(useHistorySessionStore());
 const { conversationList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
@@ -53,7 +51,6 @@ const initCopilot = async (): Promise<void> => {
     if (!_ && res) {
       const cookie = res.result.session_id;
       localStorage.setItem('cookie',cookie);
-      userinfo.value.status = true;
       await getModeOptions();
       await stopGeneraterion();
     }
@@ -76,7 +73,6 @@ const setPlugins = async() => {
 }
 
 const logoutHandler = () => {
-  logout();
   historySession.value = [];
   conversationList.value = [];
   loginDialogVisible.value = true;
@@ -111,7 +107,6 @@ const handleAgreement = async (CheckedVersion: string | null) => {
  *
  */
 const handleSubmit = async () => {
-  await updateAgreement(agreementVersion.value);
   dialogVisible.value = false;
 };
 
@@ -138,13 +133,6 @@ watch(
   },
   {
     immediate: true,
-  }
-);
-
-watch(() => userinfo.value.status, () => {
-  if(!userinfo.value.status){
-    // loginDialogVisible.value = true;
-  }
   }
 );
 
@@ -212,15 +200,11 @@ const getModeOptions = async() => {
 
 .apikey {
   &_view {
-
-    // height: 400px;
     &_alert {
       margin-bottom: 8px;
     }
 
     &_main {
-      // background-color: pink;
-      // height: 336px;
       .main {
         display: flex;
         flex-direction: column;
@@ -295,8 +279,8 @@ const getModeOptions = async() => {
 .dialogue {
   height: 100vh;
   width: 100vw;
-  // min-height: 768px;
-  // min-width: 1388px;
+  min-height: 680px;
+  min-width: 400px;
   overflow: scroll;
   display: flex;
   flex-direction: column;

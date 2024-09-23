@@ -17,7 +17,7 @@ pub trait WindowExt {
 impl<R: Runtime> WindowExt for Window<R> {
     fn setup_window_pos(&self) -> Result<()> {
         let window_padding = 24;
-        let window_vertical_offset = 192;
+        let window_vertical_offset = 168;
 
         let screen = self.current_monitor()?.unwrap();
         let screen_position = screen.position();

@@ -8,7 +8,6 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { ElNotification } from 'element-plus';
-import { useAccountStore } from 'src/store';
 
 import type { InternalAxiosRequestConfig } from 'axios';
 import { storeToRefs } from 'pinia';
@@ -29,13 +28,6 @@ export const handleChangeRequestHeader = (
 };
 
 export const handleAuthorize = (errStatus: number): boolean => {
-  const type = import.meta.env.VITE_USER_TYPE;
-  const store = useAccountStore();
-  const { userinfo } = storeToRefs(store);
-  userinfo.value.organization = type;
-  if ((errStatus === 401 || errStatus === 403)) {
-    userinfo.value.status = false;
-  }
   return true;
 };
 

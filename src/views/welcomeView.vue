@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { reactive } from 'vue'
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
@@ -48,9 +47,6 @@ async function saveSettings() {
         </div>
       </div>
     </div>
-    <footer class="dialogue-footer">
-      <CommonFooter />
-    </footer>
   </div>
 </template>
 
@@ -132,9 +128,6 @@ async function saveSettings() {
       display: flex;
       flex: 1;
     }
-  }
-  &-footer{
-    margin-bottom: 12px;
   }
 }
 </style>

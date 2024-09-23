@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import axios from "axios";
 
-import { handleChangeRequestHeader, handleGeneralError, handleStatusError } from "./tools";
+import { handleChangeRequestHeader } from "./tools";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 export interface FcResponse<T> {
@@ -60,7 +60,6 @@ server.interceptors.response.use(
     return response;
   },
   async (error) => {
-    return await handleStatusError(error);
   }
 );
 

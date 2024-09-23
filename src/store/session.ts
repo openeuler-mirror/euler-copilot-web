@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import { defineStore } from 'pinia';
 import { ref, nextTick } from 'vue';
-import { useAccountStore, useHistorySessionStore } from 'src/store';
+import { useHistorySessionStore } from 'src/store';
 import {
   MessageArray,
   type ConversationItem,
@@ -224,12 +224,6 @@ export const useSessionStore = defineStore('session', () => {
     ind?: number
   ): Promise<boolean> => {
     if (status === 401 || status === 403) {
-      // 鉴权失败重发
-      const store = useAccountStore();
-      // const res = await store.refreshAccessToken();
-      // if (res) {
-      //   await getStream(params, ind);
-      // }
       return false;
     } else if (status === 429) {
       throw new Error(`HTTP error, Rate limit exceeded`);
