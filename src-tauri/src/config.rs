@@ -9,25 +9,22 @@ use std::path::PathBuf;
 pub struct Config {
     framework_url: String,
     framework_api_key: String,
-    #[serde(flatten)]
-    other: std::collections::HashMap<String, serde_json::Value>,
 }
 
 #[tauri::command]
 pub fn get_base_url() -> String {
-    // Config::load()
-    //     .map(|config| config.framework_url)
-    //     .unwrap_or_default()
-    "https://eulercopilot.gitee.com".to_string()
+    Config::load()
+        .map(|config| config.framework_url)
+        .unwrap_or_default()
 }
 
 #[tauri::command]
 pub fn get_api_key() -> String {
-    // Config::load()
-    //     .map(|config| config.framework_api_key)
-    //     .unwrap_or_default()
+    Config::load()
+        .map(|config| config.framework_api_key)
+        .unwrap_or_default()
     // "7a779fee04d8486c8bb0f7131b5852b9".to_string()
-    "402ab78d2b5042ec913a6c9b7e3801c7".to_string()
+    // "402ab78d2b5042ec913a6c9b7e3801c7".to_string()
 }
 
 #[tauri::command]
@@ -47,14 +44,13 @@ impl Config {
     }
 
     fn config_file() -> PathBuf {
-        Self::config_dir().join("config.json")
+        Self::config_dir().join("desktop.json")
     }
 
     fn default() -> Self {
         Config {
-            framework_url: String::new(),
+            framework_url: "https://eulercopilot.gitee.com".to_string(),
             framework_api_key: String::new(),
-            other: std::collections::HashMap::new(),
         }
     }
 

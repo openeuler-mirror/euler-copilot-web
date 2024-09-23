@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, ref, withDefaults } from 'vue';
+import { computed, ref } from 'vue';
 import { writeText } from 'src/utils';
 import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';

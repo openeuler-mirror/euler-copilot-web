@@ -3,8 +3,6 @@ import { ref } from 'vue';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { reactive } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { useAccountStore } from 'src/store';
-const { userLogin } = useAccountStore();
 import { errorMsg } from 'src/components/Message';
 import { useRouter } from 'vue-router'
 const router = useRouter();
@@ -39,18 +37,6 @@ const submitForm = (formEl: FormInstance | undefined) => {
     }
   })
 }
-
-const loginHandler = async () => {
-  const status = await userLogin(ruleForm.passwd,ruleForm.account);
-  if(status){
-    router.replace('/');
-    const store = useAccountStore();
-    const res = await store.refreshAccessToken();
-  }else{
-    errorMsg('登录失败');
-  }
-}
-
 
 </script>
 

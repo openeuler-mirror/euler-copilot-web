@@ -4,7 +4,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use positioner::WindowExt;
-use tauri::{App, Manager, RunEvent, GlobalShortcutManager};
+use tauri::{App, AppHandle, GlobalShortcutManager, Manager, RunEvent};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
 #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
@@ -32,16 +32,17 @@ fn main() {
         // .plugin(tauri_plugin_shell::init())
         .system_tray(tray)
         .on_system_tray_event(|app, event| match event {
+            SystemTrayEvent::DoubleClick { .. } => {
+                dbg!("system tray double clicked");
+                show_main_window(app);
+            },
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 "quit" => {
                     app.exit(0);
                 }
                 "show" => {
                     dbg!("menu item show clicked");
-                    let window = app.get_window("main").unwrap();
-                    window.show().unwrap();
-                    window.setup_window_pos().unwrap();
-                    window.set_focus().unwrap();
+                    show_main_window(app);
                 }
                 "hide" => {
                     dbg!("menu item hide clicked");
@@ -99,8 +100,8 @@ fn register_shortcut(app: &App) {
         if window.is_visible().unwrap() {
             window.hide().unwrap();
         } else {
-            window.show().unwrap();
             window.setup_window_pos().unwrap();
+            window.show().unwrap();
             window.set_focus().unwrap();
         }
     });
@@ -108,3 +109,14 @@ fn register_shortcut(app: &App) {
         println!("{}", err);
     }
 }
+
+fn show_main_window(app_handle: &AppHandle) {
+    let window = app_handle.get_window("main").unwrap();
+    if !window.is_visible().unwrap() {
+        window.setup_window_pos().unwrap();
+        window.show().unwrap();
+        window.set_focus().unwrap();
+    }
+}
+
+fn show_welcome_window(app: App) {}
