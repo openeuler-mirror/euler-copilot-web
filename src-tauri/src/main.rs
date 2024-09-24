@@ -4,7 +4,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use positioner::WindowExt;
-use tauri::{App, AppHandle, GlobalShortcutManager, Manager, RunEvent};
+use tauri::{App, AppHandle, WindowBuilder, WindowUrl, GlobalShortcutManager, Manager, RunEvent};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
 #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
@@ -61,7 +61,7 @@ fn main() {
         .setup(|_app| {
             let api_key = config::get_api_key();
             if api_key.is_empty() {
-                show_welcome_window(_app);
+                create_welcome_window(_app);
             }
             #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
             {
@@ -105,15 +105,20 @@ fn main() {
 
 fn register_shortcut(app: &App) {
     let mut shortcut = app.global_shortcut_manager();
-    let app_handler = app.handle();
+    let app_handle = app.handle();
     let result = shortcut.register("Shift+CmdOrCtrl+O", move || {
-        let window = app_handler.get_window("main").unwrap();
-        if window.is_visible().unwrap() {
-            window.hide().unwrap();
+        let window = app_handle.get_window("main");
+        if window.is_none() {
+            create_main_window(&app_handle);
         } else {
-            window.setup_window_pos().unwrap();
-            window.show().unwrap();
-            window.set_focus().unwrap();
+            let window = window.unwrap();
+            if window.is_visible().unwrap() {
+                window.hide().unwrap();
+            } else {
+                window.setup_window_pos().unwrap();
+                window.show().unwrap();
+                window.set_focus().unwrap();
+            }
         }
     });
     if let Err(err) = result {
@@ -122,26 +127,52 @@ fn register_shortcut(app: &App) {
 }
 
 fn show_main_window(app_handle: &AppHandle) {
-    let window = app_handle.get_window("main").unwrap();
-    if !window.is_visible().unwrap() {
-        window.setup_window_pos().unwrap();
-        window.show().unwrap();
-        window.set_focus().unwrap();
+    let window = app_handle.get_window("main");
+    if window.is_none() {
+        create_main_window(&app_handle);
+    } else {
+        let window = window.unwrap();
+        if !window.is_visible().unwrap() {
+            window.setup_window_pos().unwrap();
+            window.show().unwrap();
+            window.set_focus().unwrap();
+        }
     }
 }
 
-fn show_welcome_window(app: &App) {
-    let mut builder = tauri::WindowBuilder::new(
-        app,
-        "welcome",
-        tauri::WindowUrl::App("/welcome".into()),
-    )
-    .title("欢迎")
-    .resizable(false)
-    .maximizable(false)
-    .minimizable(false)
-    .inner_size(600., 400.)
-    .center();
+fn create_main_window(app_handle: &AppHandle) {
+    let mut builder =
+        WindowBuilder::new(app_handle, "main", WindowUrl::App("/".into()))
+            .title("Copilot")
+            .resizable(true)
+            .maximizable(false)
+            .minimizable(false)
+            .skip_taskbar(true)
+            .inner_size(500., 680.)
+            .min_inner_size(500., 680.)
+            .max_inner_size(720., 4096.)
+            .center();
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
+    builder.build().expect("无法创建主窗口");
+
+    let window = app_handle.get_window("main").unwrap();
+    window.setup_window_pos().unwrap();
+}
+
+fn create_welcome_window(app: &App) {
+    let mut builder =
+        WindowBuilder::new(app, "welcome", WindowUrl::App("/welcome".into()))
+            .title("欢迎")
+            .resizable(false)
+            .maximizable(false)
+            .minimizable(false)
+            .inner_size(720., 540.)
+            .center();
 
     #[cfg(target_os = "macos")]
     {
@@ -153,17 +184,25 @@ fn show_welcome_window(app: &App) {
 
 #[tauri::command]
 fn show_settings_window(app_handle: AppHandle) {
-    let mut builder = tauri::WindowBuilder::new(
-        &app_handle,
-        "settings",
-        tauri::WindowUrl::App("/settings".into()),
-    )
-    .title("设置")
-    .resizable(false)
-    .maximizable(false)
-    .minimizable(false)
-    .inner_size(400., 300.)
-    .center();
+    let window = app_handle.get_window("settings");
+    if window.is_none() {
+        create_settings_window(&app_handle);
+    } else {
+        let window = window.unwrap();
+        window.show().unwrap();
+        window.set_focus().unwrap();
+    }
+}
+
+fn create_settings_window(app_handle: &AppHandle) {
+    let mut builder = 
+        WindowBuilder::new(app_handle, "settings", WindowUrl::App("/settings".into()))
+            .title("设置")
+            .resizable(false)
+            .maximizable(false)
+            .minimizable(false)
+            .inner_size(540., 480.)
+            .center();
 
     #[cfg(target_os = "macos")]
     {

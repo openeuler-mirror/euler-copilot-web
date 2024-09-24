@@ -13,24 +13,6 @@ import type { FcResponse } from 'src/apis/server';
 const BASE_URL = '/api/client/conversation';
 
 /**
- * 停止生成
- * @returns
- */
-export const stopGeneraterion = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          // conversation_id: string;
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return post(`/api/client/stop`);
-};
-
-/**
  * 获取历史session列表
  * @returns
  */
@@ -52,23 +34,6 @@ export const getSessionRecord = (): Promise<
   return get(BASE_URL);
 };
 
-/**
- * 创建一个会话
- * @returns
- */
-export const createSession = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          conversation_id: string;
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return post(BASE_URL);
-};
 /**
  * 更新会话标题
  * @param params
@@ -161,25 +126,24 @@ export const commentConversation = (params: {
 };
 
 export const getRecognitionMode = (): Promise<
-  [
-    any, 
-    (
-      | FcResponse<
-        Array<{
-          plugin_id: string,
-          plugin_name: string
-        }>>
-      | undefined)]> => {
+[
+  any, 
+  (
+    | FcResponse<
+      Array<{
+        plugin_id: string,
+        plugin_name: string
+      }>>
+    | undefined)
+]> => {
   return get('api/client/plugin');
 }
 
 export const sessionApi = {
-  createSession,
   updateSession,
   deleteSession,
   getSessionRecord,
   getHistoryConversation,
   commentConversation,
   getRecognitionMode,
-  stopGeneraterion,
 };

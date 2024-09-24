@@ -318,7 +318,7 @@ export const useSessionStore = defineStore('session', () => {
     isPaused.value = true;
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
     cancel();
-    await api.stopGeneraterion();
+    await invoke('stop');
   };
   /**
    * 重新生成回答

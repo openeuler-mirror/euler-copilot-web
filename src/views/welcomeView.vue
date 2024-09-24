@@ -74,8 +74,8 @@ async function saveSettings() {
 .dialogue {
   height: 100vh;
   width: 100vw;
-  min-height: 300px;
-  min-width: 400px;
+  min-height: 540px;
+  min-width: 720px;
   overflow: scroll;
   display: flex;
   flex-direction: column;

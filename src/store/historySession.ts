@@ -14,6 +14,7 @@ import { storeToRefs } from 'pinia';
 import { useSessionStore } from '.';
 import type { SessionItem } from 'src/components/sessionCard/type';
 import { successMsg } from 'src/components/Message';
+import { invoke } from '@tauri-apps/api/tauri';
 
 export interface HistorySessionItem {
   sessionId: string;
@@ -156,14 +157,18 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
       await generateSession();
     }
   };
+
   /**
    * 创建一个新的会话
    */
   const generateSession = async (): Promise<void> => {
-    const [_, res] = await api.createSession();
-    if (!_ && res) {
-      currentSelectedSession.value = res.result.conversation_id;
-    }
+    await invoke('create_conversation').then(async (conversationId: any) => {
+      if (conversationId) {
+        currentSelectedSession.value = conversationId;
+      }
+    }).catch((err) => {
+      console.error(err);
+    });
   };
 
   return {
