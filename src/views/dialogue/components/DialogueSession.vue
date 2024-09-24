@@ -9,6 +9,8 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg } from 'src/components/Message';
 import { listen } from '@tauri-apps/api/event';
+import marked from 'src/utils/marked.js';
+
 
 interface StreamPayload {
   message: string;
@@ -163,7 +165,9 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const handleSendMessage = async (question: string, user_selected_flow?: string[]) => {
   if (isAnswerGenerating.value) return;
   const len = conversationList.value.length;
-  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
+  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish){
+    return;
+  }
   dialogueInput.value = '';
   if (!currentSelectedSession.value) {
     await generateSession();
@@ -359,6 +363,8 @@ const createNewSession = async (): Promise<void> => {
   await generateSession();
 };
 
+const contentMessage = ref('')
+
 /**
  * 暂停和重新生成问答
  */
@@ -367,13 +373,36 @@ const handlePauseAndReGenerate = (cid?: number) => {
     pausedStream(cid);
 };
 
+
 listen<StreamPayload>("fetch-stream-data", (event) => {
   const line = event.payload.message.replace(/^data:\s*/, '').trim();
   try {
     const json = JSON.parse(line);
-    console.log(json);
+    const len = conversationList.value.length;
+    if (json.search_suggestions) {
+    conversationList.value[len-1].search_suggestions = json.search_suggestions;
+    }else if (json.qa_record_id) {
+
+    }else{
+    contentMessage.value = contentMessage.value + json.content
+    let str =  marked.parse(contentMessage.value.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+    let tableStart = str.indexOf('<table>');
+    if(tableStart!== -1){
+    str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
+    }
+  //将table提取出来中加一个<div>父节点控制溢出
+    conversationList.value[len-1].message = str
+    }
   } catch (error) {
-    console.log(line);
+    if(line == '[DONE]'){
+      conversationList.value[conversationList.value.length - 1].isFinish = true;
+      isAnswerGenerating.value = false;
+      contentMessage.value='';
+    }else if (error === '[SENSETIVE]'){
+      //敏感词处理
+    }else{
+      //Error处理
+    }
   };
 });
 </script>
@@ -588,7 +617,7 @@ button[disabled]:hover {
 
       &__textarea {
         position: relative;
-
+        height: 100px;
         textarea {
           width: 100%;
           height: 100%;

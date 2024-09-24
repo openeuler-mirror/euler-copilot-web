@@ -7,12 +7,22 @@ import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
 import xss from 'xss';
+import { storeToRefs } from 'pinia';
 import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import { onMounted,watch,onBeforeUnmount } from 'vue';
+import { listen } from '@tauri-apps/api/event';
+const { isAnswerGenerating } = storeToRefs(useSessionStore());
+const search_suggestions = ref();
+const { conversationList} = storeToRefs(useSessionStore());
+
+interface StreamPayload {
+  message: string;
+}
 
 export interface DialoguePanelProps {
   cid: string;
+  type:string;
   // 用来区分是用户还是ai的输入
   // 文本内容
   content?: string[] | string;
@@ -44,6 +54,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   currentSelected: 0,
   needRegernerate: false,
 });
+
 const index = ref(0);
 const isLike = ref(props.isLikeList);
 const emits = defineEmits<{
@@ -175,11 +186,15 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return '';
   }
-  return marked.parse(
-    xss(props.content[props.currentSelected]).replace(/&gt;/g, '>').replace(/&lt;/g, '<')
-  );
+  // return marked.parse(
+  //   xss(props.content[props.currentSelected]).replace(/&gt;/g, '>').replace(/&lt;/g, '<')
+  // );
+  return props.content
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
 });
+
+// let contentAfterMark = ref('');
+let contentMessage = ref('');
 
 const prePageHandle = (cid:number) => {
   prePage(cid);
@@ -243,11 +258,12 @@ onBeforeUnmount(() => {
   index.value = 0;
 })
 
-// const selectQuestion = (event) => {
-//   let name = event.target.innerText;
-//   let question = event.target.innerText;
-//   emits('handleSendMessage',question);
-// };
+// if (!props.content) {
+//     return '';
+//   }
+//   return marked.parse(
+//     xss(props.content[props.currentSelected]).replace(/&gt;/g, '>').replace(/&lt;/g, '<')
+//   );
 
 const selectQuestion = (item:object) => {
   let question = item.question;
@@ -259,6 +275,8 @@ const selectQuestion = (item:object) => {
   }
 }
   
+
+
 
 </script>
 <template>
@@ -280,12 +298,11 @@ const selectQuestion = (item:object) => {
     <div class="dialogue-panel__robot" v-else>
       <div
         v-if="contentAfterMark"
-      
+        v-html="contentAfterMark"
         id="markdown-preview"
         class="dialogue-panel__robot-content"
-        v-html="contentAfterMark"
       ></div>
-      <div class="loading" v-else-if="!contentAfterMark && !isFinish && !$slots.default">
+      <div class="loading" v-else-if="!contentAfterMark">
         <img src="/src/assets/images/loading.png" alt="" class="loading-icon">
         <div class="loading-text">EulerCopilot正在生成回答......</div>
       </div>
@@ -297,7 +314,7 @@ const selectQuestion = (item:object) => {
       </div>
       <div class="dialogue-panel__robot-bottom" v-if="!$slots.default && contentAfterMark">
         <div class="action-buttons">
-          <div class="pagenation" v-if="isFinish">
+          <div class="pagenation" v-if="props.isFinish">
               <img
                 class="pagenation-arror"
                 @click="prePageHandle(Number(cid))"
@@ -311,13 +328,13 @@ const selectQuestion = (item:object) => {
                 src="src/assets/svgs/arror_right.svg"
               />
             </div>
-          <div class="regenerate-button" v-if="needRegernerate && isFinish" @click="handlePauseAndReGenerate(Number(cid))">
+          <div class="regenerate-button" v-if="needRegernerate && props.isFinish" @click="handlePauseAndReGenerate(Number(cid))">
             <img v-if="themeStore.theme === 'dark'" src="/src/assets/svgs/dark_regenerate.svg" alt="">
             <img v-else src="/src/assets/svgs/light_regenerate.svg" alt="">
             <div>重新生成</div>
           </div>
 
-          <div class="button-group" v-if="isFinish">
+          <div class="button-group" v-if="props.isFinish">
             <el-tooltip placement="top"  content="复制" effect="light">
               <img v-if="themeStore.theme === 'dark'" class="button-icon copy" src="src/assets/svgs/dark_copy.svg" @click="handleCopy" />
               <img v-else class="button-icon copy" src="src/assets/svgs/light_copy.svg" @click="handleCopy" />
@@ -435,6 +452,12 @@ const selectQuestion = (item:object) => {
 </template>
 
 <style lang="scss">
+
+.overflowTable{
+  width: 100%;
+  overflow-x: scroll;
+}
+
 .test{
   display: inline-block;
   margin-right: 8px;

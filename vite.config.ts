@@ -27,13 +27,13 @@ export default defineConfig(async () => ({
     },
     proxy: {
       "/plugin": {
-        target: 'https://eulercopilot.gitee.com',
+        target: 'https://euler-copilot-web.test.osinfra.cn/',
         changeOrigin: true,
         ws: false,
         secure: false,
       },
       "/api": {
-        target: 'https://eulercopilot.gitee.com',
+        target: 'https://euler-copilot-web.test.osinfra.cn/',
         changeOrigin: true,
         ws: false,
         rewrite: (path: string) => path.replace(/^\/api/, "/api"),

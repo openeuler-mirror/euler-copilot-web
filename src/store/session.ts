@@ -101,6 +101,8 @@ export const useSessionStore = defineStore('session', () => {
       }).catch((error) => {
         throw new Error(`HTTP error! ${error}`);
       })
+
+      
       // if (!resp.body) {
       //   throw new Error(`HTTP error, body not exits`);
       // }
@@ -253,7 +255,7 @@ export const useSessionStore = defineStore('session', () => {
         (conversationList.value[regenerateInd] as RobotConversationItem).message.length - 1;//123
     } else {
       // 初次生成 ，创建一个问题和一个回答
-      const ind = conversationList.value.length - 1;
+      const ind = conversationList.value.length ;
       const a = new MessageArray()
       a.addItem('','',2);
       conversationList.value.push(
