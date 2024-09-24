@@ -4,7 +4,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use positioner::WindowExt;
-use tauri::{App, AppHandle, WindowBuilder, WindowUrl, GlobalShortcutManager, Manager, RunEvent};
+use tauri::{App, AppHandle, GlobalShortcutManager, Manager, RunEvent, WindowBuilder, WindowUrl};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
 #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
@@ -141,17 +141,16 @@ fn show_main_window(app_handle: &AppHandle) {
 }
 
 fn create_main_window(app_handle: &AppHandle) {
-    let mut builder =
-        WindowBuilder::new(app_handle, "main", WindowUrl::App("/".into()))
-            .title("Copilot")
-            .resizable(true)
-            .maximizable(false)
-            .minimizable(false)
-            .skip_taskbar(true)
-            .inner_size(500., 680.)
-            .min_inner_size(500., 680.)
-            .max_inner_size(720., 4096.)
-            .center();
+    let mut builder = WindowBuilder::new(app_handle, "main", WindowUrl::App("/".into()))
+        .title("Copilot")
+        .resizable(true)
+        .maximizable(false)
+        .minimizable(false)
+        .skip_taskbar(true)
+        .inner_size(500., 680.)
+        .min_inner_size(500., 680.)
+        .max_inner_size(720., 4096.)
+        .center();
 
     #[cfg(target_os = "macos")]
     {
@@ -165,14 +164,13 @@ fn create_main_window(app_handle: &AppHandle) {
 }
 
 fn create_welcome_window(app: &App) {
-    let mut builder =
-        WindowBuilder::new(app, "welcome", WindowUrl::App("/welcome".into()))
-            .title("欢迎")
-            .resizable(false)
-            .maximizable(false)
-            .minimizable(false)
-            .inner_size(720., 540.)
-            .center();
+    let mut builder = WindowBuilder::new(app, "welcome", WindowUrl::App("/welcome".into()))
+        .title("欢迎")
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .inner_size(720., 540.)
+        .center();
 
     #[cfg(target_os = "macos")]
     {
@@ -195,7 +193,7 @@ fn show_settings_window(app_handle: AppHandle) {
 }
 
 fn create_settings_window(app_handle: &AppHandle) {
-    let mut builder = 
+    let mut builder =
         WindowBuilder::new(app_handle, "settings", WindowUrl::App("/settings".into()))
             .title("设置")
             .resizable(false)

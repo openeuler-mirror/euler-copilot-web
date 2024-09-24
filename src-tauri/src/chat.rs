@@ -90,7 +90,6 @@ pub async fn receive_stream<R: Runtime>(
     let mut stream = response.bytes_stream();
 
     while let Some(item) = stream.next().await {
-
         #[cfg(debug_assertions)]
         println!("Received item is OK: {}", item.is_ok());
 
@@ -100,7 +99,6 @@ pub async fn receive_stream<R: Runtime>(
                 let lines = chunk.split("\n\n").collect::<Vec<&str>>();
                 for line in lines {
                     if line.starts_with("data: ") {
-
                         #[cfg(debug_assertions)]
                         println!("Received line: {}", line.trim());
 
