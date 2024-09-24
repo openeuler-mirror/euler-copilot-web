@@ -90,34 +90,27 @@ pub async fn receive_stream<R: Runtime>(
     let mut stream = response.bytes_stream();
 
     while let Some(item) = stream.next().await {
+
+        #[cfg(debug_assertions)]
         println!("Received item is OK: {}", item.is_ok());
+
         match item {
             Ok(bytes) => {
-                println!("Received bytes: {}", bytes.len());
                 let chunk = String::from_utf8_lossy(&bytes);
-                println!("Received chunk: {}", chunk);
-                // if let Some(mut json_str) = chunk.strip_prefix("data: ") {
-                //     json_str = json_str.trim();
-                //     println!("Received JSON: {}", json_str);
-                //     match json_str {
-                //         "[ERROR]" | "[SENSITIVE]" | "[DONE]" => emit_message(&app, json_str),
-                //         _ => {
-                //             if let Ok(json_value) = serde_json::from_str::<Value>(json_str) {
-                //                 let payload = parse_json_payload(&json_value);
-                //                 emit_message(&app, &payload);
-                //             } else {
-                //                 println!("Failed to parse JSON: {}", json_str);
-                //             }
-                //         }
-                //     }
-                // } else {
-                //     println!("Received non-JSON data: {}", chunk);
-                // }
-                emit_message(&app, &chunk);
+                let lines = chunk.split("\n\n").collect::<Vec<&str>>();
+                for line in lines {
+                    if line.starts_with("data: ") {
+
+                        #[cfg(debug_assertions)]
+                        println!("Received line: {}", line.trim());
+
+                        emit_message(&app, &line.trim());
+                    }
+                }
             }
             Err(e) => {
                 eprintln!("Error: {}", e);
-                continue;
+                break;
             }
         }
     }
@@ -196,31 +189,6 @@ pub async fn stop() {
         .await
         .map_err(|e| format!("Failed to send request: {}", e))
         .unwrap();
-}
-
-fn parse_json_payload(json_value: &Value) -> String {
-    match json_value {
-        Value::Object(obj) => {
-            if let Some(content) = obj.get("content") {
-                content.as_str().unwrap_or_default().to_string()
-            } else if obj.contains_key("search_suggestions") {
-                json_value.to_string()
-            } else if let Some(extract) = obj.get("extract") {
-                if let Some(extract_obj) = extract.as_object() {
-                    if let Some(data) = extract_obj.get("data") {
-                        data.to_string()
-                    } else {
-                        String::new()
-                    }
-                } else {
-                    String::new()
-                }
-            } else {
-                String::new()
-            }
-        }
-        _ => String::new(),
-    }
 }
 
 fn emit_message<R: Runtime>(app: &AppHandle<R>, message: &str) {

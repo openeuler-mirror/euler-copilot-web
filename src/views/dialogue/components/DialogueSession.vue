@@ -368,15 +368,13 @@ const handlePauseAndReGenerate = (cid?: number) => {
 };
 
 listen<StreamPayload>("fetch-stream-data", (event) => {
-  const lines = event.payload.message.split('\n\n').filter((line) => line.startsWith('data: '));
-  lines.forEach((line) => {
-    try {
-      const json = JSON.parse(line.replace(/^data:\s*/, '').trim());
-      console.log(json);
-    } catch (error) {
-      console.log(line);
-    };
-  });
+  const line = event.payload.message.replace(/^data:\s*/, '').trim();
+  try {
+    const json = JSON.parse(line);
+    console.log(json);
+  } catch (error) {
+    console.log(line);
+  };
 });
 </script>
 
