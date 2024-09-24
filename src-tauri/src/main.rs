@@ -20,12 +20,12 @@ fn main() {
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
     let show = CustomMenuItem::new("show".to_string(), "显示窗口");
     let tray_menu = SystemTrayMenu::new()
-        .add_item(quit)
+        .add_item(show)
+        .add_item(hide)
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(settings)
         .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(show)
-        .add_item(hide);
+        .add_item(quit);
 
     let tray = SystemTray::new().with_menu(tray_menu);
 
@@ -52,7 +52,7 @@ fn main() {
                 }
                 "settings" => {
                     dbg!("menu item settings clicked");
-                    show_settings_window(app);
+                    show_settings_window(app.clone());
                 }
                 _ => {}
             },
@@ -77,10 +77,12 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            show_settings_window,
             chat::create_conversation,
             chat::refresh_session_id,
             chat::receive_stream,
             chat::stop,
+            config::get_base_url,
             config::get_api_key,
             config::update_config
         ])
@@ -104,7 +106,7 @@ fn main() {
 fn register_shortcut(app: &App) {
     let mut shortcut = app.global_shortcut_manager();
     let app_handler = app.handle();
-    let result = shortcut.register("CmdOrCtrl+O", move || {
+    let result = shortcut.register("Shift+CmdOrCtrl+O", move || {
         let window = app_handler.get_window("main").unwrap();
         if window.is_visible().unwrap() {
             window.hide().unwrap();
@@ -129,9 +131,9 @@ fn show_main_window(app_handle: &AppHandle) {
 }
 
 fn show_welcome_window(app: &App) {
-    tauri::WindowBuilder::new(
+    let mut builder = tauri::WindowBuilder::new(
         app,
-        "welcome", // 窗口的唯一标识符
+        "welcome",
         tauri::WindowUrl::App("/welcome".into()),
     )
     .title("欢迎")
@@ -139,14 +141,20 @@ fn show_welcome_window(app: &App) {
     .maximizable(false)
     .minimizable(false)
     .inner_size(600., 400.)
-    .center()
-    .build()
-    .expect("无法创建欢迎窗口");
+    .center();
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
+    builder.build().expect("无法创建欢迎窗口");
 }
 
-fn show_settings_window(app_handle: &AppHandle) {
-    tauri::WindowBuilder::new(
-        app_handle,
+#[tauri::command]
+fn show_settings_window(app_handle: AppHandle) {
+    let mut builder = tauri::WindowBuilder::new(
+        &app_handle,
         "settings",
         tauri::WindowUrl::App("/settings".into()),
     )
@@ -155,7 +163,12 @@ fn show_settings_window(app_handle: &AppHandle) {
     .maximizable(false)
     .minimizable(false)
     .inner_size(400., 300.)
-    .center()
-    .build()
-    .expect("无法创建设置窗口");
+    .center();
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
+    builder.build().expect("无法创建设置窗口");
 }
