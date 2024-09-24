@@ -81,7 +81,13 @@
         "icons/128x128@2x.png",
         "icons/icon.icns",
         "icons/icon.ico"
-      ]
+      ],
+      "rpm": {
+        "epoch": 0,
+        "files": {},
+        "release": "1",
+        "depends": ["webkit2gtk3"]
+      }
     }
   }
 }
