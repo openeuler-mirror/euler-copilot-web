@@ -18,20 +18,40 @@ pub async fn receive_stream<R: Runtime>(
     app: AppHandle<R>,
     session: &str,
     question: &str,
-    language: &str,
     conversation: &str,
+    language: Option<&str>,
+    record: Option<&str>,
     plugin: Option<&str>,
+    flow: Option<&str>,
+    flow_id: Option<&str>,
 ) -> Result<String, String> {
     let mut url = Url::parse(&get_base_url()).unwrap();
     url.set_path("api/client/chat");
     println!("Chat API URL: {}", url);
+    println!("Conversation ID: {}", conversation);
+    println!("Session ID: {}", session);
 
     let mut data = json!({
         "session_id": session,
         "question": question,
-        "language": language,
         "conversation_id": conversation,
     });
+
+    if let Some(language) = language {
+        if !language.is_empty() {
+            data["language"] = json!(language);
+        } else {
+            data["language"] = json!("zh");
+        }
+    } else {
+        data["language"] = json!("zh");
+    }
+
+    if let Some(record) = record {
+        if !record.is_empty() {
+            data["record_id"] = json!(record);
+        }
+    }
 
     if let Some(plugin) = plugin {
         if !plugin.is_empty() {
@@ -39,10 +59,19 @@ pub async fn receive_stream<R: Runtime>(
         }
     }
 
-    let cookie = format!("ECSESSION={};", session);
+    if let Some(flow) = flow {
+        if !flow.is_empty() {
+            data["user_selected_flow"] = json!(flow);
+        }
+    }
+
+    if let Some(flow_id) = flow_id {
+        if !flow_id.is_empty() {
+            data["flow_id"] = json!(flow_id);
+        }
+    }
 
     let mut headers = get_base_headers();
-    headers.insert(header::COOKIE, cookie.parse().unwrap());
     headers.insert(header::ACCEPT, "text/event-stream".parse().unwrap());
 
     let client = Client::builder()
@@ -65,23 +94,24 @@ pub async fn receive_stream<R: Runtime>(
                 println!("Received bytes: {}", bytes.len());
                 let chunk = String::from_utf8_lossy(&bytes);
                 println!("Received chunk: {}", chunk);
-                if let Some(mut json_str) = chunk.strip_prefix("data: ") {
-                    json_str = json_str.trim();
-                    println!("Received JSON: {}", json_str);
-                    match json_str {
-                        "[ERROR]" | "[SENSITIVE]" | "[DONE]" => emit_message(&app, json_str),
-                        _ => {
-                            if let Ok(json_value) = serde_json::from_str::<Value>(json_str) {
-                                let payload = parse_json_payload(&json_value);
-                                emit_message(&app, &payload);
-                            } else {
-                                println!("Failed to parse JSON: {}", json_str);
-                            }
-                        }
-                    }
-                } else {
-                    println!("Received non-JSON data: {}", chunk);
-                }
+                // if let Some(mut json_str) = chunk.strip_prefix("data: ") {
+                //     json_str = json_str.trim();
+                //     println!("Received JSON: {}", json_str);
+                //     match json_str {
+                //         "[ERROR]" | "[SENSITIVE]" | "[DONE]" => emit_message(&app, json_str),
+                //         _ => {
+                //             if let Ok(json_value) = serde_json::from_str::<Value>(json_str) {
+                //                 let payload = parse_json_payload(&json_value);
+                //                 emit_message(&app, &payload);
+                //             } else {
+                //                 println!("Failed to parse JSON: {}", json_str);
+                //             }
+                //         }
+                //     }
+                // } else {
+                //     println!("Received non-JSON data: {}", chunk);
+                // }
+                emit_message(&app, &chunk);
             }
             Err(e) => {
                 eprintln!("Error: {}", e);

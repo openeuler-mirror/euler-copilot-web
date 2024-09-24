@@ -19,7 +19,7 @@ import {
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
-import { listen } from "@tauri-apps/api/event";
+import { listen } from '@tauri-apps/api/event';
 
 interface StreamPayload {
   message: string;
@@ -63,54 +63,41 @@ export const useSessionStore = defineStore('session', () => {
   const getStream = async (
     params: {
       question: string;
-      user_selected_plugins?: any,
-      sessionId?: string;
-      qaRecordId?: string;
-      user_selected_flow?:string;
+      conversationID?: string;
+      userSelectedPlugins?: any,
+      recordID?: string;
+      userSelectedFlow?: string;
     },
     ind?: number
   ): Promise<void> => {
     const { currentSelectedSession } = useHistorySessionStore();
-    params.sessionId = currentSelectedSession;
+    params.conversationID = currentSelectedSession;
+    console.log("Current conversation ID:", params.conversationID)
     // 当前问答在整个问答记录中的索引
     const answerIndex = ind ?? conversationList.value.length - 1;
     // const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
 
     controller = new AbortController();
-    const sessionId = await invoke("refresh_session_id", {
-      sessionId: params.sessionId,
-    });
-    console.log(sessionId)
+    try {
+      const sessionId: string = await invoke("refresh_session_id", {
+        sessionId: localStorage.getItem('session'),
+      });
+      localStorage.setItem('session', sessionId);
+      console.log("Refreshed session ID:", sessionId)
+    } catch (error) {
+      console.error("Error refreshing session ID:", error);
+    }
     try {
       let resp;
-      // if (params.user_selected_flow) {
-      // resp = await fetch('http://116.63.164.87:30007/api/client/chat', {
-      //   signal: controller.signal,
-      //   method: 'POST',
-      //   keepalive:true,
-      //   headers: headers,
-      //   body: Body.json({
-      //     question: params.question,
-      //     conversation_id: params.sessionId,
-      //     // record_id: params.qaRecordId,
-      //     // record_id: '',
-      //     // files: [],
-      //     user_selected_plugins: [],
-      //     session_id:localStorage.getItem('cookie'),
-      //     user_selected_flow:params.user_selected_flow,
-      //     // flow_id: '',
-      //     // language:"zh",
-      //   }),
-      // });
       resp = await invoke("receive_stream", {
-        session: localStorage.getItem('cookie'),
+        session: localStorage.getItem('session'),
         question: params.question,
+        conversation: params.conversationID,
         language:"zh",
-        conversation: params.sessionId,
-        // record_id: params.qaRecordId,
+        record: params.recordID,
         plugin: "",
-        // user_selected_flow: params.user_selected_flow,
-        // flow_id: '',
+        flow: params.userSelectedFlow,
+        flowId: "",
       })
       console.log(resp);
       listen<StreamPayload>("fetch-stream-data", (event) => {
@@ -303,9 +290,9 @@ export const useSessionStore = defineStore('session', () => {
       await getStream(
         {
           question,
-          qaRecordId,
-          user_selected_plugins,
-          user_selected_flow,
+          recordID: qaRecordId,
+          userSelectedPlugins: user_selected_plugins,
+          userSelectedFlow: user_selected_flow,
         },
         regenerateInd ?? undefined
       )
@@ -313,8 +300,8 @@ export const useSessionStore = defineStore('session', () => {
       await getStream(
         {
           question,
-          qaRecordId,
-          user_selected_plugins,
+          recordID: qaRecordId,
+          userSelectedPlugins: user_selected_plugins,
         },
         regenerateInd ?? undefined
       )
@@ -322,7 +309,7 @@ export const useSessionStore = defineStore('session', () => {
       await getStream(
         {
           question,
-          qaRecordId,
+          recordID: qaRecordId,
         },
         regenerateInd ?? undefined
       );

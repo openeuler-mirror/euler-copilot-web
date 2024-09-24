@@ -23,8 +23,6 @@ pub fn get_api_key() -> String {
     Config::load()
         .map(|config| config.framework_api_key)
         .unwrap_or_default()
-    // "7a779fee04d8486c8bb0f7131b5852b9".to_string()
-    // "402ab78d2b5042ec913a6c9b7e3801c7".to_string()
 }
 
 #[tauri::command]

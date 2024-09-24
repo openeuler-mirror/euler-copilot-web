@@ -50,7 +50,7 @@ const initCopilot = async (): Promise<void> => {
     const [_ , res] = await api.getSessionID();
     if (!_ && res) {
       const cookie = res.result.session_id;
-      localStorage.setItem('cookie',cookie);
+      localStorage.setItem('session',cookie);
       await getModeOptions();
       await stopGeneraterion();
     }

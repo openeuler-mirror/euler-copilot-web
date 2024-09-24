@@ -36,7 +36,7 @@ fn main() {
             SystemTrayEvent::DoubleClick { .. } => {
                 dbg!("system tray double clicked");
                 show_main_window(app);
-            },
+            }
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 "quit" => {
                     app.exit(0);
@@ -132,7 +132,7 @@ fn show_welcome_window(app: &App) {
     tauri::WindowBuilder::new(
         app,
         "welcome", // 窗口的唯一标识符
-        tauri::WindowUrl::App("/welcome".into())
+        tauri::WindowUrl::App("/welcome".into()),
     )
     .title("欢迎")
     .resizable(false)

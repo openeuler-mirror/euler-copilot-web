@@ -10,27 +10,18 @@
 import { ElNotification } from 'element-plus';
 
 import type { InternalAxiosRequestConfig } from 'axios';
-import { storeToRefs } from 'pinia';
+import { invoke } from '@tauri-apps/api/tauri';
 
 // 修改请求头
-export const handleChangeRequestHeader = (
+export const handleChangeRequestHeader = async (
   config: InternalAxiosRequestConfig<any>
-): InternalAxiosRequestConfig<any> => {
+): Promise<InternalAxiosRequestConfig<any>> => {
   config.headers['Content-Type'] = 'application/json; charset=UTF-8';
-  //全局获取apikey
-  const apikey = '7a779fee04d8486c8bb0f7131b5852b9'
-  if(localStorage.getItem('cookie')){
-      document.cookie=`ECSESSION=${localStorage.getItem('cookie')};path=/`;
-  }
-  
-  config.headers['Authorization'] = `Bearer ${apikey}`;
+  await invoke('get_api_key').then((apiKey) => {
+    config.headers['Authorization'] = `Bearer ${apiKey}`;
+  });
   return config;
 };
-
-export const handleAuthorize = (errStatus: number): boolean => {
-  return true;
-};
-
 
 export const handleNetworkError = (errStatus: number): void => {
   let errMessage: string;

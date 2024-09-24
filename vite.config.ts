@@ -2,15 +2,16 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 // https://vitejs.dev/config/
+
 export default defineConfig(async () => ({
   plugins: [vue()],
   resolve: {
-          alias: {
-            src: fileURLToPath(new URL("./src", import.meta.url)),
-            assets: fileURLToPath(new URL("./src/assets", import.meta.url)),
-            components: fileURLToPath(new URL("./src/components", import.meta.url)),
-          },
-        },
+    alias: {
+      src: fileURLToPath(new URL("./src", import.meta.url)),
+      assets: fileURLToPath(new URL("./src/assets", import.meta.url)),
+      components: fileURLToPath(new URL("./src/components", import.meta.url)),
+    },
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -25,18 +26,18 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
     proxy: {
-              "/plugin": {
-                target: 'http://116.63.164.87:30007',
-                changeOrigin: true,
-                ws: false,
-                secure: false,
-              },
-              "/api": {
-                target: 'http://116.63.164.87:30007',
-                changeOrigin: true,
-                ws: false,
-                rewrite: (path: string) => path.replace(/^\/api/, "/api"),
-              },
-            },
+      "/plugin": {
+        target: 'https://eulercopilot.gitee.com',
+        changeOrigin: true,
+        ws: false,
+        secure: false,
+      },
+      "/api": {
+        target: 'https://eulercopilot.gitee.com',
+        changeOrigin: true,
+        ws: false,
+        rewrite: (path: string) => path.replace(/^\/api/, "/api"),
+      },
+    },
   },
 }));
