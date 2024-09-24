@@ -25,6 +25,7 @@ enum SupportMap {
   support = 1,
   against = 0,
 }
+
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const modeOptions = ref(props.modeOptions);
@@ -366,10 +367,17 @@ const handlePauseAndReGenerate = (cid?: number) => {
     pausedStream(cid);
 };
 
-const unlisten = await listen<StreamPayload>("fetch-stream-data", (event) => {
-  console.log(event.payload.message);
+listen<StreamPayload>("fetch-stream-data", (event) => {
+  const lines = event.payload.message.split('\n\n').filter((line) => line.startsWith('data: '));
+  lines.forEach((line) => {
+    try {
+      const json = JSON.parse(line.replace(/^data:\s*/, '').trim());
+      console.log(json);
+    } catch (error) {
+      console.log(line);
+    };
+  });
 });
-unlisten();
 </script>
 
 <template>

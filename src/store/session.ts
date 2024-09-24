@@ -107,14 +107,14 @@ export const useSessionStore = defineStore('session', () => {
       // const reader = resp.body.getReader();
       // const decoder = new TextDecoder('utf-8');
 
-      let isEnd = true;
-      isPaused.value = false;
-      while (isEnd) {
-        if (isPaused.value) {
-          // 手动暂停输出
-          isAnswerGenerating.value = false;
-          break;
-        }
+      // let isEnd = true;
+      // isPaused.value = false;
+      // while (isEnd) {
+      //   if (isPaused.value) {
+      //     // 手动暂停输出
+      //     isAnswerGenerating.value = false;
+      //     break;
+      //   }
         // const { done, value } = await reader.read();
         // const decodedValue = decoder.decode(value, { stream: true });
         // const isLegal = judgeMessage(answerIndex, decodedValue);
@@ -157,7 +157,7 @@ export const useSessionStore = defineStore('session', () => {
         //     }
         //   }
         // });
-      }
+      // }
     } catch (err: any) {
       console.log(err);
       isPaused.value = true;
