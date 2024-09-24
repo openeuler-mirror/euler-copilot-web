@@ -20,12 +20,12 @@ fn main() {
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
     let show = CustomMenuItem::new("show".to_string(), "显示窗口");
     let tray_menu = SystemTrayMenu::new()
-        .add_item(quit)
+        .add_item(show)
+        .add_item(hide)
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(settings)
         .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(show)
-        .add_item(hide);
+        .add_item(quit);
 
     let tray = SystemTray::new().with_menu(tray_menu);
 
@@ -52,7 +52,7 @@ fn main() {
                 }
                 "settings" => {
                     dbg!("menu item settings clicked");
-                    show_settings_window(app);
+                    show_settings_window(app.clone());
                 }
                 _ => {}
             },
@@ -77,10 +77,12 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            show_settings_window,
             chat::create_conversation,
             chat::refresh_session_id,
             chat::receive_stream,
             chat::stop,
+            config::get_base_url,
             config::get_api_key,
             config::update_config
         ])
@@ -149,9 +151,10 @@ fn show_welcome_window(app: &App) {
     builder.build().expect("无法创建欢迎窗口");
 }
 
-fn show_settings_window(app_handle: &AppHandle) {
+#[tauri::command]
+fn show_settings_window(app_handle: AppHandle) {
     let mut builder = tauri::WindowBuilder::new(
-        app_handle,
+        &app_handle,
         "settings",
         tauri::WindowUrl::App("/settings".into()),
     )

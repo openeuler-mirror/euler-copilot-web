@@ -13,6 +13,7 @@ import { reactive } from 'vue';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { api } from 'src/apis';
 import { stopGeneraterion } from 'src/apis/paths';
+import { invoke } from '@tauri-apps/api/tauri';
 // Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch;
@@ -72,10 +73,8 @@ const setPlugins = async() => {
     }
 }
 
-const logoutHandler = () => {
-  historySession.value = [];
-  conversationList.value = [];
-  loginDialogVisible.value = true;
+const settingsHandler = () => {
+  invoke('show_settings_window')
 };
 
 // 协议内容
@@ -176,7 +175,7 @@ const getModeOptions = async() => {
           <template #reference>
             <img class="avatar" src="src/assets/svgs/user.svg" />
           </template>
-          <el-button class="exit-button" @click="logoutHandler">退出登录</el-button>
+          <el-button class="exit-button" @click="settingsHandler">设置</el-button>
         </el-popover>
       </div>
     </header>

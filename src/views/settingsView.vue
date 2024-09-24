@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { onMounted, reactive } from 'vue'
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
 
@@ -7,6 +7,20 @@ const settingsItems = reactive({
   url: '',
   key: '',
 })
+
+async function loadSettings() {
+  try {
+    await invoke('get_base_url').then(async (url: any) => {
+      settingsItems.url = url;
+    })
+    await invoke('get_api_key').then(async (apiKey: any) => {
+      settingsItems.key = apiKey;
+    })
+  } catch (error) {
+    errorMsg('加载失败');
+    console.error(error);
+  }
+}
 
 async function saveSettings() {
   try {
@@ -21,6 +35,9 @@ async function saveSettings() {
   }
 }
 
+onMounted(() => {
+  loadSettings();
+})
 </script>
 
 <template>
@@ -36,10 +53,10 @@ async function saveSettings() {
         <div class="settings">
           <el-form ref="ruleFormRef" style="max-width: 600px" :model="settingsItems"
             label-width="auto" class="demo-ruleForm">
-            <el-form-item label="Copilot 服务地址" prop="url">
+            <el-form-item label="服务地址" prop="url">
               <el-input v-model="settingsItems.url" />
             </el-form-item>
-            <el-form-item label="API KEY" prop="key">
+            <el-form-item label="API Key" prop="key">
               <el-input v-model="settingsItems.key" type="password" autocomplete="off" />
             </el-form-item>
             <el-form-item>
