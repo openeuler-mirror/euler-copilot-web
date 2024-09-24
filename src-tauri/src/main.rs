@@ -104,7 +104,7 @@ fn main() {
 fn register_shortcut(app: &App) {
     let mut shortcut = app.global_shortcut_manager();
     let app_handler = app.handle();
-    let result = shortcut.register("CmdOrCtrl+O", move || {
+    let result = shortcut.register("Shift+CmdOrCtrl+O", move || {
         let window = app_handler.get_window("main").unwrap();
         if window.is_visible().unwrap() {
             window.hide().unwrap();
