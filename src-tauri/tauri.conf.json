@@ -36,6 +36,17 @@
             "args": true
           }
         ]
+      },
+      "fs": {
+        "exists": true,
+        "readDir": true,
+        "readFile": true,
+        "writeFile": true,
+        "createDir": true,
+        "scope": [
+          "$HOME/.config/eulercopilot/*",
+          "$HOME/.eulercopilot/scripts/*"
+        ]
       }
     },
     "windows": [
