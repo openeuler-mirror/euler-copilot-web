@@ -8,10 +8,11 @@ import type { ConversationItem, RobotConversationItem } from '../types';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg } from 'src/components/Message';
-// import { FitAddon } from 'xterm-addon-fit';
-// import { AttachAddon } from 'xterm-addon-attach';
-// import { Terminal } from 'xterm';
-// import 'xterm/css/xterm.css';
+import { listen } from '@tauri-apps/api/event';
+
+interface StreamPayload {
+  message: string;
+}
 
 export interface DialogueSession {
   modeOptions: any;
@@ -154,10 +155,11 @@ const { sendQuestion } = useSessionStore();
 const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
+
 /**
  * 发送消息
  */
- const handleSendMessage = async (question: string, user_selected_flow?: string[]) => {
+const handleSendMessage = async (question: string, user_selected_flow?: string[]) => {
   if (isAnswerGenerating.value) return;
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
@@ -171,7 +173,6 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
     await sendQuestion(question, user_selected_plugins.value, undefined, undefined, undefined);
   }
 };
-
 
 /**
  * 处理鼠标事件
@@ -197,10 +198,8 @@ const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
   return undefined;
 };
 
-
 // textarea实例
 const inputRef = ref<HTMLTextAreaElement | null>(null);
-
 
 /**
  * 支持、反对 更改逻辑的钩子函数。
@@ -287,7 +286,6 @@ const setOptionDisabled = () => {
   }
 };
 
-
 onMounted(() => {
   if (!inputRef.value) return;
   inputRef.value.focus();
@@ -298,8 +296,6 @@ watch(() => props, () => {
 }, {
   deep: true
 })
-
-
 
 watch(selectMode, (newValue, oldValue) => {
   setOptionDisabled();
@@ -358,19 +354,22 @@ watch(selectMode, (newValue, oldValue) => {
 });
 
 const createNewSession = async (): Promise<void> => {
-      conversationList.value = [];
-      await generateSession();
-      
-  };
-
+  conversationList.value = [];
+  await generateSession();
+};
 
 /**
  * 暂停和重新生成问答
  */
- const handlePauseAndReGenerate = (cid?: number) => {
+const handlePauseAndReGenerate = (cid?: number) => {
     // 停止生成handlePauseAndReGenerate
     pausedStream(cid);
 };
+
+const unlisten = await listen<StreamPayload>("fetch-stream-data", (event) => {
+  console.log(event.payload.message);
+});
+unlisten();
 </script>
 
 <template>
@@ -442,16 +441,6 @@ const createNewSession = async (): Promise<void> => {
         </div>
       </div>
     </div>
-    <!-- 使用v-show是为了避免初始化terminal时dom未渲染 -->
-    <!-- <div v-show="isTermShow" class="dialogue-shell">
-      <el-tabs v-model="activePane" type="border-card">
-        <el-tab-pane label="智能shell" name="shell">
-        </el-tab-pane>
-      </el-tabs>
-      <div style="height: 100%;"
-           ref="terminal" v-loading="termLoading">
-      </div>
-    </div> -->
   </div>
 </template>
 

@@ -24,7 +24,7 @@ pub async fn receive_stream<R: Runtime>(
     plugin: Option<&str>,
     flow: Option<&str>,
     flow_id: Option<&str>,
-) -> Result<String, String> {
+) -> Result<u16, String> {
     let mut url = Url::parse(&get_base_url()).unwrap();
     url.set_path("api/client/chat");
     println!("Chat API URL: {}", url);
@@ -79,13 +79,15 @@ pub async fn receive_stream<R: Runtime>(
         .build()
         .map_err(|err| format!("failed to generate client: {}", err))?;
 
-    let mut stream = client
+    let response = client
         .post(url)
         .json(&data)
         .send()
         .await
-        .map_err(|err| format!("failed to call API: {}", err))?
-        .bytes_stream();
+        .map_err(|err| format!("failed to call API: {}", err))?;
+
+    let status = response.status().as_u16();
+    let mut stream = response.bytes_stream();
 
     while let Some(item) = stream.next().await {
         println!("Received item is OK: {}", item.is_ok());
@@ -120,7 +122,7 @@ pub async fn receive_stream<R: Runtime>(
         }
     }
 
-    Ok("success".to_string())
+    Ok(status)
 }
 
 #[tauri::command]

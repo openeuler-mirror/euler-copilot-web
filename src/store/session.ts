@@ -19,11 +19,6 @@ import {
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
-import { listen } from '@tauri-apps/api/event';
-
-interface StreamPayload {
-  message: string;
-}
 
 let controller = new AbortController();
 export const useSessionStore = defineStore('session', () => {
@@ -88,8 +83,7 @@ export const useSessionStore = defineStore('session', () => {
       console.error("Error refreshing session ID:", error);
     }
     try {
-      let resp;
-      resp = await invoke("receive_stream", {
+      await invoke("receive_stream", {
         session: localStorage.getItem('session'),
         question: params.question,
         conversation: params.conversationID,
@@ -98,18 +92,15 @@ export const useSessionStore = defineStore('session', () => {
         plugin: "",
         flow: params.userSelectedFlow,
         flowId: "",
+      }).then(async (status: any) => {
+        console.log(status);
+        const isServiceOk = await handleServiceStatus(status, params, ind);
+        if (!isServiceOk) {
+          return;
+        }
+      }).catch((error) => {
+        throw new Error(`HTTP error! ${error}`);
       })
-      console.log(resp);
-      listen<StreamPayload>("fetch-stream-data", (event) => {
-        console.log(event.payload.message);
-      });
-      // const isServiceOk = await handleServiceStatus(resp.status, params, ind);
-      // if (!isServiceOk) {
-      //   return;
-      // }
-      // if (!resp.ok) {
-      //   throw new Error(`HTTP error! status: ${resp.status}`);
-      // }
       // if (!resp.body) {
       //   throw new Error(`HTTP error, body not exits`);
       // }
