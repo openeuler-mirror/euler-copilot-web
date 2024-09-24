@@ -129,9 +129,9 @@ fn show_main_window(app_handle: &AppHandle) {
 }
 
 fn show_welcome_window(app: &App) {
-    tauri::WindowBuilder::new(
+    let mut builder = tauri::WindowBuilder::new(
         app,
-        "welcome", // 窗口的唯一标识符
+        "welcome",
         tauri::WindowUrl::App("/welcome".into()),
     )
     .title("欢迎")
@@ -139,13 +139,18 @@ fn show_welcome_window(app: &App) {
     .maximizable(false)
     .minimizable(false)
     .inner_size(600., 400.)
-    .center()
-    .build()
-    .expect("无法创建欢迎窗口");
+    .center();
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
+    builder.build().expect("无法创建欢迎窗口");
 }
 
 fn show_settings_window(app_handle: &AppHandle) {
-    tauri::WindowBuilder::new(
+    let mut builder = tauri::WindowBuilder::new(
         app_handle,
         "settings",
         tauri::WindowUrl::App("/settings".into()),
@@ -155,7 +160,12 @@ fn show_settings_window(app_handle: &AppHandle) {
     .maximizable(false)
     .minimizable(false)
     .inner_size(400., 300.)
-    .center()
-    .build()
-    .expect("无法创建设置窗口");
+    .center();
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
+    builder.build().expect("无法创建设置窗口");
 }
