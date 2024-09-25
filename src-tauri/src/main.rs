@@ -210,19 +210,13 @@ fn show_settings_window(app_handle: AppHandle) {
 }
 
 fn create_settings_window(app_handle: &AppHandle) {
-    let mut builder =
-        WindowBuilder::new(app_handle, "settings", WindowUrl::App("/settings".into()))
-            .title("设置")
-            .resizable(false)
-            .maximizable(false)
-            .minimizable(false)
-            .inner_size(540., 480.)
-            .center();
-
-    #[cfg(target_os = "macos")]
-    {
-        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
-    }
+    let builder = WindowBuilder::new(app_handle, "settings", WindowUrl::App("/settings".into()))
+        .title("设置")
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .inner_size(540., 480.)
+        .center();
 
     builder.build().expect("无法创建设置窗口");
 }

@@ -302,64 +302,6 @@ watch(() => props, () => {
   deep: true
 })
 
-
-// watch(selectMode, (newValue, oldValue) => {
-//   console.log(selectMode.value);
-//   setOptionDisabled();
-//   user_selected_plugins.value = [];
-//   let first = true;
-//   if (selectMode.value.length !== 0) {
-//     if (selectMode.value[0] === 'auto') {
-//       modeOptions.value.forEach(item => {
-//         const plugin = {
-//           plugin_name: item.value
-//         };
-//         first ? '' : user_selected_plugins.value.push(item.value);
-//         first = false;
-//       });
-//     } else {
-//       selectMode.value.forEach(item => {
-//         const plugin = {
-//           plugin_name: item
-//         };
-//         user_selected_plugins.value.push(item);
-//       });
-//     }
-//   }
-//   nextTick(() => {
-//     const totalW = (document.querySelector('.recognitionMode') as HTMLElement).offsetWidth;
-//     const selectPreW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
-//     const allTags = document.querySelectorAll('.recognitionMode .el-select-tags-wrapper .el-tag--info');
-//     (document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).style.display = "flex";
-//     const allTagsWidth = (document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).offsetWidth;
-//     const nTag = allTags[allTags.length - 1] as HTMLElement;
-//     const isNExist = nTag.innerText.includes('+');
-//     if (selectPreW >= totalW && newValue.length > oldValue.length && isNExist) {
-//       return;
-//     }
-//     if (totalW > allTagsWidth + 100) {
-//       (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${allTagsWidth + 70}px`;
-//     } else {
-//       (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${totalW}px`;
-//     }
-//     if (allTags.length > 3) {
-//       const lastTag = allTags[allTags.length - 3] as HTMLElement;
-//       const selectDomW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
-//       let show_w = 0;
-//       if (selectDomW >= totalW) {
-//         show_w = selectDomW - lastTag.offsetWidth + 200;
-//         if (show_w >= totalW) {
-//           tagNum.value = Math.min(tagNum.value, selectMode.value.length - 2);
-//         } else {
-//           tagNum.value = Math.min(tagNum.value, selectMode.value.length - 1);
-//         }
-//       } else {
-//         tagNum.value = allTags.length;
-//       }
-//     }
-//   });
-// });
-
 const createNewSession = async (): Promise<void> => {
   conversationList.value = [];
   await generateSession();
@@ -371,7 +313,6 @@ const contentMessage = ref('')
  * 暂停和重新生成问答
  */
 const handlePauseAndReGenerate = (cid?: number) => {
-    // 停止生成handlePauseAndReGenerate
     pausedStream(cid);
 };
 
