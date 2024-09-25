@@ -391,7 +391,9 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
     }
   //将table提取出来中加一个<div>父节点控制溢出
-    conversationList.value[len-1].message = str
+    const answerIndex = conversationList.value.length - 1>=0?conversationList.value.length - 1:0;
+    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+    conversationList.value[len-1].message[conversationItem.currentInd] = str
     }
   } catch (error) {
     if(line == '[DONE]'){
@@ -643,10 +645,10 @@ button[disabled]:hover {
       }
 
       &__icon {
-        position: relative;
-        bottom: 42px;
+        position: absolute;
+        bottom: 8px;
         text-align: right;
-
+        right: 36px;
         img{
           width: 32px;
         }

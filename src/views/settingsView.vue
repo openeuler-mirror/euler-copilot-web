@@ -59,11 +59,9 @@ onMounted(() => {
             <el-form-item label="API Key" prop="key">
               <el-input v-model="settingsItems.key" type="password" autocomplete="off" />
             </el-form-item>
-            <el-form-item>
               <el-button class='button' type="primary" @click="saveSettings">
                 保存
               </el-button>
-            </el-form-item>
           </el-form>
         </div>
       </div>
@@ -74,7 +72,7 @@ onMounted(() => {
 <style lang="scss">
 
 .button{
-  left: 50%;
+  left: calc(50% - 23px);
   position: relative;
 }
 .popper-class {
@@ -91,6 +89,9 @@ onMounted(() => {
 .settings {
   top: 25%;
   position: relative;
+  input{
+
+  }
 }
 .dialogue {
   height: 100vh;
@@ -146,7 +147,7 @@ onMounted(() => {
     justify-content: space-between;
 
     &-main {
-      display: flex;
+      // display: flex;
       flex: 1;
     }
   }

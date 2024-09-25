@@ -20,20 +20,32 @@ async function saveSettings() {
   }
 }
 
+const theme = localStorage.getItem('theme') === 'dark'?'dark':'light';
+
+const openPage = () => {
+  window.location.href =' https://euler-copilot-web.test.osinfra.cn/';
+}
+
 </script>
 
 <template>
   <div class="dialogue">
     <header class="dialogue-header">
       <span>
-        <img src="src/assets/svgs/euler_copilot_logo.svg" />
-        <h4>EulerCopilot</h4>
+        <!-- <img src="src/assets/svgs/euler_copilot_logo.svg" /> -->
+        <h4>欢迎使用</h4>
+        <img class='logo' src="src/assets/images/newlogo.png" />
       </span>
     </header>
     <div class="dialogue-container">
       <div class="dialogue-container-main">
+        <div class="tip">
+          <img v-if='theme === "dark"' class='tips' src='src/assets/images/darktips.png'/>
+          <img  class='tips' src='src/assets/images/lighttips.png'/>
+          <p @click='openPage'>没有 API Key？点击前往获取</p>
+        </div>
         <div class="settings">
-          <el-form ref="ruleFormRef" style="max-width: 600px" :model="settingsItems"
+          <el-form ref="ruleFormRef" :model="settingsItems"
             label-width="auto" class="demo-ruleForm">
             <el-form-item label="API KEY" prop="key">
               <el-input v-model="settingsItems.key" type="password" autocomplete="off" />
@@ -51,9 +63,28 @@ async function saveSettings() {
 </template>
 
 <style lang="scss">
+.logo{
+  width: 100px;
+}
+
+.tip{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  p{
+    text-decoration:none;
+    display: block;
+  }
+}
+
+.tips{
+  width: 200px;
+}
 
 .button{
-  left: 50%;
+  left: calc(50% - 23px);
   position: relative;
 }
 .popper-class {
@@ -68,7 +99,7 @@ async function saveSettings() {
 <style lang="scss" scoped>
 
 .settings {
-  top: 25%;
+  top: 5%;
   position: relative;
 }
 .dialogue {
@@ -97,9 +128,8 @@ async function saveSettings() {
       font-size: 16px;
       height: 48px;
       img {
-        width: 24px;
-        height: 48px;
-        border-radius: 50%;
+        width: auto;
+        height: 32px;
       }
 
       h4 {
@@ -125,7 +155,6 @@ async function saveSettings() {
     justify-content: space-between;
 
     &-main {
-      display: flex;
       flex: 1;
     }
   }

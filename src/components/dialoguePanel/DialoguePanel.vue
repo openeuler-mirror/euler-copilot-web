@@ -189,12 +189,9 @@ const contentAfterMark = computed(() => {
   // return marked.parse(
   //   xss(props.content[props.currentSelected]).replace(/&gt;/g, '>').replace(/&lt;/g, '<')
   // );
-  return props.content
+  return props.content[props.currentSelected]
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
 });
-
-// let contentAfterMark = ref('');
-let contentMessage = ref('');
 
 const prePageHandle = (cid:number) => {
   prePage(cid);
@@ -339,7 +336,7 @@ const selectQuestion = (item:object) => {
               <img v-if="themeStore.theme === 'dark'" class="button-icon copy" src="src/assets/svgs/dark_copy.svg" @click="handleCopy" />
               <img v-else class="button-icon copy" src="src/assets/svgs/light_copy.svg" @click="handleCopy" />
             </el-tooltip>
-            <el-tooltip placement="top" content="赞同" effect="light">
+            <!-- <el-tooltip placement="top" content="赞同" effect="light">
               <img
                 class="button-icon simg"
                 v-if="!isSupport && themeStore.theme === 'dark'"
@@ -434,7 +431,7 @@ const selectQuestion = (item:object) => {
                   />
                 </el-popover>
               </div>
-            </el-tooltip>
+            </el-tooltip> -->
           </div>
         </div>
       </div>
