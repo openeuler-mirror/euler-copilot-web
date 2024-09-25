@@ -300,7 +300,7 @@ const selectQuestion = (item:object) => {
       ></div>
       <div class="loading" v-else-if="!contentAfterMark">
         <img src="/src/assets/images/loading.png" alt="" class="loading-icon">
-        <div class="loading-text">EulerCopilot正在生成回答......</div>
+        <div class="loading-text">openEuler Copilot System正在生成回答......</div>
       </div>
       <div v-if="$slots.default" class="dialogue-panel__robot-slot">
         <!-- <div class="dialog-panel__robot-time">

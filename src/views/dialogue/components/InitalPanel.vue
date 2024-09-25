@@ -9,10 +9,6 @@ const themeStore = useChangeThemeStore();
 <template>
   <div class="dialogue-panel">
     <div class="inital-panel">
-      <div class="introduction">您好，我是
-        <img src="/src/assets/images/logoText.png" alt="">
-        ，很高兴为您服务
-      </div>
       <p class="inital-panel-tips">
       </p>
       <div class='container'>
@@ -35,11 +31,6 @@ const themeStore = useChangeThemeStore();
 <style lang="scss" scoped>
 .dialogue-panel {
   // padding-right: 25px;
-}
-
-.dialogue-shell{
-  width: 100%;
-  height: 100%;
 }
 
 .sidenav {
