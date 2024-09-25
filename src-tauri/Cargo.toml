@@ -30,6 +30,7 @@ futures-util = "0.3.30"
 anyhow = "1.0.88"
 dirs = "5.0.1"
 url = "2.5.2"
+webbrowser = "1.0.2"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
