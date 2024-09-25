@@ -373,7 +373,6 @@ const handlePauseAndReGenerate = (cid?: number) => {
     pausedStream(cid);
 };
 
-
 listen<StreamPayload>("fetch-stream-data", (event) => {
   const line = event.payload.message.replace(/^data:\s*/, '').trim();
   try {
@@ -381,28 +380,28 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     const len = conversationList.value.length;
     if (json.search_suggestions) {
     conversationList.value[len-1].search_suggestions = json.search_suggestions;
-    }else if (json.qa_record_id) {
+    } else if (json.qa_record_id) {
 
-    }else{
+    } else {
     contentMessage.value = contentMessage.value + json.content
     let str =  marked.parse(contentMessage.value.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+    // 将 table 提取出来中加一个 <div> 父节点控制溢出
     let tableStart = str.indexOf('<table>');
-    if(tableStart!== -1){
-    str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
+    if (tableStart!== -1) {
+      str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
     }
-  //将table提取出来中加一个<div>父节点控制溢出
     const answerIndex = conversationList.value.length - 1>=0?conversationList.value.length - 1:0;
     const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
     conversationList.value[len-1].message[conversationItem.currentInd] = str
     }
   } catch (error) {
-    if(line == '[DONE]'){
+    if (line == '[DONE]') {
       conversationList.value[conversationList.value.length - 1].isFinish = true;
       isAnswerGenerating.value = false;
       contentMessage.value='';
-    }else if (error === '[SENSETIVE]'){
+    } else if (error === '[SENSETIVE]') {
       //敏感词处理
-    }else{
+    } else {
       //Error处理
     }
   };
@@ -410,18 +409,30 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 </script>
 
 <template>
-  <div style="height: 100%;width: 100%;display: flex">
+  <div style="height: 100%; width: 100%; display: flex">
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-session">
       <div class="dialogue-session-main" ref="dialogueRef">
-        <DialoguePanel v-for="(item, index) in conversationList" :cid="item.cid" :key="index" :type="item.belong"
-          :content="item.message" :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
+        <DialoguePanel
+          v-for="(item, index) in conversationList"
+          :cid="item.cid"
+          :key="index"
+          :type="item.belong"
+          :content="item.message"
+          :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
           :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : ''"
-          :is-finish="getItem(item, 'isFinish')" :is-support="getItem(item, 'isSupport')"
-          :is-against="getItem(item, 'isAgainst')" :created-at="item.createdAt" :current-selected="item.currentInd"
+          :is-finish="getItem(item, 'isFinish')"
+          :is-support="getItem(item, 'isSupport')"
+          :is-against="getItem(item, 'isAgainst')"
+          :created-at="item.createdAt"
+          :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
-          :user-selected-plugins="user_selected_plugins" :search_suggestions="getItem(item, 'search_suggestions')"
-          @commont="handleCommont" @report="handleReport" @handleSendMessage='handleSendMessage'/>
+          :user-selected-plugins="user_selected_plugins"
+          :search_suggestions="getItem(item, 'search_suggestions')"
+          @commont="handleCommont"
+          @report="handleReport"
+          @handleSendMessage="handleSendMessage"
+        />
         <div v-if="conversationList.length === 0">
           <InitalPanel />
         </div>
@@ -429,50 +440,93 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 
       <div class="dialogue-session-bottom">
         <!-- 问题换一换 -->
-        <div v-if="isAnswerGenerating" class="dialogue-panel__stop"
-          @click="handlePauseAndReGenerate(Number(conversationList.length))">
-          <img v-if="themeStore.theme === 'dark'" src="/src/assets/svgs/dark_stop_answer.svg" alt="">
-          <img v-else src="/src/assets/svgs/light_stop_answer.svg" alt="">
+        <div
+          v-if="isAnswerGenerating"
+          class="dialogue-panel-stop"
+          @click="handlePauseAndReGenerate(Number(conversationList.length))"
+        >
+          <img
+            v-if="themeStore.theme === 'dark'"
+            src="/src/assets/svgs/dark_stop_answer.svg"
+            alt=""
+          />
+          <img v-else src="/src/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="dialogue-panel__stop-answer">停止回答</div>
         </div>
         <div class="problem" v-if="conversationList.length === 0">
           <ul>
-            <li v-for="item in filterQuestions" :key="item.id" @click="selectQuestion">
+            <li
+              v-for="item in filterQuestions"
+              :key="item.id"
+              @click="selectQuestion"
+            >
               {{ item.question }}
             </li>
           </ul>
           <div class="change-button" @click="changeProblem">
-            <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/light_change.svg" alt="">
-            <img v-else src="src/assets/svgs/dark_change.svg" alt="">
+            <img
+              v-if="themeStore.theme === 'dark'"
+              src="src/assets/svgs/light_change.svg"
+              alt=""
+            />
+            <img v-else src="src/assets/svgs/dark_change.svg" alt="" />
             <span>换一换</span>
           </div>
         </div>
         <!-- 识别方式 -->
         <div class="recognitionMode">
-          <el-select class="mode-select" v-model="selectMode" multiple collapse-tags
+          <el-select
+            class="mode-select"
+            v-model="selectMode"
+            multiple
+            collapse-tags
             filterable
             allow-create
             default-first-option
-            placeholder="请选择识别方式" >
-            <el-option v-for="item in modeOptions" :key="item.value" :label="item.label" :value="item.value"
-              :disabled="item.disabled" />
+            placeholder="请选择识别方式"
+          >
+            <el-option
+              v-for="item in modeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+              :disabled="item.disabled"
+            />
           </el-select>
-          <img class='renew_btn' @click='createNewSession()' v-if="isAnswerGenerating || dialogueInput.length <= 0" src="/src/assets/images/createIcon.svg"alt="" />
+          <img
+            class="renew_btn"
+            @click="createNewSession()"
+            v-if="isAnswerGenerating || dialogueInput.length <= 0"
+            src="/src/assets/images/createIcon.svg"
+            alt=""
+          />
         </div>
         <!-- 输入框 -->
         <div class="dialogue-session-bottom-sendbox">
           <div class="dialogue-session-bottom-sendbox__textarea">
-            <textarea ref="inputRef" v-model="dialogueInput" maxlength="2000" placeholder="在此输入你想了解的内容"
-              @keydown="handleKeydown" />
+            <textarea
+              ref="inputRef"
+              v-model="dialogueInput"
+              maxlength="2000"
+              placeholder="在此输入你想了解的内容"
+              @keydown="handleKeydown"
+            />
           </div>
           <!-- 发送问题 -->
           <div class="dialogue-session-bottom-sendbox__icon">
             <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
-            <img v-if="isAnswerGenerating || dialogueInput.length <= 0" src="/src/assets/images/send_disable.png"
-              alt="" />
+            <img
+              v-if="isAnswerGenerating || dialogueInput.length <= 0"
+              src="/src/assets/images/send_disable.png"
+              alt=""
+            />
             <div v-else @click="handleSendMessage(dialogueInput)">
-              <img v-if="themeStore.theme === 'dark'" src="/src/assets/images/dark_send.png" alt="">
-              <img v-else src="/src/assets/images/light_send.png" alt="">
+              <img
+                v-if="themeStore.theme === 'dark'"
+                src="/src/assets/images/dark_send.png"
+                alt=""
+              />
+              <img v-else src="/src/assets/images/light_send.png" alt="" />
             </div>
           </div>
         </div>
@@ -482,43 +536,41 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 </template>
 
 <style lang="scss" scoped>
-
-.renew_btn{
+.renew_btn {
   position: absolute;
   left: calc(100% - 70px);
 }
 
-.dialogue-panel__stop {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 128px;
-    height: 40px;
-    border-radius: 8px;
-    border: 1px solid var(--o-text-color-primary);
-    margin-top: 38px;
-    margin-left: auto;
-    margin-right: auto;
-    cursor: pointer;
-    position: relative;
-    img {
-      width: 16px;
-      height: 16px;
-      margin-right: 8px;
-    }
-
-    &-answer {
-      display: block;
-      font-size: 16px;
-      color: var(--o-text-color-primary);
-      line-height: 24px;
-    }
+.dialogue-panel-stop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 128px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--o-text-color-primary);
+  margin-top: 38px;
+  margin-left: auto;
+  margin-right: auto;
+  cursor: pointer;
+  position: relative;
+  img {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
   }
+
+  &-answer {
+    display: block;
+    font-size: 16px;
+    color: var(--o-text-color-primary);
+    line-height: 24px;
+  }
+}
 ::v-deep .el-input__inner {
   border: none;
   box-shadow: none;
 }
-
 
 button[disabled] {
   color: white;
@@ -544,7 +596,11 @@ button[disabled]:hover {
 
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
     display: none;
   }
 
@@ -552,7 +608,6 @@ button[disabled]:hover {
     width: 3px;
     height: 3px;
     display: none;
-
   }
 
   /* 滚动条的滑块 */
@@ -563,7 +618,7 @@ button[disabled]:hover {
   }
 
   &::before {
-    content: '';
+    content: "";
     width: 100%;
     height: 100%;
     position: absolute;
@@ -610,10 +665,10 @@ button[disabled]:hover {
         float: right;
         text-align: center;
         margin-right: 98px;
-        color: #8D98AA;
+        color: #8d98aa;
 
         .red-word {
-          color: #E02020;
+          color: #e02020;
         }
       }
 
@@ -627,8 +682,9 @@ button[disabled]:hover {
           color: var(--o-text-color-primary);
           font-size: 12px;
           background-color: var(--o-bg-color-base);
-          font-family: HarmonyOS_Sans_SC_Medium, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-            Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          font-family: HarmonyOS_Sans_SC_Medium, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+            "Open Sans", "Helvetica Neue", sans-serif;
 
           &:focus {
             outline: none;
@@ -649,13 +705,12 @@ button[disabled]:hover {
         bottom: 8px;
         text-align: right;
         right: 36px;
-        img{
+        img {
           width: 32px;
         }
       }
     }
   }
-
 }
 
 .problem {
@@ -681,14 +736,22 @@ button[disabled]:hover {
       margin-bottom: 8px;
 
       &:hover {
-        background-image: linear-gradient(to right, rgba(109,117,250,0.8), rgba(90,179,255,0.8));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.8),
+          rgba(90, 179, 255, 0.8)
+        );
         color: var(--o-text-color-fourth);
-    }
+      }
 
-    &:active {
-        background-image: linear-gradient(to right, rgba(109,117,250,1.0), rgba(90,179,255,1.0));
+      &:active {
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 1),
+          rgba(90, 179, 255, 1)
+        );
         color: var(--o-text-color-fourth);
-    }
+      }
     }
   }
 

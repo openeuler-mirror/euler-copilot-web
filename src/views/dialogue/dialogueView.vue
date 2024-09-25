@@ -11,7 +11,6 @@ import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
 import { reactive } from 'vue';
 import { errorMsg, successMsg } from 'src/components/Message';
-import { api } from 'src/apis';
 import { invoke } from '@tauri-apps/api/tauri';
 // Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件

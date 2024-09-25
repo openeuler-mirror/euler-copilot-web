@@ -101,65 +101,6 @@ export const useSessionStore = defineStore('session', () => {
       }).catch((error) => {
         throw new Error(`HTTP error! ${error}`);
       })
-
-
-      // if (!resp.body) {
-      //   throw new Error(`HTTP error, body not exits`);
-      // }
-      // const reader = resp.body.getReader();
-      // const decoder = new TextDecoder('utf-8');
-
-      // let isEnd = true;
-      // isPaused.value = false;
-      // while (isEnd) {
-      //   if (isPaused.value) {
-      //     // 手动暂停输出
-      //     isAnswerGenerating.value = false;
-      //     break;
-      //   }
-      // const { done, value } = await reader.read();
-      // const decodedValue = decoder.decode(value, { stream: true });
-      // const isLegal = judgeMessage(answerIndex, decodedValue);
-      // if (!isLegal) {
-      //   isEnd = false;
-      //   break;
-      // }
-
-      // if (done) {
-      //   // 传输结束
-      //   conversationItem.isFinish = true;
-      //   isEnd = false;
-      //   isAnswerGenerating.value = false;
-      //   break;
-      // }
-      // const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
-
-      // lines.forEach((line) => {
-      //   const message = JSON.parse(line.replace(/^data:\s*/, '').trim());
-      //   if ('qa_record_id' in message) {
-      //     conversationItem.recordId = message.qa_record_id;
-      //   } else if ('search_suggestions' in message) {
-      //     conversationItem.search_suggestions = message.search_suggestions;
-      //   }else {
-      //     if (message.content.startsWith('<<<') && message.content.endWith('>>>')) {
-      //       const obj = extractAttributesFromMarker(message.content);
-      //       if (obj) {
-      //         conversationItem.message[conversationItem.currentInd] += `## ${obj.title} \n`;
-      //         conversationItem.message[
-      //           conversationItem.currentInd
-      //         ] += `<iframe src="${obj.link}" frameborder="0" width="100%" height="300"></iframe>`;
-      //       }
-      //     } else {
-      //       conversationItem.message[conversationItem.currentInd] += message.content;
-      //     }
-      //     if(dialogueRef.value.scrollHeight - (dialogueRef.value.clientHeight+dialogueRef.value.scrollTop) >= 2){
-      //       return
-      //     }else{
-      //       scrollBottom();
-      //     }
-      //   }
-      // });
-      // }
     } catch (err: any) {
       console.log(err);
       isPaused.value = true;
