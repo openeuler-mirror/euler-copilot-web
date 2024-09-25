@@ -141,7 +141,7 @@ const questions = [
 
 let groupid = ref(0);
 
-const selectMode = ref([]);
+const selectMode = ref('');
 
 const user_selected_plugins = ref('');
 
@@ -214,20 +214,20 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
 const handleCommont = async (
   type: 'support' | 'against',
   cid: number,
-  qaRecordId: number,
+  recordId: number,
   index: number,
   reason?: string,
   reasonLink?: string,
   reasonDescription?: string,
 ) => {
   const params: {
-    qaRecordId: string;
+    recordId: string;
     isLike: number;
     dislikeReason?: string;
     reasonLink?: string;
     reasonDescription?: string;
   } = {
-    qaRecordId: qaRecordId,
+    recordId: recordId,
     isLike: SupportMap[type],
     dislikeReason: reason,
     reasonLink: reasonLink,
@@ -277,7 +277,7 @@ const setOptionDisabled = () => {
       return item;
     });
   } else {
-    const isAuto = selectMode.value.some(item => item === 'auto');
+    const isAuto = selectMode.value === 'auto';
     let first = true;
     modeOptions.value.map(item => {
       if (!first) {
@@ -338,10 +338,13 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       (conversationList.value[lastIndex] as RobotConversationItem).search_suggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
     } else if (json.type == 'extract') {
-      if (json.data.shell) {
-      } else if (json.data.script) {
-      } else if (json.data.output) {
-        contentMessage.value = json.data.output;
+      const data = JSON.parse(json.data);
+      if (data.shell) {
+        console.log(data.shell);
+      } else if (data.script) {
+        console.log(data.script);
+      } else if (data.output) {
+        contentMessage.value = data.output;
         handleMarkdown(contentMessage.value);
       }
     } else {
@@ -443,10 +446,8 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           <el-select
             class="mode-select"
             v-model="selectMode"
-            multiple
             collapse-tags
             filterable
-            :multiple="false" 
             allow-create
             default-first-option
             placeholder="请选择识别方式"

@@ -59,7 +59,7 @@ export const useSessionStore = defineStore('session', () => {
     params: {
       question: string;
       conversationID?: string;
-      userSelectedPlugins?: any,
+      userSelectedPlugin?: string;
       recordID?: string;
       userSelectedFlow?: string;
     },
@@ -83,13 +83,13 @@ export const useSessionStore = defineStore('session', () => {
       console.error("Error refreshing session ID:", error);
     }
     try {
-      await invoke("chat", {
+      await invoke('chat', {
         session: localStorage.getItem('session'),
         question: params.question,
         conversation: params.conversationID,
-        language: "zh",
+        language: 'zh',
         record: params.recordID,
-        plugin: params.userSelectedPlugins,
+        plugin: params.userSelectedPlugin,
         flow: params.userSelectedFlow,
         flowId: "",
       }).then(async (status: any) => {
@@ -167,9 +167,9 @@ export const useSessionStore = defineStore('session', () => {
    */
   const sendQuestion = async (
     question: string,
-    user_selected_plugins?: any[],
+    userSelectedPlugin?: string,
     regenerateInd?: number,
-    qaRecordId?: string,
+    recordId?: string,
     user_selected_flow?: string,
   ): Promise<void> => {
     if (regenerateInd) {
@@ -207,18 +207,18 @@ export const useSessionStore = defineStore('session', () => {
       await getStream(
         {
           question,
-          recordID: qaRecordId,
-          userSelectedPlugins: user_selected_plugins,
+          recordID: recordId,
+          userSelectedPlugin: userSelectedPlugin,
           userSelectedFlow: user_selected_flow,
         },
         regenerateInd ?? undefined
       )
-    } else if (user_selected_plugins) {
+    } else if (userSelectedPlugin) {
       await getStream(
         {
           question,
-          recordID: qaRecordId,
-          userSelectedPlugins: user_selected_plugins,
+          recordID: recordId,
+          userSelectedPlugin: userSelectedPlugin,
         },
         regenerateInd ?? undefined
       )
@@ -226,7 +226,7 @@ export const useSessionStore = defineStore('session', () => {
       await getStream(
         {
           question,
-          recordID: qaRecordId,
+          recordID: recordId,
         },
         regenerateInd ?? undefined
       );
@@ -248,7 +248,7 @@ export const useSessionStore = defineStore('session', () => {
    * 重新生成回答
    * @param cid
    */
-  const reGenerateAnswer = (cid: number, user_selected_plugins: any[]): void => {
+  const reGenerateAnswer = (cid: number, userSelectedPlugin: string): void => {
     const answerInd = conversationList.value.findIndex((val) => val.cid === cid);
     const question = (conversationList.value[answerInd - 1] as UserConversationItem).message;
     const recordId = (conversationList.value[answerInd] as RobotConversationItem).recordId;
@@ -256,7 +256,7 @@ export const useSessionStore = defineStore('session', () => {
     if (!question) {
       return;
     }
-    sendQuestion(question, user_selected_plugins, answerInd, recordId);
+    sendQuestion(question, userSelectedPlugin, answerInd, recordId);
   };
 
   // #region ----------------------------------------< pagenation >--------------------------------------
