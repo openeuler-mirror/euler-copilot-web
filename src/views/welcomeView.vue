@@ -22,10 +22,14 @@ async function saveSettings() {
   await WebviewWindow.getByLabel('welcome')?.close();
 }
 
-const theme = localStorage.getItem('theme') === 'dark'?'dark':'light';
+const theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
 
-const openPage = () => {
-  window.location.href ='https://eulercopilot.gitee.com/';
+const openCopilotWeb = () => {
+  invoke('open_url', {
+    url: 'https://eulercopilot.gitee.com'
+  }).catch(err => {
+    console.error(err);
+  });
 }
 </script>
 
@@ -42,7 +46,7 @@ const openPage = () => {
         <div class="tip">
           <img v-if='theme === "dark"' class='tips' src='src/assets/images/api_key_tips_dark.png'/>
           <img v-else class='tips' src='src/assets/images/api_key_tips_light.png'/>
-          <p @click='openPage'>没有 API Key？点击前往获取</p>
+          <p @click='openCopilotWeb'>没有 API Key？点击前往获取</p>
         </div>
         <div class="settings">
           <el-form ref="ruleFormRef" :model="settingsItems"

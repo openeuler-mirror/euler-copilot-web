@@ -13,6 +13,7 @@ use tauri::WindowEvent;
 mod api;
 mod config;
 mod positioner;
+mod utility;
 
 fn main() {
     let settings = CustomMenuItem::new("settings".to_string(), "设置");
@@ -85,7 +86,8 @@ fn main() {
             api::stop,
             config::get_base_url,
             config::get_api_key,
-            config::update_config
+            config::update_config,
+            utility::open_url
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");

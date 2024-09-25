@@ -27,9 +27,12 @@ pub async fn chat<R: Runtime>(
 ) -> Result<u16, String> {
     let mut url = Url::parse(&get_base_url()).unwrap();
     url.set_path("api/client/chat");
-    println!("Chat API URL: {}", url);
-    println!("Conversation ID: {}", conversation);
-    println!("Session ID: {}", session);
+    #[cfg(debug_assertions)]
+    {
+        println!("Chat API URL: {}", url);
+        println!("Conversation ID: {}", conversation);
+        println!("Session ID: {}", session);
+    }
 
     let mut data = json!({
         "session_id": session,
