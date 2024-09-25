@@ -154,7 +154,9 @@ fn create_main_window(app_handle: &AppHandle) {
 
     #[cfg(target_os = "macos")]
     {
-        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+        builder = builder
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true);
     }
 
     builder.build().expect("无法创建主窗口");
@@ -174,7 +176,9 @@ fn create_welcome_window(app: &App) {
 
     #[cfg(target_os = "macos")]
     {
-        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+        builder = builder
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true);
     }
 
     builder.build().expect("无法创建欢迎窗口");

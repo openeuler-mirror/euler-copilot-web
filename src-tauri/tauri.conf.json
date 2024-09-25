@@ -59,6 +59,7 @@
         "minHeight": 680,
         "maxWidth": 720,
         "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
         "skipTaskbar": true,
         "maximizable": false,
         "minimizable": false,
