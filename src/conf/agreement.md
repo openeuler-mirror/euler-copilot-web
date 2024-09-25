@@ -3,7 +3,7 @@
 
 欢迎您使用开放原子开源基金会（下文简称“基金会”或“我们”）提供的 openEuler Copilot System 服务!
 
-本协议约束您（使用者）对[openEuler Copilot System](https://euler-copilot-web.test.osinfra.cn)网站等相关服务（以下简称“本服务”或“openEuler Copilot System”）的使用。
+本协议约束您（使用者）对[openEuler Copilot System](https://eulercopilot.gitee.com)网站等相关服务（以下简称“本服务”或“openEuler Copilot System”）的使用。
 
 **重要提示:**
 
@@ -21,7 +21,7 @@
 
 ## 第 1 条 定义
 
-**1.1 用户** ：指通过https://euler-copilot-web.test.osinfra.cn网站使用 openEuler Copilot System 服务的自然人。本协议中可称为“使用者”或“您”。
+**1.1 用户** ：指通过https://eulercopilot.gitee.com网站使用 openEuler Copilot System 服务的自然人。本协议中可称为“使用者”或“您”。
 
 **1.2 openEuler Copilot System** ：指基金会基于大语言模型提供的生成类人工智能问答产品。
 

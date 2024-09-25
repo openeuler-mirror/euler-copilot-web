@@ -22,21 +22,26 @@ async function saveSettings() {
   await WebviewWindow.getByLabel('welcome')?.close();
 }
 
+const theme = localStorage.getItem('theme') === 'dark'?'dark':'light';
+
+const openPage = () => {
+  window.location.href ='https://eulercopilot.gitee.com/';
+}
 </script>
 
 <template>
   <div class="dialogue">
     <header class="dialogue-header">
       <span>
-        <img src="src/assets/svgs/euler_copilot_logo.svg" />
-        <h4>openEuler Copilot System</h4>
+        <h4>欢迎使用 </h4>
+        <img class='logo' src="src/assets/images/logo_text.png" />
       </span>
     </header>
     <div class="dialogue-container">
       <div class="dialogue-container-main">
         <div class="tip">
-          <img v-if='theme === "dark"' class='tips' src='src/assets/images/darktips.png'/>
-          <img  class='tips' src='src/assets/images/lighttips.png'/>
+          <img v-if='theme === "dark"' class='tips' src='src/assets/images/api_key_tips_dark.png'/>
+          <img v-else class='tips' src='src/assets/images/api_key_tips_light.png'/>
           <p @click='openPage'>没有 API Key？点击前往获取</p>
         </div>
         <div class="settings">
