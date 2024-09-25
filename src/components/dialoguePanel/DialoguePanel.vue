@@ -274,10 +274,6 @@ const selectQuestion = (item:object) => {
     emits('handleSendMessage',question);
   }
 }
-  
-
-
-
 </script>
 <template>
   <div class="dialogue-panel">

@@ -2,6 +2,7 @@
 import { reactive } from 'vue'
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
+import { WebviewWindow } from '@tauri-apps/api/window';
 
 const settingsItems = reactive({
   key: '',
@@ -18,6 +19,7 @@ async function saveSettings() {
     errorMsg('保存失败');
     console.error(error);
   }
+  await WebviewWindow.getByLabel('welcome')?.close();
 }
 
 </script>

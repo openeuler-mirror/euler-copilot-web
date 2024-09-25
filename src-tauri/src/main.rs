@@ -159,6 +159,11 @@ fn create_main_window(app_handle: &AppHandle) {
             .hidden_title(true);
     }
 
+    #[cfg(target_os = "linux")]
+    {
+        builder = builder.decorations(false);
+    }
+
     builder.build().expect("无法创建主窗口");
 
     let window = app_handle.get_window("main").unwrap();
@@ -179,6 +184,11 @@ fn create_welcome_window(app: &App) {
         builder = builder
             .title_bar_style(tauri::TitleBarStyle::Overlay)
             .hidden_title(true);
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        builder = builder.decorations(false);
     }
 
     builder.build().expect("无法创建欢迎窗口");

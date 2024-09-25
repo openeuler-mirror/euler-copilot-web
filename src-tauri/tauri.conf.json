@@ -49,24 +49,7 @@
         ]
       }
     },
-    "windows": [
-      {
-        "label": "main",
-        "title": "Copilot",
-        "width": 500,
-        "height": 680,
-        "minWidth": 500,
-        "minHeight": 680,
-        "maxWidth": 720,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
-        "skipTaskbar": true,
-        "maximizable": false,
-        "minimizable": false,
-        "resizable": true,
-        "visible": false
-      }
-    ],
+    "windows": [],
     "systemTray": {
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true
@@ -89,7 +72,9 @@
         "epoch": 0,
         "files": {},
         "release": "1",
-        "depends": ["webkit2gtk3"]
+        "depends": [
+          "webkit2gtk3"
+        ]
       }
     }
   }
