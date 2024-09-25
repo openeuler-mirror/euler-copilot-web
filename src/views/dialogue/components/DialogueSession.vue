@@ -316,36 +316,58 @@ const handlePauseAndReGenerate = (cid?: number) => {
     pausedStream(cid);
 };
 
+const handleMarkdown = (content: string) => {
+  const lastIndex = conversationList.value.length - 1;
+  let markedStr = marked.parse(content.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+  // 将 table 提取出来中加一个 <div> 父节点控制溢出
+  let tableStart = markedStr.indexOf('<table>');
+  if (tableStart!== -1) {
+    markedStr = markedStr.slice(0, tableStart) + '<div class="overflowTable">' + markedStr.slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
+  }
+  const answerIndex = lastIndex >= 0 ? lastIndex : 0;
+  const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+  (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr
+}
+
 listen<StreamPayload>("fetch-stream-data", (event) => {
   const line = event.payload.message.replace(/^data:\s*/, '').trim();
+  const lastIndex = conversationList.value.length - 1;
   try {
     const json = JSON.parse(line);
-    const len = conversationList.value.length;
     if (json.search_suggestions) {
-    conversationList.value[len-1].search_suggestions = json.search_suggestions;
+      (conversationList.value[lastIndex] as RobotConversationItem).search_suggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
-
+    } else if (json.type == 'extract') {
+      if (json.data.shell) {
+      } else if (json.data.script) {
+      } else if (json.data.output) {
+        contentMessage.value = json.data.output;
+        handleMarkdown(contentMessage.value);
+      }
     } else {
-    contentMessage.value = contentMessage.value + json.content
-    let str =  marked.parse(contentMessage.value.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
-    // 将 table 提取出来中加一个 <div> 父节点控制溢出
-    let tableStart = str.indexOf('<table>');
-    if (tableStart!== -1) {
-      str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
-    }
-    const answerIndex = conversationList.value.length - 1>=0?conversationList.value.length - 1:0;
-    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-    conversationList.value[len-1].message[conversationItem.currentInd] = str
+      contentMessage.value = contentMessage.value + json.content
+      handleMarkdown(contentMessage.value);
     }
   } catch (error) {
+    let msg = '';
     if (line == '[DONE]') {
-      conversationList.value[conversationList.value.length - 1].isFinish = true;
+      (conversationList.value[lastIndex] as RobotConversationItem).isFinish = true;
       isAnswerGenerating.value = false;
       contentMessage.value='';
-    } else if (error === '[SENSETIVE]') {
-      //敏感词处理
+    } else if (line == '[SENSITIVE]') {
+      msg = '很抱歉，暂时只支持问题 openEuler 和 Linux 领域相关的问题';
+    } else if (line == '[ERROR]') {
+      msg = '系统繁忙，请稍后再试';
     } else {
-      //Error处理
+      msg = '未知错误，请稍后再试';
+    }
+    if (msg) {
+      contentMessage.value='';
+      (conversationList.value[lastIndex] as RobotConversationItem).message[
+        (conversationList.value[lastIndex] as RobotConversationItem).currentInd
+      ] = msg;
+      (conversationList.value[lastIndex] as RobotConversationItem).isFinish = true;
+      isAnswerGenerating.value = false;
     }
   };
 });
