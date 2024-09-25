@@ -10,7 +10,7 @@ use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemT
 #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
 use tauri::WindowEvent;
 
-mod chat;
+mod api;
 mod config;
 mod positioner;
 
@@ -78,10 +78,11 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             show_settings_window,
-            chat::create_conversation,
-            chat::refresh_session_id,
-            chat::receive_stream,
-            chat::stop,
+            api::create_conversation,
+            api::refresh_session_id,
+            api::plugin,
+            api::chat,
+            api::stop,
             config::get_base_url,
             config::get_api_key,
             config::update_config
@@ -159,6 +160,11 @@ fn create_main_window(app_handle: &AppHandle) {
             .hidden_title(true);
     }
 
+    #[cfg(target_os = "linux")]
+    {
+        builder = builder.decorations(false);
+    }
+
     builder.build().expect("无法创建主窗口");
 
     let window = app_handle.get_window("main").unwrap();
@@ -179,6 +185,11 @@ fn create_welcome_window(app: &App) {
         builder = builder
             .title_bar_style(tauri::TitleBarStyle::Overlay)
             .hidden_title(true);
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        builder = builder.decorations(false);
     }
 
     builder.build().expect("无法创建欢迎窗口");

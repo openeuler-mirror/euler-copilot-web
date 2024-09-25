@@ -45,7 +45,7 @@ onMounted(() => {
     <header class="dialogue-header">
       <span>
         <img src="src/assets/svgs/euler_copilot_logo.svg" />
-        <h4>EulerCopilot</h4>
+        <h4>openEuler Copilot System</h4>
       </span>
     </header>
     <div class="dialogue-container">

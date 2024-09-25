@@ -2,6 +2,7 @@
 import { reactive } from 'vue'
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
+import { WebviewWindow } from '@tauri-apps/api/window';
 
 const settingsItems = reactive({
   key: '',
@@ -18,12 +19,7 @@ async function saveSettings() {
     errorMsg('保存失败');
     console.error(error);
   }
-}
-
-const theme = localStorage.getItem('theme') === 'dark'?'dark':'light';
-
-const openPage = () => {
-  window.location.href =' https://euler-copilot-web.test.osinfra.cn/';
+  await WebviewWindow.getByLabel('welcome')?.close();
 }
 
 </script>
@@ -32,9 +28,8 @@ const openPage = () => {
   <div class="dialogue">
     <header class="dialogue-header">
       <span>
-        <!-- <img src="src/assets/svgs/euler_copilot_logo.svg" /> -->
-        <h4>欢迎使用</h4>
-        <img class='logo' src="src/assets/images/newlogo.png" />
+        <img src="src/assets/svgs/euler_copilot_logo.svg" />
+        <h4>openEuler Copilot System</h4>
       </span>
     </header>
     <div class="dialogue-container">

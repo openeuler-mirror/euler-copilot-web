@@ -8,8 +8,8 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { get, put, post } from 'src/apis/server';
-
 import type { FcResponse } from 'src/apis/server';
+
 const BASE_URL = '/api/client/conversation';
 
 /**
@@ -21,12 +21,12 @@ export const getSessionRecord = (): Promise<
     any,
     (
       | FcResponse<
-          Array<{
-            conversation_id: string;
-            title: string;
-            created_time: Date;
-          }>
-        >
+        Array<{
+          conversation_id: string;
+          title: string;
+          created_time: Date;
+        }>
+      >
       | undefined
     )
   ]
@@ -51,10 +51,10 @@ export const updateSession = (
     any,
     (
       | FcResponse<
-          Array<{
-            conversation_id: string;
-          }>
-        >
+        Array<{
+          conversation_id: string;
+        }>
+      >
       | undefined
     )
   ]
@@ -86,16 +86,16 @@ export const getHistoryConversation = (
     any,
     (
       | FcResponse<
-          Array<{
-            conversation_id: string;
-            record_id: string;
-            question: string;
-            answer: string;
-            created_time: string | Date;
-            is_like?:number|undefined;
-            group_id:string,
-          }>
-        >
+        Array<{
+          conversation_id: string;
+          record_id: string;
+          question: string;
+          answer: string;
+          created_time: string | Date;
+          is_like?: number | undefined;
+          group_id: string,
+        }>
+      >
       | undefined
     )
   ]
@@ -125,25 +125,10 @@ export const commentConversation = (params: {
   });
 };
 
-export const getRecognitionMode = (): Promise<
-[
-  any, 
-  (
-    | FcResponse<
-      Array<{
-        plugin_id: string,
-        plugin_name: string
-      }>>
-    | undefined)
-]> => {
-  return get('api/client/plugin');
-}
-
 export const sessionApi = {
   updateSession,
   deleteSession,
   getSessionRecord,
   getHistoryConversation,
   commentConversation,
-  getRecognitionMode,
 };

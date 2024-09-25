@@ -60,17 +60,21 @@ const initCopilot = async (): Promise<void> => {
 };
 
 const setPlugins = async() => {
-  const [_, res] = await api.getRecognitionMode();
-  if (!_ && res) {
-    res.result.forEach(item => {
-      const opt = {
-        label: item.plugin_name,
-        value: item.plugin_name,
-        disabled: false
-      };
-      modeOptions.value.push(opt);
-    });
-  }
+  await invoke('plugin').then(async (data: any) => {
+    console.log(data);
+    if (data && data.result) {
+      data.result.forEach(item => {
+        const opt = {
+          label: item.plugin_name,
+          value: item.plugin_name,
+          disabled: false
+        };
+        modeOptions.value.push(opt);
+      });
+    }
+  }).catch(err => {
+    console.error(err);
+  });
 }
 
 const settingsHandler = () => {
@@ -137,19 +141,25 @@ watch(
 );
 
 const getModeOptions = async() => {
-  await api.getRecognitionMode().then(data => {
-    const [_,res] = data;
-    res.result.forEach(item => {
-    const opt = {
-      label: item.plugin_name,
-      value: item.plugin_name,
-      disabled: false
-    };
-    const a = modeOptions.find((item) => {return item.label === opt.label})
-    if(!a){
-      modeOptions.push(opt);
+  await invoke('plugin').then(async (data: any) => {
+    console.log(data);
+    if (data && data.result) {
+      data.result.forEach(item => {
+        const opt = {
+          label: item.plugin_name,
+          value: item.plugin_name,
+          disabled: false
+        };
+        const plugin = modeOptions.find((item) => {
+          return item.label === opt.label
+        })
+        if (!plugin) {
+          modeOptions.push(opt);
+        }
+      });
     }
-  });
+  }).catch(err => {
+    console.error(err);
   });
 }
 
@@ -160,7 +170,7 @@ const getModeOptions = async() => {
     <header class="dialogue-header">
       <span>
         <img src="src/assets/svgs/euler_copilot_logo.svg" />
-        <h4>EulerCopilot</h4>
+        <h4>openEuler Copilot System</h4>
       </span>
       <div class="header-right">
         <div class="mode">

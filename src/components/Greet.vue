@@ -30,7 +30,7 @@ async function callReceiveStream() {
     console.error("Error refreshing session ID:", error);
   }
   try {
-    const result = await invoke("receive_stream", {
+    const result = await invoke("chat", {
       session: sessionId.value,
       question: question.value,
       language: "zh",

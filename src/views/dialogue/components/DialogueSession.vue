@@ -658,19 +658,6 @@ button[disabled]:hover {
 
 }
 
-.dialogue-shell {
-  flex: 1;
-  height: calc(100% - 36px);
-  width: 500px;
-
-  :deep(.xterm) {
-    padding: 10px;
-    height: 100%;
-  }
-}
-
-
-
 .problem {
   display: flex;
   margin-top: 16px;
