@@ -14,7 +14,7 @@ pub struct StreamPayload {
 }
 
 #[tauri::command]
-pub async fn receive_stream<R: Runtime>(
+pub async fn chat<R: Runtime>(
     app: AppHandle<R>,
     session: &str,
     question: &str,
@@ -187,6 +187,27 @@ pub async fn stop() {
         .await
         .map_err(|e| format!("Failed to send request: {}", e))
         .unwrap();
+}
+
+#[tauri::command]
+pub async fn plugin() -> Result<Value, String> {
+    let mut url = Url::parse(&get_base_url()).unwrap();
+    url.set_path("api/client/plugin");
+
+    let client = Client::new();
+    let response = client
+        .get(url)
+        .headers(get_base_headers())
+        .send()
+        .await
+        .map_err(|e| format!("Failed to send request: {}", e))?;
+
+    let json: Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+
+    Ok(json)
 }
 
 fn emit_message<R: Runtime>(app: &AppHandle<R>, message: &str) {

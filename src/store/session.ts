@@ -83,11 +83,11 @@ export const useSessionStore = defineStore('session', () => {
       console.error("Error refreshing session ID:", error);
     }
     try {
-      await invoke("receive_stream", {
+      await invoke("chat", {
         session: localStorage.getItem('session'),
         question: params.question,
         conversation: params.conversationID,
-        language:"zh",
+        language: "zh",
         record: params.recordID,
         plugin: "",
         flow: params.userSelectedFlow,
@@ -102,7 +102,7 @@ export const useSessionStore = defineStore('session', () => {
         throw new Error(`HTTP error! ${error}`);
       })
 
-      
+
       // if (!resp.body) {
       //   throw new Error(`HTTP error, body not exits`);
       // }
@@ -117,48 +117,48 @@ export const useSessionStore = defineStore('session', () => {
       //     isAnswerGenerating.value = false;
       //     break;
       //   }
-        // const { done, value } = await reader.read();
-        // const decodedValue = decoder.decode(value, { stream: true });
-        // const isLegal = judgeMessage(answerIndex, decodedValue);
-        // if (!isLegal) {
-        //   isEnd = false;
-        //   break;
-        // }
+      // const { done, value } = await reader.read();
+      // const decodedValue = decoder.decode(value, { stream: true });
+      // const isLegal = judgeMessage(answerIndex, decodedValue);
+      // if (!isLegal) {
+      //   isEnd = false;
+      //   break;
+      // }
 
-        // if (done) {
-        //   // 传输结束
-        //   conversationItem.isFinish = true;
-        //   isEnd = false;
-        //   isAnswerGenerating.value = false;
-        //   break;
-        // }
-        // const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
+      // if (done) {
+      //   // 传输结束
+      //   conversationItem.isFinish = true;
+      //   isEnd = false;
+      //   isAnswerGenerating.value = false;
+      //   break;
+      // }
+      // const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
 
-        // lines.forEach((line) => {
-        //   const message = JSON.parse(line.replace(/^data:\s*/, '').trim());
-        //   if ('qa_record_id' in message) {
-        //     conversationItem.recordId = message.qa_record_id;
-        //   } else if ('search_suggestions' in message) {
-        //     conversationItem.search_suggestions = message.search_suggestions;
-        //   }else {
-        //     if (message.content.startsWith('<<<') && message.content.endWith('>>>')) {
-        //       const obj = extractAttributesFromMarker(message.content);
-        //       if (obj) {
-        //         conversationItem.message[conversationItem.currentInd] += `## ${obj.title} \n`;
-        //         conversationItem.message[
-        //           conversationItem.currentInd
-        //         ] += `<iframe src="${obj.link}" frameborder="0" width="100%" height="300"></iframe>`;
-        //       }
-        //     } else {
-        //       conversationItem.message[conversationItem.currentInd] += message.content;
-        //     }
-        //     if(dialogueRef.value.scrollHeight - (dialogueRef.value.clientHeight+dialogueRef.value.scrollTop) >= 2){
-        //       return
-        //     }else{
-        //       scrollBottom();
-        //     }
-        //   }
-        // });
+      // lines.forEach((line) => {
+      //   const message = JSON.parse(line.replace(/^data:\s*/, '').trim());
+      //   if ('qa_record_id' in message) {
+      //     conversationItem.recordId = message.qa_record_id;
+      //   } else if ('search_suggestions' in message) {
+      //     conversationItem.search_suggestions = message.search_suggestions;
+      //   }else {
+      //     if (message.content.startsWith('<<<') && message.content.endWith('>>>')) {
+      //       const obj = extractAttributesFromMarker(message.content);
+      //       if (obj) {
+      //         conversationItem.message[conversationItem.currentInd] += `## ${obj.title} \n`;
+      //         conversationItem.message[
+      //           conversationItem.currentInd
+      //         ] += `<iframe src="${obj.link}" frameborder="0" width="100%" height="300"></iframe>`;
+      //       }
+      //     } else {
+      //       conversationItem.message[conversationItem.currentInd] += message.content;
+      //     }
+      //     if(dialogueRef.value.scrollHeight - (dialogueRef.value.clientHeight+dialogueRef.value.scrollTop) >= 2){
+      //       return
+      //     }else{
+      //       scrollBottom();
+      //     }
+      //   }
+      // });
       // }
     } catch (err: any) {
       console.log(err);
@@ -229,7 +229,7 @@ export const useSessionStore = defineStore('session', () => {
     user_selected_plugins?: any[],
     regenerateInd?: number,
     qaRecordId?: string,
-    user_selected_flow?:string,
+    user_selected_flow?: string,
   ): Promise<void> => {
     if (regenerateInd) {
       // 重新生成，指定某个回答，修改默认索引
@@ -238,9 +238,9 @@ export const useSessionStore = defineStore('session', () => {
         (conversationList.value[regenerateInd] as RobotConversationItem).message.length - 1;//123
     } else {
       // 初次生成 ，创建一个问题和一个回答
-      const ind = conversationList.value.length ;
+      const ind = conversationList.value.length;
       const a = new MessageArray()
-      a.addItem('','',2);
+      a.addItem('', '', 2);
       conversationList.value.push(
         {
           cid: ind + 1,
@@ -251,18 +251,18 @@ export const useSessionStore = defineStore('session', () => {
           cid: ind + 2,
           belong: 'robot',
           message: [''],
-          messageList:a,
+          messageList: a,
           currentInd: 0,
           isFinish: false,
           recordId: '',
-          groupId:'',
-          sessionId:'',
+          groupId: '',
+          sessionId: '',
         }
       );
     }
     isAnswerGenerating.value = true;
     scrollBottom();
-    if(user_selected_flow){
+    if (user_selected_flow) {
       await getStream(
         {
           question,
@@ -272,7 +272,7 @@ export const useSessionStore = defineStore('session', () => {
         },
         regenerateInd ?? undefined
       )
-    }else if(user_selected_plugins){
+    } else if (user_selected_plugins) {
       await getStream(
         {
           question,
@@ -281,7 +281,7 @@ export const useSessionStore = defineStore('session', () => {
         },
         regenerateInd ?? undefined
       )
-    }else{
+    } else {
       await getStream(
         {
           question,
@@ -290,11 +290,11 @@ export const useSessionStore = defineStore('session', () => {
         regenerateInd ?? undefined
       );
     }
-    }
+  }
   /**
    * 暂停流式返回
    */
-  const pausedStream = async(cid?: number): Promise<void> => {
+  const pausedStream = async (cid?: number): Promise<void> => {
     const answerIndex =
       conversationList.value.findIndex((val) => val.cid === cid) ||
       conversationList.value.length - 1;
@@ -324,7 +324,7 @@ export const useSessionStore = defineStore('session', () => {
    * @param cid
    */
   const prePage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex((val) => val.cid === cid );
+    const answerInd = conversationList.value.findIndex((val) => val.cid === cid);
     if ((conversationList.value[answerInd] as RobotConversationItem).currentInd === 0) {
       return;
     }
@@ -369,13 +369,13 @@ export const useSessionStore = defineStore('session', () => {
             (i) => i.groupId === record.group_id
           );
           re?.message.push(record.answer);
-          if(typeof(re?.message) !== 'string'){
-            re?.messageList.addItem(record.answer,record.record_id,typeof(record.is_like) === 'object'? 2 :Number(record.is_like)); 
+          if (typeof (re?.message) !== 'string') {
+            re?.messageList.addItem(record.answer, record.record_id, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
           }
           return;
         }
         const a = new MessageArray();
-        a.addItem(record.answer,record.record_id,typeof(record.is_like) === 'object'? 2 :Number(record.is_like));
+        a.addItem(record.answer, record.record_id, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
         conversationList.value.push(
           {
             cid: conversationList.value.length + 1,
@@ -386,15 +386,15 @@ export const useSessionStore = defineStore('session', () => {
           {
             cid: conversationList.value.length + 2,
             belong: 'robot',
-            message:[record.answer],
+            message: [record.answer],
             messageList: a,
             currentInd: 0,
             isAgainst: false,
             isSupport: false,
             isFinish: true,
             recordId: record.record_id,
-            sessionId:record.conversation_id,
-            groupId:record.group_id,
+            sessionId: record.conversation_id,
+            groupId: record.group_id,
           }
         );
         scrollBottom('auto');
@@ -402,7 +402,7 @@ export const useSessionStore = defineStore('session', () => {
     }
   };
 
-  const comment = (cid: number, isSupport: boolean, index:number): void => {
+  const comment = (cid: number, isSupport: boolean, index: number): void => {
     const ind = conversationList.value.find((item) => item.cid === cid);
     // ind.message.items[index].is_like = isSupport;
   };
@@ -428,9 +428,9 @@ export const useSessionStore = defineStore('session', () => {
 
 export const useChangeThemeStore = defineStore('theme', () => {
   const theme = ref('');
-  if(localStorage.getItem('theme')){
+  if (localStorage.getItem('theme')) {
     theme.value = localStorage.getItem('theme');
-  }else{
+  } else {
     theme.value = 'dark'
   }
   return {
