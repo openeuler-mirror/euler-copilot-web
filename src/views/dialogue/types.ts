@@ -12,17 +12,6 @@ import type {
   RobotDialoguePanelType,
 } from 'src/components/dialoguePanel/type';
 
-// 工具类型
-export type LinkType = 'redirect' | 'action';
-
-export interface LinkItem {
-  key: string;
-  label: string;
-  type: LinkType;
-  url?: string;
-  icon?: any;
-}
-
 export interface EgItem {
   icon?: any;
   iconDark?: any;
@@ -105,16 +94,7 @@ export class MessageArray {
     return this.items.map(item => item.recordId);
   }
 
-  getIslikeList(): number[] {
+  getIslikeList(): (number | undefined)[] | undefined {
     return this.items.map(item => item.isLike);
   }
-
-  getisLikeByIndex(index: number): number {
-    return this.items.map(item => item.isLike)[index];
-  }
-
-  changeisLikeByCidAndIndex(cid: number, index: number, islike: number | boolean): void {
-    this.getisLikeByIndex(index)[cid] = islike;
-  }
-
 }

@@ -19,7 +19,7 @@ export const feedback = (params: {
   degree: number;
   request_id: string;
   feedback_tag?: string;
-  commont?: string;
+  comment?: string;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
   return post('/openlabs/qabot/satisfaction', params);
 };

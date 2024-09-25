@@ -74,7 +74,7 @@ const renderer = {
   code(code: string, infostring: string | undefined): string {
     return renderCode(code, infostring);
   },
-  link(href: string, title: string | null | undefined, text: string): string {
+  link(href: string, text: string): string {
     return renderLink(href, text);
   },
 };

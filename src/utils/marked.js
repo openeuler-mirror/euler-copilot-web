@@ -33,9 +33,8 @@ const ICON_SVG = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24" w
 export const renderCode = (code, language) => {
   const id = `pre-${Date.now()}-${randomInt()}`;
   const lang = language ? language : 'bash';
-  return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${
-    hljs.highlight(code, { language: lang }).value
-  }</code></pre>`;
+  return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${hljs.highlight(code, { language: lang }).value
+    }</code></pre>`;
 };
 
 /**
@@ -60,7 +59,7 @@ const renderer = {
   code(code, infostring) {
     return renderCode(code, infostring);
   },
-  link(href, title, text) {
+  link(href, text) {
     return renderLink(href, text);
   },
 };

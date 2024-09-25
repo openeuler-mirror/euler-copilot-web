@@ -4,7 +4,8 @@ import { writeText } from 'src/utils';
 import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import dayjs from 'dayjs';
 import { errorMsg, successMsg } from 'src/components/Message';
-import { onMounted,watch,onBeforeUnmount } from 'vue';
+import { onMounted, watch, onBeforeUnmount } from 'vue';
+import { ExampleQuestionItem } from 'src/views/dialogue/components/DialogueSession.vue'
 
 export interface DialoguePanelProps {
   cid: string;
@@ -27,9 +28,9 @@ export interface DialoguePanelProps {
   // 是否选择插件
   userSelectedPlugins?: any;
   //
-  recordList?:string[] | undefined;
+  recordList?: string[] | undefined;
   //
-  isLikeList?:number[] | undefined;
+  isLikeList?: (number | undefined)[] | undefined;
   searchSuggestions?:any;
 }
 const themeStore = useChangeThemeStore();
@@ -45,7 +46,7 @@ const index = ref(0);
 const isLike = ref(props.isLikeList);
 const emits = defineEmits<{
   (
-    e: 'commont',
+    e: 'comment',
     type: 'support' | 'against',
     recordId:string,
     reason?: string,
@@ -127,20 +128,19 @@ const isSupport = ref();
 const isAgainst = ref();
 
 const handleIsLike = () => {
-  let a = 2;
-  if(isLike.value === undefined){
-    return
-  }else{
-    if(index.value<=isLike.value.length && isLike.value.length !== 0){
+  let a: number | undefined = 2;
+  if (isLike.value === undefined) {
+    return;
+  }
+  if (index.value <= isLike.value.length && isLike.value.length !== 0) {
     a = isLike.value[index.value];
-    }
-  if(a !== 2){
+  }
+  if (a !== 2) {
     isSupport.value = Boolean(a);
     isAgainst.value = !a;
-  }else{
+  } else {
     isSupport.value = 0;
     isAgainst.value = 0;
-  }
   }
 }
 
@@ -165,13 +165,13 @@ onBeforeUnmount(() => {
   index.value = 0;
 })
 
-const selectQuestion = (item:object) => {
+const selectQuestion = (item: ExampleQuestionItem) => {
   let question = item.question;
-  let user_selected_flow = item.id;
-  if(user_selected_flow){
-    emits('handleSendMessage',question,user_selected_flow);
-  }else{
-    emits('handleSendMessage',question);
+  let selectedFlow = item.id;
+  if (selectedFlow) {
+    emits('handleSendMessage', question, selectedFlow);
+  } else {
+    emits('handleSendMessage', question);
   }
 }
 </script>
@@ -600,10 +600,6 @@ const selectQuestion = (item:object) => {
           line-height: 16px;
           cursor: pointer;
           user-select: none;
-
-          img {
-            // margin-right: 8px;
-          }
 
           .paused-answer {
             color: #c4c2c2;

@@ -94,12 +94,12 @@ export const useSessionStore = defineStore('session', () => {
         flowId: "",
       }).then(async (status: any) => {
         console.log(status);
-        const isServiceOk = await handleServiceStatus(status, params, ind);
+        const isServiceOk = await handleServiceStatus(status);
         if (!isServiceOk) {
           return;
         }
       }).catch((error) => {
-        throw new Error(`HTTP error! ${error}`);
+        throw new Error(`RUST backend error: ${error}`);
       })
     } catch (err: any) {
       console.log(err);
@@ -118,13 +118,7 @@ export const useSessionStore = defineStore('session', () => {
   };
 
   const handleServiceStatus = async (
-    status: number,
-    params: {
-      question: string;
-      sessionId?: string;
-      recordId?: string;
-    },
-    ind?: number
+    status: number
   ): Promise<boolean> => {
     if (status === 401 || status === 403) {
       return false;

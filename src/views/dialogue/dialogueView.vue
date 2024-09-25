@@ -8,7 +8,6 @@ import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
-// Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch;
 const router = useRouter();

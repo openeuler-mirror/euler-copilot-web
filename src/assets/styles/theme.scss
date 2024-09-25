@@ -1,28 +1,21 @@
 body[theme='dark'] {
     --o-bg-image: url('../../assets/images/dark_background.png');
-    --o-shell-image: url('../../assets/images/dark_shell.png');
-    --o-sider:url('../../assets/images/dark_sider.png');
-    --o-sider-hover:url('../../assets/images/dark_sider-hover.png');
-    --o-button-color:#576372;
-    --o-button-border-color:#576372;
-    --o-button-disable-color:#626D7C;
-    --o-button-disable-background:#203052;
-    --o-button-disable-border:#626D7C;
-    --o-time-text:#3E4551;
-    --o-bash-bg:#2A2F37;
+    --o-button-color: #576372;
+    --o-button-border-color: #576372;
+    --o-button-disable-color: #626D7C;
+    --o-button-disable-background: #203052;
+    --o-button-disable-border: #626D7C;
+    --o-time-text: #3E4551;
+    --o-bash-bg: #2A2F37;
 }
 
 body[theme='light'] {
     --o-bg-image: url('../../assets//images//light_background.png');
-    --o-shell-image: url('../../assets/images/light_shell.png');
-    --o-sider:url('../../assets/images/light_sider.png');
-    --o-sider-hover:url('../../assets/images/light_sider-hover.png');
-    --o-button-color:#C3CEDF;
-    --o-button-border-color:#D3DCE9;
-    --o-button-disable-color:#BFC7D7;
-    --o-button-disable-background:#EBEDF3;
-    --o-button-disable-border:#EBEDF3;
-    --o-time-text:#DFE5EF;
-    --o-bash-bg:#F4F6FA;
-
+    --o-button-color: #C3CEDF;
+    --o-button-border-color: #D3DCE9;
+    --o-button-disable-color: #BFC7D7;
+    --o-button-disable-background: #EBEDF3;
+    --o-button-disable-border: #EBEDF3;
+    --o-time-text: #DFE5EF;
+    --o-bash-bg: #F4F6FA;
 }

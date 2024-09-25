@@ -5,12 +5,11 @@ import InitalPanel from './InitalPanel.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import type { ConversationItem, RobotConversationItem } from '../types';
-import { api } from 'src/apis';
-import { useHistorySessionStore } from 'src/store/historySession';
+import { api } from 'src/apis/';
+import { useHistorySessionStore } from 'src/store/';
 import { successMsg } from 'src/components/Message';
 import { listen } from '@tauri-apps/api/event';
 import marked from 'src/utils/marked.js';
-
 
 interface StreamPayload {
   message: string;
@@ -20,8 +19,13 @@ export interface DialogueSession {
   modeOptions: any;
 }
 
-const props = withDefaults(defineProps<DialogueSession>(), {
-});
+export interface ExampleQuestionItem {
+  groupId: number;
+  id: number;
+  question: string;
+}
+
+const props = withDefaults(defineProps<DialogueSession>(), {});
 
 enum SupportMap {
   support = 1,
@@ -139,13 +143,13 @@ const questions = [
   },
 ];
 
-let groupid = ref(0);
+let groupId = ref(0);
 
 const selectMode = ref('');
 const selectedPlugin = ref('');
 
 let filterQuestions = computed(() =>
-  questions.filter(item => item.groupId === (groupid.value % 6)));
+  questions.filter(item => item.groupId === (groupId.value % 6)));
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -208,7 +212,7 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
  * @param type
  * @param cid
  */
-const handleCommont = async (
+const handleComment = async (
   type: 'support' | 'against',
   recordId: string,
   reason?: string,
@@ -242,14 +246,14 @@ const handleCommont = async (
  */
 const handleReport = async (
   recordId: string,
-  reason: string,
+  reason?: string | undefined,
 ) => {
   const params: {
     recordId: string;
     reason: string;
   } = {
     recordId: recordId,
-    reason: reason,
+    reason: reason ? reason : '',
   };
   const [_, res] = await api.report(params);
   if (!_ && res) {
@@ -258,7 +262,7 @@ const handleReport = async (
 };
 
 const changeProblem = () => {
-  groupid.value++;
+  groupId.value++;
 };
 
 const selectQuestion = (event: any) => {
@@ -350,8 +354,8 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           :key="index"
           :type="item.belong"
           :content="item.message"
-          :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
-          :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : ''"
+          :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : undefined"
+          :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : undefined"
           :is-finish="getItem(item as ConversationItem, 'isFinish')"
           :is-support="getItem(item as ConversationItem, 'isSupport')"
           :is-against="getItem(item as ConversationItem, 'isAgainst')"
@@ -360,7 +364,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
           :user-selected-plugins="selectedPlugin"
           :search-suggestions="getItem(item as ConversationItem, 'searchSuggestions')"
-          @commont="handleCommont"
+          @comment="handleComment"
           @report="handleReport"
           @handleSendMessage="handleSendMessage"
         />
@@ -405,14 +409,11 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           </div>
         </div>
         <!-- 识别方式 -->
-        <div class="recognitionMode">
+        <div class="plugin-selector">
           <el-select
             class="mode-select"
             v-model="selectMode"
-            collapse-tags
-            filterable
-            allow-create
-            default-first-option
+            clearable
             placeholder="请选择识别方式"
           >
             <el-option
@@ -522,7 +523,6 @@ button[disabled]:hover {
   position: relative;
   align-items: center;
   justify-content: space-between;
-  // min-width: 500px;
 
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
@@ -574,14 +574,11 @@ button[disabled]:hover {
   &-bottom {
     margin-top: 24px;
     height: auto;
-    // width: 1000px;
     width: calc(100% - 48px);
 
     &-sendbox {
       background-color: var(--o-bg-color-base);
-      // height: 40px;
       border-radius: 8px;
-      // padding: 16px 24px;
       padding: 11px;
       bottom: 0px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -647,8 +644,7 @@ button[disabled]:hover {
   display: flex;
   margin-top: 16px;
   bottom: 160px;
-  // width: 1000px;
-  max-height: 100px;
+  max-height: 216px;
   overflow-y: auto;
 
   ul {
@@ -716,15 +712,14 @@ button[disabled]:hover {
   bottom: 168px;
 }
 
-.recognitionMode {
+.plugin-selector {
   width: calc(100% - 48px);
-  // min-width: 154px;
   margin-bottom: 8px;
-  margin-top: 16px;
+  margin-top: 8px;
   border-radius: 8px;
 
   .mode-select {
-    max-width: 100%;
+    max-width: 168px;
     height: 40px;
   }
 }
@@ -738,10 +733,6 @@ button[disabled]:hover {
 
 :deep(.el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light) {
   border-radius: 4px;
-}
-
-.multiple-select {
-  display: block;
 }
 
 :deep(.el-input__wrapper) {

@@ -29,10 +29,6 @@ const themeStore = useChangeThemeStore();
 </template>
 
 <style lang="scss" scoped>
-.dialogue-panel {
-  // padding-right: 25px;
-}
-
 .sidenav {
   height: 100%;
   /* 100% 全高 */
@@ -78,36 +74,20 @@ const themeStore = useChangeThemeStore();
   margin-left: 50px;
 }
 
-
 .container {
   display: flex;
   justify-content: center;
 }
 
 .inital-panel {
-  // background-color: var(--o-bg-color-base);
   background-color: transparent;
   border-radius: 8px;
   padding-top: 64px;
   display: block;
   width: 100%;
-// 
+
   @media screen and (max-width: 1368px) and (max-height: 768px) {
     padding: 16px 24px 16px 24px;
-  }
-
-  .introduction {
-    display: flex;
-    height: 24px;
-    justify-content: center;
-    line-height: 24px;
-    font-weight: 500;
-    font-size: 14px;
-    color: var(--o-text-color-primary);
-
-    img{
-      height: 24px;
-    }
   }
 
   &-tips {
@@ -121,23 +101,16 @@ const themeStore = useChangeThemeStore();
     }
   }
 
-  .eg {
-    background-color: var(--o-bg-color-base);
-    border-radius: 8px;
-    p {
-      font-size: 12px;
-      color: var(--o-text-color-secondary);
-    }
-  }
-
   .eg-list {
     display: flex;
     width: auto;
     background-color: var(--o-bg-color-base);
+    border-radius: 8px;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    padding: 8px;
 
     li {
       cursor: text;
@@ -147,44 +120,33 @@ const themeStore = useChangeThemeStore();
       display: flex;
       align-items: center;
       width: calc(50% - 8px);
-      font-size: 12px;
-      // height: 64px;
       background-color: transparent;
-      // margin-top: 20px;
       overflow: hidden;
 
       @media screen and (max-width: 1368px) {
         width: calc(50% - 4px);
-        padding: 10px;
+        padding: 8px;
       }
 
       @media screen and (max-height: 768px) {
         width: calc(50% - 4px);
-        padding: 10px;
+        padding: 8px;
       }
 
       img {
-        width: 28px;
-        height: 28px;
-        // align-self: baseline;
-        // margin-right: 6px;
+        width: 32px;
+        height: 32px;
+        margin-right: 2px;
       }
-
 
       &__text {
         width: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        font-size: 12px;
+        font-size: 14px;
         color: var(--o-text-color-primary);
         line-height: 24px;
-
-        &-desc {
-          font-size: 12px;
-          color: var(--o-text-color-secondary);
-          font-weight: 400;
-        }
       }
     }
   }
