@@ -30,7 +30,7 @@ export interface DialoguePanelProps {
   recordList?:string[] | undefined;
   //
   isLikeList?:number[] | undefined;
-  search_suggestions?:any;
+  searchSuggestions?:any;
 }
 const themeStore = useChangeThemeStore();
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
@@ -238,11 +238,11 @@ const selectQuestion = (item:object) => {
           </div>
         </div>
       </div>
-      <div class='search-suggestions' v-if='props.search_suggestions'>
+      <div class='search-suggestions' v-if='props.searchSuggestions'>
         <h4 class='tip'>你可以继续问我:</h4>
         <ul class='search-suggestions_value'>
           <li class='value'
-          v-for="(item, _) in props.search_suggestions" >
+          v-for="(item, _) in props.searchSuggestions" >
           <p @click='selectQuestion(item)'><p class='test' v-if='item.name'>#{{item.name}}</p>{{item.question}}</p></li>
         </ul>
       </div>

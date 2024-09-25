@@ -373,7 +373,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
           :user-selected-plugins="selectedPlugin"
-          :search_suggestions="getItem(item, 'search_suggestions')"
+          :search-suggestions="getItem(item, 'searchSuggestions')"
           @commont="handleCommont"
           @report="handleReport"
           @handleSendMessage="handleSendMessage"
