@@ -151,7 +151,7 @@ let filterQuestions = computed(() =>
 const dialogueInput = ref<string>('');
 
 // 对话列表
-const { sendQuestion, scrollBottom } = useSessionStore();
+const { sendQuestion, judgeMessage } = useSessionStore();
 const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
@@ -328,26 +328,12 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       handleMarkdown(contentMessage.value);
     }
   } catch (error) {
-    let msg = '';
+    contentMessage.value = '';
     if (line == '[DONE]') {
       (conversationList.value[lastIndex] as RobotConversationItem).isFinish = true;
       isAnswerGenerating.value = false;
-      contentMessage.value='';
-    } else if (line == '[SENSITIVE]') {
-      msg = '很抱歉，暂时只支持问题 openEuler 和 Linux 领域相关的问题';
-    } else if (line == '[ERROR]') {
-      msg = '系统繁忙，请稍后再试';
-    } else {
-      msg = '未知错误，请稍后再试';
-    }
-    if (msg) {
-      contentMessage.value = '';
-      const answerIndex = lastIndex >= 0 ? lastIndex : 0;
-      const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-      (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = msg;
-      (conversationList.value[lastIndex] as RobotConversationItem).isFinish = true;
-      isAnswerGenerating.value = false;
-      scrollBottom();
+    } else if (judgeMessage(lastIndex, line)) {
+      console.error('JSON decode error:', line);
     }
   };
 });
@@ -360,20 +346,20 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       <div class="dialogue-session-main" ref="dialogueRef">
         <DialoguePanel
           v-for="(item, index) in conversationList"
-          :cid="item.cid"
+          :cid="item.cid.toString()"
           :key="index"
           :type="item.belong"
           :content="item.message"
           :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
           :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : ''"
-          :is-finish="getItem(item, 'isFinish')"
-          :is-support="getItem(item, 'isSupport')"
-          :is-against="getItem(item, 'isAgainst')"
+          :is-finish="getItem(item as ConversationItem, 'isFinish')"
+          :is-support="getItem(item as ConversationItem, 'isSupport')"
+          :is-against="getItem(item as ConversationItem, 'isAgainst')"
           :created-at="item.createdAt"
           :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
           :user-selected-plugins="selectedPlugin"
-          :search-suggestions="getItem(item, 'searchSuggestions')"
+          :search-suggestions="getItem(item as ConversationItem, 'searchSuggestions')"
           @commont="handleCommont"
           @report="handleReport"
           @handleSendMessage="handleSendMessage"

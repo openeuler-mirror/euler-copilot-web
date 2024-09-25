@@ -349,7 +349,7 @@ export const useSessionStore = defineStore('session', () => {
     conversationList,
     isAnswerGenerating,
     dialogueRef,
-    scrollBottom,
+    judgeMessage,
     sendQuestion,
     pausedStream,
     prePage,

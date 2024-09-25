@@ -43,6 +43,7 @@ export interface ChainItem {
 export type ConversationItem = UserConversationItem | RobotConversationItem;
 
 export interface UserConversationItem {
+  [key: string]: any;
   cid: number;
   belong: UserDialoguePanelType;
   message: string;
@@ -50,6 +51,7 @@ export interface UserConversationItem {
 }
 
 export interface RobotConversationItem {
+  [key: string]: any;
   cid: number;
   sessionId: string;
   recordId: string;
