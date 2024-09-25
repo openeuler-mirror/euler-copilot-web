@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
     "tauri:release": "tauri build --release",
+    "cargo:format": "cd src-tauri && cargo fmt",
     "cargo:check": "cd src-tauri && cargo check",
     "cargo:clean": "cd src-tauri && cargo clean",
     "update": "pnpm update && cd src-tauri && cargo update"

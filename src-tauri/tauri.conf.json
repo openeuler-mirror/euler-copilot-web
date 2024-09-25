@@ -53,13 +53,16 @@
       {
         "label": "main",
         "title": "Copilot",
-        "decorations": false,
-        "skipTaskbar": true,
-        "width": 400,
+        "width": 500,
         "height": 680,
-        "minWidth": 400,
+        "minWidth": 500,
         "minHeight": 680,
         "maxWidth": 720,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "skipTaskbar": true,
+        "maximizable": false,
+        "minimizable": false,
         "resizable": true,
         "visible": false
       }

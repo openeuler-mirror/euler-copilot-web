@@ -12,7 +12,6 @@ import { ARGEEMENT_VERSION } from 'src/conf/version';
 import { reactive } from 'vue';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { api } from 'src/apis';
-import { stopGeneraterion } from 'src/apis/paths';
 import { invoke } from '@tauri-apps/api/tauri';
 // Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件
@@ -48,29 +47,30 @@ const initCopilot = async (): Promise<void> => {
   }
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
-    const [_ , res] = await api.getSessionID();
-    if (!_ && res) {
-      const cookie = res.result.session_id;
-      localStorage.setItem('session',cookie);
-      await getModeOptions();
-      await stopGeneraterion();
-    }
-    return;
+    await invoke('refresh_session_id').then(async (sessionID: any) => {
+      if (sessionID) {
+        localStorage.setItem('session', sessionID);
+        await getModeOptions();
+        await invoke('stop');
+      }
+    }).catch(err => {
+      console.error(err);
+    });
   }
 };
 
 const setPlugins = async() => {
   const [_, res] = await api.getRecognitionMode();
-    if (!_ && res) {
-      res.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.plugin_name,
-          disabled: false
-        };
-        modeOptions.value.push(opt);
-      });
-    }
+  if (!_ && res) {
+    res.result.forEach(item => {
+      const opt = {
+        label: item.plugin_name,
+        value: item.plugin_name,
+        disabled: false
+      };
+      modeOptions.value.push(opt);
+    });
+  }
 }
 
 const settingsHandler = () => {
@@ -120,8 +120,9 @@ const changeTheme = () => {
 };
 
 onMounted(() => {
-  if (localStorage.getItem('theme')) {
-    document.body.setAttribute('theme', localStorage.getItem('theme'));
+  const theme = localStorage.getItem('theme');
+  if (theme) {
+    document.body.setAttribute('theme', theme);
   }
 });
 
@@ -137,19 +138,19 @@ watch(
 
 const getModeOptions = async() => {
   await api.getRecognitionMode().then(data => {
-        const [_,res] = data;
-        res.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.plugin_name,
-          disabled: false
-        };
-        const a = modeOptions.find((item) => {return item.label === opt.label})
-        if(!a){
-          modeOptions.push(opt);
-        }
-      });
-      });
+    const [_,res] = data;
+    res.result.forEach(item => {
+    const opt = {
+      label: item.plugin_name,
+      value: item.plugin_name,
+      disabled: false
+    };
+    const a = modeOptions.find((item) => {return item.label === opt.label})
+    if(!a){
+      modeOptions.push(opt);
+    }
+  });
+  });
 }
 
 </script>
@@ -279,7 +280,7 @@ const getModeOptions = async() => {
   height: 100vh;
   width: 100vw;
   min-height: 680px;
-  min-width: 400px;
+  min-width: 500px;
   overflow: scroll;
   display: flex;
   flex-direction: column;

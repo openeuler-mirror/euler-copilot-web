@@ -95,8 +95,8 @@ onMounted(() => {
 .dialogue {
   height: 100vh;
   width: 100vw;
-  min-height: 300px;
-  min-width: 400px;
+  min-height: 480px;
+  min-width: 540px;
   overflow: scroll;
   display: flex;
   flex-direction: column;
