@@ -176,23 +176,6 @@ export const useSessionStore = defineStore('session', () => {
     }
   };
 
-  /**
-   * 解析图表格式的文本
-   */
-  const extractAttributesFromMarker = (str: string): { title: string; link: string } | null => {
-    const regex = /<<<[^>]*title="([^"]+)"[^>]*link="([^"]+)"[^>]*>>>/;
-
-    const match = str.match(regex);
-
-    if (match) {
-      return {
-        title: match[1],
-        link: match[2],
-      };
-    } else {
-      return null;
-    }
-  };
 
   const handleServiceStatus = async (
     status: number,
