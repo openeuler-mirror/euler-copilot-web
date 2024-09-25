@@ -67,7 +67,7 @@ export const useSessionStore = defineStore('session', () => {
   ): Promise<void> => {
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationID = currentSelectedSession;
-    console.log("Current conversation ID:", params.conversationID)
+    console.log("Current conversation ID:", params.conversationID);
     // 当前问答在整个问答记录中的索引
     const answerIndex = ind ?? conversationList.value.length - 1;
     // const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
@@ -89,7 +89,7 @@ export const useSessionStore = defineStore('session', () => {
         conversation: params.conversationID,
         language: "zh",
         record: params.recordID,
-        plugin: "",
+        plugin: params.userSelectedPlugins,
         flow: params.userSelectedFlow,
         flowId: "",
       }).then(async (status: any) => {

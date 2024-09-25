@@ -61,12 +61,11 @@ const initCopilot = async (): Promise<void> => {
 
 const setPlugins = async() => {
   await invoke('plugin').then(async (data: any) => {
-    console.log(data);
     if (data && data.result) {
       data.result.forEach(item => {
         const opt = {
           label: item.plugin_name,
-          value: item.plugin_name,
+          value: item.id,
           disabled: false
         };
         modeOptions.value.push(opt);
@@ -142,12 +141,11 @@ watch(
 
 const getModeOptions = async() => {
   await invoke('plugin').then(async (data: any) => {
-    console.log(data);
     if (data && data.result) {
       data.result.forEach(item => {
         const opt = {
           label: item.plugin_name,
-          value: item.plugin_name,
+          value: item.id,
           disabled: false
         };
         const plugin = modeOptions.find((item) => {
