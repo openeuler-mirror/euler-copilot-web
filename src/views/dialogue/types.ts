@@ -55,64 +55,63 @@ export interface RobotConversationItem {
   recordId: string;
   belong: RobotDialoguePanelType;
   message: string[];
-  messageList:MessageArray;
+  messageList: MessageArray;
   // 当前选中第n次回答的索引值
   currentInd: number;
   isFinish?: boolean;
   isSupport?: boolean;
   isAgainst?: boolean;
   createdAt?: string | Date;
-  groupId?:string;
-  search_suggestions?:string[];
+  groupId?: string;
+  searchSuggestions?: string[];
 }
 
 export interface MessageRecord {
-  message:string;
-  record_id:string;
-  is_like:number|undefined;
+  message: string;
+  recordId: string;
+  isLike: number | undefined;
 }
 
 export class MessageArray {
-  private items:MessageRecord[] = [];
-  addItem(message: string,record_id:string,is_like:number):void {
+  private items: MessageRecord[] = [];
+  addItem(message: string, recordId: string, isLike: number): void {
     const newItem: MessageRecord = {
       message,
-      record_id,
-      is_like,
+      recordId,
+      isLike: isLike,
     };
     this.items.push(newItem);
   }
 
-  getItem(index: number):MessageRecord|undefined {
+  getItem(index: number): MessageRecord | undefined {
     return this.items[index];
   }
 
-  getLength():number {
+  getLength(): number {
     return this.items.length;
   }
 
-  getAllItems():MessageRecord[]{
+  getAllItems(): MessageRecord[] {
     return this.items;
   }
 
-  getMessageList(): string[] {   
-    return this.items.map(item => item.message);  
-  }  
-
-  getRecordIdList(): string[] {    
-    return this.items.map(item => item.record_id);  
-  }  
-  
-  getIslikeList(): number[] {   
-    return this.items.map(item => item.is_like);  
-  }  
-
-  getisLikeByIndex(index:number): number {
-    return this.items.map(item => item.is_like)[index];
+  getMessageList(): string[] {
+    return this.items.map(item => item.message);
   }
 
-  changeisLikeByCidAndIndex(cid:number,index:number,islike:number|boolean):void {
-    const a = this.getisLikeByIndex(index)[cid];
+  getRecordIdList(): string[] {
+    return this.items.map(item => item.recordId);
+  }
+
+  getIslikeList(): number[] {
+    return this.items.map(item => item.isLike);
+  }
+
+  getisLikeByIndex(index: number): number {
+    return this.items.map(item => item.isLike)[index];
+  }
+
+  changeisLikeByCidAndIndex(cid: number, index: number, islike: number | boolean): void {
     this.getisLikeByIndex(index)[cid] = islike;
   }
 

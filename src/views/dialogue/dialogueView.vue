@@ -1,24 +1,18 @@
 <script lang="ts" setup>
 import { useRouter, useRoute } from 'vue-router';
 import { onMounted, ref, watch } from 'vue';
-import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
-import { useHistorySessionStore, useSessionStore, useChangeThemeStore } from 'src/store';
+import { useChangeThemeStore } from 'src/store';
 import DialogueSession from './components/DialogueSession.vue';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
-import { marked } from 'marked';
-import { ARGEEMENT_VERSION } from 'src/conf/version';
 import { reactive } from 'vue';
-import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
 // Given hello.txt pointing to file with "Hello world", which is 11 bytes long:
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch;
 const router = useRouter();
 const route = useRoute();
-const { historySession } = storeToRefs(useHistorySessionStore());
-const { conversationList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
 const dialogVisible = ref(false);
 const modeOptions = reactive([
@@ -35,11 +29,10 @@ const loginDialogVisible = ref(false);
 /**
  * 初始化
  */
-
 const initCopilot = async (): Promise<void> => {
-// await writeTextFile('app.conf', 'file contents', { dir: BaseDirectory.AppConfig });
-  if(localStorage.getItem('theme')){
-    themeStore.theme = localStorage.getItem('theme');
+  const themeValue = localStorage.getItem('theme');
+  if (themeValue) {
+    themeStore.theme = themeValue;
   }
   else {
     localStorage.setItem('theme', 'dark');
@@ -58,51 +51,12 @@ const initCopilot = async (): Promise<void> => {
   }
 };
 
-const setPlugins = async() => {
-  await invoke('plugin').then(async (data: any) => {
-    if (data && data.result) {
-      data.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.id,
-          disabled: false
-        };
-        modeOptions.value.push(opt);
-      });
-    }
-  }).catch(err => {
-    console.error(err);
-  });
-}
-
 const settingsHandler = () => {
   invoke('show_settings_window')
 };
 
 // 协议内容
 const agreement = ref<string>('');
-// 协议版本
-const agreementVersion = ref<string>(ARGEEMENT_VERSION);
-
-/**
- * 读取协议
- */
-const readAgreement = async () => {
-  const response = await import('src/conf/agreement.md?raw');
-  agreement.value = marked.parse(response.default) as string;
-};
-
-/**
- * 处理服务协议是否显示
- * @param CheckedVersion
- */
-const handleAgreement = async (CheckedVersion: string | null) => {
-  if (agreementVersion.value === CheckedVersion) {
-    return;
-  }
-  await readAgreement();
-  dialogVisible.value = true;
-};
 
 /**ss
  *
@@ -141,7 +95,7 @@ watch(
 const getModeOptions = async() => {
   await invoke('plugin').then(async (data: any) => {
     if (data && data.result) {
-      data.result.forEach(item => {
+      data.result.forEach((item: any) => {
         const opt = {
           label: item.plugin_name,
           value: item.id,

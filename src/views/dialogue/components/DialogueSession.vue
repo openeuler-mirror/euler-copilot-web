@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import InitalPanel from './InitalPanel.vue';
 import { storeToRefs } from 'pinia';
-import { useSessionStore, useChangeThemeStore } from 'src/store';
+import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
@@ -28,7 +28,7 @@ enum SupportMap {
   against = 0,
 }
 
-const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
+const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const modeOptions = ref(props.modeOptions);
 const questions = [
@@ -142,10 +142,7 @@ const questions = [
 let groupid = ref(0);
 
 const selectMode = ref('');
-
-const user_selected_plugins = ref('');
-
-const tagNum = ref(6);
+const selectedPlugin = ref('');
 
 let filterQuestions = computed(() =>
   questions.filter(item => item.groupId === (groupid.value % 6)));
@@ -154,7 +151,7 @@ let filterQuestions = computed(() =>
 const dialogueInput = ref<string>('');
 
 // 对话列表
-const { sendQuestion } = useSessionStore();
+const { sendQuestion, scrollBottom } = useSessionStore();
 const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
@@ -162,7 +159,7 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (question: string, user_selected_flow?: string[]) => {
+const handleSendMessage = async (question: string, user_selected_flow?: string) => {
   if (isAnswerGenerating.value) return;
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish){
@@ -213,9 +210,7 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
  */
 const handleCommont = async (
   type: 'support' | 'against',
-  cid: number,
-  recordId: number,
-  index: number,
+  recordId: string,
   reason?: string,
   reasonLink?: string,
   reasonDescription?: string,
@@ -246,14 +241,14 @@ const handleCommont = async (
  * @param cid
  */
 const handleReport = async (
-  qaRecordId: string,
+  recordId: string,
   reason: string,
 ) => {
   const params: {
-    qaRecordId: string;
+    recordId: string;
     reason: string;
   } = {
-    record_id: qaRecordId,
+    recordId: recordId,
     reason: reason,
   };
   const [_, res] = await api.report(params);
@@ -266,29 +261,8 @@ const changeProblem = () => {
   groupid.value++;
 };
 
-const selectQuestion = (event) => {
+const selectQuestion = (event: any) => {
   dialogueInput.value = event.target.innerText;
-};
-
-const setOptionDisabled = () => {
-  if (selectMode.value.length === 0) {
-    modeOptions.value.map(item => {
-      item.disabled = false;
-      return item;
-    });
-  } else {
-    const isAuto = selectMode.value === 'auto';
-    let first = true;
-    modeOptions.value.map(item => {
-      if (!first) {
-        item.disabled = isAuto ? true : false;
-      } else {
-        item.disabled = isAuto ? false : true;
-      }
-      first = false;
-      return item;
-    });
-  }
 };
 
 onMounted(() => {
@@ -303,6 +277,7 @@ watch(() => props, () => {
 })
 
 const createNewSession = async (): Promise<void> => {
+  isAnswerGenerating.value = false;
   conversationList.value = [];
   await generateSession();
 };
@@ -313,7 +288,8 @@ const contentMessage = ref('')
  * 暂停和重新生成问答
  */
 const handlePauseAndReGenerate = (cid?: number) => {
-    pausedStream(cid);
+  pausedStream(cid);
+  contentMessage.value = '';
 };
 
 const handleMarkdown = (content: string) => {
@@ -335,7 +311,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
   try {
     const json = JSON.parse(line);
     if (json.search_suggestions) {
-      (conversationList.value[lastIndex] as RobotConversationItem).search_suggestions = json.search_suggestions;
+      (conversationList.value[lastIndex] as RobotConversationItem).searchSuggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
     } else if (json.type == 'extract') {
       const data = JSON.parse(json.data);
@@ -365,12 +341,13 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       msg = '未知错误，请稍后再试';
     }
     if (msg) {
-      contentMessage.value='';
-      (conversationList.value[lastIndex] as RobotConversationItem).message[
-        (conversationList.value[lastIndex] as RobotConversationItem).currentInd
-      ] = msg;
+      contentMessage.value = '';
+      const answerIndex = lastIndex >= 0 ? lastIndex : 0;
+      const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+      (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = msg;
       (conversationList.value[lastIndex] as RobotConversationItem).isFinish = true;
       isAnswerGenerating.value = false;
+      scrollBottom();
     }
   };
 });
@@ -395,7 +372,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           :created-at="item.createdAt"
           :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
-          :user-selected-plugins="user_selected_plugins"
+          :user-selected-plugins="selectedPlugin"
           :search_suggestions="getItem(item, 'search_suggestions')"
           @commont="handleCommont"
           @report="handleReport"
@@ -410,7 +387,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
         <!-- 问题换一换 -->
         <div
           v-if="isAnswerGenerating"
-          class="dialogue-panel-stop"
+          class="dialogue-panel__stop"
           @click="handlePauseAndReGenerate(Number(conversationList.length))"
         >
           <img
@@ -508,7 +485,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
   left: calc(100% - 70px);
 }
 
-.dialogue-panel-stop {
+.dialogue-panel__stop {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -534,7 +511,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     line-height: 24px;
   }
 }
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
   border: none;
   box-shadow: none;
 }
@@ -766,14 +743,14 @@ button[disabled]:hover {
   }
 }
 
-::v-deep .el-input__wrapper {
+:deep(.el-input__wrapper) {
   border: none;
   box-shadow: none;
   height: 40px;
   width: 150px;
 }
 
-::v-deep .el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light {
+:deep(.el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light) {
   border-radius: 4px;
 }
 

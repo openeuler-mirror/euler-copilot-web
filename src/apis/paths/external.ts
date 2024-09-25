@@ -30,12 +30,12 @@ export const feedback = (params: {
  * @returns
  */
 export const report = (params: {
-  record_id: string;
+  recordId: string;
   reason: string;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
   return post('/api/blacklist/complaint', params);
 };
 
 export const externalApi = {
-  feedback,report
+  feedback, report
 };

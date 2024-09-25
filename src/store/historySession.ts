@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import { api } from 'src/apis';
 import { defineStore } from 'pinia';
-import { ref, computed, h } from 'vue';
+import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore } from '.';
 import type { SessionItem } from 'src/components/sessionCard/type';
@@ -96,7 +96,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
         createdTime: item.created_time,
         title: item.title,
       }));
-      if(res.result.length === 0){
+      if (res.result.length === 0) {
         await generateSession();
       }
       if (!currentSelectedSession.value) {

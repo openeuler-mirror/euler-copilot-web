@@ -35,7 +35,7 @@ export const useSessionStore = defineStore('session', () => {
       }
       //完成所有渲染再执行
       setTimeout(() => {
-        dialogueRef.value.scrollTo({
+        dialogueRef.value?.scrollTo({
           top: dialogueRef.value.scrollHeight,
           behavior: action,
         });
@@ -117,13 +117,12 @@ export const useSessionStore = defineStore('session', () => {
     }
   };
 
-
   const handleServiceStatus = async (
     status: number,
     params: {
       question: string;
       sessionId?: string;
-      qaRecordId?: string;
+      recordId?: string;
     },
     ind?: number
   ): Promise<boolean> => {
@@ -135,6 +134,7 @@ export const useSessionStore = defineStore('session', () => {
       return true;
     }
   };
+
   /**
    * 处理不合法信息
    * @param ind 当前问答对索引
@@ -144,7 +144,6 @@ export const useSessionStore = defineStore('session', () => {
     if (msg.includes('[SENSITIVE]')) {
       errorMsg = '很抱歉，暂时只支持问题 openEuler 和 Linux 领域相关的问题';
     }
-    //error没加限制
     if (msg.includes('[ERROR]')) {
       errorMsg = '系统繁忙，请稍后再试';
     }
@@ -157,9 +156,9 @@ export const useSessionStore = defineStore('session', () => {
       scrollBottom();
       return false;
     }
-
     return true;
   };
+
   /**
    * 发送问题
    * @param question 问题
@@ -232,18 +231,20 @@ export const useSessionStore = defineStore('session', () => {
       );
     }
   }
+
   /**
    * 暂停流式返回
    */
   const pausedStream = async (cid?: number): Promise<void> => {
     const answerIndex =
-      conversationList.value.findIndex((val) => val.cid === cid) ||
+      conversationList.value.findIndex((val: any) => val.cid === cid) ||
       conversationList.value.length - 1;
     isPaused.value = true;
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
     cancel();
     await invoke('stop');
   };
+
   /**
    * 重新生成回答
    * @param cid
@@ -270,7 +271,6 @@ export const useSessionStore = defineStore('session', () => {
       return;
     }
     (conversationList.value[answerInd] as RobotConversationItem).currentInd -= 1;
-    const index = (conversationList.value[answerInd] as RobotConversationItem).currentInd;
   };
   /**
    * 下一条
@@ -286,8 +286,6 @@ export const useSessionStore = defineStore('session', () => {
       return;
     }
     (conversationList.value[answerInd] as RobotConversationItem).currentInd += 1;
-    const index = (conversationList.value[answerInd] as RobotConversationItem).currentInd;
-
   };
   // #endregion
 
@@ -297,26 +295,25 @@ export const useSessionStore = defineStore('session', () => {
    */
   const getConversation = async (sessionId: string): Promise<void> => {
     const [_, res] = await api.getHistoryConversation(sessionId);
-    //
     if (!_ && res) {
       conversationList.value = [];
       res.result.forEach((record) => {
         if (
           (conversationList.value as RobotConversationItem[]).find(
-            (i) => i.groupId === record.group_id
+            (i) => i.groupId === record.groupId
           )
         ) {
           const re = (conversationList.value as RobotConversationItem[]).find(
-            (i) => i.groupId === record.group_id
+            (i) => i.groupId === record.groupId
           );
           re?.message.push(record.answer);
           if (typeof (re?.message) !== 'string') {
-            re?.messageList.addItem(record.answer, record.record_id, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
+            re?.messageList.addItem(record.answer, record.recordId, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
           }
           return;
         }
         const a = new MessageArray();
-        a.addItem(record.answer, record.record_id, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
+        a.addItem(record.answer, record.recordId, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
         conversationList.value.push(
           {
             cid: conversationList.value.length + 1,
@@ -333,9 +330,9 @@ export const useSessionStore = defineStore('session', () => {
             isAgainst: false,
             isSupport: false,
             isFinish: true,
-            recordId: record.record_id,
-            sessionId: record.conversation_id,
-            groupId: record.group_id,
+            recordId: record.recordId,
+            sessionId: record.conversationId,
+            groupId: record.groupId,
           }
         );
         scrollBottom('auto');
@@ -343,34 +340,31 @@ export const useSessionStore = defineStore('session', () => {
     }
   };
 
-  const comment = (cid: number, isSupport: boolean, index: number): void => {
-    const ind = conversationList.value.find((item) => item.cid === cid);
-    // ind.message.items[index].is_like = isSupport;
-  };
-
   const cancel = () => {
     controller.abort();
   };
+
   return {
     isPaused,
     conversationList,
     isAnswerGenerating,
     dialogueRef,
+    scrollBottom,
     sendQuestion,
     pausedStream,
     prePage,
     nextPage,
     reGenerateAnswer,
     getConversation,
-    comment,
     cancel,
   };
 });
 
 export const useChangeThemeStore = defineStore('theme', () => {
   const theme = ref('');
-  if (localStorage.getItem('theme')) {
-    theme.value = localStorage.getItem('theme');
+  const themeValue = localStorage.getItem('theme');
+  if (themeValue) {
+    theme.value = themeValue;
   } else {
     theme.value = 'dark'
   }

@@ -18,12 +18,6 @@ export interface FcResponse<T> {
   result: T;
 }
 
-interface MyResponseData<T> {  
-  code: number;  
-  message: string; 
-  result: T;  
-}  
-
 export interface IAnyObj {
   [index: string]: unknown;
 }
@@ -54,12 +48,10 @@ server.interceptors.response.use(
     if (response.status !== 200) {
       return Promise.reject(response.data);
     }
-    // if (!handleGeneralError(response.data.code, response.data.label, response.data.err_msg)) {
-    //   return false;
-    // }
     return response;
   },
   async (error) => {
+    console.error("request error", error);
   }
 );
 

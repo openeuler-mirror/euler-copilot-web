@@ -1,24 +1,10 @@
 <script lang="ts" setup>
-import type { DialoguePanelType } from './type';
-import marked from 'src/utils/marked.js';
 import { computed, ref } from 'vue';
 import { writeText } from 'src/utils';
 import { useSessionStore, useChangeThemeStore } from 'src/store/session';
-import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
-import xss from 'xss';
-import { storeToRefs } from 'pinia';
 import { errorMsg, successMsg } from 'src/components/Message';
-import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import { onMounted,watch,onBeforeUnmount } from 'vue';
-import { listen } from '@tauri-apps/api/event';
-const { isAnswerGenerating } = storeToRefs(useSessionStore());
-const search_suggestions = ref();
-const { conversationList} = storeToRefs(useSessionStore());
-
-interface StreamPayload {
-  message: string;
-}
 
 export interface DialoguePanelProps {
   cid: string;
@@ -61,14 +47,14 @@ const emits = defineEmits<{
   (
     e: 'commont',
     type: 'support' | 'against',
-    qaRecordId:string,
+    recordId:string,
     reason?: string,
     reason_link?: string,
     reason_description?: string,
   ): void;
   (
     e: 'report',
-    qaRecordId:string,
+    recordId:string,
     reason?: string,
   ): void;
   (
@@ -89,7 +75,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
   }
   if (props.isFinish) {
     // 重新生成
-    reGenerateAnswer(cid, ref(props.userSelectedPlugins));
+    reGenerateAnswer(cid, props.userSelectedPlugins);
   } else {
     // 停止生成
     pausedStream(cid);
@@ -108,89 +94,13 @@ const handleCopy = (): void => {
   successMsg('复制成功');
   return;
 };
-/**
- * 赞同与反对
- */
-const handleSupport = async (type: 'support' | 'against' | 'report'): Promise<void> => {
-  if (type === 'support') {
-    const qaRecordId = props.recordList[index.value];
-    emits('commont', type, props.cid,qaRecordId,index.value);
-    isLike.value[index.value] = 1;
-    handleIsLike();
-  } else if (type === 'against') {
-    isAgainstVisible.value = true;
-  } else {
-    isReportVisible.value = true;
-  }
-};
-
-/**
- * 反对
- * @param reason
- * @param reasonLink
- * @param reasonDescription
- */
-const handleAgainst = async (
-  reason: string,
-  reasonLink?: string,
-  reasonDescription?: string
-): Promise<void> => {
-  const qaRecordId = props.recordList[index.value];
-  emits('commont', 'against', props.cid,qaRecordId,index.value, reason, reasonLink, reasonDescription);
-  isAgainstVisible.value = false;
-  isLike.value[index.value] = 0;
-  handleIsLike();
-};
-
-const handleOutsideClick = () => {
-  isAgainstVisible.value = false;
-};
-
-const bindDocumentClick = () => {
-  document.addEventListener('click', handleOutsideClick);
-};
-
-const unbindDocumentClick = () => {
-  document.removeEventListener('click', handleOutsideClick);
-};
-
-// 举报功能
-const handleReport = async (
-  reason: string,
-): Promise<void> => {
-  const qaRecordId = props.recordList[index.value];
-  emits('report',qaRecordId,reason);
-  isAgainstVisible.value = false;
-};
-
-//处理举报逻辑
-const handleReportClick = () => {
-  isReportVisible.value = false;
-};
-
-//处理举报逻辑
-const bindReportClick = () => {
-  document.addEventListener('click', handleReportClick);
-};
-
-//处理举报逻辑
-const unbindReportClick = () => {
-  document.removeEventListener('click', handleReportClick);
-};
-
-const isAgainstVisible = ref<boolean>(false);
-const isReportVisible = ref<boolean>(false);
 
 // 解析完成后的文本内容
 const contentAfterMark = computed(() => {
   if (!props.content) {
     return '';
   }
-  // return marked.parse(
-  //   xss(props.content[props.currentSelected]).replace(/&gt;/g, '>').replace(/&lt;/g, '<')
-  // );
   return props.content[props.currentSelected]
-  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
 });
 
 const prePageHandle = (cid:number) => {
@@ -254,13 +164,6 @@ onBeforeUnmount(() => {
   isLike.value = undefined;
   index.value = 0;
 })
-
-// if (!props.content) {
-//     return '';
-//   }
-//   return marked.parse(
-//     xss(props.content[props.currentSelected]).replace(/&gt;/g, '>').replace(/&lt;/g, '<')
-//   );
 
 const selectQuestion = (item:object) => {
   let question = item.question;
@@ -332,102 +235,6 @@ const selectQuestion = (item:object) => {
               <img v-if="themeStore.theme === 'dark'" class="button-icon copy" src="src/assets/svgs/dark_copy.svg" @click="handleCopy" />
               <img v-else class="button-icon copy" src="src/assets/svgs/light_copy.svg" @click="handleCopy" />
             </el-tooltip>
-            <!-- <el-tooltip placement="top" content="赞同" effect="light">
-              <img
-                class="button-icon simg"
-                v-if="!isSupport && themeStore.theme === 'dark'"
-                src="src/assets/svgs/dark_support.svg"
-                @click="handleSupport('support')"
-              />
-              <img
-                class="button-icon simg"
-                v-if="!isSupport && themeStore.theme === 'light'"
-                src="src/assets/svgs/light_support.svg"
-                @click="handleSupport('support')"
-              />
-              <img
-                class="button-icon simg"
-                v-if="isSupport"
-                src="src/assets/svgs/support_active.svg"
-                @click="handleSupport('support')"
-              />
-            </el-tooltip>
-            <el-tooltip
-              placement="top"
-              content="不赞同"
-              
-              effect="light"
-              ref="tooltip"
-            >
-              <div class="against-button">
-                <el-popover
-                  placement="bottom-end"
-                  :visible="isAgainstVisible"
-                  width="328"
-                  height="328"
-                  @after-enter="bindDocumentClick"
-                  @after-leave="unbindDocumentClick"
-                >
-                  <template #reference>
-                    <img
-                      class="button-icon"
-                      v-if="!isAgainst && themeStore.theme === 'dark'"
-                      src="src/assets/svgs/dark_against.svg"
-                      @click="handleSupport('against')"
-                    />
-                    <img
-                      class="button-icon"
-                      v-if="!isAgainst && themeStore.theme === 'light'"
-                      src="src/assets/svgs/light_against.svg"
-                      @click="handleSupport('against')"
-                    />
-                    <img
-                      class="button-icon"
-                      v-if="isAgainst"
-                      src="src/assets/svgs/against_active.svg"
-                      @click="handleSupport('against')"
-                    />
-                  </template>
-                  <AgainstPopover
-                    @click.stop
-                    @close="isAgainstVisible = false"
-                    @submit="handleAgainst"
-                  />
-                </el-popover>
-              </div>
-            </el-tooltip>
-            <el-tooltip placement="top" content="举报" effect="light" ref="tooltip">
-              <div class="against-button">
-                <el-popover
-                  placement="bottom-end"
-                  :visible="isReportVisible"
-                  width="328"
-                  height="416"
-                  @after-enter="bindReportClick"
-                  @after-leave="unbindReportClick"
-                >
-                  <template #reference>
-                    <img
-                      v-if="themeStore.theme === 'dark'"
-                      class="button-icon"
-                      src="src/assets/svgs/dark_report.svg"
-                      @click="handleSupport('report')"
-                    />
-                    <img
-                      v-if="themeStore.theme === 'light'"
-                      class="button-icon"
-                      src="src/assets/svgs/light_report.svg"
-                      @click="handleSupport('report')"
-                    />
-                  </template>
-                  <ReportPopover
-                    @click.stop
-                    @close="isReportVisible = false"
-                    @report="handleReport"
-                  />
-                </el-popover>
-              </div>
-            </el-tooltip> -->
           </div>
         </div>
       </div>
@@ -435,7 +242,7 @@ const selectQuestion = (item:object) => {
         <h4 class='tip'>你可以继续问我:</h4>
         <ul class='search-suggestions_value'>
           <li class='value'
-          v-for="(item, index) in props.search_suggestions" >
+          v-for="(item, _) in props.search_suggestions" >
           <p @click='selectQuestion(item)'><p class='test' v-if='item.name'>#{{item.name}}</p>{{item.question}}</p></li>
         </ul>
       </div>

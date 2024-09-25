@@ -87,13 +87,13 @@ export const getHistoryConversation = (
     (
       | FcResponse<
         Array<{
-          conversation_id: string;
-          record_id: string;
+          conversationId: string;
+          recordId: string;
           question: string;
           answer: string;
           created_time: string | Date;
           is_like?: number | undefined;
-          group_id: string,
+          groupId: string,
         }>
       >
       | undefined
@@ -109,15 +109,15 @@ export const getHistoryConversation = (
  * @returns
  */
 export const commentConversation = (params: {
-  qaRecordId: string;
+  recordId: string;
   isLike: number;
   dislikeReason?: string;
   reasonLink?: string;
   reasonDescription?: string;
 }): Promise<[any, FcResponse<Record<string, unknown>> | undefined]> => {
-  const { qaRecordId, isLike, dislikeReason, reasonLink, reasonDescription } = params;
+  const { recordId: recordId, isLike, dislikeReason, reasonLink, reasonDescription } = params;
   return post(`/api/comment`, {
-    qa_record_id: qaRecordId,
+    qa_record_id: recordId,
     is_like: isLike,
     dislike_reason: dislikeReason,
     reason_link: reasonLink,
