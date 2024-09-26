@@ -8,6 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { writeText, readText } from '@tauri-apps/api/clipboard';
+import { invoke } from '@tauri-apps/api/tauri';
 import { successMsg, errorMsg } from 'src/components/Message';
 
 /**
@@ -57,7 +58,22 @@ export const copyText = async (content: string): Promise<void> => {
     } else {
       errorMsg('复制失败');
     }
-  }).catch(() => {
+  }).catch((err) => {
+    console.error(err);
     errorMsg('复制失败');
+  });
+};
+
+/**
+ * 在终端中运行命令
+ */
+export const runCommand = async (command: string): Promise<void> => {
+  await invoke('open_terminal', {
+    command: command
+  }).then(() => {
+    successMsg('已启动命令行终端');
+  }).catch((err) => {
+    console.error(err);
+    errorMsg('命令行终端启动失败');
   });
 };

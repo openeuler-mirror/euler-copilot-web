@@ -90,7 +90,8 @@ fn main() {
             config::get_base_url,
             config::get_api_key,
             config::update_config,
-            utility::open_url
+            utility::open_url,
+            utility::open_terminal
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -219,7 +220,7 @@ fn create_settings_window(app_handle: &AppHandle) {
         .resizable(false)
         .maximizable(false)
         .minimizable(false)
-        .inner_size(540., 480.)
+        .inner_size(540., 360.)
         .center();
 
     builder.build().expect("无法创建设置窗口");

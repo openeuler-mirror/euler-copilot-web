@@ -16,22 +16,32 @@ async function loadSettings() {
     await invoke('get_api_key').then(async (apiKey: any) => {
       settingsItems.key = apiKey;
     })
-  } catch (error) {
+  } catch (err) {
     errorMsg('加载失败');
-    console.error(error);
+    console.error(err);
   }
 }
 
 async function saveSettings() {
+  if (!settingsItems.key) {
+    errorMsg('请输入 API Key');
+    return;
+  }
+
+  if (settingsItems.key.length != 32) {
+    errorMsg('API Key 长度不正确');
+    return;
+  }
+
   try {
     await invoke('update_config', {
       url: settingsItems.url,
       apiKey: settingsItems.key,
     });
     successMsg('保存成功');
-  } catch (error) {
+  } catch (err) {
     errorMsg('保存失败');
-    console.error(error);
+    console.error(err);
   }
 }
 
@@ -102,7 +112,7 @@ body {
   overflow: hidden;
   height: 100vh;
   width: 100vw;
-  min-height: 480px;
+  min-height: 360px;
   min-width: 540px;
   display: flex;
   flex-direction: column;
