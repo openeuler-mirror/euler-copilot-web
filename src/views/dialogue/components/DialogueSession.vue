@@ -205,7 +205,7 @@ const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
   return undefined;
 };
 
-// textarea实例
+// TextArea 实例
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 
 /**
