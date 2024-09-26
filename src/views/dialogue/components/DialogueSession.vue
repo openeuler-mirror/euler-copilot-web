@@ -8,6 +8,7 @@ import type { ConversationItem, RobotConversationItem } from '../types';
 import { api } from 'src/apis/';
 import { useHistorySessionStore } from 'src/store/';
 import { successMsg } from 'src/components/Message';
+import { runCommand } from 'src/utils';
 import { listen } from '@tauri-apps/api/event';
 import marked from 'src/utils/marked';
 
@@ -320,7 +321,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     } else if (json.type == 'extract') {
       const data = JSON.parse(json.data);
       if (data.shell) {
-        console.log(data.shell);
+        runCommand(data.shell as string);
       } else if (data.script) {
         console.log(data.script);
       } else if (data.output) {

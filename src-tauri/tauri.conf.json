@@ -30,8 +30,18 @@
         "open": true,
         "scope": [
           {
-            "name": "docker",
-            "cmd": "docker",
+            "name": "cmd",
+            "cmd": "cmd",
+            "args": true
+          },
+          {
+            "name": "gnome-terminal",
+            "cmd": "gnome-terminal",
+            "args": true
+          },
+          {
+            "name": "osascript",
+            "cmd": "osascript",
             "args": true
           }
         ]
@@ -53,7 +63,6 @@
         "writeText": true
       }
     },
-    "windows": [],
     "systemTray": {
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true
@@ -85,7 +94,8 @@
         "files": {},
         "release": "1",
         "depends": [
-          "webkit2gtk3"
+          "webkit2gtk3",
+          "gnome-terminal"
         ],
         "provides": [
           "eulercopilot-client"
