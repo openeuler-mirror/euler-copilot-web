@@ -7,7 +7,8 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { successMsg } from 'src/components/Message';
+import { writeText, readText } from '@tauri-apps/api/clipboard';
+import { successMsg, errorMsg } from 'src/components/Message';
 
 /**
  * 随机整数范围 min <= return < max
@@ -19,7 +20,8 @@ export const randomInt = (): number => {
   return window.crypto.getRandomValues(new Uint32Array(1))[0];
 };
 
-type HtmlEvent = 'copyPreCode';
+export type HtmlEvent = 'copyPreCode';
+
 /**
  * HTML事件分发
  * @param _t dom节点
@@ -31,16 +33,15 @@ type HtmlEvent = 'copyPreCode';
 export const onHtmlEventDispatch = (
   _t: any,
   _ty: any,
-  event: any,
+  _event: any,
   type: HtmlEvent,
   data: any,
 ): void => {
   if (type === 'copyPreCode') {
     const code = document.getElementById(data);
     if (code) {
-      writeText(code.innerText);
+      copyText(code.innerText);
     }
-    successMsg('复制成功')
   }
 };
 
@@ -48,28 +49,15 @@ export const onHtmlEventDispatch = (
  * 复制code
  * @param text code内容
  */
-export const writeText = (text: string): void => {
-  if (navigator.clipboard && window.isSecureContext) {
-    const type = 'text/plain';
-    const blob = new Blob([text], { type });
-    const data = [new ClipboardItem({ [type]: blob })];
-    navigator.clipboard.write(data).then(
-      () => { },
-      () => { },
-    );
-  } else {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'absolute';
-    textArea.style.opacity = '0';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    new Promise<void>((res, rej) => {
-      document.execCommand('copy') ? res() : rej(new Error('复制失败'));
-      textArea.remove();
-    });
-  }
+export const copyText = async (content: string): Promise<void> => {
+  await writeText(content);
+  await readText().then(async (text) => {
+    if (text === content) {
+      successMsg('复制成功');
+    } else {
+      errorMsg('复制失败');
+    }
+  }).catch(() => {
+    errorMsg('复制失败');
+  });
 };

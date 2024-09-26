@@ -46,6 +46,11 @@
           "$HOME/.config/eulercopilot/*",
           "$HOME/.eulercopilot/scripts/*"
         ]
+      },
+      "clipboard": {
+        "all": true,
+        "readText": true,
+        "writeText": true
       }
     },
     "windows": [],

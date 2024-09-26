@@ -12,6 +12,7 @@ tauri-build = { version = "1", features = [] }
 
 [dependencies]
 tauri = { version = "1", features = [
+    "clipboard-all",
     "shell-execute",
     "shell-open",
     "fs-create-dir",

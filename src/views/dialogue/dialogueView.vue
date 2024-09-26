@@ -1,15 +1,23 @@
 <script lang="ts" setup>
 import { useRouter, useRoute } from 'vue-router';
 import { onMounted, ref, watch } from 'vue';
-import { onHtmlEventDispatch } from 'src/utils';
+import { HtmlEvent, onHtmlEventDispatch } from 'src/utils';
 import { useChangeThemeStore } from 'src/store';
 import DialogueSession from './components/DialogueSession.vue';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
+
+declare global {  
+  interface Window {  
+    onHtmlEventDispatch?: (_t: any, _ty: any, _event: any, type: HtmlEvent, data: any) => void;
+  }  
+}
+
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch;
+
 const router = useRouter();
 const route = useRoute();
 const themeStore = useChangeThemeStore();
@@ -57,9 +65,6 @@ const settingsHandler = () => {
 // 协议内容
 const agreement = ref<string>('');
 
-/**ss
- *
- */
 const handleSubmit = async () => {
   dialogVisible.value = false;
 };

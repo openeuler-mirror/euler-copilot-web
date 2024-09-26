@@ -119,7 +119,7 @@ const handleComplaint = () => {
 .against-popover {
     padding: 12px;
     &-title {
-        font-size: 16px;
+        font-size: 14px;
         padding-bottom: 16px;
         font-weight: 500;
         line-height: 24px;

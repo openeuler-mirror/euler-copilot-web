@@ -70,11 +70,11 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-
 .button{
   left: calc(50% - 23px);
   position: relative;
 }
+
 .popper-class {
   padding: 3px 0 !important;
 
@@ -84,15 +84,13 @@ onMounted(() => {
   }
 }
 </style>
-<style lang="scss" scoped>
 
+<style lang="scss" scoped>
 .settings {
   top: 25%;
   position: relative;
-  input{
-
-  }
 }
+
 .dialogue {
   height: 100vh;
   width: 100vw;

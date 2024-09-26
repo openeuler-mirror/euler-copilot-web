@@ -493,7 +493,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 
   &-answer {
     display: block;
-    font-size: 16px;
+    font-size: 14px;
     color: var(--o-text-color-primary);
     line-height: 24px;
   }

@@ -9,6 +9,16 @@ const settingsItems = reactive({
 })
 
 async function saveSettings() {
+  if (!settingsItems.key) {
+    errorMsg('请输入 API Key');
+    return;
+  }
+
+  if (settingsItems.key.length != 32) {
+    errorMsg('API Key 长度不正确');
+    return;
+  }
+
   try {
     await invoke('update_config', {
       url: null,
@@ -20,6 +30,7 @@ async function saveSettings() {
     console.error(error);
   }
   await WebviewWindow.getByLabel('welcome')?.close();
+  await invoke('show_main_window');
 }
 
 const theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
@@ -56,7 +67,7 @@ const openCopilotWeb = () => {
             </el-form-item>
             <el-form-item>
               <el-button class='button' type="primary" @click="saveSettings">
-                保存
+                开始使用！
               </el-button>
             </el-form-item>
           </el-form>

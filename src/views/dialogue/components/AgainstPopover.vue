@@ -165,7 +165,7 @@ const handleSubmit = () => {
 .against-popover {
   padding: 12px;
   &-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     padding-bottom: 15px;
     color: #000;

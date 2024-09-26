@@ -7,9 +7,6 @@ use positioner::WindowExt;
 use tauri::{App, AppHandle, GlobalShortcutManager, Manager, RunEvent, WindowBuilder, WindowUrl};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 
-#[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
-use tauri::WindowEvent;
-
 mod api;
 mod config;
 mod positioner;
@@ -36,7 +33,7 @@ fn main() {
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::DoubleClick { .. } => {
                 dbg!("system tray double clicked");
-                show_main_window(app);
+                show_main_window(app.clone());
             }
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 "quit" => {
@@ -44,12 +41,14 @@ fn main() {
                 }
                 "show" => {
                     dbg!("menu item show clicked");
-                    show_main_window(app);
+                    show_main_window(app.clone());
                 }
                 "hide" => {
                     dbg!("menu item hide clicked");
-                    let window = app.get_window("main").unwrap();
-                    window.hide().unwrap();
+                    let window = app.get_window("main");
+                    if let Some(window) = window {
+                        window.hide().unwrap();
+                    }
                 }
                 "settings" => {
                     dbg!("menu item settings clicked");
@@ -66,18 +65,22 @@ fn main() {
             }
             #[cfg(all(not(target_os = "linux"), not(debug_assertions)))]
             {
-                let window = _app.get_window("main").unwrap();
-                let w = window.clone();
-                window.on_window_event(move |event| match event {
-                    WindowEvent::Focused(false) => {
-                        w.hide().unwrap();
-                    }
-                    _ => {}
-                });
+                use tauri::WindowEvent;
+                let window = _app.get_window("main");
+                if let Some(window) = window {
+                    let w = window.clone();
+                    window.on_window_event(move |event| match event {
+                        WindowEvent::Focused(false) => {
+                            w.hide().unwrap();
+                        }
+                        _ => {}
+                    });
+                }
             }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            show_main_window,
             show_settings_window,
             api::create_conversation,
             api::refresh_session_id,
@@ -129,7 +132,8 @@ fn register_shortcut(app: &App) {
     }
 }
 
-fn show_main_window(app_handle: &AppHandle) {
+#[tauri::command]
+fn show_main_window(app_handle: AppHandle) {
     let window = app_handle.get_window("main");
     if window.is_none() {
         create_main_window(&app_handle);

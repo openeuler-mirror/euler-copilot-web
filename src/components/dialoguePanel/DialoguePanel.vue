@@ -1,23 +1,23 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import { writeText } from 'src/utils';
+import { copyText } from 'src/utils';
 import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import dayjs from 'dayjs';
-import { errorMsg, successMsg } from 'src/components/Message';
+import { errorMsg } from 'src/components/Message';
 import { onMounted, watch, onBeforeUnmount } from 'vue';
 import { ExampleQuestionItem } from 'src/views/dialogue/components/DialogueSession.vue'
 
 export interface DialoguePanelProps {
   cid: string;
-  type:string;
-  // 用来区分是用户还是ai的输入
+  // 用来区分是用户还是 AI 的输入
+  type: string;
   // 文本内容
   content?: string[] | string;
-  // 当前选中的第n次回答的索引，默认是最新回答
+  // 当前选中的第 n 次回答的索引，默认是最新回答
   currentSelected?: number;
   // 文本内容是否生成完毕
   isFinish?: boolean;
-  // 是否在loading
+  // 是否在 loading
   isLoading?: boolean;
   // 创建时间
   createdAt?: string | Date;
@@ -27,9 +27,7 @@ export interface DialoguePanelProps {
   needRegernerate?: boolean;
   // 是否选择插件
   userSelectedPlugins?: any;
-  //
   recordList?: string[] | undefined;
-  //
   isLikeList?: (number | undefined)[] | undefined;
   searchSuggestions?:any;
 }
@@ -37,7 +35,7 @@ const themeStore = useChangeThemeStore();
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 const props = withDefaults(defineProps<DialoguePanelProps>(), {
   isFinish: false,
-  // 当前选中的第n次回答的索引
+  // 当前选中的第 n 次回答的索引
   currentSelected: 0,
   needRegernerate: false,
 });
@@ -86,14 +84,13 @@ const handlePauseAndReGenerate = (cid?: number) => {
 // #endregion
 
 // 复制
-const handleCopy = (): void => {
+const handleCopy = async (): Promise<void> => {
   if (!props.content || !Array.isArray(props.content)) {
     errorMsg('复制失败');
     return;
   }
-  writeText(props.content[props.currentSelected]);
-  successMsg('复制成功');
-  return;
+  const content = props.content[props.currentSelected];
+  await copyText(content);
 };
 
 // 解析完成后的文本内容
@@ -106,9 +103,9 @@ const contentAfterMark = computed(() => {
 
 const prePageHandle = (cid:number) => {
   prePage(cid);
-  if(index.value === 0){
+  if (index.value === 0) {
     index.value = 0;
-  }else{
+  } else {
     index.value--;
     handleIsLike();
   }
@@ -116,9 +113,9 @@ const prePageHandle = (cid:number) => {
 
 const nextPageHandle = (cid:number) => {
   nextPage(cid);
-  if(index.value === (props.isLikeList as number[]).length-1){
+  if (index.value === (props.isLikeList as number[]).length-1) {
     index.value = (props.isLikeList as number[]).length-1;
-  }else{
+  } else {
     index.value++;
     handleIsLike();
   }
@@ -144,13 +141,12 @@ const handleIsLike = () => {
   }
 }
 
-onMounted(()=>{
+onMounted(() => {
   isLike.value = props.isLikeList;
   setTimeout(() => {
     handleIsLike();
   }, 200);
 })
-
 
 watch(
   () => props.isLikeList,
@@ -200,12 +196,9 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       ></div>
       <div class="loading" v-else-if="!contentAfterMark">
         <img src="/src/assets/images/loading.png" alt="" class="loading-icon">
-        <div class="loading-text">openEuler Copilot System正在生成回答......</div>
+        <div class="loading-text">openEuler Copilot System 正在生成回答……</div>
       </div>
       <div v-if="$slots.default" class="dialogue-panel__robot-slot">
-        <!-- <div class="dialog-panel__robot-time">
-          {{ dayjs().format('YYYY-MM-DD HH:mm:ss') }}
-        </div> -->
         <slot name="default"></slot>
       </div>
       <div class="dialogue-panel__robot-bottom" v-if="!$slots.default && contentAfterMark">
@@ -231,7 +224,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
           </div>
 
           <div class="button-group" v-if="props.isFinish">
-            <el-tooltip placement="top"  content="复制" effect="light">
+            <el-tooltip placement="top" content="复制" effect="light">
               <img v-if="themeStore.theme === 'dark'" class="button-icon copy" src="src/assets/svgs/dark_copy.svg" @click="handleCopy" />
               <img v-else class="button-icon copy" src="src/assets/svgs/light_copy.svg" @click="handleCopy" />
             </el-tooltip>
@@ -239,7 +232,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
         </div>
       </div>
       <div class='search-suggestions' v-if='props.searchSuggestions'>
-        <h4 class='tip'>你可以继续问我:</h4>
+        <h4 class='tip'>你可以继续问我：</h4>
         <ul class='search-suggestions_value'>
           <li class='value'
           v-for="(item, _) in props.searchSuggestions" >
@@ -253,12 +246,12 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 
 <style lang="scss">
 
-.overflowTable{
+.overflowTable {
   width: 100%;
   overflow-x: scroll;
 }
 
-.test{
+.test {
   display: inline-block;
   margin-right: 8px;
   font-size: 14px;
@@ -284,7 +277,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
   border: none;
   .against-popover-title {
     color: var(--o-text-color-primary);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     line-height: 24px;
   }
@@ -356,12 +349,11 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 }
 
 .el-tooltip {
-  float: left; //解决整体右浮动.提示语位置偏差
+  float: left; // 解决整体右浮动.提示语位置偏差
 }
 
 ::deep .el-popper .el-popper.is-customized {
-  float: right; //解决整体右浮动.提示语位置偏差
-  // background-color: pink;
+  float: right; // 解决整体右浮动.提示语位置偏差
 }
 
 
@@ -416,8 +408,6 @@ const selectQuestion = (item: ExampleQuestionItem) => {
   }
 }
 .dialogue-panel {
-  // padding-right: 25px;
-  // padding: 0px 15%;
   width:calc(100% - 48px);
   &__user {
     position: relative;
@@ -438,7 +428,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 
     p {
       padding: 12px 16px;
-      font-size: 16px;
+      font-size: 14px;
       line-height: 24px;
     }
   }
@@ -506,7 +496,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       }
 
       &-text {
-        font-size: 16px;
+        font-size: 14px;
         line-height: 24px;
         padding-left: 12px;
         color: #6395FD;
@@ -670,7 +660,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 
     &-answer {
       display: block;
-      font-size: 16px;
+      font-size: 14px;
       color: var(--o-text-color-primary);
       line-height: 24px;
     }
