@@ -224,14 +224,28 @@
   background-color: #f4f6fa;
   padding: 16px;
 }
-h1,
-h2,
+
+h1 {
+  font-size: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+h2 {
+  font-size: 14px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 h3,
 h4 {
   font-size: 12px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
+
 .text-header {
-  font-size: 12px;
+  font-size: 20px;
   font-weight: 800;
   text-align: center;
   margin-bottom: 16px;

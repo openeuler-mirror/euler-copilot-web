@@ -88,13 +88,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 </script>
 
 <style lang="scss" scoped>
-
-.agreement-markdown h1 {
-    text-align: center;
-    padding-bottom: 30px;
-    font-size: 20px;
-}
-
 .button-group {
   text-align: center;
   .confirm-button {
@@ -114,7 +107,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   h1 {
     text-align: center;
     padding-bottom: 16px;
-    font-size: 12px;
+    font-size: 20px;
     margin-top: 16px;
   }
   h2 {
