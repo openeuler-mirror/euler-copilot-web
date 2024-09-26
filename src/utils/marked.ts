@@ -7,9 +7,8 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import hljs from 'highlight.js';
 import { marked } from 'marked';
-
+import hljs from 'highlight.js';
 import { randomInt } from './tools';
 
 /**
@@ -71,10 +70,10 @@ export const renderLink = (href: string, text: string): string => {
  * 自定义渲染
  */
 const renderer = {
-  code(code: string, infostring: string | undefined): string {
-    return renderCode(code, infostring);
+  code(code: string, language: string | undefined): string {
+    return renderCode(code, language);
   },
-  link(href: string, text: string): string {
+  link(href: string, _title: string | null | undefined, text: string): string {
     return renderLink(href, text);
   },
 };

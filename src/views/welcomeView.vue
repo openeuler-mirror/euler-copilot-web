@@ -78,6 +78,13 @@ const openCopilotWeb = () => {
 </template>
 
 <style lang="scss">
+body {
+  overflow: hidden;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+}
+
 .logo{
   width: 100px;
 }
@@ -118,14 +125,13 @@ const openCopilotWeb = () => {
   position: relative;
 }
 .dialogue {
+  overflow: hidden;
   height: 100vh;
   width: 100vw;
   min-height: 540px;
   min-width: 720px;
-  overflow: scroll;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   background-image: var(--o-bg-image);
   background-size: cover;
   &-header {

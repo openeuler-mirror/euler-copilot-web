@@ -9,7 +9,7 @@ import { api } from 'src/apis/';
 import { useHistorySessionStore } from 'src/store/';
 import { successMsg } from 'src/components/Message';
 import { listen } from '@tauri-apps/api/event';
-import marked from 'src/utils/marked.js';
+import marked from 'src/utils/marked';
 
 interface StreamPayload {
   message: string;

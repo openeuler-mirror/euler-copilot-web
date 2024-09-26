@@ -92,7 +92,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 .agreement-markdown h1 {
     text-align: center;
     padding-bottom: 30px;
-    font-size: 12px;
+    font-size: 20px;
 }
 
 .button-group {

@@ -1,6 +1,6 @@
 <template>
   <div class="textBody">
-    <div class="text-header">openEuler Copilot System隐私政策</div>
+    <div class="text-header">openEuler Copilot System 隐私政策</div>
     <p>
       开放原子开源基金会（下文简称“我们”或“基金会”）深知您的隐私对您的重要性，并充分尊重您的隐私。在向我们提交您的个人信息之前，请您仔细阅读本《隐私政策声明》（以下简称“本声明”）。如果您对于我们处理您的个人信息的方式有任何疑问，欢迎与我们联系。
     </p>

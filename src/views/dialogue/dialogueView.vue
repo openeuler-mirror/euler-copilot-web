@@ -159,6 +159,13 @@ const getModeOptions = async() => {
 </template>
 
 <style lang="scss">
+body {
+  overflow: hidden;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+}
+
 .el-dialog__body {
   overflow: hidden;
 }
@@ -242,14 +249,13 @@ const getModeOptions = async() => {
 </style>
 <style lang="scss" scoped>
 .dialogue {
+  overflow: hidden;
   height: 100vh;
   width: 100vw;
   min-height: 680px;
   min-width: 500px;
-  overflow: scroll;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   background-image: var(--o-bg-image);
   background-size: cover;
   &-header {
