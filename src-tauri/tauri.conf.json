@@ -72,11 +72,6 @@
     },
     "bundle": {
       "active": true,
-      "targets": [
-        "dmg",
-        "rpm",
-        "msi"
-      ],
       "identifier": "org.openEuler.Copilot.Desktop",
       "icon": [
         "icons/32x32.png",
@@ -89,22 +84,7 @@
       "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.",
       "category": "Productivity",
       "shortDescription": "openEuler Copilot System Desktop Client",
-      "longDescription": "openEuler Copilot System Desktop Client",
-      "rpm": {
-        "files": {},
-        "release": "1",
-        "depends": [
-          "webkit2gtk3",
-          "gnome-terminal"
-        ],
-        "provides": [
-          "eulercopilot-client"
-        ],
-        "desktopTemplate": "./template/eulercopilot-client.desktop"
-      },
-      "macOS": {
-        "minimumSystemVersion": "11.0"
-      }
+      "longDescription": "openEuler Copilot System Desktop Client"
     }
   }
 }

@@ -1,0 +1,30 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "tauri": {
+    "bundle": {
+      "identifier": "org.openEuler.Copilot.Desktop",
+      "targets": [
+        "nsis"
+      ],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "",
+        "webviewInstallMode": {
+          "type": "embedBootstrapper",
+          "silent": true
+        },
+        "nsis": {
+          "displayLanguageSelector": true,
+          "installerIcon": "icons/icon.ico",
+          "languages": [
+            "SimpChinese"
+          ],
+          "license": "../LICENSE",
+          "installMode": "perMachine",
+          "template": "./template/installer.nsi"
+        }
+      }
+    }
+  }
+}
