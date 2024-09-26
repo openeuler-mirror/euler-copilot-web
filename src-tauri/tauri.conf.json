@@ -27,24 +27,7 @@
       "shell": {
         "all": false,
         "execute": true,
-        "open": true,
-        "scope": [
-          {
-            "name": "cmd",
-            "cmd": "cmd",
-            "args": true
-          },
-          {
-            "name": "gnome-terminal",
-            "cmd": "gnome-terminal",
-            "args": true
-          },
-          {
-            "name": "osascript",
-            "cmd": "osascript",
-            "args": true
-          }
-        ]
+        "open": true
       },
       "fs": {
         "exists": true,
