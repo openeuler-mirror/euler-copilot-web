@@ -297,17 +297,19 @@ const handlePauseAndReGenerate = (cid?: number) => {
   contentMessage.value = '';
 };
 
-const handleMarkdown = (content: string) => {
+const handleMarkdown = async (content: string) => {
   const lastIndex = conversationList.value.length - 1;
   let markedStr = marked.parse(content.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
   // 将 table 提取出来中加一个 <div> 父节点控制溢出
-  let tableStart = markedStr.indexOf('<table>');
+  if (typeof markedStr === 'string') {  
+    let tableStart = markedStr.indexOf('<table>');
   if (tableStart!== -1) {
     markedStr = markedStr.slice(0, tableStart) + '<div class="overflowTable">' + markedStr.slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
   }
   const answerIndex = lastIndex >= 0 ? lastIndex : 0;
   const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-  (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr
+  (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr 
+  } 
 }
 
 listen<StreamPayload>("fetch-stream-data", (event) => {
