@@ -8,6 +8,8 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { marked } from 'marked';
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
 import hljs from 'highlight.js';
 import { randomInt } from './tools';
 
@@ -25,6 +27,18 @@ export const doubleWell = /##(.*?)##/;
 // export const link = /\bhttps?:\/\/[\w/.-]+(?<![.,。，])/g;
 export const link = /\bhttps?:\/\/[\w/.-]+/g;
 
+const marked = new Marked(
+  markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang, info) {
+      console.log(code,lang,info);
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    }
+  })
+);
+
+
 // #region ----------------------------------------< markedjs 配置 >--------------------------------------
 /**
  * markedjs 配置
@@ -34,50 +48,28 @@ marked.setOptions({
   breaks: false, // 支持Github换行符，必须打开gfm选项
   pedantic: false, // 只解析符合Markdwon定义的，不修正Markdown的错误
   // 高亮的语法规范
-  highlight: (code: string, lang: string) => hljs.highlight(code, { language: lang }).value,
+  // highlight: (code: string, lang: string) => hljs.highlight(code, { language: lang }).value,
 });
 
 // #endregion
 
 // #region ----------------------------------------< renderer >--------------------------------------
-/**
- * 自定义代码块内容解析
- * @param code 解析后的HTML代码
- * @param language 语言
- * @returns
- */
-export const renderCode = (code: string, language: string | undefined): string => {
-  const id = `pre-${Date.now()}-${randomInt()}`;
-  return `<pre><div class="code-toolbar"><span>${language}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${language}">${code}</code></pre>`;
-};
 
-/**
- * 解析网页链接内容
- * @param href
- * @param text
- * @returns
- */
-export const renderLink = (href: string, text: string): string => {
-  if (href === text) {
-    const txt = text.replace(link, '');
+const renderer = new marked.Renderer()
+renderer.code = function({text,lang}) {
+    const id = `pre-${Date.now()}-${randomInt()}`;
+    return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${text}</code></pre>`;
+};
+renderer.link = function({ href, title}) {
+  if (href === title) {
+    const txt = title.replace(link, '');
     const url = (href.match(link) ?? [])[0];
     return `<a href="${url}" target="_blank">${url}</a>${txt}`;
   }
-  return `<a href="${href}" target="_blank">${text}</a>`;
-};
+  return `<a href="${href}" target="_blank">${title}</a>`;
+}
 
-/**
- * 自定义渲染
- */
-const renderer = {
-  code(code: string, language: string | undefined): string {
-    return renderCode(code, language);
-  },
-  link(href: string, _title: string | null | undefined, text: string): string {
-    return renderLink(href, text);
-  },
-};
 
-marked.use({ renderer });
+marked.use({ renderer:renderer });
 // #endregion
 export default marked;
