@@ -13,6 +13,7 @@ export interface DialoguePanelProps {
   type: string;
   // 文本内容
   content?: string[] | string;
+  copyList?:string[] | string;
   // 当前选中的第 n 次回答的索引，默认是最新回答
   currentSelected?: number;
   // 文本内容是否生成完毕
@@ -85,11 +86,11 @@ const handlePauseAndReGenerate = (cid?: number) => {
 
 // 复制
 const handleCopy = async (): Promise<void> => {
-  if (!props.content || !Array.isArray(props.content)) {
+  if (!props.copyList || !Array.isArray(props.copyList)) {
     errorMsg('复制失败');
     return;
   }
-  const content = props.content[props.currentSelected];
+  const content = props.copyList[props.currentSelected];
   await copyText(content);
 };
 

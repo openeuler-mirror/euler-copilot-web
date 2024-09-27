@@ -148,6 +148,7 @@ let groupId = ref(0);
 
 const selectMode = ref('');
 const selectedPlugin = ref('');
+const copyList = ref('');
 
 let filterQuestions = computed(() =>
   questions.filter(item => item.groupId === (groupId.value % 6)));
@@ -308,7 +309,8 @@ const handleMarkdown = async (content: string) => {
   }
   const answerIndex = lastIndex >= 0 ? lastIndex : 0;
   const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-  (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr 
+  (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr;
+  (conversationList.value[lastIndex] as RobotConversationItem).copyList[conversationItem.currentInd] = copyList.value + content;
   } 
 }
 
@@ -357,6 +359,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           :key="index"
           :type="item.belong"
           :content="item.message"
+          :copyList="item.copyList"
           :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : undefined"
           :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : undefined"
           :is-finish="getItem(item as ConversationItem, 'isFinish')"
