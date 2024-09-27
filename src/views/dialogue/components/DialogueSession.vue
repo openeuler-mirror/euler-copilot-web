@@ -304,14 +304,14 @@ const handleMarkdown = async (content: string) => {
   // 将 table 提取出来中加一个 <div> 父节点控制溢出
   if (typeof markedStr === 'string') {  
     let tableStart = markedStr.indexOf('<table>');
-  if (tableStart!== -1) {
-    markedStr = markedStr.slice(0, tableStart) + '<div class="overflowTable">' + markedStr.slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
+    if (tableStart!== -1) {
+      markedStr = markedStr.slice(0, tableStart) + '<div class="overflowTable">' + markedStr.slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
+    }
+    const answerIndex = lastIndex >= 0 ? lastIndex : 0;
+    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+    (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr;
+    (conversationList.value[lastIndex] as RobotConversationItem).copyList[conversationItem.currentInd] = copyList.value + content;
   }
-  const answerIndex = lastIndex >= 0 ? lastIndex : 0;
-  const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-  (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr;
-  (conversationList.value[lastIndex] as RobotConversationItem).copyList[conversationItem.currentInd] = copyList.value + content;
-  } 
 }
 
 listen<StreamPayload>("fetch-stream-data", (event) => {
@@ -331,11 +331,11 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       } else if (data.output) {
         contentMessage.value = data.output;
         handleMarkdown(contentMessage.value);
-      }
-    } else {
+      };
+    } else if (json.content) {
       contentMessage.value = contentMessage.value + json.content
       handleMarkdown(contentMessage.value);
-    }
+    };
   } catch (error) {
     contentMessage.value = '';
     if (line == '[DONE]') {
@@ -343,7 +343,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       isAnswerGenerating.value = false;
     } else if (judgeMessage(lastIndex, line)) {
       console.error('JSON decode error:', line);
-    }
+    };
   };
 });
 </script>

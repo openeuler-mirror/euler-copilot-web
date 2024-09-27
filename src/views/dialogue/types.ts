@@ -46,7 +46,7 @@ export interface RobotConversationItem {
   recordId: string;
   belong: RobotDialoguePanelType;
   message: string[];
-  copyList:string[];
+  copyList: string[];
   messageList: MessageArray;
   // 当前选中第n次回答的索引值
   currentInd: number;
@@ -90,7 +90,6 @@ export class MessageArray {
   getMessageList(): string[] {
     return this.items.map(item => item.message);
   }
-
 
   getRecordIdList(): string[] {
     return this.items.map(item => item.recordId);

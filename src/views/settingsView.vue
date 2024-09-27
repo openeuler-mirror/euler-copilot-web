@@ -2,10 +2,12 @@
 import { onMounted, reactive } from 'vue'
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
+import { enable, isEnabled, disable } from "tauri-plugin-autostart-api";
 
 const settingsItems = reactive({
   url: '',
   key: '',
+  autoStart: false
 })
 
 async function loadSettings() {
@@ -45,6 +47,24 @@ async function saveSettings() {
   }
 }
 
+async function toggleAutoStart() {
+  if (await isEnabled()) {
+    await disable().then(() => {
+      settingsItems.autoStart = false;
+    }).catch((err) => {
+      errorMsg('开机启动关闭失败')
+      console.error(err);
+    });
+  } else {
+    await enable().then(() => {
+      settingsItems.autoStart = true;
+    }).catch((err) => {
+      errorMsg('开机启动开启失败')
+      console.error(err);
+    });
+  }
+}
+
 onMounted(() => {
   loadSettings();
 })
@@ -68,6 +88,9 @@ onMounted(() => {
             </el-form-item>
             <el-form-item label="API Key" prop="key">
               <el-input v-model="settingsItems.key" type="password" autocomplete="off" />
+            </el-form-item>
+            <el-form-item label="开机启动">
+              <el-checkbox v-model="settingsItems.autoStart" @change="toggleAutoStart" :lable="settingsItems.autoStart ? '已开启' : '已关闭'" />
             </el-form-item>
               <el-button class='button' type="primary" @click="saveSettings">
                 保存

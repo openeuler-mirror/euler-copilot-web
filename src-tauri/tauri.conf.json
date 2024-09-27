@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "eulercopilot-client",
+    "productName": "openEuler Copilot System",
     "version": "0.9.1"
   },
   "tauri": {

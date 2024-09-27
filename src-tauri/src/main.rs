@@ -6,6 +6,7 @@
 use positioner::WindowExt;
 use tauri::{App, AppHandle, GlobalShortcutManager, Manager, RunEvent, WindowBuilder, WindowUrl};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
+use tauri_plugin_autostart::MacosLauncher;
 
 mod api;
 mod config;
@@ -13,6 +14,10 @@ mod positioner;
 mod utility;
 
 fn main() {
+    // Fix issue with nVidia GPU on Linux
+    #[cfg(target_os = "linux")]
+    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+
     let settings = CustomMenuItem::new("settings".to_string(), "设置");
     let quit = CustomMenuItem::new("quit".to_string(), "退出");
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
@@ -28,7 +33,14 @@ fn main() {
     let tray = SystemTray::new().with_menu(tray_menu);
 
     let app = tauri::Builder::default()
-        // .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            dbg!("app exists");
+            show_main_window(app.clone());
+        }))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .system_tray(tray)
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::DoubleClick { .. } => {

@@ -13,7 +13,7 @@ export interface DialoguePanelProps {
   type: string;
   // 文本内容
   content?: string[] | string;
-  copyList?:string[] | string;
+  copyList?: string[] | string;
   // 当前选中的第 n 次回答的索引，默认是最新回答
   currentSelected?: number;
   // 文本内容是否生成完毕
@@ -197,7 +197,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       ></div>
       <div class="loading" v-else-if="!contentAfterMark">
         <img src="/src/assets/images/loading.png" alt="" class="loading-icon">
-        <div class="loading-text">openEuler Copilot System 正在生成回答……</div>
+        <div class="loading-text">正在生成回答……</div>
       </div>
       <div v-if="$slots.default" class="dialogue-panel__robot-slot">
         <slot name="default"></slot>
@@ -257,9 +257,9 @@ const selectQuestion = (item: ExampleQuestionItem) => {
   margin-right: 8px;
   font-size: 14px;
   background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
- background-clip: text;
- color: transparent;
- line-height: 32px;
+  background-clip: text;
+  color: transparent;
+  line-height: 32px;
 }
 .el-popper[role=tooltip].is-dark, .el-popper[role=tooltip].is-light {
   background-color: var(--o-bg-color-base);

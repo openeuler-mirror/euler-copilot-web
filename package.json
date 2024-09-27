@@ -25,6 +25,7 @@
     "marked": "^14.1.2",
     "marked-highlight": "^2.1.4",
     "pinia": "^2.2.2",
+    "tauri-plugin-autostart-api": "github:tauri-apps/tauri-plugin-autostart#v1",
     "vue": "^3.5.8",
     "vue-router": "^4.4.5"
   },
