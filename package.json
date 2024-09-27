@@ -8,7 +8,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
-    "tauri:release": "tauri build -- --release",
+    "tauri:release": "tauri build",
     "cargo:format": "cd src-tauri && cargo fmt",
     "cargo:check": "cd src-tauri && cargo check",
     "cargo:clean": "cd src-tauri && cargo clean",

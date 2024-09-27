@@ -1,0 +1,50 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "tauri": {
+    "allowlist": {
+      "shell": {
+        "all": false,
+        "execute": true,
+        "open": true,
+        "scope": [
+          {
+            "name": "osascript",
+            "cmd": "osascript",
+            "args": true
+          }
+        ]
+      }
+    },
+    "bundle": {
+      "identifier": "org.openEuler.Copilot.Desktop",
+      "targets": [
+        "dmg"
+      ],
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "14.4",
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "entitlements": null
+      },
+      "dmg": {
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        },
+        "windowSize": {
+          "height": 400,
+          "width": 660
+        },
+        "windowPosition": {
+          "x": 200,
+          "y": 180
+        }
+      }
+    }
+  }
+}

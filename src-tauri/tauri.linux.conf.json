@@ -1,0 +1,42 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "tauri": {
+    "allowlist": {
+      "shell": {
+        "all": false,
+        "execute": true,
+        "open": true,
+        "scope": [
+          {
+            "name": "gnome-terminal",
+            "cmd": "gnome-terminal",
+            "args": true
+          }
+        ]
+      }
+    },
+    "bundle": {
+      "identifier": "org.openEuler.Copilot.Desktop",
+      "targets": [
+        "rpm"
+      ],
+      "rpm": {
+        "release": "1",
+        "depends": [
+          "webkit2gtk3",
+          "gnome-terminal"
+        ],
+        "desktopTemplate": "./template/eulercopilot-client.desktop",
+        "provides": [
+          "eulercopilot-client"
+        ],
+        "conflicts": [
+          "eulercopilot-client"
+        ],
+        "obsoletes": [
+          "eulercopilot-client"
+        ]
+      }
+    }
+  }
+}

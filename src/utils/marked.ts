@@ -30,7 +30,7 @@ const marked = new Marked(
   markedHighlight({
     langPrefix: 'hljs language-',
     highlight(code, lang, info) {
-      console.log(code,lang,info);
+      console.log(code, lang, info);
       const language = hljs.getLanguage(lang) ? lang : 'plaintext';
       return hljs.highlight(code, { language }).value;
     }
@@ -46,8 +46,6 @@ marked.setOptions({
   gfm: true, // 启动类似于Github样式的Markdown语法
   breaks: false, // 支持Github换行符，必须打开gfm选项
   pedantic: false, // 只解析符合Markdwon定义的，不修正Markdown的错误
-  // 高亮的语法规范
-  // highlight: (code: string, lang: string) => hljs.highlight(code, { language: lang }).value,
 });
 
 // #endregion
@@ -55,11 +53,11 @@ marked.setOptions({
 // #region ----------------------------------------< renderer >--------------------------------------
 
 const renderer = new marked.Renderer()
-renderer.code = function({text,lang}) {
-    const id = `pre-${Date.now()}-${randomInt()}`;
-    return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${text}</code></pre>`;
+renderer.code = function ({ text, lang }) {
+  const id = `pre-${Date.now()}-${randomInt()}`;
+  return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${text}</code></pre>`;
 };
-renderer.link = function({ href, title}) {
+renderer.link = function ({ href, title }) {
   if (href === title) {
     const txt = title.replace(link, '');
     const url = (href.match(link) ?? [])[0];
@@ -69,6 +67,6 @@ renderer.link = function({ href, title}) {
 }
 
 
-marked.use({ renderer:renderer });
+marked.use({ renderer: renderer });
 // #endregion
 export default marked;
