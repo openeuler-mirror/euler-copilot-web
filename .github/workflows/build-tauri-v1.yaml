@@ -17,7 +17,10 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            target: universal-apple-darwin
+            target: aarch64-apple-darwin
+            bundle: dmg
+          - os: macos-latest
+            target: x86_64-apple-darwin
             bundle: dmg
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -61,6 +64,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
+          version: latest
           run_install: false
 
       - name: Pnpm install and check
