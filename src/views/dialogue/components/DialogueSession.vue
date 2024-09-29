@@ -434,7 +434,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           <img
             class="renew_btn"
             @click="createNewSession()"
-            v-if="isAnswerGenerating || dialogueInput.length <= 0"
+            v-if="!isAnswerGenerating && dialogueInput.length <= 0"
             src="/src/assets/images/createIcon.svg"
             alt=""
           />
