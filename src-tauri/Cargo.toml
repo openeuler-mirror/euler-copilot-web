@@ -4,6 +4,7 @@ version = "0.9.1"
 description = "openEuler Copilot System Desktop Client"
 authors = ["Shi Hongyu", "Wu Shitong"]
 edition = "2021"
+license = "MulanPSL-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
