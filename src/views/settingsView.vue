@@ -14,10 +14,13 @@ async function loadSettings() {
   try {
     await invoke('get_base_url').then(async (url: any) => {
       settingsItems.url = url;
-    })
+    });
     await invoke('get_api_key').then(async (apiKey: any) => {
       settingsItems.key = apiKey;
-    })
+    });
+    await isEnabled().then(async (isEnabled: boolean) => {
+      settingsItems.autoStart = isEnabled;
+    });
   } catch (err) {
     errorMsg('加载失败');
     console.error(err);
@@ -48,21 +51,23 @@ async function saveSettings() {
 }
 
 async function toggleAutoStart() {
-  if (await isEnabled()) {
-    await disable().then(() => {
-      settingsItems.autoStart = false;
-    }).catch((err) => {
-      errorMsg('开机启动关闭失败')
-      console.error(err);
-    });
-  } else {
-    await enable().then(() => {
-      settingsItems.autoStart = true;
-    }).catch((err) => {
-      errorMsg('开机启动开启失败')
-      console.error(err);
-    });
-  }
+  await isEnabled().then(async (isEnabled: boolean) => {
+    if (isEnabled) {
+      await disable().then(() => {
+        settingsItems.autoStart = false;
+      }).catch((err) => {
+        errorMsg('开机启动关闭失败')
+        console.error(err);
+      });
+    } else {
+      await enable().then(() => {
+        settingsItems.autoStart = true;
+      }).catch((err) => {
+        errorMsg('开机启动开启失败')
+        console.error(err);
+      });
+    }
+  });
 }
 
 onMounted(() => {
