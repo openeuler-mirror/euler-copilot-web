@@ -1,5 +1,5 @@
 [package]
-name = "eulercopilot-client"
+name = "eulercopilot-desktop"
 version = "0.9.1"
 description = "openEuler Copilot System Desktop Client"
 authors = ["Shi Hongyu", "Wu Shitong"]

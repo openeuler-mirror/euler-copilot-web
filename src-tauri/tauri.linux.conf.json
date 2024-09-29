@@ -26,15 +26,15 @@
           "webkit2gtk3",
           "gnome-terminal"
         ],
-        "desktopTemplate": "./template/eulercopilot-client.desktop",
+        "desktopTemplate": "./template/eulercopilot-desktop.desktop",
         "provides": [
-          "eulercopilot-client"
+          "eulercopilot-desktop"
         ],
         "conflicts": [
-          "eulercopilot-client"
+          "eulercopilot-desktop"
         ],
         "obsoletes": [
-          "eulercopilot-client"
+          "eulercopilot-desktop"
         ]
       }
     }
