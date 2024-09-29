@@ -3,10 +3,13 @@
 use futures_util::StreamExt;
 use reqwest::{header, Client};
 use serde_json::{json, Value};
-use tauri::{AppHandle, Manager, Runtime};
+use std::sync::Mutex;
+use tauri::{AppHandle, Manager, Runtime, State};
 use url::Url;
 
 use crate::config::{get_api_key, get_base_url};
+
+pub struct ChatState(pub Mutex<bool>);
 
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
@@ -16,6 +19,7 @@ pub struct StreamPayload {
 #[tauri::command]
 pub async fn chat<R: Runtime>(
     app: AppHandle<R>,
+    state: State<'_, ChatState>,
     session: &str,
     question: &str,
     conversation: &str,
@@ -25,6 +29,9 @@ pub async fn chat<R: Runtime>(
     flow: Option<&str>,
     flow_id: Option<&str>,
 ) -> Result<u16, String> {
+    // 开始回答
+    *state.0.lock().unwrap() = true;
+
     let mut url = Url::parse(&get_base_url()).unwrap();
     url.set_path("api/client/chat");
     #[cfg(debug_assertions)]
@@ -93,6 +100,12 @@ pub async fn chat<R: Runtime>(
     let mut stream = response.bytes_stream();
 
     while let Some(item) = stream.next().await {
+        // 检查状态是否中止回答
+        if !*state.0.lock().unwrap() {
+            emit_message(&app, "data: [DONE]");
+            break;
+        }
+
         #[cfg(debug_assertions)]
         println!("Received item is OK: {}", item.is_ok());
 
@@ -115,6 +128,9 @@ pub async fn chat<R: Runtime>(
             }
         }
     }
+
+    // 结束回答
+    *state.0.lock().unwrap() = false;
 
     Ok(status)
 }
@@ -177,7 +193,10 @@ pub async fn refresh_session_id(session_id: Option<&str>) -> Result<String, Stri
 }
 
 #[tauri::command]
-pub async fn stop() {
+pub async fn stop(state: State<'_, ChatState>) -> Result<(), String> {
+    // 停止回答
+    *state.0.lock().unwrap() = false;
+
     let mut url = Url::parse(&get_base_url()).unwrap();
     url.set_path("api/client/stop");
 
@@ -190,6 +209,8 @@ pub async fn stop() {
         .await
         .map_err(|e| format!("Failed to send request: {}", e))
         .unwrap();
+
+    Ok(())
 }
 
 #[tauri::command]

@@ -3,7 +3,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use api::ChatState;
 use positioner::WindowExt;
+use std::sync::Mutex;
 use tauri::{App, AppHandle, GlobalShortcutManager, Manager, RunEvent, WindowBuilder, WindowUrl};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 use tauri_plugin_autostart::MacosLauncher;
@@ -33,6 +35,7 @@ fn main() {
     let tray = SystemTray::new().with_menu(tray_menu);
 
     let app = tauri::Builder::default()
+        .manage(ChatState(Mutex::new(false)))
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             dbg!("app exists");
             show_main_window(app.clone());
