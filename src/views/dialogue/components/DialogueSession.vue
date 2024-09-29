@@ -295,6 +295,7 @@ const contentMessage = ref('')
  */
 const handlePauseAndReGenerate = (cid?: number) => {
   pausedStream(cid);
+  isAnswerGenerating.value = false;
   contentMessage.value = '';
 };
 
