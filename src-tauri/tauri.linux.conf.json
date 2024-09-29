@@ -1,5 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "package": {
+    "productName": "eulercopilot-desktop"
+  },
   "tauri": {
     "allowlist": {
       "shell": {
@@ -18,24 +21,15 @@
     "bundle": {
       "identifier": "org.openEuler.Copilot.Desktop",
       "targets": [
+        "appimage",
         "rpm"
       ],
       "rpm": {
         "release": "1",
         "depends": [
-          "webkit2gtk3",
           "gnome-terminal"
         ],
-        "desktopTemplate": "./template/eulercopilot-desktop.desktop",
-        "provides": [
-          "eulercopilot-desktop"
-        ],
-        "conflicts": [
-          "eulercopilot-desktop"
-        ],
-        "obsoletes": [
-          "eulercopilot-desktop"
-        ]
+        "desktopTemplate": "./template/eulercopilot-desktop.desktop"
       }
     }
   }
