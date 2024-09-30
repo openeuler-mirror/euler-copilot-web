@@ -29,7 +29,7 @@ export const link = /\bhttps?:\/\/[\w/.-]+/g;
 const marked = new Marked(
   markedHighlight({
     langPrefix: 'hljs language-',
-    highlight(code, lang, info) {
+    highlight(code, lang, _info) {
       const language = hljs.getLanguage(lang) ? lang : 'plaintext';
       return hljs.highlight(code, { language }).value;
     }
