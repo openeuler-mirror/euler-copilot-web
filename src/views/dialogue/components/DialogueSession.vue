@@ -168,7 +168,7 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const handleSendMessage = async (question: string, user_selected_flow?: string) => {
   if (isAnswerGenerating.value) return;
   const len = conversationList.value.length;
-  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish){
+  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) {
     return;
   }
   dialogueInput.value = '';
@@ -303,9 +303,9 @@ const handleMarkdown = async (content: string) => {
   const lastIndex = conversationList.value.length - 1;
   let markedStr = marked.parse(content.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
   // 将 table 提取出来中加一个 <div> 父节点控制溢出
-  if (typeof markedStr === 'string') {  
+  if (typeof markedStr === 'string') {
     let tableStart = markedStr.indexOf('<table>');
-    if (tableStart!== -1) {
+    if (tableStart !== -1) {
       markedStr = markedStr.slice(0, tableStart) + '<div class="overflowTable">' + markedStr.slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
     }
     const answerIndex = lastIndex >= 0 ? lastIndex : 0;
@@ -324,7 +324,10 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       (conversationList.value[lastIndex] as RobotConversationItem).searchSuggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
     } else if (json.type == 'extract') {
-      const data = JSON.parse(json.data);
+      let data = json.data;
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      };
       if (data.shell) {
         runCommand(data.shell as string);
       } else if (data.script) {
@@ -354,27 +357,17 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-session">
       <div class="dialogue-session-main" ref="dialogueRef">
-        <DialoguePanel
-          v-for="(item, index) in conversationList"
-          :cid="item.cid.toString()"
-          :key="index"
-          :type="item.belong"
-          :content="item.message"
-          :copyList="item.copyList"
+        <DialoguePanel v-for="(item, index) in conversationList" :cid="item.cid.toString()" :key="index"
+          :type="item.belong" :content="item.message" :copyList="item.copyList"
           :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : undefined"
           :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : undefined"
           :is-finish="getItem(item as ConversationItem, 'isFinish')"
           :is-support="getItem(item as ConversationItem, 'isSupport')"
-          :is-against="getItem(item as ConversationItem, 'isAgainst')"
-          :created-at="item.createdAt"
-          :current-selected="item.currentInd"
-          :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
+          :is-against="getItem(item as ConversationItem, 'isAgainst')" :created-at="item.createdAt"
+          :current-selected="item.currentInd" :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
           :user-selected-plugins="selectedPlugin"
-          :search-suggestions="getItem(item as ConversationItem, 'searchSuggestions')"
-          @comment="handleComment"
-          @report="handleReport"
-          @handleSendMessage="handleSendMessage"
-        />
+          :search-suggestions="getItem(item as ConversationItem, 'searchSuggestions')" @comment="handleComment"
+          @report="handleReport" @handleSendMessage="handleSendMessage" />
         <div v-if="conversationList.length === 0">
           <InitalPanel />
         </div>
@@ -382,88 +375,46 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 
       <div class="dialogue-session-bottom">
         <!-- 问题换一换 -->
-        <div
-          v-if="isAnswerGenerating"
-          class="dialogue-panel__stop"
-          @click="handlePauseAndReGenerate(Number(conversationList.length))"
-        >
-          <img
-            v-if="themeStore.theme === 'dark'"
-            src="/src/assets/svgs/dark_stop_answer.svg"
-            alt=""
-          />
+        <div v-if="isAnswerGenerating" class="dialogue-panel__stop"
+          @click="handlePauseAndReGenerate(Number(conversationList.length))">
+          <img v-if="themeStore.theme === 'dark'" src="/src/assets/svgs/dark_stop_answer.svg" alt="" />
           <img v-else src="/src/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="dialogue-panel__stop-answer">停止回答</div>
         </div>
         <div class="problem" v-if="conversationList.length === 0">
           <ul>
-            <li
-              v-for="item in filterQuestions"
-              :key="item.id"
-              @click="selectQuestion"
-            >
+            <li v-for="item in filterQuestions" :key="item.id" @click="selectQuestion">
               {{ item.question }}
             </li>
           </ul>
           <div class="change-button" @click="changeProblem">
-            <img
-              v-if="themeStore.theme === 'dark'"
-              src="src/assets/svgs/light_change.svg"
-              alt=""
-            />
+            <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/light_change.svg" alt="" />
             <img v-else src="src/assets/svgs/dark_change.svg" alt="" />
             <span>换一换</span>
           </div>
         </div>
         <!-- 识别方式 -->
         <div class="plugin-selector">
-          <el-select
-            class="mode-select"
-            v-model="selectMode"
-            clearable
-            placeholder="请选择识别方式"
-          >
-            <el-option
-              v-for="item in modeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              :disabled="item.disabled"
-            />
+          <el-select class="mode-select" v-model="selectMode" clearable placeholder="请选择识别方式">
+            <el-option v-for="item in modeOptions" :key="item.value" :label="item.label" :value="item.value"
+              :disabled="item.disabled" />
           </el-select>
-          <img
-            class="renew_btn"
-            @click="createNewSession()"
-            v-if="!isAnswerGenerating && dialogueInput.length <= 0"
-            src="/src/assets/images/createIcon.svg"
-            alt=""
-          />
+          <img class="renew_btn" @click="createNewSession()" v-if="!isAnswerGenerating && dialogueInput.length <= 0"
+            src="/src/assets/images/createIcon.svg" alt="" />
         </div>
         <!-- 输入框 -->
         <div class="dialogue-session-bottom-sendbox">
           <div class="dialogue-session-bottom-sendbox__textarea">
-            <textarea
-              ref="inputRef"
-              v-model="dialogueInput"
-              maxlength="2000"
-              placeholder="在此输入你想了解的内容"
-              @keydown="handleKeydown"
-            />
+            <textarea ref="inputRef" v-model="dialogueInput" maxlength="2000" placeholder="在此输入你想了解的内容"
+              @keydown="handleKeydown" />
           </div>
           <!-- 发送问题 -->
           <div class="dialogue-session-bottom-sendbox__icon">
             <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
-            <img
-              v-if="isAnswerGenerating || dialogueInput.length <= 0"
-              src="/src/assets/images/send_disable.png"
-              alt=""
-            />
+            <img v-if="isAnswerGenerating || dialogueInput.length <= 0" src="/src/assets/images/send_disable.png"
+              alt="" />
             <div v-else @click="handleSendMessage(dialogueInput)">
-              <img
-                v-if="themeStore.theme === 'dark'"
-                src="/src/assets/images/dark_send.png"
-                alt=""
-              />
+              <img v-if="themeStore.theme === 'dark'" src="/src/assets/images/dark_send.png" alt="" />
               <img v-else src="/src/assets/images/light_send.png" alt="" />
             </div>
           </div>
@@ -492,6 +443,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
   margin-right: auto;
   cursor: pointer;
   position: relative;
+
   img {
     width: 16px;
     height: 16px;
@@ -505,6 +457,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     line-height: 24px;
   }
 }
+
 :deep(.el-input__inner) {
   border: none;
   box-shadow: none;
@@ -533,11 +486,9 @@ button[disabled]:hover {
 
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(
-      180deg,
-      #e7f0fd 1%,
-      #daeafc 40%
-    ) !important;
+    background-image: linear-gradient(180deg,
+        #e7f0fd 1%,
+        #daeafc 40%) !important;
     display: none;
   }
 
@@ -573,6 +524,7 @@ button[disabled]:hover {
     width: 100%;
     height: calc(100%);
     overflow-y: auto;
+
     .initial-message {
       background-color: #fff;
     }
@@ -609,6 +561,7 @@ button[disabled]:hover {
       &__textarea {
         position: relative;
         height: 100px;
+
         textarea {
           width: 100%;
           height: 100%;
@@ -639,6 +592,7 @@ button[disabled]:hover {
         bottom: 8px;
         text-align: right;
         right: 36px;
+
         img {
           width: 32px;
         }
@@ -669,20 +623,16 @@ button[disabled]:hover {
       margin-bottom: 8px;
 
       &:hover {
-        background-image: linear-gradient(
-          to right,
-          rgba(109, 117, 250, 0.8),
-          rgba(90, 179, 255, 0.8)
-        );
+        background-image: linear-gradient(to right,
+            rgba(109, 117, 250, 0.8),
+            rgba(90, 179, 255, 0.8));
         color: var(--o-text-color-fourth);
       }
 
       &:active {
-        background-image: linear-gradient(
-          to right,
-          rgba(109, 117, 250, 1),
-          rgba(90, 179, 255, 1)
-        );
+        background-image: linear-gradient(to right,
+            rgba(109, 117, 250, 1),
+            rgba(90, 179, 255, 1));
         color: var(--o-text-color-fourth);
       }
     }
