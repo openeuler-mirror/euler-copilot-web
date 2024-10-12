@@ -29,8 +29,9 @@ async function saveSettings() {
     errorMsg('保存失败');
     console.error(error);
   }
-  await WebviewWindow.getByLabel('welcome')?.close();
+
   await invoke('show_main_window');
+  await WebviewWindow.getByLabel('welcome')?.close();
 }
 
 const theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
