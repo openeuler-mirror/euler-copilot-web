@@ -31,6 +31,12 @@ const router = createRouter({
       component: (): Promise<typeof import('src/views/settingsView.vue')> =>
         import('src/views/settingsView.vue'),
     },
+    {
+      path: '/floating',
+      name: 'floating',
+      component: (): Promise<typeof import('src/views/floatingView.vue')> =>
+        import('src/views/floatingView.vue'),
+    }
   ],
 });
 

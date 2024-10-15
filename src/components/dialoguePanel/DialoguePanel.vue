@@ -233,11 +233,14 @@ const selectQuestion = (item: ExampleQuestionItem) => {
         </div>
       </div>
       <div class='search-suggestions' v-if='props.searchSuggestions'>
-        <h4 class='tip'>你可以继续问我：</h4>
         <ul class='search-suggestions_value'>
           <li class='value'
-          v-for="(item, _) in props.searchSuggestions" >
-          <p @click='selectQuestion(item)'><p class='test' v-if='item.name'>#{{item.name}}</p>{{item.question}}</p></li>
+            v-for="(item, index) in props.searchSuggestions.slice(0, 2)" :key="index">
+            <p @click='selectQuestion(item)'>
+              <p v-if='item.name'> #{{item.name}} </p>
+              {{item.question}}
+            </p>
+          </li>
         </ul>
       </div>
     </div>
@@ -252,15 +255,6 @@ const selectQuestion = (item: ExampleQuestionItem) => {
   overflow-x: scroll;
 }
 
-.test {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 14px;
-  background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-  background-clip: text;
-  color: transparent;
-  line-height: 32px;
-}
 .el-popper[role=tooltip].is-dark, .el-popper[role=tooltip].is-light {
   background-color: var(--o-bg-color-base);
 }
@@ -374,28 +368,19 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 .search-suggestions{
   display: flex;
   line-height: 24px;
-  margin-top: 16px;
+  margin-top: 8px;
 
   &_value{
     display: flex;
     flex-wrap: wrap;
-  }
-  .tip{
-    color:var(--o-text-color-secondary);
-    font-size: 12px;
-    height: 32px;
-    line-height: 32px;
-    align-self: center;
-    font-weight: 100;
-    flex-shrink: 0
   }
   .value{
     display: flex;
     color:var(--o-text-color-secondary);
     background-color: var(--o-bg-color-base);
     border-radius: 8px;
-    padding: 8px 16px;
-    margin: 0 0 8px 8px;
+    padding: 8px 12px;
+    margin: 0 0 8px 0;
     font-size: 12px;
     &:hover {
         background-image: linear-gradient(to right, #6d75fa, #5ab3ff);

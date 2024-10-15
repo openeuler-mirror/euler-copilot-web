@@ -44,6 +44,7 @@ fn main() {
             MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_context_menu::init())
         .system_tray(tray)
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::DoubleClick { .. } => {
@@ -74,6 +75,7 @@ fn main() {
             _ => {}
         })
         .setup(|_app| {
+            create_floating_icon(_app);
             let api_key = config::get_api_key();
             if api_key.is_empty() {
                 create_welcome_window(_app);
@@ -95,6 +97,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            exit_app,
             show_main_window,
             show_settings_window,
             api::create_conversation,
@@ -148,6 +151,21 @@ fn register_shortcut(app: &App) {
     }
 }
 
+fn create_floating_icon(app: &App) {
+    let builder = WindowBuilder::new(app, "floating", WindowUrl::App("/floating".into()))
+        .title("悬浮窗")
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .skip_taskbar(true)
+        .always_on_top(true)
+        .inner_size(64., 64.)
+        .decorations(false)
+        .transparent(true);
+
+    builder.build().expect("Failed to create floating window");
+}
+
 #[tauri::command]
 fn show_main_window(app_handle: AppHandle) {
     let window = app_handle.get_window("main");
@@ -172,8 +190,7 @@ fn create_main_window(app_handle: &AppHandle) {
         .skip_taskbar(true)
         .inner_size(500., 680.)
         .min_inner_size(500., 680.)
-        .max_inner_size(720., 4096.)
-        .center();
+        .max_inner_size(720., 4096.);
 
     #[cfg(target_os = "macos")]
     {
@@ -239,4 +256,9 @@ fn create_settings_window(app_handle: &AppHandle) {
         .center();
 
     builder.build().expect("无法创建设置窗口");
+}
+
+#[tauri::command]
+fn exit_app(app_handle: AppHandle) {
+    app_handle.exit(0);
 }

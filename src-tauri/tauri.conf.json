@@ -71,6 +71,7 @@
       "category": "Productivity",
       "shortDescription": "openEuler Copilot System Desktop Client",
       "longDescription": "openEuler Copilot System Desktop Client"
-    }
+    },
+    "macOSPrivateApi": true
   }
 }

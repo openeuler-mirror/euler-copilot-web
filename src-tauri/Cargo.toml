@@ -13,6 +13,7 @@ tauri-build = { version = "1", features = [] }
 
 [dependencies]
 tauri = { version = "1", features = [
+    "http-all",
     "window-all",
     "clipboard-all",
     "shell-execute",
@@ -24,8 +25,9 @@ tauri = { version = "1", features = [
     "fs-write-file",
     "global-shortcut-all",
     "system-tray",
-    "http-all",
+    "macos-private-api",
 ] }
+tauri-plugin-context-menu = "0.8.2"
 tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 serde = { version = "1", features = ["derive"] }

@@ -22,18 +22,19 @@
     "echarts": "^5.5.1",
     "element-plus": "2.3.12",
     "highlight.js": "^11.10.0",
-    "marked": "^14.1.2",
+    "marked": "^14.1.3",
     "marked-highlight": "^2.1.4",
-    "pinia": "^2.2.2",
+    "pinia": "^2.2.4",
     "tauri-plugin-autostart-api": "github:tauri-apps/tauri-plugin-autostart#v1",
-    "vue": "^3.5.10",
+    "tauri-plugin-context-menu": "^0.8.0",
+    "vue": "^3.5.12",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.6.2",
+    "@tauri-apps/cli": "^1.6.3",
     "@vitejs/plugin-vue": "^5.1.4",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.8",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.9",
     "vue-tsc": "^2.1.6"
   }
 }
