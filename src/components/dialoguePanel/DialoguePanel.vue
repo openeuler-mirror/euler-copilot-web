@@ -237,7 +237,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
           <li class='value'
             v-for="(item, index) in props.searchSuggestions.slice(0, 2)" :key="index">
             <p @click='selectQuestion(item)'>
-              <p v-if='item.name'> #{{item.name}} </p>
+              <p class='suggestionItem' v-if='item.name'> #{{item.name}} </p>
               {{item.question}}
             </p>
           </li>
@@ -253,6 +253,16 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 .overflowTable {
   width: 100%;
   overflow-x: scroll;
+}
+
+.suggestionItem {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 14px;
+  background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
+  background-clip: text;
+  color: transparent;
+  line-height: 32px;
 }
 
 .el-popper[role=tooltip].is-dark, .el-popper[role=tooltip].is-light {
