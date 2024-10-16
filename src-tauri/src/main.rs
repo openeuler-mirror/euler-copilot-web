@@ -109,7 +109,8 @@ fn main() {
             config::get_api_key,
             config::update_config,
             utility::open_url,
-            utility::open_terminal
+            utility::open_terminal,
+            utility::run_command
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -68,12 +68,50 @@ export const copyText = async (content: string): Promise<void> => {
  * 在终端中运行命令
  */
 export const runCommand = async (command: string): Promise<void> => {
-  await invoke('open_terminal', {
-    command: command
-  }).then(() => {
-    successMsg('已启动命令行终端');
-  }).catch((err) => {
-    console.error(err);
-    errorMsg('命令行终端启动失败');
-  });
+  if (command.startsWith('docker run')) {
+    const containerName = extractContainerName(command);
+    await invoke('open_terminal', { command: command })
+      .then(async () => {
+        successMsg('已启动命令行终端');
+        await checkDockerContainerStatus(containerName);
+      })
+      .catch((err) => {
+        console.error(err);
+        errorMsg('命令行终端启动失败');
+      });
+  } else {
+    await invoke('open_terminal', { command: command })
+      .then(() => {
+        successMsg('已启动命令行终端');
+      })
+      .catch((err) => {
+        console.error(err);
+        errorMsg('命令行终端启动失败');
+      });
+  }
 };
+
+const extractContainerName = (command: string): string => {
+  const parts = command.split(' ');
+  const nameIndex = parts.indexOf('--name');
+  return nameIndex !== -1 && nameIndex + 1 < parts.length ? parts[nameIndex + 1] : '';
+};
+
+const checkDockerContainerStatus = async (containerName: string): Promise<void> => {
+  if (!containerName) return;
+
+  const checkCommand = `docker ps -f name=${containerName} --format '{{.Status}}'`;
+
+  try {
+    const status = await invoke('run_command', { command: checkCommand });
+    if (status) {
+      successMsg(`容器 ${containerName} 运行状态: ${status}`);
+    } else {
+      errorMsg(`容器 ${containerName} 未找到或未运行`);
+    }
+  } catch (err) {
+    console.error(err);
+    errorMsg('检查容器状态失败');
+  }
+};
+

@@ -11,6 +11,21 @@
             "name": "osascript",
             "cmd": "osascript",
             "args": true
+          },
+          {
+            "name": "sh",
+            "cmd": "/bin/sh",
+            "args": true
+          },
+          {
+            "name": "bash",
+            "cmd": "/bin/bash",
+            "args": true
+          },
+          {
+            "name": "zsh",
+            "cmd": "/bin/zsh",
+            "args": true
           }
         ]
       }

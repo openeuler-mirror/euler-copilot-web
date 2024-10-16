@@ -14,6 +14,26 @@
             "name": "gnome-terminal",
             "cmd": "gnome-terminal",
             "args": true
+          },
+          {
+            "name": "sh",
+            "cmd": "/bin/sh",
+            "args": true
+          },
+          {
+            "name": "bash",
+            "cmd": "/bin/bash",
+            "args": true
+          },
+          {
+            "name": "zsh",
+            "cmd": "/bin/zsh",
+            "args": true
+          },
+          {
+            "name": "fish",
+            "cmd": "/usr/bin/fish",
+            "args": true
           }
         ]
       }
