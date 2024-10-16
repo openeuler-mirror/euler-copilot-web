@@ -22,8 +22,7 @@ const toggleMainWindow = async () => {
     if (await mainWindow.isVisible()) {
       await mainWindow.hide();
     } else {
-      await mainWindow.show();
-      await mainWindow.setFocus();
+      await invoke('show_main_window');
     }
   }
 };
