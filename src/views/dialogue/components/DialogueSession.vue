@@ -7,9 +7,10 @@ import { useSessionStore, useChangeThemeStore } from 'src/store/session';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import { api } from 'src/apis/';
 import { useHistorySessionStore } from 'src/store/';
-import { successMsg } from 'src/components/Message';
+import { errorMsg, successMsg } from 'src/components/Message';
 import { runCommand } from 'src/utils';
 import { listen } from '@tauri-apps/api/event';
+import { arch } from '@tauri-apps/api/os';
 import marked from 'src/utils/marked';
 
 interface StreamPayload {
@@ -371,7 +372,18 @@ listen<StreamPayload>('fetch-stream-data', (event) => {
         data = JSON.parse(data);
       }
       if (data.shell) {
-        runCommand(data.shell as string);
+        const command = data.shell as string;
+        if (command.startsWith('docker')) {
+          arch().then((architecture) => {
+            if (architecture === 'x86_64') {
+              runCommand(command);
+            } else {
+              errorMsg('AI 容器镜像当前只支持在 x86_64 架构上运行');
+            }
+          });
+        } else {
+          runCommand(command);
+        }
       } else if (data.script) {
         console.log(data.script);
       } else if (data.output) {
