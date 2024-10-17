@@ -36,7 +36,7 @@ export const onHtmlEventDispatch = (
   _ty: any,
   _event: any,
   type: HtmlEvent,
-  data: any,
+  data: any
 ): void => {
   if (type === 'copyPreCode') {
     const code = document.getElementById(data);
@@ -52,16 +52,18 @@ export const onHtmlEventDispatch = (
  */
 export const copyText = async (content: string): Promise<void> => {
   await writeText(content);
-  await readText().then(async (text) => {
-    if (text === content) {
-      successMsg('复制成功');
-    } else {
+  await readText()
+    .then(async (text) => {
+      if (text === content) {
+        successMsg('复制成功');
+      } else {
+        errorMsg('复制失败');
+      }
+    })
+    .catch((err) => {
+      console.error(err);
       errorMsg('复制失败');
-    }
-  }).catch((err) => {
-    console.error(err);
-    errorMsg('复制失败');
-  });
+    });
 };
 
 /**
@@ -73,7 +75,7 @@ export const runCommand = async (command: string): Promise<void> => {
     await invoke('open_terminal', { command: command })
       .then(async () => {
         successMsg('已启动命令行终端');
-        await checkDockerContainerStatus(containerName);
+        await pollContainerStatus(containerName);
       })
       .catch((err) => {
         console.error(err);
@@ -94,24 +96,42 @@ export const runCommand = async (command: string): Promise<void> => {
 const extractContainerName = (command: string): string => {
   const parts = command.split(' ');
   const nameIndex = parts.indexOf('--name');
-  return nameIndex !== -1 && nameIndex + 1 < parts.length ? parts[nameIndex + 1] : '';
+  return nameIndex !== -1 && nameIndex + 1 < parts.length
+    ? parts[nameIndex + 1]
+    : '';
 };
 
-const checkDockerContainerStatus = async (containerName: string): Promise<void> => {
-  if (!containerName) return;
+const pollContainerStatus = async (
+  containerName: string,
+  maxAttempts = 30,
+  interval = 2000
+): Promise<void> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const status = await checkDockerContainerStatus(containerName);
+    if (status.includes('Up')) {
+      successMsg(`容器 ${containerName} 运行状态: ${status}`);
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, interval));
+  }
+  errorMsg(`容器 ${containerName} 未能在预期时间内启动`);
+};
+
+const checkDockerContainerStatus = async (
+  containerName: string
+): Promise<string> => {
+  if (!containerName) return '';
 
   const checkCommand = `docker ps -f name=${containerName} --format '{{.Status}}'`;
 
   try {
-    const status = await invoke('run_command', { command: checkCommand });
-    if (status) {
-      successMsg(`容器 ${containerName} 运行状态: ${status}`);
-    } else {
-      errorMsg(`容器 ${containerName} 未找到或未运行`);
-    }
+    const status = (await invoke('run_command', {
+      command: checkCommand,
+    })) as string;
+    return status.trim();
   } catch (err) {
     console.error(err);
     errorMsg('检查容器状态失败');
+    return '';
   }
 };
-

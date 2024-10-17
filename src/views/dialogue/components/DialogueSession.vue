@@ -40,107 +40,111 @@ const questions = [
   {
     groupId: 0,
     id: 1,
-    question: 'openEuler社区版本有哪些分类？'
+    question: 'openEuler社区版本有哪些分类？',
   },
   {
     groupId: 0,
     id: 2,
-    question: 'openEuler长期支持版本的发布间隔周期和社区支持各是多久？'
+    question: 'openEuler长期支持版本的发布间隔周期和社区支持各是多久？',
   },
   {
     groupId: 0,
     id: 3,
-    question: 'openEuler社区创新版本的发布间隔周期和社区支持各是多久？'
+    question: 'openEuler社区创新版本的发布间隔周期和社区支持各是多久？',
   },
   {
     groupId: 0,
     id: 4,
-    question: 'openEuler社区的容器云管理平台解决方案(CCPS)是什么？'
+    question: 'openEuler社区的容器云管理平台解决方案(CCPS)是什么？',
   },
   {
     groupId: 1,
     id: 5,
-    question: 'secGear主要提供哪三大能力？'
+    question: 'secGear主要提供哪三大能力？',
   },
   {
     groupId: 1,
     id: 6,
-    question: 'DDE是一款什么组件？'
+    question: 'DDE是一款什么组件？',
   },
   {
     groupId: 1,
     id: 7,
-    question: 'Lustre是什么？'
+    question: 'Lustre是什么？',
   },
   {
     groupId: 2,
     id: 8,
-    question: 'openEuler社区的测试管理平台是什么？'
+    question: 'openEuler社区的测试管理平台是什么？',
   },
   {
     groupId: 2,
     id: 9,
-    question: 'openEuler的pkgship是什么？'
+    question: 'openEuler的pkgship是什么？',
   },
   {
     groupId: 2,
     id: 10,
-    question: 'openEuler软件包引入原则是什么？'
+    question: 'openEuler软件包引入原则是什么？',
   },
   {
     groupId: 2,
     id: 11,
-    question: 'openEuler系统如何将一个RPM包下载到本地而不安装？'
+    question: 'openEuler系统如何将一个RPM包下载到本地而不安装？',
   },
   {
     groupId: 3,
     id: 12,
-    question: '请给我一个shell命令，实现以下功能：计算test.txt文件中hello字符串的出现次数'
+    question:
+      '请给我一个shell命令，实现以下功能：计算test.txt文件中hello字符串的出现次数',
   },
   {
     groupId: 3,
     id: 13,
-    question: '请给我一个shell命令，实现以下功能：linux命令将本目录及子目录文本文件中的大写字母修改成小写字母'
+    question:
+      '请给我一个shell命令，实现以下功能：linux命令将本目录及子目录文本文件中的大写字母修改成小写字母',
   },
   {
     groupId: 3,
     id: 14,
-    question: 'shell命令查找当前目录下权限符合的文件并列出'
+    question: 'shell命令查找当前目录下权限符合的文件并列出',
   },
   {
     groupId: 3,
     id: 15,
-    question: '请给我一个shell命令，实现以下功能：在/home目录及其子目录中查找关键字“error”的文本文件，并将匹配行以及它们前后的3行内容输出到名为“result.txt”的文件中'
+    question:
+      '请给我一个shell命令，实现以下功能：在/home目录及其子目录中查找关键字“error”的文本文件，并将匹配行以及它们前后的3行内容输出到名为“result.txt”的文件中',
   },
   {
     groupId: 4,
     id: 16,
-    question: 'openEuler系统如何清除软件源的依赖？'
+    question: 'openEuler系统如何清除软件源的依赖？',
   },
   {
     groupId: 4,
     id: 17,
-    question: 'openEuler系统DNF中的gpgcheck参数是用来做什么的？'
+    question: 'openEuler系统DNF中的gpgcheck参数是用来做什么的？',
   },
   {
     groupId: 4,
     id: 18,
-    question: 'openEuler系统DNF中的installonly_limit参数的作用是？'
+    question: 'openEuler系统DNF中的installonly_limit参数的作用是？',
   },
   {
     groupId: 4,
     id: 19,
-    question: 'openEuler系统DNF中的clean_requirement_on_remove参数具有什么功能？'
+    question:
+      'openEuler系统DNF中的clean_requirement_on_remove参数具有什么功能？',
   },
   {
     groupId: 5,
     id: 20,
-    question: '湖南省烟草专卖局基于openeuler系统有哪些应用？'
+    question: '湖南省烟草专卖局基于openeuler系统有哪些应用？',
   },
   {
     groupId: 5,
     id: 21,
-    question: 'XSKY星辰天合公司基于openeuler系统有哪些应用？'
+    question: 'XSKY星辰天合公司基于openeuler系统有哪些应用？',
   },
 ];
 
@@ -151,24 +155,33 @@ const selectedPlugin = ref('');
 const copyList = ref('');
 
 let filterQuestions = computed(() =>
-  questions.filter(item => item.groupId === (groupId.value % 6)));
+  questions.filter((item) => item.groupId === groupId.value % 6)
+);
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
 // 对话列表
 const { sendQuestion, judgeMessage } = useSessionStore();
-const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
+const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(
+  useSessionStore()
+);
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 
 /**
  * 发送消息
  */
-const handleSendMessage = async (question: string, user_selected_flow?: string) => {
+const handleSendMessage = async (
+  question: string,
+  user_selected_flow?: string
+) => {
   if (isAnswerGenerating.value) return;
   const len = conversationList.value.length;
-  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) {
+  if (
+    len > 0 &&
+    !(conversationList.value[len - 1] as RobotConversationItem).isFinish
+  ) {
     return;
   }
   dialogueInput.value = '';
@@ -176,9 +189,21 @@ const handleSendMessage = async (question: string, user_selected_flow?: string) 
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(question, undefined, undefined, undefined, user_selected_flow);
+    await sendQuestion(
+      question,
+      undefined,
+      undefined,
+      undefined,
+      user_selected_flow
+    );
   } else {
-    await sendQuestion(question, selectMode.value, undefined, undefined, undefined);
+    await sendQuestion(
+      question,
+      selectMode.value,
+      undefined,
+      undefined,
+      undefined
+    );
   }
 };
 
@@ -219,7 +244,7 @@ const handleComment = async (
   recordId: string,
   reason?: string,
   reasonLink?: string,
-  reasonDescription?: string,
+  reasonDescription?: string
 ) => {
   const params: {
     recordId: string;
@@ -246,10 +271,7 @@ const handleComment = async (
  * @param type
  * @param cid
  */
-const handleReport = async (
-  recordId: string,
-  reason?: string | undefined,
-) => {
+const handleReport = async (recordId: string, reason?: string | undefined) => {
   const params: {
     recordId: string;
     reason: string;
@@ -276,11 +298,15 @@ onMounted(() => {
   inputRef.value.focus();
 });
 
-watch(() => props, () => {
-  modeOptions.value = props.modeOptions;
-}, {
-  deep: true
-})
+watch(
+  () => props,
+  () => {
+    modeOptions.value = props.modeOptions;
+  },
+  {
+    deep: true,
+  }
+);
 
 const createNewSession = async (): Promise<void> => {
   isAnswerGenerating.value = false;
@@ -288,7 +314,7 @@ const createNewSession = async (): Promise<void> => {
   await generateSession();
 };
 
-const contentMessage = ref('')
+const contentMessage = ref('');
 
 /**
  * 暂停和重新生成问答
@@ -301,33 +327,49 @@ const handlePauseAndReGenerate = (cid?: number) => {
 
 const handleMarkdown = async (content: string) => {
   const lastIndex = conversationList.value.length - 1;
-  let markedStr = marked.parse(content.replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+  let markedStr = marked.parse(
+    content.replace(/&gt;/g, '>').replace(/&lt;/g, '<')
+  );
   // 将 table 提取出来中加一个 <div> 父节点控制溢出
   if (typeof markedStr === 'string') {
     let tableStart = markedStr.indexOf('<table>');
     if (tableStart !== -1) {
-      markedStr = markedStr.slice(0, tableStart) + '<div class="overflowTable">' + markedStr.slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
+      markedStr =
+        markedStr.slice(0, tableStart) +
+        '<div class="overflowTable">' +
+        markedStr
+          .slice(tableStart, markedStr.indexOf('</table>') + '</table>'.length)
+          .replace('</table>', '</table></div>') +
+        markedStr.slice(markedStr.indexOf('</table>') + '</table>'.length);
     }
     const answerIndex = lastIndex >= 0 ? lastIndex : 0;
-    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-    (conversationList.value[lastIndex] as RobotConversationItem).message[conversationItem.currentInd] = markedStr;
-    (conversationList.value[lastIndex] as RobotConversationItem).copyList[conversationItem.currentInd] = copyList.value + content;
+    const conversationItem = conversationList.value[
+      answerIndex
+    ] as RobotConversationItem;
+    (conversationList.value[lastIndex] as RobotConversationItem).message[
+      conversationItem.currentInd
+    ] = markedStr;
+    (conversationList.value[lastIndex] as RobotConversationItem).copyList[
+      conversationItem.currentInd
+    ] = copyList.value + content;
   }
-}
+};
 
-listen<StreamPayload>("fetch-stream-data", (event) => {
+listen<StreamPayload>('fetch-stream-data', (event) => {
   const line = event.payload.message.replace(/^data:\s*/, '').trim();
   const lastIndex = conversationList.value.length - 1;
   try {
     const json = JSON.parse(line);
     if (json.search_suggestions) {
-      (conversationList.value[lastIndex] as RobotConversationItem).searchSuggestions = json.search_suggestions;
+      (
+        conversationList.value[lastIndex] as RobotConversationItem
+      ).searchSuggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
     } else if (json.type == 'extract') {
       let data = json.data;
       if (typeof data === 'string') {
         data = JSON.parse(data);
-      };
+      }
       if (data.shell) {
         runCommand(data.shell as string);
       } else if (data.script) {
@@ -335,20 +377,21 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
       } else if (data.output) {
         contentMessage.value = data.output;
         handleMarkdown(contentMessage.value);
-      };
+      }
     } else if (json.content) {
-      contentMessage.value = contentMessage.value + json.content
+      contentMessage.value = contentMessage.value + json.content;
       handleMarkdown(contentMessage.value);
-    };
+    }
   } catch (error) {
     contentMessage.value = '';
     if (line == '[DONE]') {
-      (conversationList.value[lastIndex] as RobotConversationItem).isFinish = true;
+      (conversationList.value[lastIndex] as RobotConversationItem).isFinish =
+        true;
       isAnswerGenerating.value = false;
     } else if (judgeMessage(lastIndex, line)) {
       console.error('JSON decode error:', line);
-    };
-  };
+    }
+  }
 });
 </script>
 
@@ -357,17 +400,35 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-session">
       <div class="dialogue-session-main" ref="dialogueRef">
-        <DialoguePanel v-for="(item, index) in conversationList" :cid="item.cid.toString()" :key="index"
-          :type="item.belong" :content="item.message" :copyList="item.copyList"
-          :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : undefined"
-          :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : undefined"
+        <DialoguePanel
+          v-for="(item, index) in conversationList"
+          :cid="item.cid.toString()"
+          :key="index"
+          :type="item.belong"
+          :content="item.message"
+          :copyList="item.copyList"
+          :recordList="
+            item.belong === 'robot'
+              ? item.messageList.getRecordIdList()
+              : undefined
+          "
+          :isLikeList="
+            item.belong === 'robot'
+              ? item.messageList.getIslikeList()
+              : undefined
+          "
           :is-finish="getItem(item as ConversationItem, 'isFinish')"
           :is-support="getItem(item as ConversationItem, 'isSupport')"
-          :is-against="getItem(item as ConversationItem, 'isAgainst')" :created-at="item.createdAt"
-          :current-selected="item.currentInd" :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
+          :is-against="getItem(item as ConversationItem, 'isAgainst')"
+          :created-at="item.createdAt"
+          :current-selected="item.currentInd"
+          :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
           :user-selected-plugins="selectedPlugin"
-          :search-suggestions="getItem(item as ConversationItem, 'searchSuggestions')" @comment="handleComment"
-          @report="handleReport" @handleSendMessage="handleSendMessage" />
+          :search-suggestions="getItem(item as ConversationItem, 'searchSuggestions')"
+          @comment="handleComment"
+          @report="handleReport"
+          @handleSendMessage="handleSendMessage"
+        />
         <div v-if="conversationList.length === 0">
           <InitalPanel />
         </div>
@@ -375,46 +436,88 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 
       <div class="dialogue-session-bottom">
         <!-- 问题换一换 -->
-        <div v-if="isAnswerGenerating" class="dialogue-panel__stop"
-          @click="handlePauseAndReGenerate(Number(conversationList.length))">
-          <img v-if="themeStore.theme === 'dark'" src="/src/assets/svgs/dark_stop_answer.svg" alt="" />
+        <div
+          v-if="isAnswerGenerating"
+          class="dialogue-panel__stop"
+          @click="handlePauseAndReGenerate(Number(conversationList.length))"
+        >
+          <img
+            v-if="themeStore.theme === 'dark'"
+            src="/src/assets/svgs/dark_stop_answer.svg"
+            alt=""
+          />
           <img v-else src="/src/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="dialogue-panel__stop-answer">停止回答</div>
         </div>
         <div class="problem" v-if="conversationList.length === 0">
           <ul>
-            <li v-for="item in filterQuestions" :key="item.id" @click="selectQuestion">
+            <li
+              v-for="item in filterQuestions"
+              :key="item.id"
+              @click="selectQuestion"
+            >
               {{ item.question }}
             </li>
           </ul>
           <div class="change-button" @click="changeProblem">
-            <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/light_change.svg" alt="" />
+            <img
+              v-if="themeStore.theme === 'dark'"
+              src="src/assets/svgs/light_change.svg"
+              alt=""
+            />
             <img v-else src="src/assets/svgs/dark_change.svg" alt="" />
             <span>换一换</span>
           </div>
         </div>
         <!-- 识别方式 -->
         <div class="plugin-selector">
-          <el-select class="mode-select" v-model="selectMode" clearable placeholder="请选择识别方式">
-            <el-option v-for="item in modeOptions" :key="item.value" :label="item.label" :value="item.value"
-              :disabled="item.disabled" />
+          <el-select
+            class="mode-select"
+            v-model="selectMode"
+            clearable
+            placeholder="请选择识别方式"
+          >
+            <el-option
+              v-for="item in modeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+              :disabled="item.disabled"
+            />
           </el-select>
-          <img class="renew_btn" @click="createNewSession()" v-if="!isAnswerGenerating && dialogueInput.length <= 0"
-            src="/src/assets/images/createIcon.svg" alt="" />
+          <img
+            class="renew_btn"
+            @click="createNewSession()"
+            v-if="!isAnswerGenerating && dialogueInput.length <= 0"
+            src="/src/assets/images/createIcon.svg"
+            alt=""
+          />
         </div>
         <!-- 输入框 -->
         <div class="dialogue-session-bottom-sendbox">
           <div class="dialogue-session-bottom-sendbox__textarea">
-            <textarea ref="inputRef" v-model="dialogueInput" maxlength="2000" placeholder="在此输入你想了解的内容"
-              @keydown="handleKeydown" />
+            <textarea
+              ref="inputRef"
+              v-model="dialogueInput"
+              maxlength="2000"
+              placeholder="在此输入你想了解的内容"
+              @keydown="handleKeydown"
+            />
           </div>
           <!-- 发送问题 -->
           <div class="dialogue-session-bottom-sendbox__icon">
             <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
-            <img v-if="isAnswerGenerating || dialogueInput.length <= 0" src="/src/assets/images/send_disable.png"
-              alt="" />
+            <img
+              v-if="isAnswerGenerating || dialogueInput.length <= 0"
+              src="/src/assets/images/send_disable.png"
+              alt=""
+            />
             <div v-else @click="handleSendMessage(dialogueInput)">
-              <img v-if="themeStore.theme === 'dark'" src="/src/assets/images/dark_send.png" alt="" />
+              <img
+                v-if="themeStore.theme === 'dark'"
+                src="/src/assets/images/dark_send.png"
+                alt=""
+              />
               <img v-else src="/src/assets/images/light_send.png" alt="" />
             </div>
           </div>
@@ -486,9 +589,11 @@ button[disabled]:hover {
 
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(180deg,
-        #e7f0fd 1%,
-        #daeafc 40%) !important;
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
     display: none;
   }
 
@@ -506,7 +611,7 @@ button[disabled]:hover {
   }
 
   &::before {
-    content: "";
+    content: '';
     width: 100%;
     height: 100%;
     position: absolute;
@@ -570,8 +675,8 @@ button[disabled]:hover {
           font-size: 12px;
           background-color: var(--o-bg-color-base);
           font-family: HarmonyOS_Sans_SC_Medium, system-ui, -apple-system,
-            BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-            "Open Sans", "Helvetica Neue", sans-serif;
+            BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+            'Open Sans', 'Helvetica Neue', sans-serif;
 
           &:focus {
             outline: none;
@@ -623,16 +728,20 @@ button[disabled]:hover {
       margin-bottom: 8px;
 
       &:hover {
-        background-image: linear-gradient(to right,
-            rgba(109, 117, 250, 0.8),
-            rgba(90, 179, 255, 0.8));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.8),
+          rgba(90, 179, 255, 0.8)
+        );
         color: var(--o-text-color-fourth);
       }
 
       &:active {
-        background-image: linear-gradient(to right,
-            rgba(109, 117, 250, 1),
-            rgba(90, 179, 255, 1));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 1),
+          rgba(90, 179, 255, 1)
+        );
         color: var(--o-text-color-fourth);
       }
     }

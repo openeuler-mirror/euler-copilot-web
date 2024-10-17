@@ -12,7 +12,7 @@
 <script lang="ts" setup>
 import { invoke } from '@tauri-apps/api/tauri';
 import { WebviewWindow } from '@tauri-apps/api/window';
-import { showMenu } from "tauri-plugin-context-menu";
+import { showMenu } from 'tauri-plugin-context-menu';
 
 const toggleMainWindow = async () => {
   const mainWindow: WebviewWindow | null = WebviewWindow.getByLabel('main');
@@ -44,7 +44,7 @@ const showContextMenu = (event: MouseEvent) => {
           mainWindow?.hide();
         },
       },
-      { is_separator: true},
+      { is_separator: true },
       {
         label: '设置',
         event: () => {
@@ -58,7 +58,7 @@ const showContextMenu = (event: MouseEvent) => {
           invoke('exit_app');
         },
       },
-    ]
+    ],
   });
 };
 </script>
