@@ -154,7 +154,7 @@ fn register_shortcut(app: &App) {
 
 fn create_floating_icon(app: &App) {
     let builder = WindowBuilder::new(app, "floating", WindowUrl::App("/floating".into()))
-        .title("悬浮窗")
+        .title("悬浮球")
         .resizable(false)
         .maximizable(false)
         .minimizable(false)
@@ -162,9 +162,10 @@ fn create_floating_icon(app: &App) {
         .always_on_top(true)
         .inner_size(64., 64.)
         .decorations(false)
-        .transparent(true);
+        .transparent(true)
+        .position(0., 576.);
 
-    builder.build().expect("Failed to create floating window");
+    builder.build().expect("无法创建悬浮球");
 }
 
 #[tauri::command]
