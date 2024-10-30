@@ -47,6 +47,9 @@
         "all": true,
         "readText": true,
         "writeText": true
+      },
+      "os": {
+        "all": true
       }
     },
     "systemTray": {
