@@ -92,7 +92,7 @@ onMounted(() => {
               <el-input v-model="settingsItems.url" />
             </el-form-item>
             <el-form-item label="API Key" prop="key">
-              <el-input v-model="settingsItems.key" type="password" autocomplete="off" />
+              <el-input v-model="settingsItems.key" autocomplete="off" />
             </el-form-item>
             <el-form-item label="开机启动">
               <el-checkbox v-model="settingsItems.autoStart" @change="toggleAutoStart" :lable="settingsItems.autoStart ? '已开启' : '已关闭'" />

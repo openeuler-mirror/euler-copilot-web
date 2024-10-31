@@ -64,7 +64,7 @@ const openCopilotWeb = () => {
           <el-form ref="ruleFormRef" :model="settingsItems"
             label-width="auto" class="demo-ruleForm">
             <el-form-item label="API KEY" prop="key">
-              <el-input v-model="settingsItems.key" type="password" autocomplete="off" />
+              <el-input v-model="settingsItems.key" autocomplete="off" />
             </el-form-item>
             <el-form-item>
               <el-button class='button' type="primary" @click="saveSettings">

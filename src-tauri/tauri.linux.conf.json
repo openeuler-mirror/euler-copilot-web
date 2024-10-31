@@ -45,7 +45,7 @@
         "rpm"
       ],
       "rpm": {
-        "release": "3",
+        "release": "4",
         "depends": [
           "gnome-terminal"
         ],
