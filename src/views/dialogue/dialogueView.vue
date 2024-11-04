@@ -8,6 +8,8 @@ import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
+import marked from 'src/utils/marked';
+
 
 declare global {  
   interface Window {  
@@ -32,6 +34,7 @@ const modeOptions = reactive([
 
 const isDark = ref(localStorage.getItem('theme') === 'dark');
 const loginDialogVisible = ref(false);
+const agreeDialogVisiable = ref(false);
 
 /**
  * 初始化
@@ -46,6 +49,7 @@ const initCopilot = async (): Promise<void> => {
   }
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
+    readAgreementTip();
     await invoke('refresh_session_id').then(async (sessionID: any) => {
       if (sessionID) {
         localStorage.setItem('session', sessionID);
@@ -64,6 +68,8 @@ const settingsHandler = () => {
 
 // 协议内容
 const agreement = ref<string>('');
+const tip = ref<string>('');
+
 
 const handleSubmit = async () => {
   dialogVisible.value = false;
@@ -77,6 +83,19 @@ const changeTheme = () => {
   localStorage.setItem('theme',theme);
   themeStore.theme = theme;
   themeStore.$patch({theme: theme});
+};
+
+const readAgreement = async () => {
+  const response = await import('src/conf/agreement.md?raw');
+  agreement.value = marked.parse(response.default) as string;
+  agreeDialogVisiable.value = true;
+};
+
+const readAgreementTip = async () => {
+  console.log('123');
+  const response = await import('src/conf/agreement-tip.md?raw');
+  tip.value = marked.parse(response.default) as string;
+  agreeDialogVisiable.value = true;
 };
 
 onMounted(() => {
@@ -155,6 +174,20 @@ const getModeOptions = async() => {
     </footer>
     <EulerDialog :visible="dialogVisible" :content="agreement" agreement-name="《服务协议》" @submit="handleSubmit">
     </EulerDialog>
+    <EulerDialog
+      :visible="dialogVisible"
+      :content="agreement"
+      :need-check="false"
+      agreement-name="《服务协议》"
+      @submit="dialogVisible = false"
+    ></EulerDialog>
+    <EulerDialog
+      :visible="agreeDialogVisiable"
+      :content="tip"
+      :need-check="false"
+      agreement-name="《服务协议》"
+      @submit="agreeDialogVisiable = false"
+    ></EulerDialog>
   </div>
 </template>
 

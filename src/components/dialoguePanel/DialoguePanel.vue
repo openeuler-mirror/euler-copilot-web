@@ -574,7 +574,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
               color: var(--o-text-color-primary) !important;
             }
 
-            letter-spacing: 2px;
+            // letter-spacing: 2px;
           }
 
         .regenerate-button {

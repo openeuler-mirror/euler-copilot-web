@@ -104,6 +104,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 .agreement-markdown {
   background-color: var(--o-bg-color-light);
   padding: 10px;
+  font-size: 100 !important;
   h1 {
     text-align: center;
     padding-bottom: 16px;
