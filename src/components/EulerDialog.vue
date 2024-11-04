@@ -9,7 +9,7 @@
     align-center
   >
     <template #default>
-      <el-scrollbar height="400px">
+      <el-scrollbar height="300px">
         <div class="agreement-markdown" v-html="content"></div>
       </el-scrollbar>
     </template>

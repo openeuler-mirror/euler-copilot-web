@@ -1,8 +1,13 @@
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
 import { WebviewWindow } from '@tauri-apps/api/window';
+import marked from 'src/utils/marked';
+import EulerDialog from 'src/components/EulerDialog.vue';
+
+
+const tip = ref<string>('');
 
 const settingsItems = reactive({
   key: '',
@@ -35,6 +40,7 @@ async function saveSettings() {
 }
 
 const theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+const agreeDialogVisiable = ref(false);
 
 const openCopilotWeb = () => {
   invoke('open_url', {
@@ -43,6 +49,19 @@ const openCopilotWeb = () => {
     console.error(err);
   });
 }
+
+const readAgreementTip = async () => {
+  console.log('123');
+  const response = await import('src/conf/agreement-tip.md?raw');
+  tip.value = marked.parse(response.default) as string;
+  agreeDialogVisiable.value = true;
+};
+
+
+onMounted(() => {
+  readAgreementTip();
+});
+
 </script>
 
 <template>
@@ -73,6 +92,13 @@ const openCopilotWeb = () => {
             </el-form-item>
           </el-form>
         </div>
+        <EulerDialog
+      :visible="agreeDialogVisiable"
+      :content="tip"
+      :need-check="false"
+      agreement-name="《服务协议》"
+      @submit="agreeDialogVisiable = false"
+    ></EulerDialog>
       </div>
     </div>
   </div>
