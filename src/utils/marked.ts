@@ -56,13 +56,14 @@ renderer.code = function ({ text, lang }) {
   const id = `pre-${Date.now()}-${randomInt()}`;
   return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${text}</code></pre>`;
 };
-renderer.link = function ({ href, title }) {
+renderer.link = function ({ href, title, tokens }) {
+  const text = this.parser.parseInline(tokens);
   if (href === title) {
     const txt = title.replace(link, '');
     const url = (href.match(link) ?? [])[0];
     return `<a href="${url}" target="_blank">${url}</a>${txt}`;
   }
-  return `<a href="${href}" target="_blank">${title}</a>`;
+  return `<a href="${href}" target="_blank">${text}</a>`;
 }
 
 
