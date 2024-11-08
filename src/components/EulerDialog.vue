@@ -3,7 +3,7 @@
     :model-value="visible"
     :show-close="false"
     width="50%"
-    title="服务协议" 
+    :title="props.agreementName"
     :close-on-press-escape="false"
     :close-on-click-modal="false"
     align-center
