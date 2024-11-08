@@ -6,7 +6,6 @@ import { WebviewWindow } from '@tauri-apps/api/window';
 import marked from 'src/utils/marked';
 import EulerDialog from 'src/components/EulerDialog.vue';
 
-
 const tip = ref<string>('');
 
 const settingsItems = reactive({
@@ -51,12 +50,10 @@ const openCopilotWeb = () => {
 }
 
 const readAgreementTip = async () => {
-  console.log('123');
   const response = await import('src/conf/agreement-tip.md?raw');
   tip.value = marked.parse(response.default) as string;
   agreeDialogVisiable.value = true;
 };
-
 
 onMounted(() => {
   readAgreementTip();
@@ -93,12 +90,12 @@ onMounted(() => {
           </el-form>
         </div>
         <EulerDialog
-      :visible="agreeDialogVisiable"
-      :content="tip"
-      :need-check="false"
-      agreement-name="《服务协议》"
-      @submit="agreeDialogVisiable = false"
-    ></EulerDialog>
+          :visible="agreeDialogVisiable"
+          :content="tip"
+          :need-check="false"
+          agreement-name="内测声明"
+          @submit="agreeDialogVisiable = false"
+        ></EulerDialog>
       </div>
     </div>
   </div>
