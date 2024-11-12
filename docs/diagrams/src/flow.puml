@@ -1,0 +1,71 @@
+@startuml Desktop Application Flow
+
+' Application Startup Flow
+start
+:应用启动;
+:初始化Tauri应用;
+fork
+  :创建悬浮球窗口;
+fork again
+  :检查API Key;
+  if (API Key存在?) then (yes)
+  else (no)
+    :创建欢迎窗口;
+  endif
+end fork
+:注册全局快捷键;
+:初始化系统托盘;
+
+' Chat Flow
+partition "对话流程" {
+  :用户输入问题;
+  :发送请求到后端;
+  fork
+    :创建新会话;
+  fork again
+    :使用现有会话;
+  end fork
+  :调用chat API;
+  :处理流式响应;
+  :渲染Markdown内容;
+}
+
+' Settings Flow
+partition "设置流程" {
+  :打开设置窗口;
+  :更新配置;
+  :保存到配置文件;
+  :重新加载配置;
+}
+
+' Window Management Flow
+partition "窗口管理" {
+  :全局快捷键触发;
+  if (窗口存在?) then (yes)
+    if (窗口可见?) then (yes)
+      :隐藏窗口;
+    else (no)
+      :显示窗口;
+      :设置焦点;
+    endif
+  else (no)
+    :创建主窗口;
+  endif
+}
+
+' System Tray Flow
+partition "系统托盘" {
+  :用户点击托盘;
+  switch (选择操作)
+  case (显示/隐藏)
+    :切换窗口状态;
+  case (设置)
+    :打开设置窗口;
+  case (退出)
+    :关闭应用;
+  endswitch
+}
+
+stop
+
+@enduml

@@ -1,0 +1,139 @@
+@startuml Frontend Architecture
+
+' Types
+package "Types" {
+  interface DialoguePanelType {
+    USER = 'user'
+    ROBOT = 'robot'
+  }
+
+  interface ConversationItem {
+    cid: number
+    belong: DialoguePanelType
+    message: string
+    createdAt: string | Date
+  }
+
+  interface RobotConversationItem {
+    sessionId: string
+    recordId: string
+    message: string[]
+    copyList: string[]
+    messageList: MessageArray
+    currentInd: number
+    isFinish: boolean
+    isSupport: boolean
+    isAgainst: boolean
+    searchSuggestions: string[]
+  }
+
+  class MessageArray {
+    - items: MessageRecord[]
+    + addItem(message: string, recordId: string, isLike: number)
+    + getItem(index: number): MessageRecord
+    + getLength(): number
+  }
+}
+
+' Store
+package "Store" {
+  class SessionStore {
+    - dialogueRef: ref<HTMLDivElement>
+    - isPaused: ref<boolean>
+    - conversationList: ref<ConversationItem[]>
+    - isAnswerGenerating: ref<boolean>
+    + scrollBottom(action: 'smooth' | 'auto')
+    + getStream(params: StreamParams)
+    + sendQuestion(question: string)
+    + pausedStream(cid: number)
+    + reGenerateAnswer(cid: number)
+  }
+
+  class HistorySessionStore {
+    - historySession: ref<HistorySessionItem[]>
+    - currentSelectedSession: ref<string>
+    - selectedSessionIds: ref<string[]>
+    + changeSession(sessionId: string)
+    + generateSession()
+    + deleteSession()
+  }
+}
+
+' Components
+package "Components" {
+  class DialoguePanel {
+    - props: DialoguePanelProps
+    - index: ref<number>
+    - isLike: ref<number[]>
+    + handleCopy()
+    + handlePauseAndReGenerate()
+    + handleIsLike()
+    + prePageHandle()
+    + nextPageHandle()
+  }
+
+  class Message {
+    + warningMsg(msgInfo: string)
+    + successMsg(msgInfo: string)
+    + errorMsg(msgInfo: string)
+    + infoMsg(msgInfo: string)
+  }
+
+  class EulerDialog {
+    - visible: boolean
+    - content: string
+    - agreementName: string
+    + handleSubmit()
+  }
+}
+
+' Views
+package "Views" {
+  class DialogueView {
+    - isDark: ref<boolean>
+    - modeOptions: reactive[]
+    - dialogVisible: ref<boolean>
+    + changeTheme()
+    + initCopilot()
+    + settingsHandler()
+    + readAgreement()
+  }
+
+  class DialogueSession {
+    - dialogueInput: ref<string>
+    - selectMode: ref<string>
+    - contentMessage: ref<string>
+    + handleSendMessage()
+    + handleKeydown()
+    + handleComment()
+    + handleMarkdown()
+    + createNewSession()
+  }
+}
+
+' APIs
+package "APIs" {
+  class SessionAPI {
+    + getSessionRecord()
+    + updateSession()
+    + deleteSession()
+    + getHistoryConversation()
+  }
+
+  class ExternalAPI {
+    + feedback()
+    + report()
+  }
+}
+
+' Relationships
+DialogueView *-- DialogueSession
+DialogueSession *-- DialoguePanel
+DialoguePanel ..> Message
+SessionStore --> SessionAPI
+HistorySessionStore --> SessionAPI
+DialogueSession --> SessionStore
+DialogueSession --> HistorySessionStore
+DialoguePanel --> ExternalAPI
+
+@enduml

@@ -1,0 +1,111 @@
+@startuml Backend Architecture
+
+' Main Application
+package "Tauri Application" {
+  class MainApp {
+    + run()
+    + build()
+    + setup()
+  }
+}
+
+' Core Modules
+package "Core Modules" {
+  class WindowManager {
+    + create_main_window(app: &App)
+    + create_settings_window(app_handle: &AppHandle)
+    + create_welcome_window(app: &App)
+    + create_floating_icon(app: &App)
+    + register_shortcut(app: &App)
+    + show_main_window(app_handle: AppHandle)
+    + show_settings_window(app_handle: AppHandle)
+    + exit_app(app_handle: AppHandle)
+  }
+
+  class SystemTray {
+    + create_tray_menu(): SystemTrayMenu
+    + handle_tray_event(app: &AppHandle, event: SystemTrayEvent)
+  }
+}
+
+' API Module
+package "API" {
+  class ChatState {
+    - Mutex<bool>
+  }
+
+  class StreamPayload {
+    + message: String
+  }
+
+  class ApiHandler {
+    + chat<R: Runtime>(app: AppHandle<R>, state: State<ChatState>, params...)
+    + create_conversation(): Result<String>
+    + refresh_session_id(session_id: Option<&str>): Result<String>
+    + stop(state: State<ChatState>): Result<()>
+    + plugin(): Result<Value>
+    - emit_message<R: Runtime>(app: &AppHandle<R>, message: &str)
+    - get_base_headers(): HeaderMap
+  }
+}
+
+' Config Module
+package "Config" {
+  class Config {
+    - framework_url: String
+    - framework_api_key: String
+    + config_dir(): PathBuf
+    + config_file(): PathBuf
+    + default(): Self
+    + load(): Result<Self>
+    + save(): Result<()>
+    + get_base_url(): String
+    + get_api_key(): String
+    + update_config(url: Option<&str>, api_key: Option<&str>): Result<()>
+  }
+}
+
+' Utility Module
+package "Utility" {
+  class SystemUtils {
+    + run_command(command: &str): Result<String>
+    + open_url(url: &str)
+    + open_terminal(command: &str)
+  }
+
+  class Positioner {
+    + setup_window_pos(): Result<()>
+  }
+}
+
+' Dependencies and Relationships
+MainApp --> WindowManager
+MainApp --> SystemTray
+MainApp --> ApiHandler
+MainApp --> Config
+
+ApiHandler --> ChatState
+ApiHandler --> Config
+WindowManager --> Positioner
+SystemUtils --> Config
+
+' Command Registration
+note right of MainApp
+  Registered Commands:
+  - exit_app
+  - show_main_window
+  - show_settings_window
+  - create_conversation
+  - refresh_session_id
+  - plugin
+  - chat
+  - stop
+  - get_base_url
+  - get_api_key
+  - update_config
+  - open_url
+  - open_terminal
+  - run_command
+end note
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml Desktop Application Sequence
+
+' Participants
+actor User
+participant "Frontend\nVue3" as Frontend
+participant "DialogueSession" as Session
+participant "SessionStore" as Store
+participant "Tauri Backend" as Backend
+participant "API Server" as Server
+database "Config File" as Config
+
+' Application Startup
+User -> Frontend: 启动应用
+Frontend -> Backend: initCopilot()
+Backend -> Config: load()
+Backend -> Backend: create_floating_icon()
+Backend -> Backend: register_shortcut()
+
+' Session Management
+User -> Frontend: 新建会话
+Frontend -> Store: createNewSession()
+Store -> Backend: create_conversation()
+Backend -> Server: POST /api/client/conversation
+Server --> Backend: conversation_id
+Backend --> Store: 返回会话ID
+Store -> Frontend: 更新会话列表
+
+' Chat Flow
+User -> Frontend: 输入问题
+Frontend -> Session: handleSendMessage()
+Session -> Store: sendQuestion()
+Store -> Backend: chat()
+Backend -> Server: POST /api/client/chat
+Server --> Backend: Stream Response
+Backend -> Frontend: emit_message()
+Frontend -> Session: handleMarkdown()
+Session -> Frontend: 更新UI
+
+' Settings Flow
+User -> Frontend: 打开设置
+Frontend -> Backend: show_settings_window()
+User -> Frontend: 更新配置
+Frontend -> Backend: update_config()
+Backend -> Config: save()
+Backend --> Frontend: 配置更新完成
+
+' Global Shortcut
+User -> Backend: 触发快捷键
+Backend -> Backend: handle_shortcut()
+Backend -> Frontend: 切换窗口状态
+
+' System Tray
+User -> Backend: 点击系统托盘
+Backend -> Backend: handle_tray_event()
+alt 显示/隐藏
+    Backend -> Frontend: 切换窗口显示
+else 设置
+    Backend -> Frontend: 打开设置窗口
+else 退出
+    Backend -> Backend: exit_app()
+end
+
+@enduml
