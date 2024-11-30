@@ -45,7 +45,7 @@ const initCopilot = async (): Promise<void> => {
     themeStore.theme = themeValue;
   }
   else {
-    localStorage.setItem('theme', 'dark');
+    localStorage.setItem('theme', 'light');
   }
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
