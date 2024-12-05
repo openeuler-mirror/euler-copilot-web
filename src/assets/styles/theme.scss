@@ -1,0 +1,27 @@
+body[theme='dark'] {
+  --o-bg-image: url('../../assets/images/dark_background.png');
+  --o-shell-image: url('../../assets/images/dark_shell.png');
+  --o-sider: url('../../assets/images/dark_sider.png');
+  --o-sider-hover: url('../../assets/images/dark_sider-hover.png');
+  --o-button-color: #576372;
+  --o-button-border-color: #576372;
+  --o-button-disable-color: #626d7c;
+  --o-button-disable-background: #203052;
+  --o-button-disable-border: #626d7c;
+  --o-time-text: #3e4551;
+  --o-bash-bg: #2a2f37;
+}
+
+body[theme='light'] {
+  --o-bg-image: url('../../assets/images/light_background.png');
+  --o-shell-image: url('../../assets/images/light_shell.png');
+  --o-sider: url('../../assets/images/light_sider.png');
+  --o-sider-hover: url('../../assets/images/light_sider-hover.png');
+  --o-button-color: #c3cedf;
+  --o-button-border-color: #d3dce9;
+  --o-button-disable-color: #bfc7d7;
+  --o-button-disable-background: #ebedf3;
+  --o-button-disable-border: #ebedf3;
+  --o-time-text: #dfe5ef;
+  --o-bash-bg: #f4f6fa;
+}

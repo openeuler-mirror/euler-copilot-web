@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deploy
+  namespace: euler-copilot
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: web
+          image: #Web镜像地址
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP #依据实际可改为HTTPS协议
+            failureThreshold: 5
+            initialDelaySeconds: 60
+            periodSeconds: 90
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+          volumeMounts:
+            - mountPath: /config
+              name: web-config-volume
+            - mountPath: /var/lib/nginx/tmp
+              name: web-tmp
+            - mountPath: /home/eulercopilot/.env
+              name: web-env-volume
+              subPath: .env
+            # 使用SSL证书的时候，需要挂载证书文件
+#            - mountPath: /config/pass.txt
+#              name: web-env-volume
+#              subPath: pass.txt
+#            - mountPath: /config/server.key
+#              name: web-env-volume
+#              subPath: server.key
+#            - mountPath: /config/server.crt
+#              name: web-env-volume
+#              subPath: server.crt
+#            - mountPath: /config/dhparam.pem
+#              name: web-env-volume
+#              subPath: dhparam.pem
+          securityContext:
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            runAsUser: 1001
+            runAsGroup: 1001
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+#          resources:
+#            limits:
+#              memory: 1024Mi
+#              cpu: 500m
+      restartPolicy: Always
+      volumes:
+        - name: web-config-volume
+          emptyDir:
+            medium: Memory
+        - name: web-env-volume
+          configMap:
+            name: web-config
+        - name: web-tmp
+          emptyDir:
+            medium: Memory
