@@ -1,0 +1,40 @@
+
+.el-message{
+    width: 30%;
+    border-radius: 5px;
+  }
+  
+  .el-message--success{
+    background-color: #C2E7C7;
+    color: #000;
+    border-color: #24AB36;
+    border-radius: 10px;
+    .el-message__content{
+      color: #000;
+      font-size: 12px;
+  
+    }
+  }
+  
+  .el-message--warning{
+    background-color: #F9ECB8;
+    border-color: #EBAF00;
+    img{
+      width: 16px;
+      height: 16px;
+    }
+    .el-message__content{
+      color: #000;
+      font-size: 12px;
+    }
+  }
+  
+  .el-message--error{
+    background-color: #F7C1C1;
+    color: #000;
+    border-color: #E42121;
+    .el-message__content{
+      color: #000;
+      font-size: 12px;
+    }
+  }
