@@ -1,7 +1,7 @@
 # euler-copilot-web
 
 #### 介绍
-The web frontend of EulerCopilot
+openEuler Copilot System前端
 
 #### 软件架构
 软件架构说明

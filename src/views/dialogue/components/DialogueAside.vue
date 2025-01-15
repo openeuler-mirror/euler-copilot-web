@@ -20,7 +20,7 @@ import { successMsg } from "src/components/Message";
 import i18n from 'src/i18n';
 
 interface HistorySession {
-  sessionId: string;
+  conversation_id: string;
   title: string;
   createdTime: string | Date;
 }
@@ -177,7 +177,7 @@ function cancelDeleteSession(): void {
  */
 function selectAllSession(): void {
   isSelectedAll.value
-    ? (selectedSessionIds.value = historySession.value.map(item => item.sessionId))
+    ? (selectedSessionIds.value = historySession.value.map(item => item.conversation_id))
     : (selectedSessionIds.value = []);
 }
 
@@ -249,7 +249,7 @@ function hanleAsideVisible(): void {
             <ElCollapse v-model="activeNames">
               <template v-for="item in filteredHistorySessions" :key="item.key">
                 <ElCollapseItem :title="item.title" :name="item.key">
-                  <template v-for="session in item.list" :key="session.sessionId">
+                  <template v-for="session in item.list" :key="session.conversation_id">
                     <SessionCard
                       :conversation="session"
                       :deletion="isBatchDeletion"
@@ -329,7 +329,7 @@ function hanleAsideVisible(): void {
 }
 
 :deep(.el-collapse-item__wrap) {
-  border-bottom: none;
+  border-bottom: 5px;
 }
 
 @keyframes slideInFromLeft {

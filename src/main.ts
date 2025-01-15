@@ -30,6 +30,7 @@ import {
   QiankunProps
 } from "vite-plugin-qiankun/dist/helper";
 
+
 let app: AppInstance<Element> | null = null
 
 const render = (props: any = {}) => {
@@ -65,5 +66,4 @@ const initQianKun = () => {
   })
 }
 
-qiankunWindow.__POWERED_BY_QIANKUN__ ? initQianKun() : render()
-
+qiankunWindow.__POWERED_BY_QIANKUN__ ? initQianKun() : render();

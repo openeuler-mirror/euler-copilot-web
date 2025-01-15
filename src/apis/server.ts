@@ -9,20 +9,18 @@
 // See the Mulan PSL v2 for more details.
 import axios from "axios";
 
-import { handleChangeRequestHeader, handleGeneralError, handleStatusError } from "./tools";
-import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import { handleChangeRequestHeader, handleStatusError } from "./tools";
+import type { AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosHeaders } from "axios";
 
 export interface FcResponse<T> {
   error: string;
+  code?: number;
+  message?: string;
   errMessage: string;
   result: T;
 }
 
-interface MyResponseData<T> {  
-  code: number;  
-  message: string; 
-  result: T;  
-}  
+export type IError = null | Error | AxiosError;
 
 export interface IAnyObj {
   [index: string]: unknown;
@@ -50,16 +48,14 @@ server.interceptors.request.use(
 
 // response interceptor
 server.interceptors.response.use(
-  (response: AxiosResponse<any, any>): any => {
+  (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
     if (response.status !== 200) {
-      return Promise.reject(response.data);
+      return Promise.reject(new Error(response.statusText));
     }
-    // if (!handleGeneralError(response.data.code, response.data.label, response.data.err_msg)) {
-    //   return false;
-    // }
-    return response;
+
+    return Promise.resolve(response);
   },
-  async (error) => {
+  async (error: AxiosError) => {
     return await handleStatusError(error);
   }
 );
@@ -68,18 +64,17 @@ server.interceptors.response.use(
  * request with get
  * @param url
  * @param params
- * @param clearFn
  * @constructor
  */
 export const get = async <T>(
   url: string,
   params: IAnyObj = {}
-): Promise<[any, FcResponse<T> | undefined]> => {
+): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
-    const result = await server.get(url, { params });
+    const result = await server.get(url, { params: params });
     return [null, result.data as FcResponse<T>];
   } catch (error) {
-    return [error, undefined];
+    return [error as IError, undefined];
   }
 };
 
@@ -93,13 +88,14 @@ export const get = async <T>(
 export const post = async <T>(
   url: string,
   data: IAnyObj = {},
-  params: IAnyObj = {}
-): Promise<[any, FcResponse<T> | undefined]> => {
+  params: IAnyObj = {},
+  headers: IAnyObj = {}
+): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
-    const result = await server.post(url, data, { params });
+    const result = await server.post(url, data, { params: params, headers: headers as AxiosHeaders });
     return [null, result.data as FcResponse<T>];
   } catch (error) {
-    return [error, undefined];
+    return [error as IError, undefined];
   }
 };
 
@@ -114,12 +110,12 @@ export const put = async <T>(
   url: string,
   data: IAnyObj = {},
   params: IAnyObj = {}
-): Promise<[any, FcResponse<T> | undefined]> => {
+): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
-    const result = await server.put(url, data, { params });
+    const result = await server.put(url, data, { params: params });
     return [null, result.data as FcResponse<T>];
   } catch (error) {
-    return [error, undefined];
+    return [error as IError, undefined];
   }
 };
 
@@ -129,18 +125,15 @@ export const put = async <T>(
  * @param params
  * @constructor
  */
-export const del = <T>(
+export const del = async <T>(
   url: string,
+  data: IAnyObj = {},
   params: IAnyObj = {}
-): Promise<[any, FcResponse<T> | undefined]> => {
-  return new Promise((resolve) => {
-    server
-      .delete(url, { params })
-      .then((result) => {
-        resolve([null, result.data as FcResponse<T>]);
-      })
-      .catch((err) => {
-        resolve([err, undefined]);
-      });
-  });
+): Promise<[IError, FcResponse<T> | undefined]> => {
+  try {
+    const result = await server.delete(url, { data: data, params: params });
+    return [null, result.data as FcResponse<T>];
+  } catch (error) {
+    return [error as IError, undefined];
+  }
 };

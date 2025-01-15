@@ -13,14 +13,14 @@ const policy = ref<string>('');
  * 读取协议
  */
 const readAgreement = async () => {
-  const language = sessionStorage.getItem('localeLang');
+  const language = localStorage.getItem('localeLang');
   const response = language === 'en'?await import('src/conf/agreement-en.md?raw'):await import('src/conf/agreement.md?raw');
   agreement.value = marked.parse(response.default) as string;
   agreeDialogVisiable.value = true;
 };
 
 const readPolicy= async () => {
-  const language = sessionStorage.getItem('localeLang');
+  const language = localStorage.getItem('localeLang');
   const response = language === 'en'?await import('src/conf/policy-en.md?raw'):await import('src/conf/policy.md?raw');
   policy.value = marked.parse(response.default) as string;
   policyDialogVisiable.value = true;

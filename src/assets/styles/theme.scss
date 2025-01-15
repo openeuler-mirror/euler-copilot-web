@@ -10,6 +10,8 @@ body[theme='dark'] {
   --o-button-disable-border: #626d7c;
   --o-time-text: #3e4551;
   --o-bash-bg: #2a2f37;
+  --o-flow-code-bg: rgb(42,47,55);
+  --o-flow-code-border: rgb(62,69,81);
 }
 
 body[theme='light'] {
@@ -24,4 +26,6 @@ body[theme='light'] {
   --o-button-disable-border: #ebedf3;
   --o-time-text: #dfe5ef;
   --o-bash-bg: #f4f6fa;
+  --o-flow-code-bg: rgb(244,256,258);
+  --o-flow-code-border: rgb(223,229,239);
 }

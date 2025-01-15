@@ -45,10 +45,10 @@ export const useAccountStore = defineStore('account', () => {
     return false;
   };
 
-  async function getAuthUrl() {
-    const [_, res] = await api.queryAuthUrl();
+  async function getAuthUrl(action: string) {
+    const [_, res] = await api.queryAuthUrl(action);
     if (res) {
-      return res.result
+      return res.result.url
     }
     return null
   }
