@@ -9,6 +9,7 @@ import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
 import { UploadTypeName, UploadStatus, UploadType } from 'src/components/uploadFile/type';
+import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
@@ -23,6 +24,7 @@ const session = useSessionStore();
 
 export interface DialogueSession {
   modeOptions: any;
+  isCreateApp: any;
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
@@ -35,6 +37,7 @@ enum SupportMap {
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const modeOptions = ref(props.modeOptions);
+const isCreateApp = ref(props?.isCreateApp)
 const questions = [
   {
     groupId: 0,
@@ -143,6 +146,7 @@ const questions = [
   },
 ];
 
+
 let groupid = ref(0);
 
 const tagNum = ref(3);
@@ -160,7 +164,7 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string[]) => {
+const handleSendMessage = async (groupId: string | undefined, question: string, user_selected_flow?: string[]) => {
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
@@ -176,9 +180,9 @@ const handleSendMessage = async (groupId:string|undefined,question: string, user
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(groupId,question, undefined, undefined, undefined, user_selected_flow,undefined);
+    await sendQuestion(groupId, question, undefined, undefined, undefined, user_selected_flow, undefined);
   } else {
-    await sendQuestion(groupId,question, user_selected_plugins.value, undefined, undefined, undefined,undefined);
+    await sendQuestion(groupId, question, user_selected_plugins.value, undefined, undefined, undefined, undefined);
   }
 };
 
@@ -190,7 +194,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     if (dialogueInput.value !== '' && isAllowToSend.value) {
-      handleSendMessage(undefined,dialogueInput.value);
+      handleSendMessage(undefined, dialogueInput.value);
     }
   }
 };
@@ -199,7 +203,7 @@ const handleKeydown = (event: KeyboardEvent) => {
  *
  * @param item
  */
-const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
+const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
   if (field in item) {
     return (item as RobotConversationItem)[field] as T;
   }
@@ -221,7 +225,7 @@ const handleCommont = async (
   index: number,
   reason?: string,
   reasonLink?: string,
-  reasonDescription?: string
+  reasonDescription?: string,
 ) => {
   const params: {
     qaRecordId: string;
@@ -405,11 +409,11 @@ const isAllowToSend = computed(() => {
 });
 
 // 会话切换时
-watch(currentSelectedSession, async (newVal) => {
+watch(currentSelectedSession, async newVal => {
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
   let curPolling = pollingMap.get(newVal);
-  
+
   let isNewSession = false;
   if (!newFileView) {
     isNewSession = true;
@@ -440,10 +444,10 @@ watch(currentSelectedSession, async (newVal) => {
           isNewSession ? uploadFilesView.value.push(item as any) : null;
         }
       });
-      isNewSession ? curPolling.startPolling() : null;
-      uploadFilesView.value.sort((pre, cur) => {
-        return cur.created_at - pre.created_at;
-      });
+    isNewSession ? curPolling.startPolling() : null;
+    uploadFilesView.value.sort((pre, cur) => {
+      return cur.created_at - pre.created_at;
+    });
   }
 });
 
@@ -498,7 +502,7 @@ const isAllowToUpload = (files): boolean => {
 };
 
 // 构造上传数据
-const generateUploadData = (files) => {
+const generateUploadData = files => {
   let formData = new FormData();
   for (let file of files) {
     formData.append('documents', file);
@@ -525,12 +529,12 @@ const updateUploadView = (files, batch): void => {
 const sizeFormator = (size: number) => {
   if (size > 1024 * 1024) {
     return `${(size / 1024 / 1024).toFixed(2)}GB`;
-  } 
+  }
   if (size > 1024) {
     return `${(size / 1024).toFixed(2)}MB`;
   }
   return `${size.toFixed(2)}KB`;
-}
+};
 
 const getPollingProcess = sessionId => {
   let timer;
@@ -539,8 +543,8 @@ const getPollingProcess = sessionId => {
   const process = async () => {
     const pollingExistUploadList = existUploadMap.get(sessionId);
     const pollingUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
-    ? uploadFilesView.value
-    : uploadViewsMap.get(sessionId);
+      ? uploadFilesView.value
+      : uploadViewsMap.get(sessionId);
     const [_, response] = await api.getUploadFiles(sessionId);
     if (!_ && response) {
       const { documents } = response.result;
@@ -682,10 +686,10 @@ const handleDelete = (file): void => {
 };
 
 const clearSuggestion = (index: number): void => {
-  if('search_suggestions' in conversationList.value[index]){
-  conversationList.value[index].search_suggestions = undefined;
+  if ('search_suggestions' in conversationList.value[index]) {
+    conversationList.value[index].search_suggestions = undefined;
   }
-}
+};
 
 onMounted(() => {
   // 全局数据初始化
@@ -701,7 +705,7 @@ watch(
   },
   {
     deep: true,
-  }
+  },
 );
 
 watch(selectMode, (newValue, oldValue) => {
@@ -772,10 +776,10 @@ const handlePauseAndReGenerate = (cid?: number) => {
 </script>
 
 <template>
-  <div style="height: 100%; width: 100%; display: flex">
+  <div class="dialogue-rightContainer">
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-conversation">
-      <div class="dialogue-conversation-main" ref="dialogueRef">
+      <div class="dialogue-conversation-main" ref="dialogueRef" v-if="!isCreateApp">
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
@@ -808,11 +812,13 @@ const handlePauseAndReGenerate = (cid?: number) => {
           <InitalPanel />
         </div>
       </div>
+        <div class="createApp-demo">
 
+        </div>
       <div class="dialogue-conversation-bottom">
         <!-- 问题换一换 -->
         <div
-          v-if="isAnswerGenerating"
+          v-if="isAnswerGenerating && !isCreateApp"
           class="dialogue-panel__stop"
           @click="handlePauseAndReGenerate(Number(conversationList.length))"
         >
@@ -822,7 +828,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
             {{ $t('feedback.stop') }}
           </div>
         </div>
-        <div class="problem" v-if="conversationList.length === 0">
+        <div class="problem" v-if="conversationList.length === 0 && !isCreateApp">
           <ul>
             <li v-for="item in filterQuestions" :key="item.id" @click="selectQuestion">
               {{ $t('question.' + item.question) }}
@@ -835,7 +841,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
           </div>
         </div>
         <!-- 识别方式 -->
-        <div class="recognitionMode">
+        <div class="recognitionMode" v-if="!isCreateApp">
           <el-select
             class="mode-select"
             v-model="selectMode"
@@ -892,7 +898,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
                 src="@/assets/images/send_disable.png"
                 alt=""
               />
-              <div v-else @click="handleSendMessage(undefined,dialogueInput)">
+              <div v-else @click="handleSendMessage(undefined, dialogueInput)">
                 <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
                 <img v-else src="@/assets/images/light_send.png" alt="" />
               </div>
@@ -906,11 +912,20 @@ const handlePauseAndReGenerate = (cid?: number) => {
           </transition>
         </div>
       </div>
+      <footer class="copilot-footer">
+        <CommonFooter />
+      </footer>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.dialogue-rightContainer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  min-width: 1028px;
+}
 .dialogue-panel__stop {
   display: flex;
   justify-content: center;
@@ -1071,8 +1086,19 @@ button[disabled]:hover {
           color: var(--o-text-color-primary);
           font-size: 16px;
           background-color: var(--o-bg-color-base);
-          font-family: HarmonyOS_Sans_SC_Medium, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-            Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          font-family:
+            HarmonyOS_Sans_SC_Medium,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            Roboto,
+            Oxygen,
+            Ubuntu,
+            Cantarell,
+            'Open Sans',
+            'Helvetica Neue',
+            sans-serif;
 
           &:focus {
             outline: none;
@@ -1252,5 +1278,9 @@ button[disabled]:hover {
 :deep(.el-select) {
   border-radius: 8px;
   background: var(--o-bg-color-base);
+}
+
+.copilot-footer {
+  margin-top: 16px;
 }
 </style>

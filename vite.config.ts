@@ -46,6 +46,9 @@ export default ({ mode }): UserConfigExport => {
             if (/\/opendesign2\/themes\/es\/(.*?)\//.test(id)) {
               return "opendesign2";
             }
+            if (/\/opendesign-icons\/themes\/es\/(.*?)\//.test(id)) {
+              return "opendesign-icons";
+            }
             if (/\/element-plus\/es\/components\/(.*?)\/(.*)\/?style/.test(id)) {
               return "element-plus";
             }

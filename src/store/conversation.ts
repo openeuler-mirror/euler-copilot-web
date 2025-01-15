@@ -11,6 +11,7 @@ import { defineStore } from 'pinia';
 import { ref, nextTick } from 'vue';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import {
+  AppShowType,
   MessageArray,
   type ConversationItem,
   type RobotConversationItem,
@@ -68,7 +69,8 @@ export const useSessionStore = defineStore('conversation', () => {
   const isPaused = ref(false);
   // 会话列表
   const conversationList = ref<ConversationItem[]>([]);
-
+  const app = ref<AppShowType>({});
+  const appList = ref([]);
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
   /**
@@ -664,6 +666,8 @@ export const useSessionStore = defineStore('conversation', () => {
     conversationList,
     isAnswerGenerating,
     dialogueRef,
+    app,
+    appList,
     sendQuestion,
     pausedStream,
     prePage,

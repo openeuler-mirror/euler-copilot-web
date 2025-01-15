@@ -10,14 +10,15 @@ import {
   ElCollapseItem,
   ElTooltip,
 } from 'element-plus';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
-import { useHistorySessionStore } from '@/store/historySession';
+import { useHistorySessionStore,useSessionStore } from '@/store';
 import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { useI18n } from 'vue-i18n';
-import { successMsg } from "src/components/Message";
+import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
+import { apiKeyApi } from 'srcapis/paths';
 
 interface HistorySession {
   conversation_id: string;
@@ -31,15 +32,27 @@ const props = withDefaults(
   }>(),
   {
     theme: 'dark',
-  }
+  },
 );
 const { t } = useI18n();
-const { historySession, selectedSessionIds, isSelectedAll,currentSelectedSession } = storeToRefs(useHistorySessionStore());
+const { historySession, selectedSessionIds, isSelectedAll, currentSelectedSession } =
+  storeToRefs(useHistorySessionStore());
+const { app, appList } = storeToRefs(useSessionStore());
 const { getHistorySession, createNewSession } = useHistorySessionStore();
 const deleteType = ref(true);
 // 搜索的关键词
 const searchKey = ref<string>('');
 const activeNames = ref(['today', 'week', 'month', 'other']);
+const isCollapsed = ref(false)
+const selectedAppId = ref(null)
+//
+const apps = ref([
+  { id: 1, name: '应用 1' },
+  { id: 2, name: '应用 2' },
+  { id: 3, name: '应用 3' },
+  { id: 4, name: '应用 4' },
+  { id: 5, name: '应用 5' },
+])
 
 const filteredHistorySessions = computed(() => {
   // filter by searchKey
@@ -121,7 +134,7 @@ function deleteSessionList(): void {
  * @param {string[]} list - The list of sessions.
  * @return {void} This function does not return anything.
  */
- function deleteOne(sessionName: string, list: string[]): void {
+function deleteOne(sessionName: string, list: string[]): void {
   deleteType.value = false;
   deletedSessionName.value = sessionName;
   sessionList.value = list;
@@ -197,6 +210,40 @@ function hanleAsideVisible(): void {
     isCopilotAsideVisible.value = true;
   }
 }
+
+const displayedApps = computed(() => {
+  return apps.value.slice(0, 5)
+})
+
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value
+}
+
+const selectApp = (id) => {
+  selectedAppId.value = id
+}
+function ensureAppAtFirstPosition() {
+
+  const newApp = app.value;
+  const index = apps.value.findIndex(app => app.id === newApp.id);
+  selectApp(newApp.id);
+  if (index !== -1 && index !== 0) {
+    const [item] = apps.value.splice(index, 1);
+    apps.value.unshift(item);
+  } else if (index === -1) {
+    apps.value.unshift(newApp);
+  }
+}
+
+watch(
+  () => app,
+  () => {
+    ensureAppAtFirstPosition();
+  },
+  {
+    immediate: true
+  }
+);
 </script>
 
 <template>
@@ -204,14 +251,37 @@ function hanleAsideVisible(): void {
     <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
       <div class="trapezoid" @click="hanleAsideVisible" />
     </ElTooltip>
-
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
-        <ElButton class="create-button" @click="createNewSession">
+        <div class="collapsible-apps">
+    <div class="collapsible-header" @click="toggleCollapse">
+      <div class="header-content">
+        <AppWindowIcon :size="20" />
+        <span>我的应用</span>
+      </div>
+      <ChevronDownIcon 
+        :size="20" 
+        :class="{ 'rotate': !isCollapsed }"
+      />
+    </div>
+    <transition name="collapse">
+      <ul v-if="!isCollapsed" class="app-list">
+        <li 
+          v-for="app in displayedApps" 
+          :key="app.id" 
+          @click="selectApp(app.id)"
+          :class="{ 'selected': selectedAppId === app.id }"
+        >
+          <span>{{ app.name }}</span>
+        </li>
+      </ul>
+    </transition>
+    <!-- 缺少空白切图 ；； 缺少空 appList 判断-->
+  </div>
+        <!-- <ElButton class="create-button" @click="createNewSession">
           <img class="create-button__icon" src="@/assets/svgs/create.svg" />
           <span>{{ $t('history.new_chat') }}</span>
-        </ElButton>
-
+        </ElButton> -->
         <!-- 历史记录 -->
         <div class="history-record">
           <div class="history-record-title">
@@ -250,11 +320,7 @@ function hanleAsideVisible(): void {
               <template v-for="item in filteredHistorySessions" :key="item.key">
                 <ElCollapseItem :title="item.title" :name="item.key">
                   <template v-for="session in item.list" :key="session.conversation_id">
-                    <SessionCard
-                      :conversation="session"
-                      :deletion="isBatchDeletion"
-                      @deleteOne="deleteOne"
-                    />
+                    <SessionCard :conversation="session" :deletion="isBatchDeletion" @deleteOne="deleteOne" />
                   </template>
                 </ElCollapseItem>
               </template>
@@ -330,6 +396,88 @@ function hanleAsideVisible(): void {
 
 :deep(.el-collapse-item__wrap) {
   border-bottom: 5px;
+}
+
+.collapsible-apps {
+  width: 17rem;
+  // background-color: rgb(244, 246, 250);
+  border-radius: 8px;
+  overflow: hidden;
+  .collapsible-header {
+    background-color: rgb(244, 246, 250);
+    padding: 1rem;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    // margin-bottom: 12px;
+    cursor: pointer;
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      :deep(svg) {
+        color: #3b82f6;
+      }
+      span {
+        font-weight: 600;
+        color: #374151;
+      }
+    }
+
+    :deep(svg.rotate) {
+      transform: rotate(180deg);
+    }
+
+    :deep(svg) {
+      color: #6b7280;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  .app-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      height: 32px;
+      display: flex;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      align-items: center;
+      border: 8px;
+      border-radius: 8px;
+      span{
+        display: block;
+        margin-left: 24px;
+        align-items: center;
+      }
+      &:hover {
+        background-color: #f3f4f6;
+      }
+
+      &.selected {
+        background: linear-gradient(127.60deg, rgba(109, 117, 250, 0.2) -1.725%, rgba(90, 179, 255, 0.2) 98.22%);
+        color: white;
+      }
+    }
+  }
+}
+
+// Transition styles
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: all 0.3s ease-in-out;
+  max-height: 20rem;
+  opacity: 1;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 
 @keyframes slideInFromLeft {

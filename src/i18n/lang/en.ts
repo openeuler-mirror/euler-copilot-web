@@ -174,7 +174,6 @@ export default {
   witChainD: {
     witChainD: "WitChainD",
     describe_the_witChainD: "Please enter witChainD id",
-    witChainD_id: "id",
   },
   flow: {
     flow_start: "Workflow in progress",

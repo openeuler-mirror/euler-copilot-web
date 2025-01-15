@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import { api } from 'src/apis';
 import { useRouter, useRoute } from 'vue-router';
-import { useHistorySessionStore, useAccountStore, useChangeThemeStore } from 'src/store';
+import { useHistorySessionStore, useAccountStore, useChangeThemeStore, useSessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
 import DialogueAside from './components/DialogueAside.vue';
 import DialogueSession from './components/DialogueSession.vue';
-import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
@@ -19,7 +18,8 @@ const { t } = useI18n();
 const { theme } = storeToRefs(useChangeThemeStore());
 const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo, updateAgreement } = useAccountStore();
-const { getHistorySession } = useHistorySessionStore();
+const { getHistorySession} = useHistorySessionStore();
+const { app , appList} = storeToRefs(useSessionStore());
 const modeOptions = reactive([
   {
     label: t('main.Automatic'),
@@ -51,21 +51,32 @@ const initCopilot = async (): Promise<void> => {
   }
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
+  console.log(currRoute.value.path);
+  console.log(currRoute.value.params);
+  console.log(currRoute.value);
   if (currRoute.value.path === '/') {
     const isLogin = await getUserInfo();
     if (isLogin) {
-      await api.getRecognitionMode()
+      await api.getRecognitionMode();
       await api.stopGeneration();
       await getHistorySession();
       setPlugins();
     }
     return;
+  }else if(currRoute.value.query.id){
+    console.log(currRoute.value.query);
+    app.value = {
+      id:String(currRoute.value.query.id),
+      name:String(currRoute.value.query.name),
+    }
+    console.log(app.value);
+  }else{
+    console.log('else');
   }
 };
 
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
-
 
 // 协议内容
 const agreement = ref<string>('');
@@ -75,7 +86,7 @@ const agreementVersion = ref<string>(ARGEEMENT_VERSION);
 /**
  * 读取协议
  */
- const readAgreement = async () => {
+const readAgreement = async () => {
   const response = await import('src/conf/agreement.md?raw');
   agreement.value = marked.parse(response.default) as string;
 };
@@ -100,6 +111,14 @@ const handleSubmit = async () => {
   dialogVisible.value = false;
 };
 
+onMounted(() => {
+  window.scrollTo({
+    top: 0,
+    left: 0,
+  });
+  //获取 top5 list
+});
+
 watch(
   () => route.path,
   () => {
@@ -107,7 +126,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 </script>
 <template>
@@ -117,9 +136,7 @@ watch(
       <DialogueSession :modeOptions="modeOptions" />
     </div>
   </div>
-  <footer class="copilot-footer">
-    <CommonFooter />
-  </footer>
+
   <EulerDialog
     :visible="dialogVisible"
     :content="agreement"
@@ -128,18 +145,18 @@ watch(
     @submit="handleSubmit"
   ></EulerDialog>
   <EulerDialog
-      :visible="agreeDialogVisiable"
-      :content="tip"
-      :need-check="false"
-      height="300px"
-      agreement-name="内测声明"
-      @submit="agreeDialogVisiable = false"
-    ></EulerDialog>
+    :visible="agreeDialogVisiable"
+    :content="tip"
+    :need-check="false"
+    height="300px"
+    agreement-name="内测声明"
+    @submit="agreeDialogVisiable = false"
+  ></EulerDialog>
 </template>
 <style lang="scss" scoped>
 .copilot-container {
-  padding: 16px 24px 16px 24px;
-  height: calc(100% - 65px);
+  padding: 16px 24px 16px 8px;
+  height: 100%;
   display: flex;
   justify-content: space-between;
   &-main {
@@ -150,7 +167,24 @@ watch(
     margin-bottom: 12px;
   }
 }
+.copilot-aside {
+  width: 64px;
+  height: calc(100% - 8px);
+  background-color: #1f2937;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+}
+
 .micro-copilot-container {
   height: calc(100% - 25px);
+}
+.el-menu {
+  width: 64px;
+  margin-right: 8px;
 }
 </style>

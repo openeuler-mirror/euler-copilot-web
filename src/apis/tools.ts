@@ -15,6 +15,7 @@ import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
 import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { storeToRefs } from 'pinia';
 import i18n from 'src/i18n'
+import { errorMsg } from 'src/components/Message';
 
 function getCookie(name: string) {
   let matches = document.cookie.match(new RegExp(
@@ -73,6 +74,10 @@ export const handleAuthorize = async (errStatus: number): Promise<void> => {
   }
   if (errStatus === 460) {
     window.open(LOGOUT_CALLBACK_URL, '_self');
+  }
+  else{
+    console.log(errStatus);
+    errorMsg(`${errStatus} is error`);
   }
 };
 

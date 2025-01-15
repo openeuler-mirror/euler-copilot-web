@@ -7,24 +7,58 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import NotFoundComponent from 'src/views/404.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 const router = createRouter({
-  history: createWebHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/'),
+  history: createWebHashHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/'),
   routes: [
     {
       path: '/',
       name: 'dialogue',
-      component: (): Promise<typeof import('src/views/dialogue/dialogueView.vue')> =>
-        import('src/views/dialogue/dialogueView.vue'),
+      component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
+        import('src/views/dialogue/Copilot.vue'),
     },
     {
       path: '/login',
       name: 'dialogue-login',
-      component: (): Promise<typeof import('src/views/dialogue/dialogueView.vue')> =>
-        import('src/views/dialogue/dialogueView.vue'),
+      component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
+        import('src/views/dialogue/Copilot.vue'),
+    },
+    {
+      path: '/copilot',
+      name: 'copilot',
+      component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
+        import('src/views/dialogue/Copilot.vue'),
+    },
+    {
+      path: '/api',
+      name: 'api',
+      component: (): Promise<typeof import('src/views/api/index.vue')> =>
+        import('src/views/api/index.vue'),
+    },
+    {
+      path: '/app',
+      name: 'app',
+      component: (): Promise<typeof import('src/views/app/index.vue')> =>
+        import('src/views/app/index.vue'),
+    },
+    {
+      path: '/createApp',
+      name: 'createApp',
+      component: (): Promise<typeof import('src/views/createapp/index.vue')> =>
+        import('src/views/createapp/index.vue'),
+    },
+    {
+      path: '/tools',
+      name: 'tools',
+      component: (): Promise<typeof import('src/views/tools/index.vue')> =>
+        import('src/views/tools/index.vue'),
+      beforeEnter: (to, from, next) => {
+        window.location.href = 'https://www.baidu.com'
+        //之后改成 witchain——D
+      }
     },
     {
       path: '/404',

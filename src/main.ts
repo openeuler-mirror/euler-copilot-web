@@ -19,6 +19,7 @@ import 'src/assets/styles/main.scss';
 import 'src/assets/styles/element/index.scss';
 import opendesign2 from '@computing/opendesign2';
 import '@computing/opendesign2/themes/es/css';
+import zhCn from "element-plus/es/locale/lang/zh-cn";
 import {qiankunMounted} from './qiankun'
 
 import App from './App.vue';
@@ -40,7 +41,9 @@ const render = (props: any = {}) => {
     selector = container && container.querySelector("#app") || "#app"
   }
   app = createApp(App)
-  app.use(createPinia()).use(router).use(ElementPlus).use(opendesign2).use(i18n).mount(selector)
+  app.use(createPinia()).use(router).use(ElementPlus, {
+    locale: zhCn,
+  }).use(opendesign2).use(i18n).mount(selector)
 }
 
 const initQianKun = () => {

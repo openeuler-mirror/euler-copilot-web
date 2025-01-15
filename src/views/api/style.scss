@@ -1,0 +1,141 @@
+.appCenterBox {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  .appCenterMain {
+    color: var(--o-text-color-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 48px;
+    .appCenterTitle {
+      color: var(--o-text-color-primary);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 36px;
+      margin-bottom: 16px;
+    }
+    .appCenterSearch {
+      margin-bottom: 34px;
+      :first-of-type .el-input__wrapper {
+        width: 280px;
+        border-radius: 0px 4px 4px 0px;
+      }
+      .el-input-group__prepend {
+        border-radius: 4px 0px 0px 4px;
+        .el-input__wrapper {
+          border-radius: 4px 0px 0px 4px;
+        }
+      }
+
+      .createApp {
+        margin-left: 16px;
+      }
+    }
+
+    .appCenterType {
+      display: flex;
+      width: 400px;
+      height: 32px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2px;
+      border-radius: 4px;
+      background-color: var(--o-border-color-base);
+      .appCenterBtn {
+        width: 130px;
+        height: 28px;
+        display: flex;
+        font-size: 12px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--o-text-color-primary);
+      }
+    }
+    .appCenterCardContainer {
+      margin-top: 16px;
+      width: fit-content;
+      max-width: 1328px;
+      .appCenterCardBox {
+        width: fit-content;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        .appCenterCardSingle {
+          border-radius: 8px;
+          width: 320px;
+          height: 136px;
+          padding: 16px;
+          background-color: var(--o-bg-color-base);
+          .appCenterCardTop {
+            display: flex;
+            .appCenterCardIcon {
+              width: 80px;
+              .menu-icon{
+                width: 40px;
+              }
+            }
+            .appCenterCardContent {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              .appCenterCardContentTop {
+                display: flex;
+                justify-content: space-between;
+                .appCenterCardContentTitle {
+                  color: var(--o-text-color-primary);
+                  font-size: 16px;
+                  line-height: 24px;
+                }
+                .appCenterCardContentCollect {
+                  width: 24px;
+                  height: 24px;
+                  background-color: var(--o-bg-color-light);
+                  border-radius: 8px;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  svg {
+                    width: 16px;
+                    height: 16px;
+                    path {
+                      fill: var(--o-text-color-tertiary);
+                    }
+                  }
+                }
+              }
+              .appCenterCardContentDes{
+                font-size: 14px;
+                line-height: 22px;
+              }
+            }
+          }
+          .appCenterCardBottom{
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            .appCenterCardUser{
+              font-size: 12px;
+              line-height: 16px;
+            }
+            .appCenterCardOps{
+              .el-button span{
+                color: #6395fd;
+                font-size: 12px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  .appCenterBtnActive {
+    background-color: var(--o-color-primary) !important;
+    border-color: var(--o-color-primary) !important;
+    color: var(--o-color-white) !important;
+  }
+}

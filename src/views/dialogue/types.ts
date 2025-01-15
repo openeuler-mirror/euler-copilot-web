@@ -77,6 +77,11 @@ export interface FlowDataType {
   data: any|undefined,
 }
 
+export interface AppShowType {
+  id?: string,
+  name?:string,
+}
+
 
 export interface RobotConversationItem {
   files?:any;

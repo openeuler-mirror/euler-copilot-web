@@ -13,7 +13,7 @@ import { fa } from 'element-plus/es/locale';
 import { ElMessage } from 'element-plus';
 import { apiKeyApi } from 'srcapis/paths';
 import { watch } from 'vue';
-import i18n from 'src/i18n'
+import i18n from 'src/i18n';
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
@@ -32,8 +32,12 @@ const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 
-
-
+const routerList = [
+  { name: '对话', path: '/' },
+  { name: '语义中心', path: '/api' },
+  { name: '应用中心', path: '/app' },
+  { name: '工具', path: '/tools' },
+];
 export interface ModelForm {
   max_tokens?: number;
   model_name?: string;
@@ -41,7 +45,7 @@ export interface ModelForm {
   openai_api_key?: string;
   [property: string]: any;
 }
-const kb_id = localStorage.getItem("kb_id")||"";
+const kb_id = localStorage.getItem('kb_id') || '';
 const ruleForm = ref<ModelForm>({
   kb_id: kb_id,
 });
@@ -50,8 +54,6 @@ const rules = ref();
 const formValidateStatus = ref<any>({
   kb_id: true,
 });
-
-
 
 const logoutHandler = () => {
   logout();
@@ -93,61 +95,60 @@ const changeTheme = () => {
   themeStore.theme = theme.value;
 };
 
-const createApi = async() => {
+const createApi = async () => {
   apikey.value = '';
   revoke.value = false;
-  let action = 'create'
-  await api.getApiKey()
-  const [_, res] = await api.changeApiKey({action});
-    if (!_ && res) {
-      apikey.value = res.result.api_key;
-    }
-}
+  let action = 'create';
+  await api.getApiKey();
+  const [_, res] = await api.changeApiKey({ action });
+  if (!_ && res) {
+    apikey.value = res.result.api_key;
+  }
+};
 
-const updateApi = async() => {
+const updateApi = async () => {
   apikey.value = '';
-  let action = 'update'
-  await api.changeApiKey({action});
+  let action = 'update';
+  await api.changeApiKey({ action });
   revoke.value = false;
-}
+};
 
-const revokeApi = async() => {
-  let action = 'revoke'
-  await api.changeApiKey({action});
+const revokeApi = async () => {
+  let action = 'revoke';
+  await api.changeApiKey({ action });
   revoke.value = true;
   apikey.value = false;
   hidden.value = false;
-}
+};
 
 const handleDialogClose = () => {
   apikey.value = false;
   hidden.value = true;
   apikeyVisible.value = false;
-}
+};
 
 const handleKnowledgeDialogClose = () => {
   KnowledgeVisible.value = false;
-}
+};
 
 const copy = () => {
   navigator.clipboard.writeText(apikey.value);
-}
-
+};
 
 const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
-      const [_, res] = await api.updateKnowledgeList({
-        kb_id: ruleForm.value.kb_id || "",
-      })
-      if(!_&&res){
-        localStorage.setItem('kb_id', ruleForm.value.kb_id || "")
-        ElMessage.success("成功");
-        KnowledgeVisible.value = false;
-      }else {
-        ElMessage.error("失败");
-        KnowledgeVisible.value = false;
-      }
+  const [_, res] = await api.updateKnowledgeList({
+    kb_id: ruleForm.value.kb_id || '',
+  });
+  if (!_ && res) {
+    localStorage.setItem('kb_id', ruleForm.value.kb_id || '');
+    ElMessage.success('成功');
+    KnowledgeVisible.value = false;
+  } else {
+    ElMessage.error('失败');
+    KnowledgeVisible.value = false;
+  }
 };
 
 const changeLanguagefun = (lang: 'CN' | 'EN') => {
@@ -162,7 +163,7 @@ onMounted(() => {
   if (localStorage.getItem('theme')) {
     document.body.setAttribute('theme', localStorage.getItem('theme') || 'light');
   }
-  api.getKnowledgeList().then((res) => {
+  api.getKnowledgeList().then(res => {
     ruleForm.value = res;
   });
 });
@@ -171,7 +172,7 @@ watch(
   ruleForm,
   () => {
     let flag = false;
-      Object.keys(ruleForm.value).forEach((item) => {
+    Object.keys(ruleForm.value).forEach(item => {
       if (rules.value?.[item]?.[0]?.required) {
         if (!ruleForm.value?.[item]?.toString()?.length) {
           flag = true;
@@ -181,9 +182,11 @@ watch(
 
     isSubmitDisabled.value = flag;
   },
-  { deep: true }
+  { deep: true },
 );
-
+const handleSelect = (val: any) => {
+  console.log(val);
+};
 </script>
 
 <template>
@@ -220,105 +223,143 @@ watch(
         </el-popover>
       </div>
     </header>
-    <Copilot />
-    <el-dialog 
-    class="apikey" 
-    v-model="apikeyVisible" 
-    title="API KEY"
-    width="50%" 
-    align-center
-    :before-close='handleDialogClose'
+    <div class="dialogue-container">
+      <div class="dialogue-menu">
+        <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
+          <span class="menu-icon">
+            <el-icon class="menu-icon"><img class="create-button__icon" src="@/assets/svgs/robot_icon.svg" /></el-icon>
+          </span>
+          <span class="menu-text">{{ item.name }}</span>
+        </router-link>
+      </div>
+      <div class="dialogue-content">
+        <RouterView />
+      </div>
+    </div>
+    <el-dialog
+      class="apikey"
+      v-model="apikeyVisible"
+      title="API KEY"
+      width="50%"
+      align-center
+      :before-close="handleDialogClose"
     >
-    <div class="apikey_view">
-      <el-alert v-if='apikey' class='apikey_view_alert' type="info" :show-icon='true' :closable='false'>{{ i18n.global.t('apikey.save_apikey') }}</el-alert>
-      <div class='apikey_view_main'>
-        <div class='main'>
-          <div class='main_view' v-if="!apikey&&hidden">
-            <span>******************************</span>
-          </div>
-          <div class='main_view' v-else-if='!apikey'>
-            <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
-            <img v-else src="src/assets/svgs/light_null.svg" alt="">
-            <span>{{ i18n.global.t('apikey.no_apikey') }}</span>
-          </div>
-          <div class='main_view' v-else>
-            <div class='main_view_span'>
-              <div>{{apikey}}</div>
+      <div class="apikey_view">
+        <el-alert v-if="apikey" class="apikey_view_alert" type="info" :show-icon="true" :closable="false">{{
+          i18n.global.t('apikey.save_apikey')
+        }}</el-alert>
+        <div class="apikey_view_main">
+          <div class="main">
+            <div class="main_view" v-if="!apikey && hidden">
+              <span>******************************</span>
             </div>
-          </div>
-          <div v-if='apikey'>
-            <el-button type='primary' @click='copy' >{{ i18n.global.t('feedback.copy') }}</el-button>
-            <el-button @click='revokeApi'>{{ i18n.global.t('feedback.revoke') }}</el-button>
-          </div>
-          <div v-else-if='!apikey&&!revoke'>
-            <el-button type='primary' @click='updateApi'>{{ i18n.global.t('feedback.refresh') }}</el-button>
-            <el-button @click='revokeApi'>{{ i18n.global.t('feedback.revoke') }}</el-button>
-          </div>
-          <div v-else>
-            <el-button type='primary' @click='createApi'>{{ i18n.global.t('apikey.create_apikey') }}</el-button>
+            <div class="main_view" v-else-if="!apikey">
+              <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
+              <img v-else src="src/assets/svgs/light_null.svg" alt="" />
+              <span>{{ i18n.global.t('apikey.no_apikey') }}</span>
+            </div>
+            <div class="main_view" v-else>
+              <div class="main_view_span">
+                <div>{{ apikey }}</div>
+              </div>
+            </div>
+            <div v-if="apikey">
+              <el-button type="primary" @click="copy">{{ i18n.global.t('feedback.copy') }}</el-button>
+              <el-button @click="revokeApi">{{ i18n.global.t('feedback.revoke') }}</el-button>
+            </div>
+            <div v-else-if="!apikey && !revoke">
+              <el-button type="primary" @click="updateApi">{{ i18n.global.t('feedback.refresh') }}</el-button>
+              <el-button @click="revokeApi">{{ i18n.global.t('feedback.revoke') }}</el-button>
+            </div>
+            <div v-else>
+              <el-button type="primary" @click="createApi">{{ i18n.global.t('apikey.create_apikey') }}</el-button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </el-dialog>
-  <el-dialog
-    align-center
-    v-model="KnowledgeVisible"
-    class="model-dialog"
-    width="560"
-    @close="handleKnowledgeDialogClose"
-    :title="$t('witChainD.witChainD')"
-  >
-    <el-form
-      ref="ruleFormRef"
-      :model="ruleForm"
-      :rules="rules"
-      label-position="left"
-      @validate="handleFormValidate"
+    </el-dialog>
+    <el-dialog
+      align-center
+      v-model="KnowledgeVisible"
+      class="model-dialog"
+      width="560"
+      @close="handleKnowledgeDialogClose"
+      title="WitChainD"
     >
-      <el-form-item
-        :label="$t('witChainD.witChainD_id')"
-        prop="openai_api_key"
-        class="docName"
-      >
-        <el-input
-          v-model="ruleForm.kb_id"
-          :placeholder="$t('witChainD.describe_the_witChainD')"
-        >
-          <template #suffix>
-            <el-icon
-              class="warning-icon"
-              v-if="!formValidateStatus.kb_id"
-            >
-              <WarningFilled />
-            </el-icon>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item class="model-ops-btn">
-        <el-button
-          class="resetBtn"
-          type="primary"
-          :disabled="isSubmitDisabled"
-          @click="handleConfirmCreateModel(ruleFormRef)"
-        >
-           {{ i18n.global.t('history.ok') }}
-        </el-button>
-        <el-button class="resetBtn" @click="handleKnowledgeDialogClose">
-          {{ i18n.global.t('history.cancel') }}
-        </el-button>
-      </el-form-item>
-    </el-form>
-  </el-dialog>
+      <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-position="left" @validate="handleFormValidate">
+        <el-form-item label="id" prop="openai_api_key" class="docName">
+          <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')">
+            <template #suffix>
+              <el-icon class="warning-icon" v-if="!formValidateStatus.kb_id">
+                <WarningFilled />
+              </el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item class="model-ops-btn">
+          <el-button
+            class="resetBtn"
+            type="primary"
+            :disabled="isSubmitDisabled"
+            @click="handleConfirmCreateModel(ruleFormRef)"
+          >
+            {{ i18n.global.t('history.ok') }}
+          </el-button>
+          <el-button class="resetBtn" @click="handleKnowledgeDialogClose">
+            {{ i18n.global.t('history.cancel') }}
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
 <style lang="scss">
+.dialogue-container {
+  display: flex;
+  height: calc(100% - 48px);
+}
+.dialogue-menu {
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 100%;
+  padding-top: 8px;
+  background-color: var(--o-bg-color-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .menu-item {
+    display: flex;
+    font-style: none;
+    text-decoration: none;
+    width: 64px;
+    height: 64px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    .menu-icon {
+      align-items: center;
+    }
+    .menu-text {
+      font-style: none;
+      display: block;
+      font-size: 12px;
+      margin-top: 4px;
+      color: var(--o-text-color-primary);
+    }
+  }
+}
+.dialogue-content {
+  height: 100%;
+  flex: 1;
+}
 
 .model-dialog {
   padding: 0 !important;
   .el-dialog__title {
-    font-family: "HarmonyOS Sans SC Bold", sans-serif !important;
+    font-family: 'HarmonyOS Sans SC Bold', sans-serif !important;
     font-weight: 800;
   }
   .el-input {
@@ -393,7 +434,6 @@ watch(
 
 .apikey {
   &_view {
-
     // height: 400px;
     &_alert {
       margin-bottom: 8px;
@@ -413,12 +453,12 @@ watch(
           flex-direction: column;
           align-items: center;
           margin-top: 32px;
-          &_span{
-            height: 80px;  
+          &_span {
+            height: 80px;
             margin: 0px;
-            div{
+            div {
               margin: 0px;
-              width:300px;
+              width: 300px;
               font-size: 20px;
               word-wrap: break-word;
             }
@@ -432,8 +472,8 @@ watch(
         span {
           font-size: 12px;
         }
-        div{
-          button{
+        div {
+          button {
             margin-top: 32px;
           }
         }
@@ -477,7 +517,6 @@ watch(
 .dialogue {
   height: 100%;
   min-height: 768px;
-  min-width: 1388px;
   overflow: scroll;
   display: flex;
   flex-direction: column;
