@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from './InitalPanel.vue';
+import InterPreview from  './InterPreview.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 
@@ -37,7 +38,7 @@ enum SupportMap {
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const modeOptions = ref(props.modeOptions);
-const isCreateApp = ref(props?.isCreateApp)
+const isCreateApp = ref(props?.isCreateApp);
 const questions = [
   {
     groupId: 0,
@@ -145,7 +146,6 @@ const questions = [
     question: 'xsky_applications_on_openeuler',
   },
 ];
-
 
 let groupid = ref(0);
 
@@ -812,9 +812,10 @@ const handlePauseAndReGenerate = (cid?: number) => {
           <InitalPanel />
         </div>
       </div>
-        <div class="createApp-demo">
-
-        </div>
+      <div class="dialogue-conversation-main " v-else>
+         <InterPreview />
+      </div>
+      <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">
         <!-- 问题换一换 -->
         <div
@@ -867,6 +868,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
             <div class="dialogue-conversation-bottom-sendbox__textarea">
               <textarea
                 ref="inputRef"
+                :disabled="isCreateApp"
                 v-model="dialogueInput"
                 maxlength="2000"
                 :placeholder="$t('main.ask_me_anything')"
