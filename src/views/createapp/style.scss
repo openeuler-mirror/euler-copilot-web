@@ -88,8 +88,22 @@
     margin-top: 16px;
   }
 
-  .createAppContainerMainRight {
+  .createAppContainerMainBox{
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    .previewTitle{
+      line-height: 24px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--o-text-color-primary);
+    }
+  }
+
+  .createAppContainerMainRight {
+    width: 100%;
+    height: calc(100% - 32px);
     background-image: url('../../assets/images/light_background.png');
     --o-bg-image: url('../../assets/images/light_background.png');
     --o-shell-image: url('../../assets/images/light_shell.png');
@@ -107,7 +121,7 @@
     }
   }
 
-  .createAppContainerMainRight{
+  .createAppContainerMainBox{
     .dialogue-conversation{
       display: flex;
       flex-direction: column;

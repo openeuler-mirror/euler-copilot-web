@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computing/opendesign-icons';
@@ -17,7 +17,6 @@ const createAppForm = ref({
   selectedPeople: [],
 });
 const searchName = ref('');
-const imageUrl = ref('')
 const permissionTypeList = [
   {
     label: '公开（所有人可见）',
@@ -56,7 +55,7 @@ const handleChange = (val: number[]) => {
   activeNames.value = val;
 };
 const addLink = () => {
-  createAppForm.value.connectList.unshift('');
+  createAppForm.value.connectList.push('');
 };
 const addRecommond = () => {
   createAppForm.value.recommendQuestionList.unshift('');
@@ -71,10 +70,13 @@ const searchPerson = () => {
   curPersonList.value = permissionList.value.filter(item => item.toLowerCase().includes(searchName.value));
 };
 
-const handleAvatarSuccess = (res,file)=>{
-  console.log(res,file)
-}
+const handleAvatarSuccess = (res, file) => {
+  createAppForm.value.icon = URL.createObjectURL(file.raw)
+};
 
+const httpRequest = (res)=>{
+  res.onSuccess()
+}
 </script>
 <template>
   <el-form
@@ -96,18 +98,19 @@ const handleAvatarSuccess = (res,file)=>{
           <div class="uploadArea">
             <el-upload
               class="placeIcon avatar-uploader"
-              action="https://jsonplaceholder.typicode.com/posts/"
+              action="#"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
+              :http-request="httpRequest"
             >
-              <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+              <img v-if="createAppForm.icon.length" :src="createAppForm.icon" class="avatar" />
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload>
             <span class="text">上传图标</span>
           </div>
         </el-form-item>
         <el-form-item label="应用名称" prop="appName">
-          <el-input class="w320" v-model="createAppForm.appName" clearable placeholder="请输入"></el-input>
+          <el-input class="w320" maxlength="20" v-model="createAppForm.appName" clearable placeholder="请输入"></el-input>
         </el-form-item>
 
         <el-form-item label="应用简介" prop="appIntroduction">
@@ -213,8 +216,11 @@ const handleAvatarSuccess = (res,file)=>{
       </el-collapse-item>
     </el-collapse>
   </el-form>
-  <div class="createAppContainerMainRight">
-    <DialogueSession :modeOptions="modeOptions" isCreateApp="true" />
+  <div class="createAppContainerMainBox">
+    <div class="previewTitle">界面预览</div>
+    <div class="createAppContainerMainRight">
+      <DialogueSession :modeOptions="modeOptions" isCreateApp="true" :createAppForm="createAppForm" />
+    </div>
   </div>
 </template>
 <style scoped lang="scss">
@@ -262,9 +268,11 @@ const handleAvatarSuccess = (res,file)=>{
           width: 100%;
           height: 100%;
           border-radius: 50%;
-        }
-        .avatar-uploader .el-upload:hover {
-          border-color: #409eff;
+          img{
+            width: 100%;
+            height: 100%;
+          border-radius: 50%;
+          }
         }
         .avatar-uploader-icon {
           font-size: 28px;

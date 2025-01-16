@@ -51,9 +51,6 @@ const initCopilot = async (): Promise<void> => {
   }
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
-  console.log(currRoute.value.path);
-  console.log(currRoute.value.params);
-  console.log(currRoute.value);
   if (currRoute.value.path === '/') {
     const isLogin = await getUserInfo();
     if (isLogin) {
@@ -64,12 +61,10 @@ const initCopilot = async (): Promise<void> => {
     }
     return;
   }else if(currRoute.value.query.id){
-    console.log(currRoute.value.query);
     app.value = {
       id:String(currRoute.value.query.id),
       name:String(currRoute.value.query.name),
     }
-    console.log(app.value);
   }else{
     console.log('else');
   }

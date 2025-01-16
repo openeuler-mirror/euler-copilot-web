@@ -26,6 +26,7 @@ const session = useSessionStore();
 export interface DialogueSession {
   modeOptions: any;
   isCreateApp: any;
+  createAppForm:any;
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
@@ -812,8 +813,8 @@ const handlePauseAndReGenerate = (cid?: number) => {
           <InitalPanel />
         </div>
       </div>
-      <div class="dialogue-conversation-main " v-else>
-         <InterPreview />
+      <div class="dialogue-interPreview-main" v-else>
+         <InterPreview :createAppForm="props.createAppForm"/>
       </div>
       <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">

@@ -39,7 +39,6 @@ const props = defineProps({
   },
 })
 const path = computed(() => getSmoothStepPath(props)[0])
-console.log(props,'kkkk',path)
 const transform = computed(() => {
   return getArrowTransform(props)
 })

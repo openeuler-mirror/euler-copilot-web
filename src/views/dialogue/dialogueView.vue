@@ -516,7 +516,7 @@ const handleSelect = (val: any) => {
 <style lang="scss" scoped>
 .dialogue {
   height: 100%;
-  min-height: 768px;
+  min-height: 864px;
   overflow: scroll;
   display: flex;
   flex-direction: column;
