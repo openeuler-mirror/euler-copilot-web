@@ -5,16 +5,16 @@ import { onHtmlEventDispatch } from 'src/utils';
 import { useHistorySessionStore, useSessionStore, useAccountStore, useLangStore } from 'src/store';
 import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
-import Copilot from './Copilot.vue';
 import { useChangeThemeStore } from 'src/store';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
-import { fa } from 'element-plus/es/locale';
 import { ElMessage } from 'element-plus';
-import { apiKeyApi } from 'srcapis/paths';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
-
+import CopilotIcon from '@/assets/images/routerCopilot.png';
+import APIIcon from '@/assets/images/routerApi.png';
+import AppIcon from '@/assets/images/routerApp.png';
+import WitchainDIcon from '@/assets/images/WitchainD.png';
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
 const { logout } = useAccountStore();
@@ -31,12 +31,11 @@ const hidden = ref(false);
 const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
-
 const routerList = [
-  { name: '对话', path: '/' },
-  { name: '语义中心', path: '/api' },
-  { name: '应用中心', path: '/app' },
-  { name: '工具', path: '/tools' },
+  { name: '对话', path: '/' , src:CopilotIcon },
+  { name: '语义中心', path: '/api' , src:APIIcon },
+  { name: '应用中心', path: '/app' , src:AppIcon },
+  { name: '工具', path: '/tools' , src:WitchainDIcon },
 ];
 export interface ModelForm {
   max_tokens?: number;
@@ -229,7 +228,7 @@ const handleSelect = (val: any) => {
       <div class="dialogue-menu">
         <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
           <span class="menu-icon">
-            <el-icon class="menu-icon"><img class="create-button__icon" src="@/assets/svgs/robot_icon.svg" /></el-icon>
+            <el-icon class="menu-icon"><img class="create-button__icon" :src="item.src"></el-icon>
           </span>
           <span class="menu-text">{{ item.name }}</span>
         </router-link>
@@ -321,6 +320,7 @@ const handleSelect = (val: any) => {
   display: flex;
   height: calc(100% - 48px);
 }
+//hover active selected 样式待填充
 .dialogue-menu {
   position: relative;
   z-index: 1;
@@ -343,12 +343,20 @@ const handleSelect = (val: any) => {
     cursor: pointer;
     .menu-icon {
       align-items: center;
+      img{
+        width: 40px;
+          &:hover {
+            filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg) brightness(94%) contrast(83%);
+          }
+          &:active {
+            filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg) brightness(101%) contrast(87%);
+          }
+      }
     }
     .menu-text {
       font-style: none;
       display: block;
       font-size: 12px;
-      margin-top: 4px;
       color: var(--o-text-color-primary);
     }
   }

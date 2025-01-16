@@ -223,6 +223,9 @@ const selectApp = id => {
   selectedAppId.value = id;
 };
 function ensureAppAtFirstPosition() {
+  if(!app.value.id){
+    return;
+  }
   const newApp = app.value;
   const index = apps.value.findIndex(app => app.id === newApp.id);
   selectApp(newApp.id);
