@@ -17,8 +17,8 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button class="o-dlg-btn" type="primary" size="small" @click="handleSubmit"> 确定 </el-button>
-        <el-button class="o-dlg-btn" size="small" @click="onCancel"> 取消 </el-button>
+        <el-button class="o-dlg-btn" type="primary" size="small" @click="handleSubmit">确定</el-button>
+        <el-button class="o-dlg-btn" size="small" @click="onCancel">取消</el-button>
       </span>
     </template>
   </el-dialog>

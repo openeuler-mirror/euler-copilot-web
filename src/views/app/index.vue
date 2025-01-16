@@ -13,7 +13,7 @@
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createApp" @click="handleCreateApp"> 创建应用 </el-button>
+        <el-button type="primary" class="createApp" @click="handleCreateApp">创建应用</el-button>
       </div>
       <div class="appCenterType">
         <div class="appCenterBtn appCenterBtnActive">我的应用</div>

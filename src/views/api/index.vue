@@ -12,7 +12,7 @@
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createApp" @click="openSidebar"> 上传 </el-button>
+        <el-button type="primary" class="createApp" @click="openSidebar">上传</el-button>
       </div>
       <div class="appCenterType">
         <div class="appCenterBtn appCenterBtnActive">全部接口</div>
