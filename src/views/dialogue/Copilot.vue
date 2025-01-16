@@ -31,9 +31,9 @@ const modeOptions = reactive([
 const setPlugins = async () => {
   const [_, res] = await api.getRecognitionMode();
   if (!_ && res) {
-    res.result.forEach(item => {
+    res.result.plugins.forEach(item => {
       const opt = {
-        label: item.plugin_name,
+        label: item.name,
         value: item.id,
         disabled: false,
       };
@@ -44,19 +44,20 @@ const setPlugins = async () => {
 
 const type = import.meta.env.VITE_USER_TYPE;
 const initCopilot = async (): Promise<void> => {
-  if (sessionStorage.getItem('theme')) {
-    theme.value = sessionStorage.getItem('theme') || 'dark';
+  if (localStorage.getItem('theme')) {
+    theme.value = localStorage.getItem('theme') || 'light';
   } else {
-    sessionStorage.setItem('theme', 'dark');
+    localStorage.setItem('theme', 'light');
   }
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
     const isLogin = await getUserInfo();
     if (isLogin) {
-      await getHistorySession();
-      await setPlugins();
+      await api.getRecognitionMode()
       await api.stopGeneration();
+      await getHistorySession();
+      setPlugins();
     }
     return;
   }

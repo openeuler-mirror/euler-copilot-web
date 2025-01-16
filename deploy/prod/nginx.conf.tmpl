@@ -25,8 +25,8 @@ http {
 
     client_header_buffer_size 1k;
     large_client_header_buffers 4 8k;
-    client_body_buffer_size 16K;
-    client_max_body_size 2M;
+    client_body_buffer_size 65M;
+    client_max_body_size 65M;
 
     client_header_timeout 15s;
     client_body_timeout 15s;
@@ -91,11 +91,7 @@ http {
             return 404;
         }
         
-        location ~ ^(?:(?!/static)).*\.(js|css|ico|png|jpg|eot|svg|ttf|woff|html|txt|pdf)$ {
-            root /usr/share/nginx/html;
-            expires 30d;
-	    }
-
+   
         location / {
             limit_req zone=ratelimit burst=5 nodelay;
             root /usr/share/nginx/html;
@@ -103,6 +99,13 @@ http {
             if (!-e $request_filename){
                 return 404;
             }
+        }
+
+        location /copilot {
+            limit_req zone=ratelimit burst=5 nodelay;
+            alias /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ /index.html;
         }
         
         location /login {

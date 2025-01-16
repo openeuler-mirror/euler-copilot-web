@@ -1,20 +1,24 @@
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
+import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from './InitalPanel.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 
 import type { ConversationItem, RobotConversationItem } from '../types';
+import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
+import { UploadTypeName, UploadStatus, UploadType } from 'src/components/uploadFile/type';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
-import { successMsg } from 'src/components/Message';
+import { successMsg, errorMsg } from 'src/components/Message';
 import { FitAddon } from 'xterm-addon-fit';
 import { AttachAddon } from 'xterm-addon-attach';
 import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
 const { user_selected_plugins, selectMode } = storeToRefs(useHistorySessionStore());
+const { getHistorySession } = useHistorySessionStore();
 const session = useSessionStore();
 
 export interface DialogueSession {
@@ -26,7 +30,6 @@ const props = withDefaults(defineProps<DialogueSession>(), {});
 enum SupportMap {
   support = 1,
   against = 0,
-
 }
 // const dialogueRef = ref();
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
@@ -151,25 +154,31 @@ const dialogueInput = ref<string>('');
 
 // 对话列表
 const { sendQuestion } = useSessionStore();
-const { conversationList, isAnswerGenerating, dialogueRef} = storeToRefs(useSessionStore());
+const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (question: string, user_selected_flow?: string[]) => {
-  if (isAnswerGenerating.value) return;
-  const language = sessionStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
+const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string[]) => {
+  if (isAnswerGenerating.value || !isAllowToSend.value) return;
+  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
   dialogueInput.value = '';
+  if (uploadFilesView.value.length > 0) {
+    // 发送文件则刷新左侧会话列表
+    getHistorySession();
+  }
+  uploadFilesView.value.length = 0;
+
   if (!currentSelectedSession.value) {
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(question, undefined, undefined, undefined, user_selected_flow);
+    await sendQuestion(groupId,question, undefined, undefined, undefined, user_selected_flow,undefined);
   } else {
-    await sendQuestion(question, user_selected_plugins.value, undefined, undefined, undefined);
+    await sendQuestion(groupId,question, user_selected_plugins.value, undefined, undefined, undefined,undefined);
   }
 };
 
@@ -180,8 +189,8 @@ const handleSendMessage = async (question: string, user_selected_flow?: string[]
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
-    if (dialogueInput.value !== '') {
-      handleSendMessage(dialogueInput.value);
+    if (dialogueInput.value !== '' && isAllowToSend.value) {
+      handleSendMessage(undefined,dialogueInput.value);
     }
   }
 };
@@ -365,6 +374,319 @@ const initTerm = () => {
   term.value.focus();
 };
 
+// 上传按钮对象
+const uploadButton = ref();
+// 最大上传数量
+const MAXUPLOADLEN: number = 10;
+let uploadBatch: number = 0;
+// 后端上传列表Map (key: sessionid , value: existUploadList)
+const existUploadMap = new Map();
+// 保存后端已有的上传文件列表
+let existUploadList: Array<any> = [];
+//upload视图Map不同会话 (key: sessionid , value: uploadFilesView)
+const uploadViewsMap = new Map();
+// upload视图列表
+const uploadFilesView = ref<Array<UploadFileCard>>([]);
+// 保存轮询Map (key: sessionid , value: pollingObject)
+const pollingMap = new Map();
+// 上传类型数组
+const acceptTypeList = [...Object.values(UploadTypeName)];
+// 上传类型字符串
+const acceptType: string = acceptTypeList.map(item => `.${item},`).join(' ');
+// 发送消息按钮
+const isAllowToSend = computed(() => {
+  let defaultStatus = true;
+  uploadFilesView.value?.forEach(element => {
+    element.status !== UploadStatus.USED && element.status !== UploadStatus.UNUSED
+      ? (defaultStatus = false)
+      : undefined;
+  });
+  return defaultStatus;
+});
+
+// 会话切换时
+watch(currentSelectedSession, async (newVal) => {
+  const newExistList = existUploadMap.get(newVal);
+  const newFileView = uploadViewsMap.get(newVal);
+  let curPolling = pollingMap.get(newVal);
+  
+  let isNewSession = false;
+  if (!newFileView) {
+    isNewSession = true;
+    uploadViewsMap.set(newVal, []);
+  }
+
+  if (!newExistList) {
+    existUploadMap.set(newVal, []);
+  }
+
+  if (!curPolling) {
+    pollingMap.set(newVal, getPollingProcess(newVal));
+  }
+
+  existUploadList = existUploadMap.get(newVal);
+  uploadFilesView.value = uploadViewsMap.get(newVal);
+  curPolling = pollingMap.get(newVal);
+  // 调用接口获取最新上传列表
+  const [_, response] = await api.getUploadFiles(newVal);
+  if (!_ && response) {
+    const { documents } = response.result;
+    existUploadList.length = 0;
+    documents
+      .filter(item => item.type !== UploadStatus.RESOLVEFAIL)
+      .forEach(item => {
+        existUploadList.push(item);
+        if (item.status !== UploadStatus.USED) {
+          isNewSession ? uploadFilesView.value.push(item as any) : null;
+        }
+      });
+      isNewSession ? curPolling.startPolling() : null;
+      uploadFilesView.value.sort((pre, cur) => {
+        return cur.created_at - pre.created_at;
+      });
+  }
+});
+
+// 上传是否超出容量
+const isExceedSize = (files): boolean => {
+  for (let file of files) {
+    if (file.size / 1024 / 1024 > 64) return true;
+  }
+  return false;
+};
+
+// 上传是否符合类型
+const isUploadTypeError = (files): boolean => {
+  for (let file of files) {
+    const fileType = file.name?.split('.').pop();
+    if (!acceptTypeList.includes(fileType)) return true;
+  }
+  return false;
+};
+
+// 上传是否存在同名文件
+const isUploadFileExist = (files): boolean => {
+  for (let file of files) {
+    const isInBackendList = existUploadList.map(item => item.name).includes(file.name);
+    const isInUploadViews = uploadFilesView.value.map(item => item.name).includes(file.name);
+    if (isInBackendList || isInUploadViews) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// 是否可以上传
+const isAllowToUpload = (files): boolean => {
+  const curLen = uploadFilesView.value.length;
+  const filesLen = files.length;
+  let isAllow = true;
+  // 文件数量超额 / 文件大小超额
+  if (curLen + filesLen > MAXUPLOADLEN || isExceedSize(files)) {
+    errorMsg(i18n.global.t('upload.error_size_msg'));
+    isAllow = false;
+  } else if (isUploadTypeError(files)) {
+    errorMsg(i18n.global.t('upload.error_type_msg'));
+    isAllow = false;
+  } else if (isUploadFileExist(files)) {
+    errorMsg(i18n.global.t('upload.error_name_msg'));
+    isAllow = false;
+  } else {
+    isAllow = true;
+  }
+  return isAllow;
+};
+
+// 构造上传数据
+const generateUploadData = (files) => {
+  let formData = new FormData();
+  for (let file of files) {
+    formData.append('documents', file);
+  }
+  return formData;
+};
+
+// 更新上传列表视图
+const updateUploadView = (files, batch): void => {
+  for (let file of files) {
+    const { name, size, type } = file;
+    uploadFilesView.value.unshift({
+      name,
+      type,
+      size: size,
+      status: UploadStatus.UPLOADING,
+      id: undefined,
+      batch,
+    });
+  }
+  uploadBatch++;
+};
+
+const sizeFormator = (size: number) => {
+  if (size > 1024 * 1024) {
+    return `${(size / 1024 / 1024).toFixed(2)}GB`;
+  } 
+  if (size > 1024) {
+    return `${(size / 1024).toFixed(2)}MB`;
+  }
+  return `${size.toFixed(2)}KB`;
+}
+
+const getPollingProcess = sessionId => {
+  let timer;
+  let currentCount = 0;
+  const maxErrorCount = 200;
+  const process = async () => {
+    const pollingExistUploadList = existUploadMap.get(sessionId);
+    const pollingUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
+    ? uploadFilesView.value
+    : uploadViewsMap.get(sessionId);
+    const [_, response] = await api.getUploadFiles(sessionId);
+    if (!_ && response) {
+      const { documents } = response.result;
+      let isStopPolling = true;
+      // 更新existUploadList列表
+      pollingExistUploadList.length = 0;
+      documents
+        .filter(item => item.status !== UploadStatus.RESOLVEFAIL)
+        .forEach(item => {
+          pollingExistUploadList.push(item);
+        });
+      // 更新上传的可见列表
+      pollingUploadFilesView.forEach(item => {
+        if (item.status !== UploadStatus.UPLOADFAIL) {
+          const foundDocument = documents.find(document => document.name === item.name);
+          if (foundDocument) {
+            const { id, name, type, size, status } = foundDocument;
+            item.id = id;
+            item.name = name;
+            item.type = type;
+            item.size = sizeFormator(size);
+            item.status = status;
+          } else {
+            item.status = UploadStatus.RESOLVEFAIL;
+          }
+        }
+      });
+      // 若所有文件解析成功 则停止轮询
+      documents.forEach(document => {
+        if (document.status === UploadStatus.RESOLVING) {
+          isStopPolling = false;
+        }
+      });
+      isStopPolling && stopPolling();
+    } else {
+      // 错误次数大于最大值 停止轮询
+      currentCount++;
+      if (currentCount > maxErrorCount) {
+        stopPolling();
+        currentCount = 0;
+      }
+    }
+  };
+  const startPolling = (): void => {
+    // 若已开启轮询则不会重复开启
+    if (timer) {
+      return;
+    }
+    timer = setInterval(process, 1000);
+  };
+  const stopPolling = (): void => {
+    clearInterval(timer);
+    timer = null;
+  };
+
+  return { startPolling, stopPolling };
+};
+
+const isSameSession = (sessionId, curSessionId): boolean => {
+  return sessionId === curSessionId;
+};
+
+// 上传文件(用户操作可能分批次)
+const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promise<void> => {
+  const [_, response] = await api.uploadFiles(formData, sessionId);
+  const requestUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
+    ? uploadFilesView.value
+    : uploadViewsMap.get(sessionId);
+  if (!_ && response) {
+    const { documents } = response.result;
+    // 再次更新视图 更新上传状态
+    requestUploadFilesView.forEach(item => {
+      if (item.batch === curUploadBatch) {
+        const matchedItem = documents.find(element => element.name === item.name);
+        if (matchedItem) {
+          const { id, type, size, name } = matchedItem;
+          item.id = id;
+          item.name = name;
+          item.size = size;
+          item.type = type;
+          item.status = UploadStatus.RESOLVING;
+        } else {
+          item.status = UploadStatus.UPLOADFAIL;
+        }
+      }
+    });
+
+    // 轮询状态api 更新解析状态 existUploadList列表
+    let curPollingProcess = pollingMap.get(sessionId);
+    if (!curPollingProcess) {
+      pollingMap.set(sessionId, getPollingProcess(sessionId));
+      curPollingProcess = pollingMap.get(sessionId);
+    }
+    curPollingProcess.startPolling();
+  } else {
+    requestUploadFilesView.forEach(item => {
+      if (item.batch === curUploadBatch) {
+        item.status = UploadStatus.UPLOADFAIL;
+      }
+    });
+  }
+};
+
+// 点击上传选中文件时
+const onFileChange = event => {
+  const files = event.target.files;
+  const curUploadBatch = uploadBatch;
+  // 清空上传id
+  uploadButton.value.type = 'text';
+  uploadButton.value.type = 'file';
+  // 首先判断数量、大小、类型是否符合要求
+  if (!isAllowToUpload(files)) {
+    return;
+  }
+  // 生成需要上传的文件
+  const formData = generateUploadData(files);
+
+  // 更新视图列表
+  updateUploadView(files, curUploadBatch);
+
+  // 上传api请求
+  updateFilesInSession(formData, curUploadBatch, currentSelectedSession.value);
+};
+
+const emitUpload = (event): void => {
+  event.stopPropagation();
+  const emitEvent = new MouseEvent('click', {
+    bubbles: true,
+  });
+  uploadButton.value.dispatchEvent(emitEvent);
+};
+
+const handleDelete = (file): void => {
+  // 删除列表中的删除项
+  uploadFilesView.value = uploadFilesView.value.filter((item: UploadFileCard) => item.name !== file.name);
+  existUploadList = existUploadList.filter((item: UploadFileCard) => item.name !== file.name);
+  uploadViewsMap.set(currentSelectedSession.value, uploadFilesView.value);
+  existUploadMap.set(currentSelectedSession.value, existUploadList);
+};
+
+const clearSuggestion = (index: number): void => {
+  if('search_suggestions' in conversationList.value[index]){
+  conversationList.value[index].search_suggestions = undefined;
+  }
+}
+
 onMounted(() => {
   // 全局数据初始化
   // getMode();
@@ -459,6 +781,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
           :cid="item.cid"
           :key="index"
           :type="item.belong"
+          :inputParams="item.params"
           :content="item.message"
           :echartsObj="getItem(item, 'echartsObj')"
           :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
@@ -467,14 +790,19 @@ const handlePauseAndReGenerate = (cid?: number) => {
           :is-support="getItem(item, 'isSupport')"
           :is-against="getItem(item, 'isAgainst')"
           :test="getItem(item, 'test')"
+          :metadata="getItem(item, 'metadata')"
+          :flowdata="getItem(item, 'flowdata')"
           :created-at="item.createdAt"
           :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
           :user-selected-plugins="user_selected_plugins"
           :search_suggestions="getItem(item, 'search_suggestions')"
+          :paramsList="getItem(item, 'paramsList')"
+          :modeOptions="modeOptions"
           @commont="handleCommont"
           @report="handleReport"
           @handleSendMessage="handleSendMessage"
+          @clearSuggestion="clearSuggestion(index)"
         />
         <div v-if="conversationList.length === 0">
           <InitalPanel />
@@ -526,29 +854,56 @@ const handlePauseAndReGenerate = (cid?: number) => {
               :disabled="item.disabled"
             />
           </el-select>
-          <!-- <el-switch v-model="isTermShow" style="margin-left: 10px"
-                     active-text="智能shell"></el-switch> -->
         </div>
-        <!-- 输入框 -->
-        <div class="dialogue-conversation-bottom-sendbox">
-          <div class="dialogue-conversation-bottom-sendbox__textarea">
-            <textarea
-              ref="inputRef"
-              v-model="dialogueInput"
-              maxlength="2000"
-              :placeholder="$t('main.ask_me_anything')"
-              @keydown="handleKeydown"
-            />
-          </div>
-          <!-- 发送问题 -->
-          <div class="dialogue-conversation-bottom-sendbox__icon">
-            <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
-            <img v-if="isAnswerGenerating || dialogueInput.length <= 0" src="@/assets/images/send_disable.png" alt="" />
-            <div v-else @click="handleSendMessage(dialogueInput)">
-              <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
-              <img v-else src="@/assets/images/light_send.png" alt="" />
+        <div class="sendbox-wrapper">
+          <!-- 输入框 -->
+          <div class="dialogue-conversation-bottom-sendbox">
+            <div class="dialogue-conversation-bottom-sendbox__textarea">
+              <textarea
+                ref="inputRef"
+                v-model="dialogueInput"
+                maxlength="2000"
+                :placeholder="$t('main.ask_me_anything')"
+                @keydown="handleKeydown"
+              />
+            </div>
+            <!-- 上传 -->
+            <div class="dialogue-conversation-bottom-sendbox__upload">
+              <el-tooltip placement="top" :content="$t('upload.upload_tip_text')" effect="light">
+                <div class="upload-wrapper">
+                  <input
+                    ref="uploadButton"
+                    type="file"
+                    multiple
+                    :accept="acceptType"
+                    @change="onFileChange"
+                    src="@/assets/svgs/upload_light.svg"
+                  />
+                  <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" @click="emitUpload" />
+                  <img v-else src="@/assets/svgs/upload_dark.svg" @click="emitUpload" />
+                </div>
+              </el-tooltip>
+            </div>
+            <!-- 发送问题 -->
+            <div class="dialogue-conversation-bottom-sendbox__icon">
+              <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
+              <img
+                v-if="!isAllowToSend || isAnswerGenerating || dialogueInput.length <= 0"
+                src="@/assets/images/send_disable.png"
+                alt=""
+              />
+              <div v-else @click="handleSendMessage(undefined,dialogueInput)">
+                <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
+                <img v-else src="@/assets/images/light_send.png" alt="" />
+              </div>
             </div>
           </div>
+          <!-- 上传问价列表 -->
+          <transition name="fade">
+            <div class="dialogue-conversation-bottom__upload-list" v-if="uploadFilesView.length > 0">
+              <upload-file-group :file-list="uploadFilesView" @delete-file="handleDelete"></upload-file-group>
+            </div>
+          </transition>
         </div>
       </div>
     </div>
@@ -657,13 +1012,28 @@ button[disabled]:hover {
     height: auto;
     width: 1000px;
 
-    &-sendbox {
+    .sendbox-wrapper {
+      position: relative;
       background-color: var(--o-bg-color-base);
-      height: 120px;
       border-radius: 8px;
-      padding: 16px 24px;
       bottom: 0px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    &__upload-list {
+      width: 100%;
+      height: 88px;
+      padding: 0 8px;
+      border-radius: 0 0 8px 8px;
+      display: flex;
+      align-items: center;
+      background-color: var(--o-bg-color-light);
+      overflow-x: scroll;
+    }
+
+    &-sendbox {
+      height: 120px;
+      padding: 16px;
 
       .word-limit {
         font-size: 12px;
@@ -715,6 +1085,34 @@ button[disabled]:hover {
 
         textarea::-webkit-input-placeholder {
           font-family: HarmonyOS_Sans_SC_Medium;
+        }
+      }
+
+      &__upload {
+        position: absolute;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+
+        .upload-wrapper {
+          position: relative;
+
+          input {
+            width: 32px;
+            height: 32px;
+            opacity: 0;
+          }
+
+          img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: transparent;
+          }
+
+          img:hover {
+            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg) brightness(100%) contrast(103%);
+          }
         }
       }
 
@@ -812,6 +1210,24 @@ button[disabled]:hover {
     height: 40px;
     min-width: 160px;
   }
+}
+
+.fade-enter-from {
+  opacity: 0;
+  height: 0;
+}
+
+.fade-enter-active {
+  transition: all 0.5s ease-in-out;
+}
+
+.fade-leave-active {
+  transition: all 0.5s ease-in-out;
+}
+
+.fade-leave-to {
+  opacity: 0;
+  height: 0;
 }
 
 ::v-deep .el-input__wrapper {

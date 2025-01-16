@@ -18,15 +18,21 @@ import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store'
 const { user_selected_plugins } = storeToRefs(useHistorySessionStore());
-
+import { Suggest } from 'src/apis/paths/type';
+const { params } = storeToRefs(useHistorySessionStore());
 
 const { language } = storeToRefs(useLangStore());
 const { changeLanguage } = useLangStore();
 const echartsDraw = ref();
+const visible = ref(false);
 export interface DialoguePanelProps {
+  key: number;
+  // 
   cid: number;
   // 用来区分是用户还是ai的输入
   type: DialoguePanelType;
+  // 文本内容
+  inputParams:object;
   // 文本内容
   content?: string[] | string;
   // 当前选中的第n次回答的索引，默认是最新回答
@@ -53,7 +59,19 @@ export interface DialoguePanelProps {
   echartsObj?:any;
   //
   test?:any;
+  //
+  metadata?:Metadata;
+  //
+  flowdata?:any;
+  //
+  paramsList?:any;
+  //
+  modeOptions:any;
 }
+import JsonFormComponent from './JsonFormComponent.vue'
+import { Metadata } from "srcapis/paths/type";
+import DialogueFlow from "./DialogueFlow.vue";
+import { emit, title } from "process";
 
 var option = ref();
 var show = ref(false);
@@ -67,9 +85,10 @@ const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 const props = withDefaults(defineProps<DialoguePanelProps>(), {
   isFinish: false,
   // 当前选中的第n次回答的索引
-  currentSelected: 0,
+  // currentSelected: 0,
   needRegernerate: false,
 });
+
 const index = ref(0);
 const isLike = ref(props.isLikeList);
 const emits = defineEmits<{
@@ -88,7 +107,14 @@ const emits = defineEmits<{
   ): void;
   (
     e: 'handleSendMessage',
+    groupId: string|undefined,
     question:string,
+    user_selected_flow?:any,
+
+  ): void;
+  (
+    e: 'clearSuggestion',
+    index: number,
   ): void;
 }>();
 
@@ -101,6 +127,8 @@ const handlePauseAndReGenerate = (cid?: number) => {
   if (!cid) {
     return;
   }
+
+  emits("clearSuggestion", props.key);
   if (props.isFinish) {
     // 重新生成
     reGenerateAnswer(cid, user_selected_plugins.value);
@@ -210,7 +238,6 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return "";
   }
-  
   let str = marked.parse(
     xss(props.content[props.currentSelected])
       .replace(/&gt;/g, ">")
@@ -301,7 +328,6 @@ watch(
     show.value = true;
     echartsObj.value = {};
     }
-    
   }
 );
 
@@ -343,13 +369,13 @@ const zoom_out = () => {
   answer_zoom.value = false;
 }
 
-const selectQuestion = (item:object) => {
+const selectQuestion = (item:Suggest) => {
   let question = item.question;
-  let user_selected_flow = item.id;
+  let user_selected_flow = item.flow_id;
   if(user_selected_flow){
-    emits('handleSendMessage',question,user_selected_flow);
+    emits('handleSendMessage',undefined,question,user_selected_flow);
   }else{
-    emits('handleSendMessage',question);
+    emits('handleSendMessage',undefined,question);
   }
   
 };
@@ -369,13 +395,43 @@ const popperSize = () => {
     return size
   }
 }
+const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
+const { sendQuestion } = useSessionStore();
+
+const chatWithParams = async () => {
+  visible.value = false;
+  // handleSendMessage(undefined,undefined,user_selected_plugins.value);
+  // reGenerateAnswer(props.cid, user_selected_plugins.value,"params");
+  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
+  const len = conversationList.value.length;
+  const question = (conversationList.value[props.cid - 1]).message;
+  const flow_id = (conversationList.value[props.cid]).flowdata.flow_id;
+  await sendQuestion(undefined,question, user_selected_plugins.value, undefined, undefined, flow_id,params.value);
+}
+
+const searchPluginName = (plugin_id) => {
+  for(let item in props.modeOptions){
+    if(props.modeOptions[item].value == plugin_id){
+      return props.modeOptions[item].label
+    }
+  }
+  return ''
+    }
+
+const handleSendMessage = async (question, user_selected_flow, user_selected_plugins) => {
+  visible.value = false;
+  // handleSendMessage(undefined,undefined,user_selected_plugins.value);
+}
 
 </script>
 <template>
   <div class="dialogue-panel">
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
-      <div class="dialogue-panel__user-time">
-        {{ dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss") }}
+      <div class="dialogue-panel__user-time" v-if="createdAt">
+        {{ dayjs(createdAt * 1000).format("YYYY-MM-DD HH:mm:ss") }}
+      </div>
+      <div class="dialogue-panel__user-time" v-else>
+        {{ dayjs(Date.now()).format("YYYY-MM-DD HH:mm:ss") }}
       </div>
       <div class="dialogue-panel__content">
         <img v-if="avatar" :src="avatar" />
@@ -383,33 +439,54 @@ const popperSize = () => {
           <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_user.png" />
           <img v-else src="@/assets/images/light_user.png" />
         </div>
-        <p v-if="content">{{ content }}</p>
+        <div class="content" v-if="content">
+          <div class="message">{{ content }}</div>
+          <JsonFormComponent :code="props.inputParams" title="参数补充" v-if="props.inputParams" type="input" />
+        </div>
+
       </div>
     </div>
     <!-- AI回答 -->
     <div class="dialogue-panel__robot" v-else>
-      <div v-if="contentAfterMark" id="markdown-preview" class="dialogue-panel__robot-content">
+      <div class="dialogue-panel__robot-content">
+      <DialogueFlow v-if="flowdata"  :flowdata="props.flowdata"/> 
+      <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
+      <a v-if="props.paramsList" @click="visible = true">补充参数</a>
         <img class="answer_img" src="" alt="" @click="zoom_in($event)" />
         <div class="loading-echarts">
           <div ref="echartsDraw"  class="draw" style=" color: grey ;"></div>
         </div>
       </div>
-
-      <div class="loading" v-if="!contentAfterMark && !isFinish && !$slots.default">
+      <el-dialog
+    :model-value="visible"
+    :show-close="false"
+    width="50%"
+    height="60%"
+    title="补充参数" 
+    :close-on-press-escape="false"
+    :close-on-click-modal="false"
+    align-center
+    overflow="scroll"
+    >
+    <JsonFormComponent :code="props.paramsList" title="参数补充" v-if="props.paramsList" type="code" />
+    <div class="button-group">
+        <el-button class="confirm-button"  @click="chatWithParams()">{{$t('history.ok')}}</el-button>
+        <el-button class="confirm-button"  @click="visible = false">{{$t('history.cancel')}}</el-button>
+      </div>
+    </el-dialog>
+      <div class="loading" v-if="!contentAfterMark && !isFinish && !$slots.default &&!flowdata">
         <img src="@/assets/images/loading.png" alt="" class="loading-icon">
         <div class="loading-text">{{$t('feedback.eulercopilot_is_thinking')}}</div>
       </div>
-
+    </div>
       <div v-if="$slots.default" class="dialogue-panel__robot-slot">
-        <!-- <div class="dialog-panel__robot-time">
-          {{ dayjs().format('YYYY-MM-DD HH:mm:ss') }}
-        </div> -->
         <slot name="default"></slot>
       </div>
       <div class="dialogue-panel__robot-bottom" v-if="!$slots.default && contentAfterMark">
         <div class="action-buttons">
           <div class="pagenation" v-if="isFinish">
+            <div class="pagenation-item" v-if="props.metadata">tokens:{{ props.metadata?.input_tokens }}↑|{{ props.metadata?.output_tokens }}‌↓|{{ Number(props.metadata?.time).toFixed(2) }}</div>
               <img
                 class="pagenation-arror"
                 @click="prePageHandle(Number(cid))"
@@ -503,7 +580,7 @@ const popperSize = () => {
         <ul class='search-suggestions_value'>
           <li class='value'
           v-for="(item, index) in props.search_suggestions" >
-          <p @click='selectQuestion(item)'><p class='test' v-if='item.name'>#{{item.name}}</p>{{item.question}}</p></li>
+          <p @click='selectQuestion(item)'><p class='test' v-if='item.plugin_id'>#{{searchPluginName(item.plugin_id)}}</p>{{item.question}}</p></li>
         </ul>
       </div>
     </div>
@@ -515,6 +592,17 @@ const popperSize = () => {
 </template>
 
 <style lang="scss">
+
+.button-group {
+  text-align: center;
+  .confirm-button {
+    margin-top: 32px;
+    width: 64px;
+    height: 24px;
+    border-radius: 1;
+    font-size: 12px;
+  }
+}
 .overflowTable{
   overflow-x: scroll;
 }
@@ -766,17 +854,24 @@ const popperSize = () => {
       left: -10px;
     }
 
-    p {
-      min-height: 48px;
+    .content {
+      //min-height: 48px;
       border-radius: 8px;
       border-top-left-radius: 0px;
-      display: flex;
-      align-items: center;
+      padding: 12px;
+      // display: flex;
+      // align-items: center;
       color: var(--o-text-color-primary);
       margin-left: 45px;
       background-image: linear-gradient(to right,
           rgba(109, 117, 250, 0.2),
           rgba(90, 179, 255, 0.2));
+          .messaege {
+            top: 10px;
+            margin-top: 24px;
+            display: block;
+            width: 100%;
+          }
     }
   }
 
@@ -787,8 +882,8 @@ const popperSize = () => {
 
     .loading {
       display: flex;
-      min-height: 72px;
-      padding: 24px;
+      // min-height: 72px;
+      // padding: 24px;
       background-color: var(--o-bg-color-base);
       border-radius: 8px;
       border-top-left-radius: 0px;
@@ -879,6 +974,15 @@ const popperSize = () => {
 
         .pagenation {
           display: flex;
+
+          &-item {
+            margin-right: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 18px;
+            color: var(--o-text-color-tertiary) !important;
+            letter-spacing: 0px;
+          }
 
           img {
             width: 16px;

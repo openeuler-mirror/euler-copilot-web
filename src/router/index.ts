@@ -12,7 +12,7 @@ import NotFoundComponent from 'src/views/404.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.MODE === 'micro' ? qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/' : '/'),
+  history: createWebHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/'),
   routes: [
     {
       path: '/',

@@ -13,6 +13,8 @@ import { fa } from 'element-plus/es/locale';
 import { ElMessage } from 'element-plus';
 import { apiKeyApi } from 'srcapis/paths';
 import { watch } from 'vue';
+import i18n from 'src/i18n'
+
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
 const { logout } = useAccountStore();
@@ -39,9 +41,9 @@ export interface ModelForm {
   openai_api_key?: string;
   [property: string]: any;
 }
-
+const kb_id = localStorage.getItem("kb_id")||"";
 const ruleForm = ref<ModelForm>({
-  kb_id: "",
+  kb_id: kb_id,
 });
 const rules = ref();
 
@@ -82,12 +84,12 @@ const handleAgreement = async (CheckedVersion: string | null) => {
   dialogVisible.value = true;
 };
 
-const theme = ref(sessionStorage.getItem('theme') || 'light');
+const theme = ref(localStorage.getItem('theme') || 'light');
 
 const changeTheme = () => {
   theme.value = theme.value === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('theme', theme.value);
-  sessionStorage.setItem('theme', theme.value);
+  localStorage.setItem('theme', theme.value);
   themeStore.theme = theme.value;
 };
 
@@ -139,6 +141,7 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
         kb_id: ruleForm.value.kb_id || "",
       })
       if(!_&&res){
+        localStorage.setItem('kb_id', ruleForm.value.kb_id || "")
         ElMessage.success("成功");
         KnowledgeVisible.value = false;
       }else {
@@ -156,8 +159,8 @@ const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
 };
 
 onMounted(() => {
-  if (sessionStorage.getItem('theme')) {
-    document.body.setAttribute('theme', sessionStorage.getItem('theme') || 'light');
+  if (localStorage.getItem('theme')) {
+    document.body.setAttribute('theme', localStorage.getItem('theme') || 'light');
   }
   api.getKnowledgeList().then((res) => {
     ruleForm.value = res;
@@ -213,7 +216,7 @@ watch(
           </template>
           <el-button class="exit-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</el-button>
           <el-button class="exit-button" @click="apikeyVisible = true">API KEY</el-button>
-          <el-button class="exit-button" @click="KnowledgeVisible = true">配置资产库</el-button>
+          <el-button class="exit-button" @click="KnowledgeVisible = true">{{ i18n.global.t('witChainD.witChainD') }}</el-button>
         </el-popover>
       </div>
     </header>
@@ -221,14 +224,13 @@ watch(
     <el-dialog 
     class="apikey" 
     v-model="apikeyVisible" 
-    title="提示"
+    title="API KEY"
     width="50%" 
     align-center
     :before-close='handleDialogClose'
     >
     <div class="apikey_view">
-      <el-alert v-if='apikey' class='apikey_view_alert' type="info" :show-icon='true' :closable='false'>此API
-        KEY只展示一次，请复制后妥善保存</el-alert>
+      <el-alert v-if='apikey' class='apikey_view_alert' type="info" :show-icon='true' :closable='false'>{{ i18n.global.t('apikey.save_apikey') }}</el-alert>
       <div class='apikey_view_main'>
         <div class='main'>
           <div class='main_view' v-if="!apikey&&hidden">
@@ -237,7 +239,7 @@ watch(
           <div class='main_view' v-else-if='!apikey'>
             <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
             <img v-else src="src/assets/svgs/light_null.svg" alt="">
-            <span>暂无可用的apikey</span>
+            <span>{{ i18n.global.t('apikey.no_apikey') }}</span>
           </div>
           <div class='main_view' v-else>
             <div class='main_view_span'>
@@ -245,15 +247,15 @@ watch(
             </div>
           </div>
           <div v-if='apikey'>
-            <el-button type='primary' @click='copy' >复制</el-button>
-            <el-button @click='revokeApi'>撤销</el-button>
+            <el-button type='primary' @click='copy' >{{ i18n.global.t('feedback.copy') }}</el-button>
+            <el-button @click='revokeApi'>{{ i18n.global.t('feedback.revoke') }}</el-button>
           </div>
           <div v-else-if='!apikey&&!revoke'>
-            <el-button type='primary' @click='updateApi'>刷新</el-button>
-            <el-button @click='revokeApi'>撤销</el-button>
+            <el-button type='primary' @click='updateApi'>{{ i18n.global.t('feedback.refresh') }}</el-button>
+            <el-button @click='revokeApi'>{{ i18n.global.t('feedback.revoke') }}</el-button>
           </div>
           <div v-else>
-            <el-button type='primary' @click='createApi'>新建apikey</el-button>
+            <el-button type='primary' @click='createApi'>{{ i18n.global.t('apikey.create_apikey') }}</el-button>
           </div>
         </div>
       </div>
@@ -265,7 +267,7 @@ watch(
     class="model-dialog"
     width="560"
     @close="handleKnowledgeDialogClose"
-    title="资产库配置"
+    :title="$t('witChainD.witChainD')"
   >
     <el-form
       ref="ruleFormRef"
@@ -275,13 +277,13 @@ watch(
       @validate="handleFormValidate"
     >
       <el-form-item
-        label="资产库id"
+        :label="$t('witChainD.witChainD_id')"
         prop="openai_api_key"
         class="docName"
       >
         <el-input
           v-model="ruleForm.kb_id"
-          placeholder="请输入"
+          :placeholder="$t('witChainD.describe_the_witChainD')"
         >
           <template #suffix>
             <el-icon
@@ -300,10 +302,10 @@ watch(
           :disabled="isSubmitDisabled"
           @click="handleConfirmCreateModel(ruleFormRef)"
         >
-           确认 
+           {{ i18n.global.t('history.ok') }}
         </el-button>
         <el-button class="resetBtn" @click="handleKnowledgeDialogClose">
-           取消 
+          {{ i18n.global.t('history.cancel') }}
         </el-button>
       </el-form-item>
     </el-form>

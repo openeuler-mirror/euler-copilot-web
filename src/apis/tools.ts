@@ -27,7 +27,9 @@ function getCookie(name: string) {
 export const handleChangeRequestHeader = (
   config: InternalAxiosRequestConfig<any>
 ): InternalAxiosRequestConfig<any> => {
-  config.headers['Content-Type'] = 'application/json; charset=UTF-8';
+  if (config.headers['Content-Type'] !== 'multipart/form-data') {
+    config.headers['Content-Type'] = 'application/json; charset=UTF-8';
+  }
   const cookieValue = getCookie('_csrf_tk');
   if (cookieValue) {
     config.headers['X-CSRF-Token'] = cookieValue;
@@ -43,7 +45,7 @@ export const handleAuthorize = async (errStatus: number): Promise<void> => {
   userinfo.value.organization = type;
   if ((errStatus === 401 || errStatus === 403)) {
     if (qiankunWindow.__POWERED_BY_QIANKUN__) {
-      const url = await store.getAuthUrl()
+      const url = await store.getAuthUrl('login')
       if (url) {
         const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__ ? `${url}&redirect_index=${location.href}` : url
         if (redirectUrl)
@@ -58,7 +60,7 @@ export const handleAuthorize = async (errStatus: number): Promise<void> => {
         closeOnClickModal: false,
         closeOnPressEscape: false,
       }).then(async () => {
-        const url = await store.getAuthUrl()
+        const url = await store.getAuthUrl('login')
         if (url) {
           const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__ ? `${url}&redirect_index=${location.href}` : url
           if (redirectUrl)

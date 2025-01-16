@@ -5,8 +5,8 @@ import { useAccountStore } from 'src/store';
 export function qiankunMounted(props: QiankunProps) {
   const { theme, lang } = props.inittailData
   const language = lang === 'en' ? 'EN' : 'CN'
-  sessionStorage.setItem('localeLang', language)
-  sessionStorage.setItem('theme', theme)
+  localStorage.setItem('localeLang', language)
+  localStorage.setItem('theme', theme)
   i18n.global.locale.value = language
   props.onGlobalStateChange((state:any) => {
     onQiankunGlobalChange(state)
@@ -22,12 +22,12 @@ function onQiankunGlobalChange(globalState: any) {
 
   if (globalState.lang) {
     const language = globalState.lang === 'en' ? 'EN' : 'CN'
-    sessionStorage.setItem('localeLang', language)
+    localStorage.setItem('localeLang', language)
     i18n.global.locale.value = language
   }
 
   if (globalState.theme) {
-    sessionStorage.setItem('theme', globalState.theme)
+    localStorage.setItem('theme', globalState.theme)
     document.body.setAttribute("theme", globalState.theme);
   }
 }

@@ -19,6 +19,7 @@ declare interface ImportMetaEnv {
   readonly VITE_BASE_PROXY_URL: string;
   readonly VITE_BASE_URL: string;
   readonly VITE_USER_TYPE: string;
+  readonly VITE_QABOT_URL: string;
 
   readonly VITE_OEPKG_URL: string;
   readonly VITE_PKGSHIP_URL: string;
