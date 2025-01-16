@@ -4,7 +4,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import '../../styles/InterPreview.scss';
 import { ref, watch } from 'vue';
 import { IconUnfavorite } from '@computing/opendesign-icons';
 
