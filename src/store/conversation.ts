@@ -337,7 +337,6 @@ export const useSessionStore = defineStore('conversation', () => {
         });
       }
     } catch (err: any) {
-      console.log(err);
       isPaused.value = true;
       isAnswerGenerating.value = false;
       (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;

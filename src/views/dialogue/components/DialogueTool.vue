@@ -186,7 +186,7 @@ const handleChainClick = (tool: ChainItem) => {
       &:hover {
         background-color: transparent;
         background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
-        border:1px solid #7AA5FF;
+        border: 1px solid #7aa5ff;
       }
     }
   }
@@ -198,10 +198,10 @@ const handleChainClick = (tool: ChainItem) => {
       color: var(--o-text-color-secondary);
       &:hover {
         text-decoration: underline;
-        color:#3291fe
+        color: #3291fe;
       }
       &:active {
-        color: #0077FF;
+        color: #0077ff;
       }
     }
   }
@@ -212,11 +212,11 @@ const handleChainClick = (tool: ChainItem) => {
       color: var(--o-text-color-secondary);
       &:hover {
         text-decoration: underline;
-        color:#3291fe;
+        color: #3291fe;
       }
 
       &:active {
-        color: #0077FF;
+        color: #0077ff;
       }
 
       img {

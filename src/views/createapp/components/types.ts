@@ -7,10 +7,7 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import type {
-  UserDialoguePanelType,
-  RobotDialoguePanelType,
-} from 'src/components/dialoguePanel/type';
+import type { UserDialoguePanelType, RobotDialoguePanelType } from 'src/components/dialoguePanel/type';
 
 // 工具类型
 export type LinkType = 'redirect' | 'action';
@@ -30,7 +27,7 @@ export interface EgItem {
   insertMessage: string;
   style?: string;
   title: string;
-  des?:string;
+  des?: string;
 }
 
 export interface ChainItem {

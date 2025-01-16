@@ -74,7 +74,7 @@
             display: flex;
             .appCenterCardIcon {
               width: 80px;
-              .menu-icon{
+              .menu-icon {
                 width: 40px;
               }
             }
@@ -108,22 +108,22 @@
                   }
                 }
               }
-              .appCenterCardContentDes{
+              .appCenterCardContentDes {
                 font-size: 14px;
                 line-height: 22px;
               }
             }
           }
-          .appCenterCardBottom{
+          .appCenterCardBottom {
             margin-top: 16px;
             display: flex;
             justify-content: space-between;
-            .appCenterCardUser{
+            .appCenterCardUser {
               font-size: 12px;
               line-height: 16px;
             }
-            .appCenterCardOps{
-              .el-button span{
+            .appCenterCardOps {
+              .el-button span {
                 color: #6395fd;
                 font-size: 12px;
               }

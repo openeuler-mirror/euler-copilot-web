@@ -140,10 +140,8 @@
           border: 1px solid #7aa5ff;
           background: linear-gradient(
             127deg,
-            rgba(109, 117, 250, 0.07)
-            1.003%,
-            rgba(90, 179, 255, 0.07)
-            98.421%
+            rgba(109, 117, 250, 0.07) 1.003%,
+            rgba(90, 179, 255, 0.07) 98.421%
           ) !important;
         }
       }
@@ -161,7 +159,7 @@
 
     .el-pagination {
       margin-top: 16px;
-      .el-select__wrapper{
+      .el-select__wrapper {
         background-color: transparent;
       }
     }

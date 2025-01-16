@@ -219,7 +219,9 @@ const handleSelect = (val: any) => {
           </template>
           <el-button class="exit-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</el-button>
           <el-button class="exit-button" @click="apikeyVisible = true">API KEY</el-button>
-          <el-button class="exit-button" @click="KnowledgeVisible = true">{{ i18n.global.t('witChainD.witChainD') }}</el-button>
+          <el-button class="exit-button" @click="KnowledgeVisible = true">{{
+            i18n.global.t('witChainD.witChainD')
+          }}</el-button>
         </el-popover>
       </div>
     </header>
@@ -516,7 +518,7 @@ const handleSelect = (val: any) => {
 <style lang="scss" scoped>
 .dialogue {
   height: 100%;
-  min-height: 768px;
+  min-height: 864px;
   overflow: scroll;
   display: flex;
   flex-direction: column;

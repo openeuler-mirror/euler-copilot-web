@@ -1,13 +1,13 @@
-import { useVueFlow } from '@vue-flow/core'
-import { ref, watch } from 'vue'
+import { useVueFlow } from '@vue-flow/core';
+import { ref, watch } from 'vue';
 
-let id = 0
+let id = 0;
 
 /**
  * @returns {string} - A unique id.
  */
 function getId() {
-  return `dnode_${id++}`
+  return `dnode_${id++}`;
 }
 
 /**
@@ -22,27 +22,27 @@ const state = {
   isDragOver: ref(false),
   isDragging: ref(false),
   nodeData: ref({}),
-}
+};
 
 export default function useDragAndDrop() {
-  const { draggedType, isDragOver, isDragging, nodeData } = state
+  const { draggedType, isDragOver, isDragging, nodeData } = state;
 
-  const { addNodes, screenToFlowCoordinate, onNodesInitialized, updateNode, addEdges } = useVueFlow()
+  const { addNodes, screenToFlowCoordinate, onNodesInitialized, updateNode, addEdges } = useVueFlow();
 
-  watch(isDragging, (dragging) => {
-    document.body.style.userSelect = dragging ? 'none' : ''
-  })
+  watch(isDragging, dragging => {
+    document.body.style.userSelect = dragging ? 'none' : '';
+  });
 
   function onDragStart(event, type, info) {
     if (event.dataTransfer) {
-      event.dataTransfer.setData('application/vueflow', type)
-      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.setData('application/vueflow', type);
+      event.dataTransfer.effectAllowed = 'move';
     }
-    draggedType.value = type
-    isDragging.value = true
-    nodeData.value = {...info};
+    draggedType.value = type;
+    isDragging.value = true;
+    nodeData.value = { ...info };
 
-    document.addEventListener('drop', onDragEnd)
+    document.addEventListener('drop', onDragEnd);
   }
 
   /**
@@ -51,29 +51,27 @@ export default function useDragAndDrop() {
    * @param {DragEvent} event
    */
   function onDragOver(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (draggedType.value) {
-      isDragOver.value = true
+      isDragOver.value = true;
 
       if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = 'move'
+        event.dataTransfer.dropEffect = 'move';
       }
     }
   }
 
   function onDragLeave() {
-    isDragOver.value = false
+    isDragOver.value = false;
   }
 
   function onDragEnd() {
-    isDragging.value = false
-    isDragOver.value = false
-    draggedType.value = null
-    document.removeEventListener('drop', onDragEnd)
+    isDragging.value = false;
+    isDragOver.value = false;
+    draggedType.value = null;
+    document.removeEventListener('drop', onDragEnd);
   }
-
-
 
   /**
    * Handles the drop event.
@@ -81,21 +79,20 @@ export default function useDragAndDrop() {
    * @param {DragEvent} event
    */
   function onDrop(event, createNodeType) {
-
     const position = screenToFlowCoordinate({
       x: event.clientX,
       y: event.clientY,
-    })
+    });
 
-    const nodeId = getId()
+    const nodeId = getId();
 
     const newNode = {
       id: nodeId,
       type: draggedType.value,
       position,
-      class:"round-start",
+      class: 'round-start',
       data: nodeData.value,
-    }
+    };
 
     /**
      * Align node position after drop, so it's centered to the mouse
@@ -104,23 +101,29 @@ export default function useDragAndDrop() {
      */
     const { off } = onNodesInitialized(() => {
       const vueFlowContainer = document.querySelector('.my-diagram-class');
-      updateNode(nodeId, (node) => {
+      updateNode(nodeId, node => {
         let position = {};
         if (createNodeType === 'click') {
-          position = { x: vueFlowContainer.getBoundingClientRect().width / 4 + node.position.x, y: vueFlowContainer.getBoundingClientRect().height / 4 + node.position.y }
+          position = {
+            x: vueFlowContainer.getBoundingClientRect().width / 4 + node.position.x,
+            y: vueFlowContainer.getBoundingClientRect().height / 4 + node.position.y,
+          };
         } else {
-          position = { x: node.position.x - node.dimensions.width / 2, y: node.position.y - node.dimensions.height / 2 }
+          position = {
+            x: node.position.x - node.dimensions.width / 2,
+            y: node.position.y - node.dimensions.height / 2,
+          };
         }
 
         return {
-          position
-        }
-      })
+          position,
+        };
+      });
 
-      off()
-    })
+      off();
+    });
 
-    addNodes(newNode)
+    addNodes(newNode);
   }
 
   return {
@@ -131,5 +134,5 @@ export default function useDragAndDrop() {
     onDragLeave,
     onDragOver,
     onDrop,
-  }
+  };
 }

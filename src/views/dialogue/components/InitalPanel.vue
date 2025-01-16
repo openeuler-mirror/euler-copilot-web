@@ -4,40 +4,40 @@ import { EG_LIST } from '../constants';
 import { useChangeThemeStore } from 'src/store';
 import 'xterm/css/xterm.css';
 import { Terminal } from 'xterm';
-import {FitAddon} from 'xterm-addon-fit';
+import { FitAddon } from 'xterm-addon-fit';
 import { AttachAddon } from 'xterm-addon-attach';
 import { successMsg } from 'src/components/Message';
 const themeStore = useChangeThemeStore();
 const openShell = () => {
   isTermShow.value = true;
   fnChangeShellBox(true);
-  document.getElementById("shellView").style.width = "calc(100% - 48px)";
-  document.getElementById("shellView").style.height = "calc(100% - 104px)";
-  document.getElementById("shellView").style.margin = "64px 24px 40px 24px";
-  document.getElementById("shellView").style.borderRadius = "8px";
-}
+  document.getElementById('shellView').style.width = 'calc(100% - 48px)';
+  document.getElementById('shellView').style.height = 'calc(100% - 104px)';
+  document.getElementById('shellView').style.margin = '64px 24px 40px 24px';
+  document.getElementById('shellView').style.borderRadius = '8px';
+};
 
 const closeShell = () => {
   isTermShow.value = false;
   fnChangeShellBox(false);
   // document.getElementById("shellView").style.width = "0%";
-}
+};
 
 let socket = ref(null);
-const terminal = ref(null);  //绑定dom组件
+const terminal = ref(null); //绑定dom组件
 const fitAddon = new FitAddon();
 
 let term = ref(null);
 let termLoading = ref(false);
 let isTermShow = ref(false);
 const activePane = ref('shell');
-const fnChangeShellBox = (isShow) => {
+const fnChangeShellBox = isShow => {
   if (isShow) {
-    if (!socket.value){
+    if (!socket.value) {
       termLoading.value = true;
       createWs();
     }
-  }else {
+  } else {
     // 关闭连接
     if (socket.value) {
       socket.value.close();
@@ -47,9 +47,7 @@ const fnChangeShellBox = (isShow) => {
       term.value.dispose();
     }
   }
-
-}
-
+};
 
 const createWs = () => {
   const hostname = window.location.host;
@@ -62,25 +60,25 @@ const createWs = () => {
     //     width: 500,
     //   }
     // }));
-  }
+  };
   socket.value.onclose = () => {
     // console.log('close');
-  }
-  socket.value.onerror = (e) => {
+  };
+  socket.value.onerror = e => {
     term.value.write(`\x1b[31m${e}\x1b[m\r\n`);
     termLoading.value = false;
-  }
+  };
   initTerm();
-}
+};
 
 const initTerm = () => {
   term.value = new Terminal({
     fontSize: 14,
     cursorBlink: true,
-  })
+  });
   const attachAddon = new AttachAddon(socket.value);
   term.value.open(terminal.value);
-  fitAddon.activate(term.value) // 自适应尺寸
+  fitAddon.activate(term.value); // 自适应尺寸
   attachAddon.activate(term.value);
 
   setTimeout(() => {
@@ -89,46 +87,43 @@ const initTerm = () => {
   term.value.focus();
   window.onresize = () => {
     fitAddon.fit();
-  }
-}
+  };
+};
 </script>
 
 <template>
   <div class="dialogue-panel">
     <div class="inital-panel">
-      <div class="introduction">{{$t('main.describe1')}}
-        <img src="@/assets/images/logoText.png" alt="">
-        {{$t('main.describe2')}}
+      <div class="introduction">
+        {{ $t('main.describe1') }}
+        <img src="@/assets/images/logoText.png" alt="" />
+        {{ $t('main.describe2') }}
       </div>
-      <p class="inital-panel-tips">
-      </p>
-      <div class='container'>
+      <p class="inital-panel-tips"></p>
+      <div class="container">
         <div class="eg">
-          <p>{{$t('main.left_describe')}}</p>
+          <p>{{ $t('main.left_describe') }}</p>
           <ul class="eg-list">
             <li class="eg-list-item" v-for="item in EG_LIST" :key="item.key" :style="item.style">
               <img v-if="themeStore.theme === 'dark'" :src="item.iconDark" />
-              <img v-else :src="item.icon" alt="">
+              <img v-else :src="item.icon" alt="" />
               <div class="eg-list-item__text">
-                <p>{{ $t('main.'+item.key) }}</p>
-                <span class="eg-list-item__text-desc">{{
-                  $t('main.'+item.insertMessage)
-                }}</span>
+                <p>{{ $t('main.' + item.key) }}</p>
+                <span class="eg-list-item__text-desc">{{ $t('main.' + item.insertMessage) }}</span>
               </div>
             </li>
           </ul>
         </div>
-        <div class='shell'>
-          <p class='title'>{{$t('main.smart_shell')}}</p>
-          <div class='dse'>
-            {{$t('main.smart_shell_describe')}}
+        <div class="shell">
+          <p class="title">{{ $t('main.smart_shell') }}</p>
+          <div class="dse">
+            {{ $t('main.smart_shell_describe') }}
           </div>
         </div>
-        <div id='shellView' class='sidenav'>
-          <a href='' class='closebtn' @click='closeShell()'>x</a>
+        <div id="shellView" class="sidenav">
+          <a href="" class="closebtn" @click="closeShell()">x</a>
           <div v-show="isTermShow" class="dialogue-shell">
-            <div style="height: 100%; width: 100%" ref="terminal" v-loading="termLoading">
-            </div>
+            <div style="height: 100%; width: 100%" ref="terminal" v-loading="termLoading"></div>
           </div>
         </div>
       </div>
@@ -137,8 +132,7 @@ const initTerm = () => {
 </template>
 
 <style lang="scss" scoped>
-
-.dialogue-shell{
+.dialogue-shell {
   width: 100%;
   height: 100%;
 }
@@ -187,7 +181,6 @@ const initTerm = () => {
   font-size: 36px;
   margin-left: 50px;
 }
-
 
 .container {
   display: flex;
@@ -331,7 +324,6 @@ const initTerm = () => {
         // align-self: baseline;
         margin-right: 6px;
       }
-
 
       &__text {
         width: 100%;

@@ -18,8 +18,8 @@ const { t } = useI18n();
 const { theme } = storeToRefs(useChangeThemeStore());
 const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo, updateAgreement } = useAccountStore();
-const { getHistorySession} = useHistorySessionStore();
-const { app , appList} = storeToRefs(useSessionStore());
+const { getHistorySession } = useHistorySessionStore();
+const { app, appList } = storeToRefs(useSessionStore());
 const modeOptions = reactive([
   {
     label: t('main.Automatic'),
@@ -51,9 +51,6 @@ const initCopilot = async (): Promise<void> => {
   }
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
-  console.log(currRoute.value.path);
-  console.log(currRoute.value.params);
-  console.log(currRoute.value);
   if (currRoute.value.path === '/') {
     const isLogin = await getUserInfo();
     if (isLogin) {
@@ -63,14 +60,12 @@ const initCopilot = async (): Promise<void> => {
       setPlugins();
     }
     return;
-  }else if(currRoute.value.query.id){
-    console.log(currRoute.value.query);
+  } else if (currRoute.value.query.id) {
     app.value = {
-      id:String(currRoute.value.query.id),
-      name:String(currRoute.value.query.name),
-    }
-    console.log(app.value);
-  }else{
+      id: String(currRoute.value.query.id),
+      name: String(currRoute.value.query.name),
+    };
+  } else {
     console.log('else');
   }
 };
