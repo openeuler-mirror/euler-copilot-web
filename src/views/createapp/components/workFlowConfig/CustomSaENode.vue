@@ -93,7 +93,7 @@ watch(
   border-radius: 8px;
   justify-content: center;
   position: relative;
-  box-shadow: 0px 8px 16px 0px rgb(0, 0, 0, 0.1);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
   transform: rotate(45deg);
 
   .outHandleRing {

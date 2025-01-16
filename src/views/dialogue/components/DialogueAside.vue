@@ -12,7 +12,7 @@ import {
 } from 'element-plus';
 import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
-import { useHistorySessionStore,useSessionStore } from '@/store';
+import { useHistorySessionStore, useSessionStore } from '@/store';
 import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { useI18n } from 'vue-i18n';
@@ -43,8 +43,8 @@ const deleteType = ref(true);
 // 搜索的关键词
 const searchKey = ref<string>('');
 const activeNames = ref(['today', 'week', 'month', 'other']);
-const isCollapsed = ref(false)
-const selectedAppId = ref(null)
+const isCollapsed = ref(false);
+const selectedAppId = ref(null);
 //
 const apps = ref([
   { id: 1, name: '应用 1' },
@@ -52,7 +52,7 @@ const apps = ref([
   { id: 3, name: '应用 3' },
   { id: 4, name: '应用 4' },
   { id: 5, name: '应用 5' },
-])
+]);
 
 const filteredHistorySessions = computed(() => {
   // filter by searchKey
@@ -212,18 +212,17 @@ function hanleAsideVisible(): void {
 }
 
 const displayedApps = computed(() => {
-  return apps.value.slice(0, 5)
-})
+  return apps.value.slice(0, 5);
+});
 
 const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value
-}
+  isCollapsed.value = !isCollapsed.value;
+};
 
-const selectApp = (id) => {
-  selectedAppId.value = id
-}
+const selectApp = id => {
+  selectedAppId.value = id;
+};
 function ensureAppAtFirstPosition() {
-
   const newApp = app.value;
   const index = apps.value.findIndex(app => app.id === newApp.id);
   selectApp(newApp.id);
@@ -241,8 +240,8 @@ watch(
     ensureAppAtFirstPosition();
   },
   {
-    immediate: true
-  }
+    immediate: true,
+  },
 );
 </script>
 
@@ -254,30 +253,27 @@ watch(
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
         <div class="collapsible-apps">
-    <div class="collapsible-header" @click="toggleCollapse">
-      <div class="header-content">
-        <AppWindowIcon :size="20" />
-        <span>我的应用</span>
-      </div>
-      <ChevronDownIcon 
-        :size="20" 
-        :class="{ 'rotate': !isCollapsed }"
-      />
-    </div>
-    <transition name="collapse">
-      <ul v-if="!isCollapsed" class="app-list">
-        <li 
-          v-for="app in displayedApps" 
-          :key="app.id" 
-          @click="selectApp(app.id)"
-          :class="{ 'selected': selectedAppId === app.id }"
-        >
-          <span>{{ app.name }}</span>
-        </li>
-      </ul>
-    </transition>
-    <!-- 缺少空白切图 ；； 缺少空 appList 判断-->
-  </div>
+          <div class="collapsible-header" @click="toggleCollapse">
+            <div class="header-content">
+              <AppWindowIcon :size="20" />
+              <span>我的应用</span>
+            </div>
+            <ChevronDownIcon :size="20" :class="{ rotate: !isCollapsed }" />
+          </div>
+          <transition name="collapse">
+            <ul v-if="!isCollapsed" class="app-list">
+              <li
+                v-for="app in displayedApps"
+                :key="app.id"
+                @click="selectApp(app.id)"
+                :class="{ selected: selectedAppId === app.id }"
+              >
+                <span>{{ app.name }}</span>
+              </li>
+            </ul>
+          </transition>
+          <!-- 缺少空白切图 ；； 缺少空 appList 判断-->
+        </div>
         <!-- <ElButton class="create-button" @click="createNewSession">
           <img class="create-button__icon" src="@/assets/svgs/create.svg" />
           <span>{{ $t('history.new_chat') }}</span>
@@ -449,7 +445,7 @@ watch(
       align-items: center;
       border: 8px;
       border-radius: 8px;
-      span{
+      span {
         display: block;
         margin-left: 24px;
         align-items: center;
@@ -459,7 +455,7 @@ watch(
       }
 
       &.selected {
-        background: linear-gradient(127.60deg, rgba(109, 117, 250, 0.2) -1.725%, rgba(90, 179, 255, 0.2) 98.22%);
+        background: linear-gradient(127.6deg, rgba(109, 117, 250, 0.2) -1.725%, rgba(90, 179, 255, 0.2) 98.22%);
         color: white;
       }
     }

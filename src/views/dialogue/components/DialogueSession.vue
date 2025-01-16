@@ -3,7 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from './InitalPanel.vue';
-import InterPreview from  './InterPreview.vue';
+import InterPreview from './InterPreview.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 
@@ -26,7 +26,7 @@ const session = useSessionStore();
 export interface DialogueSession {
   modeOptions: any;
   isCreateApp: any;
-  createAppForm:any;
+  createAppForm: any;
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
@@ -814,7 +814,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
         </div>
       </div>
       <div class="dialogue-interPreview-main" v-else>
-         <InterPreview :createAppForm="props.createAppForm"/>
+        <InterPreview :createAppForm="props.createAppForm" />
       </div>
       <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">

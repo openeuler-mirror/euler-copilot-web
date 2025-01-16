@@ -114,12 +114,12 @@ const handleClose = () => {
   isAddWorkFlow.value = false;
 };
 // 删除节点
-const delNode = (id) => {
+const delNode = id => {
   if (id) {
     const node = findNode(id);
     node ? removeNodes(node) : '';
   }
-}
+};
 </script>
 <template>
   <div class="workFlowContainer" @drop="onDrop">
@@ -153,7 +153,7 @@ const delNode = (id) => {
                     <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(1) }">
                       <IconCaretRight />
                     </el-icon>
-                    <span> 系统 </span>
+                    <span>系统</span>
                   </template>
                   <div
                     class="stancesItem"

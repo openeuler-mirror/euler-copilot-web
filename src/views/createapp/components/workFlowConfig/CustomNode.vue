@@ -59,7 +59,7 @@ const delNode = id => {
           <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
             <el-button text class="dealItem" disabled>编辑</el-button>
-            <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
+            <el-button text class="dealItem" @click="delNode(props.id)"> 删除 </el-button>
           </el-popover>
         </div>
       </div>

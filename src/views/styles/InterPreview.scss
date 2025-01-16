@@ -11,7 +11,7 @@
       width: 100%;
       display: flex;
       justify-content: center;
-      
+
       .preTopContent {
         display: flex;
         align-items: center;
@@ -20,17 +20,17 @@
         border-radius: 20px;
         gap: 8px;
         background: linear-gradient(122.39deg, rgba(109, 117, 250, 0.2) -20.158%, rgba(90, 179, 255, 0.2) 112.459%);
-        .preTitleIcon{
-            width: 32px;
-            height: 32px;
-          } 
-          .preMainAppName{
-            font-size: 16px;
-            line-height: 24px;
-            color: var(--o-text-color-primary);
-            font-weight: 700;
-          }
-    }
+        .preTitleIcon {
+          width: 32px;
+          height: 32px;
+        }
+        .preMainAppName {
+          font-size: 16px;
+          line-height: 24px;
+          color: var(--o-text-color-primary);
+          font-weight: 700;
+        }
+      }
     }
 
     .preMain {
@@ -88,41 +88,40 @@
             line-height: 24px;
           }
           .linkBadge {
-            .el-badge__content{
-                right: calc(-10px + var(--el-badge-size) / 2);
-                top: 4px;
+            .el-badge__content {
+              right: calc(-10px + var(--el-badge-size) / 2);
+              top: 4px;
             }
-           
           }
 
-          .connectBox{
+          .connectBox {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            .connectCard{
-                display: flex;
-                height: 32px;
-                align-items: center;
-                background: rgba(99,149,253,0.1);
-                padding:0  8px 0 4px;
-                border-radius: 20px;
-                gap: 6px;
-                .connectBoxIndex{
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 50%;
-                    text-align: center;
-                    line-height: 24px;
-                    font-size: 14px;
-                    color: var(--o-text-color-primary);
-                  background: var(--o-bg-color-base);  
-                }
-                .connectBoxContent{
-                    color: #6395fd;
-                    font-size: 14px;
-                    cursor: pointer;
-                    font-weight: 400;
-                }
+            .connectCard {
+              display: flex;
+              height: 32px;
+              align-items: center;
+              background: rgba(99, 149, 253, 0.1);
+              padding: 0 8px 0 4px;
+              border-radius: 20px;
+              gap: 6px;
+              .connectBoxIndex {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                text-align: center;
+                line-height: 24px;
+                font-size: 14px;
+                color: var(--o-text-color-primary);
+                background: var(--o-bg-color-base);
+              }
+              .connectBoxContent {
+                color: #6395fd;
+                font-size: 14px;
+                cursor: pointer;
+                font-weight: 400;
+              }
             }
           }
         }

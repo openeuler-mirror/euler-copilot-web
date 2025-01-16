@@ -6,8 +6,8 @@ import WorkFlow from './components/workFlow.vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const createAppType = ref('appConfig');
-const handleChangeAppType = (type) => {
-  createAppType.value = type
+const handleChangeAppType = type => {
+  createAppType.value = type;
 };
 </script>
 <template>
@@ -38,11 +38,11 @@ const handleChangeAppType = (type) => {
         </div>
       </div>
     </div>
-    <div class="createAppContainerMain"  v-show="createAppType === 'appConfig'">
+    <div class="createAppContainerMain" v-show="createAppType === 'appConfig'">
       <AppConfig />
     </div>
     <div class="createWorkFlowContainerMain" v-show="createAppType !== 'appConfig'">
-      <WorkFlow  />
+      <WorkFlow />
     </div>
     <div class="createAppContainerFooter">
       <el-button>取消</el-button>

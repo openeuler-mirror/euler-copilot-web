@@ -22,12 +22,17 @@
       </div>
       <div class="appCenterCardContainer">
         <div class="appCenterCardBox">
-          <div v-for="(appItem, index) in appList" :key="index" class="appCenterCardSingle" @click="routerToDetail(appItem)">
+          <div
+            v-for="(appItem, index) in appList"
+            :key="index"
+            class="appCenterCardSingle"
+            @click="routerToDetail(appItem)"
+          >
             <div class="appCenterCardTop">
               <div class="appCenterCardIcon">
-                <el-icon class="menu-icon"
-                  ><img class="create-button__icon" src="@/assets/svgs/robot_icon.svg"
-                /></el-icon>
+                <el-icon class="menu-icon">
+                  <img class="create-button__icon" src="@/assets/svgs/robot_icon.svg" />
+                </el-icon>
               </div>
               <div class="appCenterCardContent">
                 <div class="appCenterCardContentTop">
@@ -77,7 +82,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const appInfoList = ref(new Array(36));
-const appSearchType = ref('1')
+const appSearchType = ref('1');
 const appList = ref<any>([]);
 const pagination = ref({
   pageSizes: [16, 32, 64],
@@ -87,25 +92,22 @@ const currentPage = ref(1);
 const totalCount = ref(0);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
 
-
 const handleChangePage = (pageNum: number, pageSize: number) => {
-  appList.value = appInfoList.value.slice(((pageNum - 1) * 16) ,pageNum * 16)
+  appList.value = appInfoList.value.slice((pageNum - 1) * 16, pageNum * 16);
 };
 
-const handleCreateApp = ()=>{
+const handleCreateApp = () => {
   router.push('/createApp');
-}
+};
 
-const routerToDetail = (appItem) => {
+const routerToDetail = appItem => {
   //获取appItem.id & appItem.name
   router.push(`/copilot?id=1213&name=ppp`);
-}
+};
 
 onMounted(() => {
   appList.value = appInfoList.value.slice(0, 16);
 });
-
-
 </script>
 <style scoped>
 .container {

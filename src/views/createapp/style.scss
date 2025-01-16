@@ -1,32 +1,32 @@
-.createAppContainer{
+.createAppContainer {
   width: 100%;
   color: var(--o-text-color-secondary);
   padding: 16px 24px 24px;
   display: flex;
   height: 100%;
   flex-direction: column;
-  .createAppContainerTop{
+  .createAppContainerTop {
     width: 100%;
     height: 32px;
     display: flex;
     position: relative;
     align-items: center;
-    .createAppContainerMenu{
+    .createAppContainerMenu {
       display: flex;
       gap: 16px;
-      font-size:12px;
-      .createAppContainerMenuLeft{
+      font-size: 12px;
+      .createAppContainerMenuLeft {
         display: flex;
         gap: 4px;
-        .createAppContainerMenuCenter{
+        .createAppContainerMenuCenter {
           color: #6395fd;
         }
-        .createAppContainerMenuText{
+        .createAppContainerMenuText {
           color: var(--o-text-color-primary);
           font-weight: 500;
         }
       }
-      .createAppContainerStatus{
+      .createAppContainerStatus {
         width: 52px;
         height: 16px;
         display: flex;
@@ -64,7 +64,7 @@
     }
   }
 
-  .createAppContainerMain{
+  .createAppContainerMain {
     min-width: 1200px;
     margin-top: 16px;
     padding: 24px 24px 24px 16px;
@@ -73,13 +73,9 @@
     flex: 1;
     max-height: calc(100% - 112px);
     background-color: var(--o-bg-color-base);
-    .createAppContainerMainLeft{
-      width: 536px;
-      height: 100%;
-    }
   }
 
-  .createWorkFlowContainerMain{
+  .createWorkFlowContainerMain {
     display: flex;
     gap: 24px;
     flex: 1;
@@ -88,12 +84,12 @@
     margin-top: 16px;
   }
 
-  .createAppContainerMainBox{
+  .createAppContainerMainBox {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    .previewTitle{
+    .previewTitle {
       line-height: 24px;
       font-size: 16px;
       font-weight: 700;
@@ -116,22 +112,204 @@
     --o-button-disable-border: #ebedf3;
     --o-time-text: #dfe5ef;
     --o-bash-bg: #f4f6fa;
-    .copilot-footer{
+    .copilot-footer {
       margin-bottom: 12px;
     }
   }
 
-  .createAppContainerMainBox{
-    .dialogue-conversation{
+  .createAppContainerMainLeft {
+    width: 536px;
+    height: 100%;
+    margin-top: 0px;
+    --o-owndefine-del-hover: #7aa5ff;
+    --o-owndefine-del-active: #6395fd;
+    overflow-y: auto;
+    overflow-x: hidden;
+    .el-collapse-item__header {
+      padding: 0px;
+      margin-left: 8px;
+      height: 24px;
+      line-height: 24px;
+      font-size: 16px;
+      font-weight: bolder;
+      margin-bottom: 8px;
+      .el-collapse-item__arrow {
+        color: #8d98aa;
+        margin-left: 8px;
+      }
+    }
+    .el-collapse-item__content {
+      margin-left: 0px;
+      .uploadArea {
+        color: #8d98aa;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        .placeIcon {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: 1px solid var(--o-text-color-tertiary);
+          cursor: pointer;
+        }
+
+        .avatar-uploader .el-upload {
+          border: 1px dashed #d9d9d9;
+          border-radius: 6px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+          }
+        }
+        .avatar-uploader-icon {
+          font-size: 28px;
+          color: #8c939d;
+          width: 178px;
+          height: 178px;
+          line-height: 178px;
+          text-align: center;
+        }
+        .avatar {
+          width: 178px;
+          height: 178px;
+          display: block;
+        }
+
+        .text {
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+      .el-textarea__inner {
+        height: 80px;
+      }
+
+      .linkLine {
+        height: 32px;
+        display: flex;
+        align-items: center;
+        .linkText {
+          margin-left: 8px;
+          color: var(--o-text-color-tertiary);
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+      .linkArea {
+        display: flex;
+        margin-top: 8px;
+        gap: 8px;
+        height: 32px;
+        width: 100%;
+        align-items: center;
+        .delIcon,
+        svg {
+          height: 16px;
+          width: 16px;
+          color: var(--o-text-color-tertiary);
+          &:hover {
+            color: var(--o-owndefine-del-hover);
+          }
+          &:active {
+            color: var(--o-owndefine-del-active);
+          }
+        }
+      }
+      .permissionItem {
+        .el-form-item__label,
+        .el-form-item__content {
+          padding: 0px;
+          min-height: 16px;
+        }
+        .el-form-item__label {
+          height: 16px;
+        }
+        .el-radio-group {
+          display: flex;
+          gap: 24px;
+          .el-radio {
+            margin-right: 0px;
+            height: 16px;
+          }
+        }
+        .partPermissionPerson {
+          width: 420px;
+          height: 252px;
+          padding: 16px 0px 0px 16px;
+          margin-top: 8px;
+          background-color: var(--o-bash-bg);
+          .personList {
+            max-height: 204px;
+            overflow: auto;
+            padding-bottom: 12px;
+            .el-checkbox-group {
+              margin-top: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+              .el-checkbox {
+                height: 16px;
+                display: flex;
+                align-items: center;
+                .el-checkbox__label {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  .circle {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background-color: var(--o-button-color);
+                  }
+                }
+              }
+            }
+          }
+        }
+        .o-style-search.el-input {
+          .el-input__suffix {
+            &::after {
+              margin-top: 6px;
+            }
+          }
+        }
+      }
+      .multiSessionItem {
+        display: flex;
+        gap: 8px;
+        .sessionUnit {
+          width: 56px;
+          text-align: center;
+          color: var(--o-text-color-tertiary);
+        }
+      }
+
+      .notRequired {
+        .el-form-item__label {
+          padding-left: 8px;
+        }
+      }
+    }
+  }
+
+  .createAppContainerMainBox {
+    .dialogue-conversation {
       display: flex;
       flex-direction: column;
     }
-    .createApp-demo{
+    .createApp-demo {
       flex: 1;
-    } 
+    }
   }
-  
-  .createAppContainerFooter{
+
+  .createAppContainerFooter {
     margin-top: 16px;
     height: 48px;
     width: 100%;
@@ -142,7 +320,7 @@
     gap: 16px;
     border-radius: 8px;
     background-color: var(--o-bg-color-base);
-    .el-button{
+    .el-button {
       border-radius: 4px;
     }
   }

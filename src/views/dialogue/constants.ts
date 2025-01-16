@@ -95,8 +95,7 @@ export const EG_LIST: EgItem[] = [
     iconDark: GENERAL_KNOWLEDGE_DARK,
     key: 'os_knowledge',
     title: 'OS领域通用知识',
-    insertMessage:
-      'os_knowledge_describe',
+    insertMessage: 'os_knowledge_describe',
   },
   {
     icon: EXPERTISE,
@@ -110,23 +109,20 @@ export const EG_LIST: EgItem[] = [
     iconDark: EXPANDED_KNOWLEDGE_DARK,
     key: 'beyond_openEuler',
     title: 'openEuler扩展知识',
-    insertMessage:
-      'beyond_openEuler_describe',
+    insertMessage: 'beyond_openEuler_describe',
   },
   {
     icon: APPLICATION_CASES,
     iconDark: APPLICATION_CASES_DARK,
     key: 'openEuler_use_cases',
     title: 'openEuler应用案例',
-    insertMessage:
-      'openEuler_use_cases_describe',
+    insertMessage: 'openEuler_use_cases_describe',
   },
   {
     icon: COMMAND_GENNERATION,
     iconDark: COMMAND_GENNERATION_DARK,
     key: 'command_generation',
     title: 'shell命令生成',
-    insertMessage:
-      'command_generation_describe',
+    insertMessage: 'command_generation_describe',
   },
 ];

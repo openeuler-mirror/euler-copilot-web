@@ -18,8 +18,8 @@ const { t } = useI18n();
 const { theme } = storeToRefs(useChangeThemeStore());
 const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo, updateAgreement } = useAccountStore();
-const { getHistorySession} = useHistorySessionStore();
-const { app , appList} = storeToRefs(useSessionStore());
+const { getHistorySession } = useHistorySessionStore();
+const { app, appList } = storeToRefs(useSessionStore());
 const modeOptions = reactive([
   {
     label: t('main.Automatic'),
@@ -60,12 +60,12 @@ const initCopilot = async (): Promise<void> => {
       setPlugins();
     }
     return;
-  }else if(currRoute.value.query.id){
+  } else if (currRoute.value.query.id) {
     app.value = {
-      id:String(currRoute.value.query.id),
-      name:String(currRoute.value.query.name),
-    }
-  }else{
+      id: String(currRoute.value.query.id),
+      name: String(currRoute.value.query.name),
+    };
+  } else {
     console.log('else');
   }
 };

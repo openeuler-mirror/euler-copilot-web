@@ -54,13 +54,7 @@
         </div>
       </div>
     </div>
-    <el-drawer
-      v-model="drawer"
-      title="上传语义接口"
-      :direction="direction"
-      :before-close="handleClose"
-    >
-    </el-drawer>
+    <el-drawer v-model="drawer" title="上传语义接口" :direction="direction" :before-close="handleClose"> </el-drawer>
   </div>
 </template>
 <script setup lang="ts">
@@ -70,21 +64,20 @@ import './style.scss';
 import { reactive, ref } from 'vue';
 const appList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-const drawer = ref(false)
-const direction = ref('rtl')
+const drawer = ref(false);
+const direction = ref('rtl');
 const form = reactive({
   name: '',
-  description: ''
-})
+  description: '',
+});
 
 const openSidebar = () => {
-  drawer.value = true
-}
+  drawer.value = true;
+};
 
-const handleClose = (done) => {
+const handleClose = done => {
   done();
-}
-
+};
 </script>
 <style scoped>
 .container {
