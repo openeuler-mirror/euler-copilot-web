@@ -38,10 +38,10 @@ const handleChangeAppType = (type) => {
         </div>
       </div>
     </div>
-    <div class="createAppContainerMain"  v-if="createAppType === 'appConfig'">
+    <div class="createAppContainerMain"  v-show="createAppType === 'appConfig'">
       <AppConfig />
     </div>
-    <div class="createWorkFlowContainerMain" v-else>
+    <div class="createWorkFlowContainerMain" v-show="createAppType !== 'appConfig'">
       <WorkFlow  />
     </div>
     <div class="createAppContainerFooter">

@@ -10,7 +10,8 @@ import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
-import { IconSearch, IconCaretRight } from '@computing/opendesign-icons';
+import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
+import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -18,6 +19,10 @@ const isCopilotAsideVisible = ref(true);
 const apiSearchValue = ref();
 const activeNames = ref([1]);
 const activeName = ref(1);
+const workFlowItem = ref();
+const isAddWorkFlow = ref(false);
+const editData = ref();
+const dialogType = ref('');
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -27,7 +32,7 @@ function hanleAsideVisible(): void {
   }
 }
 
-const { onInit, onNodeDragStop, onConnect, addEdges, updateNode, getNodes, getEdges, removeNodes } = useVueFlow();
+const { onInit, onConnect, addEdges, updateNode, getNodes, getEdges, findNode, removeNodes } = useVueFlow();
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
@@ -56,12 +61,13 @@ const nodes = ref([
   },
 ]);
 // 开始的边默认为空数组【当然回显时应该有值】
-const edges = ref([] as any);
+const edges = ref([]);
 // 下方为死数据--之后有接口请将其替换为接口
 const nodeStancesList = ref([
   {
     id: '11',
     type: 'custom',
+    mark: 'iiiiii',
     data: {
       label: '知识库(成功节点)',
       desc: '这里是知识库说明',
@@ -71,6 +77,7 @@ const nodeStancesList = ref([
   {
     id: '12',
     type: 'custom',
+    mark: 'iiiiii',
     data: {
       label: 'LLM(失败节点)',
       desc: '调用大模型，生成自然语言报告',
@@ -80,6 +87,7 @@ const nodeStancesList = ref([
   {
     id: '13',
     type: 'custom',
+    mark: 'iiiiii',
     data: {
       label: '条件(正常初始化节点)',
       desc: '条件说明',
@@ -94,20 +102,24 @@ onConnect(e => {
   });
 });
 
-// 这里设置/更新节点状态,更新所有-nodes.value = 新节点列表, edges.value = 新连线列表
-const setNodeStatus = () => {
-  // 通过使用updateNode方法对节点进行更新【包含状态以及位置等】如updateNode('1', { position:{ x: 400, y: 400 } })
-  const curNodeList = getNodes.value;
-  const curEdgeList = getEdges.value;
-  curNodeList.forEach(item => {
-    if (item.id) {
-      updateNode(item.id, {
-        data: { ...item.data, status: 'error' },
-      });
-    }
-  });
-};
 const handleChange = () => {};
+// 打开新增工作流弹窗
+const addWorkFlow = () => {
+  // 待增加新增弹窗
+  dialogType.value = '新增';
+  isAddWorkFlow.value = true;
+};
+// 关闭工作流弹出
+const handleClose = () => {
+  isAddWorkFlow.value = false;
+};
+// 删除节点
+const delNode = (id) => {
+  if (id) {
+    const node = findNode(id);
+    node ? removeNodes(node) : '';
+  }
+}
 </script>
 <template>
   <div class="workFlowContainer" @drop="onDrop">
@@ -173,7 +185,7 @@ const handleChange = () => {};
         <MiniMap />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
-          <CustomNode v-bind="customNodeProps"></CustomNode>
+          <CustomNode v-bind="customNodeProps" @delNode="delNode"></CustomNode>
         </template>
 
         <template #node-custom-start="customNodeStartProps">
@@ -192,19 +204,65 @@ const handleChange = () => {};
         <template #connection-line="props">
           <CustomEdge v-bind="props" />
         </template>
+        <div class="workFlowSelect">
+          <el-select>
+            <el-option></el-option>
+          </el-select>
+        </div>
       </VueFlow>
+      <div class="workFlowSelect">
+        <el-select v-model="workFlowItem" placeholder="请选择" :suffix-icon="IconCaretDown">
+          <template #footer class="selectFooter">
+            <div class="addWorkFlow" @click="addWorkFlow">
+              <el-icon>
+                <IconPlusCircle></IconPlusCircle>
+              </el-icon>
+              <span>新建工作流</span>
+            </div>
+          </template>
+        </el-select>
+      </div>
     </div>
+    <WorkFlowDialog
+      v-if="isAddWorkFlow"
+      :editData="editData"
+      :dialogType="dialogType"
+      @handleClose="handleClose"
+    ></WorkFlowDialog>
   </div>
 </template>
-<style scoped>
+<style lang="scss" scoped>
 .stancesItem {
   width: 264px;
   height: 32px;
   line-height: 32px;
   background-color: var(--o-bash-bg);
-  color: #000;
+  color: var(--o-text-color-primary);
   margin-bottom: 8px;
   padding-left: 16px;
   border-radius: 4px;
+}
+.workFlowContainerRight {
+  position: relative;
+  .workFlowSelect {
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    display: block;
+    width: 180px;
+    height: 32px;
+    .el-select {
+      width: 144px;
+      height: 32px;
+    }
+  }
+}
+.addWorkFlow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  .el-icon {
+    color: var(--o-text-color-tertiary);
+  }
 }
 </style>

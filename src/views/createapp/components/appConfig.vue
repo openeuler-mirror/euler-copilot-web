@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computing/opendesign-icons';
 import DialogueSession from '../../dialogue/components/DialogueSession.vue';
-const activeName = ref([1,2,3]);
+const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const createAppForm = ref({
   icon: '',
@@ -17,6 +17,7 @@ const createAppForm = ref({
   selectedPeople: [],
 });
 const searchName = ref('');
+const imageUrl = ref('')
 const permissionTypeList = [
   {
     label: '公开（所有人可见）',
@@ -69,144 +70,152 @@ const delRecommendItem = idx => {
 const searchPerson = () => {
   curPersonList.value = permissionList.value.filter(item => item.toLowerCase().includes(searchName.value));
 };
+
+const handleAvatarSuccess = (res,file)=>{
+  console.log(res,file)
+}
+
 </script>
 <template>
   <el-form
-        :model="createAppForm"
-        ref="createAppFormRef"
-        label-width="118px"
-        :rules="createAppRole"
-        class="createAppContainerMainLeft"
-      >
-        <el-collapse v-model="activeName" @change="handleChange" class="o-hpc-collapse" :prefix-icon="IconCaretRight">
-          <el-collapse-item title="Consistency" :name="1">
-            <template #title>
-              <span> 基本信息 </span>
-              <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(1) }">
-                <IconCaretRight />
-              </el-icon>
-            </template>
-            <el-form-item label="图标" prop="icon">
-              <div class="uploadArea">
-                <span class="placeIcon"></span>
-                <span class="text">上传图标</span>
-              </div>
-            </el-form-item>
-            <el-form-item label="应用名称" prop="appName">
-              <el-input class="w320" v-model="createAppForm.appName" clearable placeholder="请输入"></el-input>
-            </el-form-item>
+    :model="createAppForm"
+    ref="createAppFormRef"
+    label-width="118px"
+    :rules="createAppRole"
+    class="createAppContainerMainLeft"
+  >
+    <el-collapse v-model="activeName" @change="handleChange" class="o-hpc-collapse" :prefix-icon="IconCaretRight">
+      <el-collapse-item title="Consistency" :name="1">
+        <template #title>
+          <span> 基本信息 </span>
+          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(1) }">
+            <IconCaretRight />
+          </el-icon>
+        </template>
+        <el-form-item label="图标" prop="icon">
+          <div class="uploadArea">
+            <el-upload
+              class="placeIcon avatar-uploader"
+              action="https://jsonplaceholder.typicode.com/posts/"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+            >
+              <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+            <span class="text">上传图标</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="应用名称" prop="appName">
+          <el-input class="w320" v-model="createAppForm.appName" clearable placeholder="请输入"></el-input>
+        </el-form-item>
 
-            <el-form-item label="应用简介" prop="appIntroduction">
-              <el-input
-                class="w320 h80"
-                v-model="createAppForm.appIntroduction"
-                maxlength="150"
-                place
-                clearable
-                type="textarea"
-                show-word-limit
-                placeholder="请输入"
-              ></el-input>
-            </el-form-item>
+        <el-form-item label="应用简介" prop="appIntroduction">
+          <el-input
+            class="w320 h80"
+            v-model="createAppForm.appIntroduction"
+            maxlength="150"
+            place
+            clearable
+            type="textarea"
+            show-word-limit
+            placeholder="请输入"
+          ></el-input>
+        </el-form-item>
 
-            <el-form-item label="相关链接" prop="connectList">
-              <div class="linkLine">
-                <el-button :icon="IconPlusCircle" @click="addLink" :disabled="createAppForm.connectList.length > 4"
-                  >添加链接</el-button
-                >
-                <span class="linkText">最多添加5个链接</span>
-              </div>
-              <div class="linkArea" v-for="(item, index) in createAppForm.connectList">
-                <el-input
-                  class="w320"
-                  v-model="createAppForm.connectList[index]"
-                  placeholder="请输入"
-                  clearable
-                ></el-input>
-                <el-icon class="delIcon" @click="delConnectItem(index)">
-                  <IconDelete />
-                </el-icon>
-              </div>
-            </el-form-item>
+        <el-form-item label="相关链接" prop="connectList">
+          <div class="linkLine">
+            <el-button :icon="IconPlusCircle" @click="addLink" :disabled="createAppForm.connectList.length > 4"
+              >添加链接</el-button
+            >
+            <span class="linkText">最多添加5个链接</span>
+          </div>
+          <div class="linkArea" v-for="(item, index) in createAppForm.connectList">
+            <el-input class="w320" v-model="createAppForm.connectList[index]" placeholder="请输入" clearable></el-input>
+            <el-icon class="delIcon" @click="delConnectItem(index)">
+              <IconDelete />
+            </el-icon>
+          </div>
+        </el-form-item>
 
-            <el-form-item label="推荐问题" prop="recommendQuestionList">
-              <div class="linkLine">
-                <el-button
-                  :icon="IconPlusCircle"
-                  @click="addRecommond"
-                  :disabled="createAppForm.recommendQuestionList.length > 2"
-                  >添加问题</el-button
+        <el-form-item label="推荐问题" prop="recommendQuestionList">
+          <div class="linkLine">
+            <el-button
+              :icon="IconPlusCircle"
+              @click="addRecommond"
+              :disabled="createAppForm.recommendQuestionList.length > 2"
+              >添加问题</el-button
+            >
+            <span class="linkText">最多添加3个问题</span>
+          </div>
+          <div class="linkArea" v-for="(item, index) in createAppForm.recommendQuestionList">
+            <el-input
+              class="w320"
+              v-model="createAppForm.recommendQuestionList[index]"
+              placeholder="请输入"
+              clearable
+            ></el-input>
+            <el-icon class="delIcon" @click="delRecommendItem(index)">
+              <IconDelete />
+            </el-icon>
+          </div>
+        </el-form-item>
+      </el-collapse-item>
+      <el-collapse-item title="Consistency" :name="2">
+        <template #title>
+          <span> 多轮对话 </span>
+          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(2) }">
+            <IconCaretRight />
+          </el-icon>
+        </template>
+        <el-form-item label="请选择对话轮次" prop="multiSession">
+          <div class="multiSessionItem">
+            <el-input-number v-model="createAppForm.multiSession" :step="1" :min="1" :max="10"></el-input-number>
+            <span class="sessionUnit">(1 ~ 10)</span>
+          </div>
+        </el-form-item>
+      </el-collapse-item>
+      <el-collapse-item title="Consistency" :name="3">
+        <template #title>
+          <span> 权限配置 </span>
+          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(3) }">
+            <IconCaretRight />
+          </el-icon>
+        </template>
+        <el-form-item label="权限" prop="permissionType" class="permissionItem">
+          <div class="permissionSelect">
+            <el-radio-group v-model="createAppForm.permissionType">
+              <el-radio v-for="(item, index) in permissionTypeList" :key="index" :value="item.value">{{
+                item.label
+              }}</el-radio>
+            </el-radio-group>
+          </div>
+          <div class="partPermissionPerson" v-if="createAppForm.permissionType === 'part'">
+            <el-input
+              ref="inputRef"
+              v-model="searchName"
+              class="o-style-search w320"
+              placeholder="搜索用户"
+              @input="searchPerson"
+              clearable
+              :prefix-icon="IconSearch"
+            >
+            </el-input>
+            <div class="personList">
+              <el-checkbox-group v-model="createAppForm.selectedPeople">
+                <el-checkbox v-for="(item, index) in curPersonList" :key="index" :label="item">
+                  <span class="circle"></span>{{ item }}</el-checkbox
                 >
-                <span class="linkText">最多添加3个问题</span>
-              </div>
-              <div class="linkArea" v-for="(item, index) in createAppForm.recommendQuestionList">
-                <el-input
-                  class="w320"
-                  v-model="createAppForm.recommendQuestionList[index]"
-                  placeholder="请输入"
-                  clearable
-                ></el-input>
-                <el-icon class="delIcon" @click="delRecommendItem(index)">
-                  <IconDelete />
-                </el-icon>
-              </div>
-            </el-form-item>
-          </el-collapse-item>
-          <el-collapse-item title="Consistency" :name="2">
-            <template #title>
-              <span> 多轮对话 </span>
-              <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(2) }">
-                <IconCaretRight />
-              </el-icon>
-            </template>
-            <el-form-item label="请选择对话轮次" prop="multiSession">
-              <div class="multiSessionItem">
-                <el-input-number v-model="createAppForm.multiSession" :step="1" :min="1" :max="10"></el-input-number>
-                <span class="sessionUnit">(1 ~ 10)</span>
-              </div>
-            </el-form-item>
-          </el-collapse-item>
-          <el-collapse-item title="Consistency" :name="3">
-            <template #title>
-              <span> 权限配置 </span>
-              <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(3) }">
-                <IconCaretRight />
-              </el-icon>
-            </template>
-            <el-form-item label="权限" prop="permissionType" class="permissionItem">
-              <div class="permissionSelect">
-                <el-radio-group v-model="createAppForm.permissionType">
-                  <el-radio v-for="(item, index) in permissionTypeList" :key="index" :value="item.value">{{
-                    item.label
-                  }}</el-radio>
-                </el-radio-group>
-              </div>
-              <div class="partPermissionPerson" v-if="createAppForm.permissionType === 'part'">
-                <el-input
-                  ref="inputRef"
-                  v-model="searchName"
-                  class="o-style-search w320"
-                  placeholder="搜索用户"
-                  @input="searchPerson"
-                  clearable
-                  :prefix-icon="IconSearch"
-                >
-                </el-input>
-                <div class="personList">
-                  <el-checkbox-group v-model="createAppForm.selectedPeople">
-                    <el-checkbox v-for="(item, index) in curPersonList" :key="index" :label="item">
-                      <span class="circle"></span>{{ item }}</el-checkbox
-                    >
-                  </el-checkbox-group>
-                </div>
-              </div>
-            </el-form-item>
-          </el-collapse-item>
-        </el-collapse>
-      </el-form>
-      <div class="createAppContainerMainRight">
-        <DialogueSession :modeOptions="modeOptions" isCreateApp="true" />
-      </div>
+              </el-checkbox-group>
+            </div>
+          </div>
+        </el-form-item>
+      </el-collapse-item>
+    </el-collapse>
+  </el-form>
+  <div class="createAppContainerMainRight">
+    <DialogueSession :modeOptions="modeOptions" isCreateApp="true" />
+  </div>
 </template>
 <style scoped lang="scss">
 .createAppContainerMainLeft {
@@ -243,6 +252,34 @@ const searchPerson = () => {
           border: 1px solid var(--o-text-color-tertiary);
           cursor: pointer;
         }
+
+        .avatar-uploader .el-upload {
+          border: 1px dashed #d9d9d9;
+          border-radius: 6px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+        }
+        .avatar-uploader .el-upload:hover {
+          border-color: #409eff;
+        }
+        .avatar-uploader-icon {
+          font-size: 28px;
+          color: #8c939d;
+          width: 178px;
+          height: 178px;
+          line-height: 178px;
+          text-align: center;
+        }
+        .avatar {
+          width: 178px;
+          height: 178px;
+          display: block;
+        }
+
         .text {
           height: 16px;
           line-height: 16px;
@@ -354,6 +391,4 @@ const searchPerson = () => {
     }
   }
 }
-
- 
 </style>
