@@ -1,0 +1,145 @@
+.createAppContainer{
+  width: 100%;
+  color: var(--o-text-color-secondary);
+  padding: 16px 24px 24px;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  .createAppContainerTop{
+    width: 100%;
+    height: 32px;
+    display: flex;
+    position: relative;
+    align-items: center;
+    .createAppContainerMenu{
+      display: flex;
+      gap: 16px;
+      font-size:12px;
+      .createAppContainerMenuLeft{
+        display: flex;
+        gap: 4px;
+        .createAppContainerMenuCenter{
+          color: #6395fd;
+        }
+        .createAppContainerMenuText{
+          color: var(--o-text-color-primary);
+          font-weight: 500;
+        }
+      }
+      .createAppContainerStatus{
+        width: 52px;
+        height: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        background-color: var(--o-text-color-tertiary);
+        color: var(--o-color-white);
+        font-size: 12px;
+      }
+    }
+    .createAppContainerType {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-200px);
+      display: flex;
+      width: 400px;
+      height: 32px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2px;
+      border-radius: 4px;
+      background-color: var(--o-border-color-base);
+      .createAppBtn {
+        width: 200px;
+        height: 28px;
+        display: flex;
+        font-size: 12px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--o-text-color-primary);
+      }
+    }
+  }
+
+  .createAppContainerMain{
+    min-width: 1200px;
+    margin-top: 16px;
+    padding: 24px 24px 24px 16px;
+    display: flex;
+    gap: 24px;
+    flex: 1;
+    max-height: calc(100% - 112px);
+    background-color: var(--o-bg-color-base);
+    .createAppContainerMainLeft{
+      width: 536px;
+      height: 100%;
+    }
+  }
+
+  .createWorkFlowContainerMain{
+    display: flex;
+    gap: 24px;
+    flex: 1;
+    min-width: 1628px;
+    max-height: calc(100% - 112px);
+    margin-top: 16px;
+  }
+
+  .createAppContainerMainRight {
+    flex: 1;
+    background-image: url('../../assets/images/light_background.png');
+    --o-bg-image: url('../../assets/images/light_background.png');
+    --o-shell-image: url('../../assets/images/light_shell.png');
+    --o-sider: url('../../assets/images/light_sider.png');
+    --o-sider-hover: url('../../assets/images/light_sider-hover.png');
+    --o-button-color: #c3cedf;
+    --o-button-border-color: #d3dce9;
+    --o-button-disable-color: #bfc7d7;
+    --o-button-disable-background: #ebedf3;
+    --o-button-disable-border: #ebedf3;
+    --o-time-text: #dfe5ef;
+    --o-bash-bg: #f4f6fa;
+    .copilot-footer{
+      margin-bottom: 12px;
+    }
+  }
+
+  .createAppContainerMainRight{
+    .dialogue-conversation{
+      display: flex;
+      flex-direction: column;
+    }
+    .createApp-demo{
+      flex: 1;
+    } 
+  }
+  
+  .createAppContainerFooter{
+    margin-top: 16px;
+    height: 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 24px;
+    gap: 16px;
+    border-radius: 8px;
+    background-color: var(--o-bg-color-base);
+    .el-button{
+      border-radius: 4px;
+    }
+  }
+
+  .createAppBtnActive {
+    background-color: var(--o-color-primary) !important;
+    border-color: var(--o-color-primary) !important;
+    color: var(--o-color-white) !important;
+  }
+}
+
+.w320 {
+  width: 320px;
+}

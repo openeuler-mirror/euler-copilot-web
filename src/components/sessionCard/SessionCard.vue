@@ -2,10 +2,13 @@
 import { storeToRefs } from 'pinia';
 import { useHistorySessionStore, useSessionStore, useChangeThemeStore } from 'src/store';
 import type { SessionItem } from './type';
-import { ref } from 'vue';
+import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
+import { ref, onMounted, computed } from 'vue';
 import { dayjs } from 'element-plus';
 import i18n from 'src/i18n';
 import { errorMsg, successMsg } from 'src/components/Message';
+import { api } from 'src/apis';
+import SessionDropDown from './SessionDropDown.vue';
 const { currentSelectedSession, selectedSessionIds } = storeToRefs(useHistorySessionStore());
 const { changeSession, selectSession, getHistorySession, updateSessionTitle } = useHistorySessionStore();
 const { isAnswerGenerating } = storeToRefs(useSessionStore());
@@ -25,6 +28,45 @@ const isResetTitle = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
 
 const themeStore = useChangeThemeStore();
+
+const documentCount = computed(() => {
+  return props.conversation?.docCount || 0;
+});
+
+const iconRef = ref<HTMLInputElement | null>();
+
+const dropdownPosition = ref();
+
+const hoverFiles = ref();
+
+const isFileVisible = ref<boolean>(false);
+
+const isImageVisible = computed(() => {
+  return props.conversation.docCount && props.conversation.docCount > 0 
+});
+
+const handleHover = async () => {
+  // 接口获取列表数据
+  const [_, response] = await api.getUploadFiles(props.conversation.conversation_id, true, false);
+  if (!_ && response) {
+    hoverFiles.value = response.result.documents;
+    hoverFiles.value.sort((pre, cur) => pre.created_at - cur.created_at);
+    isFileVisible.value = true;
+    const rect = iconRef.value?.getBoundingClientRect();
+    dropdownPosition.value = {
+      x: rect?.x,
+      y: rect?.y,
+    };
+  } else {
+  }
+};
+
+const handleLeave = () => {
+  const timeout = setTimeout(() => {
+    isFileVisible.value = false;
+    clearTimeout(timeout);
+  }, 100);
+};
 
 const handleResetName = async (): Promise<void> => {
   isResetTitle.value = true;
@@ -67,28 +109,32 @@ const deleteOne = (name: string, list: string[]) => {
 </script>
 
 <template>
-  <div class="conversation-card" :style="isAnswerGenerating ? 'cursor: not-allowed' : 'cursor: pointer'">
+  <div
+    class="conversation-card"
+    :style="isAnswerGenerating ? 'cursor: not-allowed' : 'cursor: pointer'"
+    @mouseleave="handleLeave"
+  >
     <div class="conversation-card-item">
       <el-checkbox
         class="checkbox"
         v-if="deletion"
         v-model="bool"
-        @change="selectSession(conversation.sessionId)"
-        :checked="select(conversation.sessionId)"
+        @change="selectSession(conversation.conversation_id)"
+        :checked="select(conversation.conversation_id)"
       />
       <div
         class="conversation-card-item__box"
         :class="{
-          'conversation-card-item__box--selected': currentSelectedSession === conversation.sessionId,
+          'conversation-card-item__box--selected': currentSelectedSession === conversation.conversation_id,
         }"
-        @click="changeSession(conversation.sessionId)"
+        @click="changeSession(conversation.conversation_id)"
       >
         <div class="conversation-title">
           <div class="conversation-title__text">
             <input
               ref="inputRef"
               class="conversation-title__text-input"
-              v-if="isResetTitle && currentSelectedSession === conversation.sessionId"
+              v-if="isResetTitle && currentSelectedSession === conversation.conversation_id"
               type="text"
               v-model="inputValue"
               @keyup.enter="confirmChangeTitle(conversation)"
@@ -115,13 +161,13 @@ const deleteOne = (name: string, list: string[]) => {
                 v-if="themeStore.theme === 'dark'"
                 class="conversation-title__svg"
                 src="@/assets/svgs/dark_delete.svg"
-                @click="deleteOne(conversation.title, [conversation.sessionId])"
+                @click="deleteOne(conversation.title, [conversation.conversation_id])"
               />
               <img
                 v-else
                 class="conversation-title__svg"
                 src="@/assets/svgs/light_delete.svg"
-                @click="deleteOne(conversation.title, [conversation.sessionId])"
+                @click="deleteOne(conversation.title, [conversation.conversation_id])"
               />
             </el-tooltip>
           </div>
@@ -138,10 +184,24 @@ const deleteOne = (name: string, list: string[]) => {
             </el-tooltip>
           </div>
         </div>
+        <div class="ducments" v-if="isImageVisible">
+          <div>
+            <img ref="iconRef" @mouseover="handleHover" src="../../assets/svgs/files.svg" alt="" />
+          </div>
+          <div>
+            {{ $t('upload.aside_session_file_count_front') }}<span>{{ documentCount }}</span
+            >{{ $t('upload.aside_session_file_count_back') }}
+          </div>
+        </div>
         <span class="conversation-time">{{ dayjs(conversation.createdTime).format('YYYY-MM-DD HH:mm:ss') }}</span>
       </div>
     </div>
   </div>
+  <session-drop-down
+    :file-list="hoverFiles"
+    :drop-postion="dropdownPosition"
+    :is-file-visible="isFileVisible"
+  ></session-drop-down>
 </template>
 
 <style lang="scss" scoped>
@@ -179,7 +239,6 @@ const deleteOne = (name: string, list: string[]) => {
       // width: 100%;
       width: 202px;
       background-color: var(--o-bg-color-light);
-      height: 66px;
       padding: 0px 5px 12px 15px;
       display: flex;
       justify-content: center;
@@ -245,12 +304,32 @@ const deleteOne = (name: string, list: string[]) => {
 
     .conversation-time {
       font-size: 12px;
-      color: var(--o-text-color-secondary);
+      color: var(--o-text-color-tertiary);
       margin-top: 4px;
     }
   }
 }
-
+.ducments {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  img {
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+    display: inline-block;
+    cursor: pointer;
+  }
+  div {
+    height: 18px;
+    line-height: 18px;
+    color: var(--o-text-color-secondary);
+  }
+  span {
+    margin: 0 4px;
+    color: var(--o-color-primary-secondary);
+  }
+}
 //dialog 顶部样式强制修改
 :deep(.el-dialog) {
   width: 432px;

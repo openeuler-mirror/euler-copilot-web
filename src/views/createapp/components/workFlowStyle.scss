@@ -1,0 +1,139 @@
+.workFlowContainer {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+      overflow: hidden;
+      min-width: 0;
+      width: 0;
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+      width: 312px;
+      min-width: 256px;
+    }
+  }
+
+  @keyframes slideOutToLeft {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+      width: 312px;
+      min-width: 256px;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-100%);
+      min-width: 0;
+      overflow: hidden;
+      width: 0;
+    }
+  }
+
+  .transition-fade-enter-active {
+    animation: slideInFromLeft 0.2s ease-out;
+  }
+
+  .transition-fade-leave-active {
+    animation: slideOutToLeft 0.2s ease-in;
+  }
+
+  .aside-wrapper {
+    position: relative;
+    height: 100%;
+
+    .trapezoid {
+      width: 56px;
+      height: 15px;
+      z-index: 1;
+      background-color: var(--o-bg-color-base);
+      position: absolute;
+      left: calc(100% - 28px);
+      top: 50%;
+      border-top-left-radius: 20px 30px;
+      border-top-right-radius: 20px 30px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      transform: perspective(100px) rotateX(50deg);
+      transform-origin: bottom;
+      overflow: hidden;
+      transform: rotate(90deg);
+      cursor: pointer;
+      &::after {
+        content: '';
+        position: absolute;
+        left: 25%;
+        top: 45%;
+        width: 30px;
+        height: 3px;
+        border-radius: 20px;
+        background-color: #5cafff;
+      }
+    }
+  }
+
+  .copilot-aside {
+    width: 312px;
+    min-width: 256px;
+    background-color: var(--o-bg-color-base);
+    padding: 24px 0px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    height: 100%;
+  }
+
+  .apiCenterBox {
+    .apiCenterTitle {
+      color: var(--o-text-color-primary);
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .apiCenterSearch{
+      margin: 8px 0;
+      .o-style-search {
+        width: 264px;
+        .el-input__wrapper {
+          border-color: var(--o-border-color-lighter);
+          border-radius: 4px;
+        }
+      }
+    }
+
+    .apiContanter{
+      .el-collapse-item__header{
+        padding: 0 !important;
+        height: 28px;
+      }
+    }
+    
+  }
+
+  .workFlowContainerRight {
+    flex: 1;
+    min-width: 1292px;
+    background-color: var(--o-bg-color-base);
+    border-radius: 8px;
+  }
+
+  .vueFlowContainer {
+    width: 100%;
+    height: 100%;
+    .my-diagram-class {
+      flex: 1 !important;
+    }
+  }
+  .vue-flow__minimap {
+    transform-origin: bottom right;
+    background-color: var(--o-bg-color-base);
+  }
+
+  .vue-flow__panel.right {
+    right: unset;
+    left: 0;
+  }
+}

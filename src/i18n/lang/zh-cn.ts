@@ -153,6 +153,33 @@ export default {
     clean_requirement_on_remove_function_in_dnf: "openEuler系统DNF中的clean_requirement_on_remove参数具有什么功能？",
     hunan_tobacco_monopoly_applications_on_openeuler: "湖南省烟草专卖局基于openeuler系统有哪些应用？",
     xsky_applications_on_openeuler: "XSKY星辰天合公司基于openeuler系统有哪些应用？"
+  },
+  upload: {
+    upload_tip_text: "支持上传文件（最多上传10个，总大小限制为64MB）接受pdf、docx、doc、txt、md、xlsx",
+    uploading: "正在上传...",
+    upload_fail: "上传失败",
+    resolving: "正在解析...",
+    resolve_fail: "解析失败",
+    error_type_msg: "上传失败，文件类型不符合要求。",
+    error_size_msg: "上传失败，文件数量或大小超过最大限制。",
+    error_name_msg: "上传失败，存在重名文件。",
+    aside_session_file_count_front: "共",
+    aside_session_file_count_back: "个文档",
+  },
+  apikey:{
+    save_apikey:"此API KEY只展示一次，请复制后妥善保存",
+    no_apikey:"暂无可用的apikey",
+    create_apikey:"新建apikey",
+  },
+  witChainD: {
+    witChainD:"资产库配置",
+    witChainD_id: "资产库id",
+    describe_the_witChainD: "请输入",
+  },
+  flow: {
+    flow_start: "工作流进行中",
+    flow_end: "工作流结束",
+    flow_params_error: "缺少参数",
+    flow_pause: "工作流暂停",
   }
-
 }

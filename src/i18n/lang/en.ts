@@ -153,7 +153,33 @@ export default {
       clean_requirement_on_remove_function_in_dnf: "What is the function of the clean_requirement_on_remove parameter in DNF in openEuler?",  
       hunan_tobacco_monopoly_applications_on_openeuler: "What are the applications of Hunan Tobacco Monopoly based on openEuler?",  
       xsky_applications_on_openeuler: "What are the applications of XSKY based on openEuler?"  
+  },
+  upload: {
+    upload_tip_text: "Maximum 10 files, 64 MB in total. Formats: pdf, docx, doc, txt, md, xlsx",
+    uploading: "Upload...",
+    upload_fail: "Upload failed",
+    resolving: "Parsing...",
+    resolve_fail: "Parsing failed",
+    error_type_msg: "Upload failed, Invalid file type.",
+    error_size_msg: "Upload failed, The number or size of files exceeds the upper limits.",
+    error_name_msg: "Upload failed, Duplicate file names exit.",
+    aside_session_file_count_front: "",
+    aside_session_file_count_back: "files",
+  },
+  apikey: {
+    save_apikey: "This API KEY is only displayed once, please copy and save it properly",
+    no_apikey: "No available API key",
+    create_apikey: "Create new API key",
+  },
+  witChainD: {
+    witChainD: "WitChainD",
+    describe_the_witChainD: "Please enter witChainD id",
+  },
+  flow: {
+    flow_start: "Workflow in progress",
+    flow_end: "Workflow completed",
+    flow_params_error: "Missing parameters",
+    flow_pause: "Workflow paused",
   }
-
-  }
+}
   

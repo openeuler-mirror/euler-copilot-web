@@ -1,7 +1,7 @@
 # euler-copilot-web
 
 #### Description
-The web frontend of EulerCopilot
+openEuler Copilot System前端
 
 #### Software Architecture
 Software architecture description

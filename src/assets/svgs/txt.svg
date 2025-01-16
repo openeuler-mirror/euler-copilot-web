@@ -1,0 +1,27 @@
+<svg width="24.000000" height="24.000000" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip185_28859">
+			<rect id="文档-9" width="24.000000" height="24.000000" fill="white" fill-opacity="0"/>
+		</clipPath>
+		<linearGradient x1="11.999995" y1="-0.000069" x2="11.999995" y2="23.535963" id="paint_linear_185_28861_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#F9B766"/>
+			<stop offset="1.000000" stop-color="#F4840C"/>
+		</linearGradient>
+		<linearGradient x1="15.340234" y1="1.634996" x2="22.000231" y2="8.446170" id="paint_linear_185_28863_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#FFFFFF"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.054902"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.000000"/>
+		</linearGradient>
+	</defs>
+	<g clip-path="url(#clip185_28859)">
+		<rect id="文档" width="24.000000" height="24.000000" fill="#FFFFFF" fill-opacity="0"/>
+		<path id="path5" d="M21.99 6.96L21.99 20.62C21.99 22.48 20.48 23.99 18.62 23.99L5.37 23.99C3.5 23.99 1.99 22.48 1.99 20.62L1.99 3.37C1.99 1.5 3.5 -0.01 5.37 -0.01L14.87 -0.01C15.16 -0.01 15.45 0.11 15.66 0.31L21.66 6.16C21.87 6.37 21.99 6.66 21.99 6.96Z" fill="url(#paint_linear_185_28861_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<g opacity="0.600000">
+			<path id="path6" d="M15.33 0L21.99 6.49L17.58 6.49C16.34 6.49 15.33 5.48 15.33 4.24L15.33 0Z" fill="url(#paint_linear_185_28863_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		</g>
+	</g>
+	<path id="txt" d="M9.05 15.08Q9.56 15.08 9.89 14.86L9.66 14.3Q9.55 14.37 9.43 14.4Q9.28 14.44 9.13 14.44Q8.89 14.44 8.74 14.33Q8.47 14.13 8.47 13.57L8.47 11.43L9.68 11.43L9.68 10.83L8.47 10.83L8.47 9.67L7.79 9.67L7.79 10.83L7.1 10.83L7.1 11.43L7.79 11.43L7.79 13.65Q7.79 14.46 8.19 14.81Q8.5 15.08 9.05 15.08ZM16.06 15.08Q16.58 15.08 16.9 14.86L16.68 14.3Q16.57 14.37 16.44 14.4Q16.3 14.44 16.14 14.44Q15.9 14.44 15.75 14.33Q15.49 14.13 15.49 13.57L15.49 11.43L16.7 11.43L16.7 10.83L15.49 10.83L15.49 9.67L14.81 9.67L14.81 10.83L14.12 10.83L14.12 11.43L14.81 11.43L14.81 13.65Q14.81 14.46 15.21 14.81Q15.52 15.08 16.06 15.08ZM13.07 10.84L11.97 12.38L10.89 10.84L10.05 10.84L11.57 12.94L10.05 15L10.84 15L11.94 13.46L13.02 15L13.85 15L12.34 12.91L13.85 10.84L13.07 10.84Z" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+</svg>

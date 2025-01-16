@@ -124,8 +124,10 @@ export const updateRevision = (
 };
 
 
-function queryAuthUrl() {
-  return get<string>('/api/auth/redirect');
+function queryAuthUrl(action: string) {
+  return get<{
+    url: string;
+  }>('/api/auth/redirect',{action});
 }
 
 export const accountApi = {

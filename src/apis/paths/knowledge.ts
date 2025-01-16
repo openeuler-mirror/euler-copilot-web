@@ -24,7 +24,7 @@ export const getKnowledgeList = (): Promise<
     )
   ]
 > => {
-  return get('/api/knowledge/list');
+  return get('/api/knowledge');
 };
 
 /**
@@ -43,7 +43,7 @@ export const updateKnowledgeList = (params: {
       )
     ]
   > => {
-    return post('/api/knowledge/update', params);
+    return post('/api/knowledge', params);
   };
   
 

@@ -7,9 +7,10 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { get, put, post } from 'src/apis/server';
+import { get, put, post, del } from 'src/apis/server';
 
 import type { FcResponse } from 'src/apis/server';
+import { ConversationRecordList, ConversationList } from './type';
 const BASE_URL = '/api/conversation';
 
 /**
@@ -21,8 +22,8 @@ export const stopGeneration = (): Promise<
     any,
     (
       | FcResponse<{
-        // conversation_id: string;
-      }>
+          // conversation_id: string;
+        }>
       | undefined
     )
   ]
@@ -38,13 +39,7 @@ export const getSessionRecord = (): Promise<
   [
     any,
     (
-      | FcResponse<
-        Array<{
-          conversation_id: string;
-          title: string;
-          created_time: Date;
-        }>
-      >
+      | FcResponse<ConversationList>
       | undefined
     )
   ]
@@ -61,8 +56,8 @@ export const createSession = (): Promise<
     any,
     (
       | FcResponse<{
-        conversation_id: string;
-      }>
+          conversation_id: string;
+        }>
       | undefined
     )
   ]
@@ -79,63 +74,61 @@ export const createSession = (): Promise<
  * @returns
  */
 export const updateSession = (
-  params: { sessionId: string },
-  data: { title: string }
+  params: {
+    conversation_id: string,
+    title: string,
+  },
 ): Promise<
   [
     any,
     (
       | FcResponse<
-        Array<{
-          conversation_id: string;
-        }>
-      >
+          Array<{
+            conversation_id: string;
+          }>
+        >
       | undefined
     )
   ]
 > => {
-  return put(BASE_URL, data, {
-    conversation_id: params.sessionId,
+  return put(BASE_URL, {
+    title: params.title,
+  }, {
+    conversation_id: params.conversation_id,
   });
 };
 
 /**
  * 删除会话
- * @param params
+ * @param data
  * @returns
  */
-export const deleteSession = (params: {
+export const deleteSession = (data: {
   conversation_list: string[];
 }): Promise<[any, FcResponse<Array<{ conversation_list: string[] }>> | undefined]> => {
-  return post(`${BASE_URL}/delete`, params);
+  return del(`${BASE_URL}`, data);
 };
 
 /**
  * 获取会话历史对话记录
- * @param sessionId 会话id
+ * @param conversation_id 
+ * GET /api/record/eccb08c3-0621-4602-a4d2-4eaada892557
  */
 export const getHistoryConversation = (
-  sessionId: string
+  conversation_id: string
 ): Promise<
   [
     any,
     (
-      | FcResponse<
-        Array<{
-          conversation_id: string;
-          record_id: string;
-          question: string;
-          answer: string;
-          created_time: string | Date;
-          is_like?: number | undefined;
-          group_id: string,
-        }>
-      >
+      | FcResponse<ConversationRecordList>
       | undefined
     )
   ]
 > => {
-  return get('/api/record', { conversation_id: sessionId });
+  // return get('/api/record', { conversation_id: conversation_id });
+  return get('/api/record/'+ conversation_id);
+  // 修改 chat 格式
+
 };
 
 /**
@@ -165,13 +158,78 @@ export const getRecognitionMode = (): Promise<
     any,
     (
       | FcResponse<
-        Array<{
-          id: string,
-          plugin_name: string
-        }>>
-      | undefined)]> => {
+          Array<{
+            id: string;
+            name: string;
+            description: string;
+            auth:any;
+          }>
+        >
+      | undefined
+    )
+  ]
+> => {
   return get('/api/plugin');
+};
+
+export enum UploadStatus {
+  UNUSED = 'unused',
+  USED = 'used',
+  UPLOADING = 'uploading',
+  UPLOADFAIL = 'uploadfail',
+  RESOLVEFAIL = 'failed',
+  RESOLVING = 'processing',
 }
+
+export const getUploadFiles = (
+  sessionId: string,
+  used = true,
+  unused = true
+): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          documents: Array<{
+            id: string;
+            name: string;
+            type: string;
+            size: number;
+            status: UploadStatus.USED | UploadStatus.UNUSED | UploadStatus.RESOLVING | UploadStatus.RESOLVEFAIL;
+            created_at: number;
+          }>;
+        }>
+      | undefined
+    )
+  ]
+> => {
+  return get(`/api/document/${sessionId}`, { used, unused });
+};
+
+export const uploadFiles = (
+  formData,
+  sessionId
+): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          documents: Array<any>;
+        }>
+      | undefined
+    )
+  ]
+> => {
+  return post(`/api/document/${sessionId}`, formData, {}, {
+    'Content-Type': 'multipart/form-data',
+  });
+};
+
+export const deleteUploadedFile = (
+  documentId: any
+): Promise<[any, FcResponse<any> | undefined]> => {
+  return del(`/api/document/${documentId}`);
+};
 
 export const sessionApi = {
   createSession,
@@ -182,4 +240,7 @@ export const sessionApi = {
   commentConversation,
   getRecognitionMode,
   stopGeneration: stopGeneration,
+  getUploadFiles,
+  uploadFiles,
+  deleteUploadedFile,
 };

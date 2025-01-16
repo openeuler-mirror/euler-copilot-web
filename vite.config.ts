@@ -13,6 +13,7 @@ import Qiankun from 'vite-plugin-qiankun'
 
 import { resolve } from "path";
 import type { UserConfigExport } from "vite";
+// import babel from '@rollup/plugin-babel';
 
 // https://vitejs.dev/config/
 export default ({ mode }): UserConfigExport => {
@@ -20,8 +21,8 @@ export default ({ mode }): UserConfigExport => {
   const {
     VITE_BASE_URL
   } = env
-
-  const baseUrl = mode === 'micro' ? VITE_BASE_URL : '/'
+  
+  const baseUrl = mode === 'production' ? VITE_BASE_URL : '/'
   return defineConfig({
     base: baseUrl,
     resolve: {
@@ -35,7 +36,7 @@ export default ({ mode }): UserConfigExport => {
     plugins: [
       vue(),
       Qiankun("copilot", {
-        useDevMode: mode === 'micro'
+        useDevMode: mode === 'development'
       })
     ],
     build: {
@@ -44,6 +45,9 @@ export default ({ mode }): UserConfigExport => {
           manualChunks(id) {
             if (/\/opendesign2\/themes\/es\/(.*?)\//.test(id)) {
               return "opendesign2";
+            }
+            if (/\/opendesign-icons\/themes\/es\/(.*?)\//.test(id)) {
+              return "opendesign-icons";
             }
             if (/\/element-plus\/es\/components\/(.*?)\/(.*)\/?style/.test(id)) {
               return "element-plus";
@@ -89,6 +93,12 @@ export default ({ mode }): UserConfigExport => {
           changeOrigin: true,
           ws: false,
           rewrite: (path: string) => path.replace(/^\/stream/, ""),
+        },
+        "/qabot": {
+          target: env.VITE_QABOT_URL,
+          changeOrigin: true,
+          ws: false,
+          rewrite: (path: string) => path.replace(/^\/qabot/, ""),
         },
         "/test": {
           target: env.VITE_BASE_PROXY_URL,

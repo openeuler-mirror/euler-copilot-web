@@ -48,13 +48,48 @@ export interface UserConversationItem {
   belong: UserDialoguePanelType;
   message: string;
   createdAt?: string | Date;
+  params?: any;
 }
+
+// "input_tokens": 200, //prompt的token数量
+// "output_tokens": 50, //大模型生成的token数量
+// "time": 0.5 //运行时间，单位秒，最多2位小数
+export interface Metatype {
+  input_tokens: number;
+  output_tokens: number;
+  time: number;
+}
+
+export interface FlowType {
+  id:number
+  title:string,
+  status:string,
+  data:any,
+  display:boolean,
+  progress:string,
+  flow_id?:string,
+}
+
+export interface FlowDataType {
+  id: string,
+  stauts:string,
+  // title: '',
+  data: any|undefined,
+}
+
+export interface AppShowType {
+  id?: string,
+  name?:string,
+}
+
 
 export interface RobotConversationItem {
   files?:any;
+  flow?:any;
   cid: number;
-  sessionId: string;
+  conversation_id: string;
   recordId: string;
+  extraData?:any;
   belong: RobotDialoguePanelType;
   message: string[];
   messageList:MessageArray;
@@ -64,9 +99,12 @@ export interface RobotConversationItem {
   isSupport?: boolean;
   isAgainst?: boolean;
   createdAt?: string | Date;
-  groupId?:string;
+  groupId:string|undefined;
   search_suggestions?:string[];
   echartsObj?:any,
+  metadata?:undefined | Metatype;
+  flowdata?:FlowType;
+  paramsList?:any;
 }
 
 export interface MessageRecord {
