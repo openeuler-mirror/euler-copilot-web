@@ -10,7 +10,7 @@ import {
   ElCollapseItem,
   ElTooltip,
 } from 'element-plus';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
 import { useHistorySessionStore, useSessionStore } from '@/store';
 import { storeToRefs } from 'pinia';
@@ -18,7 +18,8 @@ import { api } from '@/apis';
 import { useI18n } from 'vue-i18n';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-import { apiKeyApi } from 'srcapis/paths';
+import appIcon from '@/assets/images/app.png'
+import { IconChevronUp } from '@computing/opendesign-icons';
 
 interface HistorySession {
   conversation_id: string;
@@ -223,6 +224,9 @@ const selectApp = id => {
   selectedAppId.value = id;
 };
 function ensureAppAtFirstPosition() {
+  if(!app.value.id){
+    return;
+  }
   const newApp = app.value;
   const index = apps.value.findIndex(app => app.id === newApp.id);
   selectApp(newApp.id);
@@ -255,10 +259,11 @@ watch(
         <div class="collapsible-apps">
           <div class="collapsible-header" @click="toggleCollapse">
             <div class="header-content">
-              <AppWindowIcon :size="20" />
+              <img :src=appIcon />
               <span>我的应用</span>
             </div>
-            <ChevronDownIcon :size="20" :class="{ rotate: !isCollapsed }" />
+            <!-- 标签 icon 丢失 -->
+            <IconChevronUp :size="20" :width="20" :class="{ rotate: !isCollapsed }" />
           </div>
           <transition name="collapse">
             <ul v-if="!isCollapsed" class="app-list">
@@ -415,6 +420,9 @@ watch(
       :deep(svg) {
         color: #3b82f6;
       }
+      img{
+        width: 30px;
+      }
       span {
         font-weight: 600;
         color: #374151;
@@ -434,8 +442,8 @@ watch(
   .app-list {
     list-style-type: none;
     padding: 0;
-    margin: 0;
-
+    margin-top: 8px;
+    color: var(--o-text-color-secondary);
     li {
       height: 32px;
       display: flex;
@@ -456,7 +464,7 @@ watch(
 
       &.selected {
         background: linear-gradient(127.6deg, rgba(109, 117, 250, 0.2) -1.725%, rgba(90, 179, 255, 0.2) 98.22%);
-        color: white;
+        color: var(--o-text-color-primary);
       }
     }
   }

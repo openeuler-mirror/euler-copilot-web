@@ -5,16 +5,21 @@ import { onHtmlEventDispatch } from 'src/utils';
 import { useHistorySessionStore, useSessionStore, useAccountStore, useLangStore } from 'src/store';
 import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
-import Copilot from './Copilot.vue';
 import { useChangeThemeStore } from 'src/store';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
-import { fa } from 'element-plus/es/locale';
 import { ElMessage } from 'element-plus';
-import { apiKeyApi } from 'srcapis/paths';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
-
+import CopilotIcon from '@/assets/images/routerCopilot.png';
+import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
+import ApiIcon from '@/assets/images/routerApi.png';
+import ApiIconSelected from '@/assets/svgs/apiIconSelected.svg';
+import AppIcon from '@/assets/images/routerApp.png';
+import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
+import WitchainDIcon from '@/assets/images/WitchainD.png';
+import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
+import { useRouter } from 'vue-router';
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
 const { logout } = useAccountStore();
@@ -31,12 +36,12 @@ const hidden = ref(false);
 const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
-
+const router = useRouter();
 const routerList = [
-  { name: '对话', path: '/' },
-  { name: '语义中心', path: '/api' },
-  { name: '应用中心', path: '/app' },
-  { name: '工具', path: '/tools' },
+  { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
+  { name: '语义中心', path: '/api' , src:ApiIcon , selectedSrc:ApiIconSelected ,routerName: 'api' },
+  { name: '应用中心', path: '/app' , src:AppIcon , selectedSrc:AppIconSelected ,routerName: 'app' },
+  { name: '工具', path: '/tools' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
 ];
 export interface ModelForm {
   max_tokens?: number;
@@ -184,9 +189,6 @@ watch(
   },
   { deep: true },
 );
-const handleSelect = (val: any) => {
-  console.log(val);
-};
 </script>
 
 <template>
@@ -229,7 +231,10 @@ const handleSelect = (val: any) => {
       <div class="dialogue-menu">
         <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
           <span class="menu-icon">
-            <el-icon class="menu-icon"><img class="create-button__icon" src="@/assets/svgs/robot_icon.svg" /></el-icon>
+            <el-icon class="menu-icon">
+              <img v-if="router.currentRoute.value.name === item.routerName" class="create-button__icon" :src="item.selectedSrc">
+              <img v-else class="create-button__icon" :src="item.src">
+            </el-icon>
           </span>
           <span class="menu-text">{{ item.name }}</span>
         </router-link>
@@ -321,6 +326,7 @@ const handleSelect = (val: any) => {
   display: flex;
   height: calc(100% - 48px);
 }
+//hover active selected 样式待填充
 .dialogue-menu {
   position: relative;
   z-index: 1;
@@ -343,12 +349,21 @@ const handleSelect = (val: any) => {
     cursor: pointer;
     .menu-icon {
       align-items: center;
+      img{
+        //hover颜色待改进
+        width: 40px;
+          &:hover {
+            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+          }
+          &:active {
+            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+          }
+      }
     }
     .menu-text {
       font-style: none;
       display: block;
       font-size: 12px;
-      margin-top: 4px;
       color: var(--o-text-color-primary);
     }
   }

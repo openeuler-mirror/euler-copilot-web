@@ -118,11 +118,4 @@ export const EG_LIST: EgItem[] = [
     title: 'openEuler应用案例',
     insertMessage: 'openEuler_use_cases_describe',
   },
-  {
-    icon: COMMAND_GENNERATION,
-    iconDark: COMMAND_GENNERATION_DARK,
-    key: 'command_generation',
-    title: 'shell命令生成',
-    insertMessage: 'command_generation_describe',
-  },
 ];
