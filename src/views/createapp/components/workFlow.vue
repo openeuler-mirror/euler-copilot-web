@@ -12,6 +12,7 @@ import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
+import EditYamlDia from './workFlowConfig/yamlEditDialog.vue';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -23,6 +24,7 @@ const workFlowItem = ref();
 const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
+const isEditYaml = ref(false);
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -120,6 +122,14 @@ const delNode = id => {
     node ? removeNodes(node) : '';
   }
 };
+// 编辑yaml
+const editYamlDrawer = id => {
+  isEditYaml.value = true;
+};
+// 关闭抽屉
+const closeDrawer = () => {
+  isEditYaml.value = false;
+};
 </script>
 <template>
   <div class="workFlowContainer" @drop="onDrop">
@@ -185,7 +195,7 @@ const delNode = id => {
         <MiniMap />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
-          <CustomNode v-bind="customNodeProps" @delNode="delNode"></CustomNode>
+          <CustomNode v-bind="customNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></CustomNode>
         </template>
 
         <template #node-custom-start="customNodeStartProps">
@@ -230,6 +240,7 @@ const delNode = id => {
       @handleClose="handleClose"
     ></WorkFlowDialog>
   </div>
+  <EditYamlDia v-if="isEditYaml"></EditYamlDia>
 </template>
 <style lang="scss" scoped>
 .stancesItem {
