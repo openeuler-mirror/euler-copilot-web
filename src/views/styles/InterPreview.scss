@@ -48,80 +48,108 @@
           border-radius: 50%;
         }
       }
-      .preMainContent {
+      .preMainContanter {
         width: calc(100% - 166px);
-        padding: 24px;
-        background-color: var(--o-bg-color-base);
-        .preMainContentTitle {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          border-bottom: 1px solid var(--o-time-text);
-          .greetDes {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        .preMainContent {
+          width: 100%;
+          padding: 24px;
+          background-color: var(--o-bg-color-base);
+          .preMainContentTitle {
             display: flex;
-            .greetDesContent {
-              font-size: 24px;
-              font-weight: 700;
-              line-height: 32px;
-              color: var(--o-text-color-primary);
+            flex-direction: column;
+            gap: 8px;
+            border-bottom: 1px solid var(--o-time-text);
+            .greetDes {
+              display: flex;
+              .greetDesContent {
+                font-size: 24px;
+                font-weight: 700;
+                line-height: 32px;
+                color: var(--o-text-color-primary);
+              }
+              .greetDesAppName {
+                color: #6c77fa;
+              }
             }
-            .greetDesAppName {
-              color: #6c77fa;
+            .preAppUser {
+              display: flex;
+              gap: 16px;
+              margin-bottom: 8px;
             }
           }
-          .preAppUser {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 8px;
-          }
-        }
-        .preMainContentDes {
-          font-size: 16px;
-          line-height: 24px;
-          margin-top: 8px;
-          margin-bottom: 20px;
-        }
-        .preMainContentLink {
-          .contentLinkTitle {
-            color: var(--o-text-color-primary);
+          .preMainContentDes {
             font-size: 16px;
             line-height: 24px;
+            margin-top: 8px;
+            margin-bottom: 20px;
           }
-          .linkBadge {
-            .el-badge__content {
-              right: calc(-10px + var(--el-badge-size) / 2);
-              top: 4px;
+          .preMainContentLink {
+            .contentLinkTitle {
+              color: var(--o-text-color-primary);
+              font-size: 16px;
+              line-height: 24px;
+            }
+            .linkBadge {
+              .el-badge__content {
+                right: calc(-10px + var(--el-badge-size) / 2);
+                top: 4px;
+              }
+            }
+
+            .connectBox {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 8px;
+              .connectCard {
+                display: flex;
+                height: 32px;
+                align-items: center;
+                background: rgba(99, 149, 253, 0.1);
+                padding: 0 8px 0 4px;
+                border-radius: 20px;
+                gap: 6px;
+                .connectBoxIndex {
+                  width: 24px;
+                  height: 24px;
+                  border-radius: 50%;
+                  text-align: center;
+                  line-height: 24px;
+                  font-size: 14px;
+                  color: var(--o-text-color-primary);
+                  background: var(--o-bg-color-base);
+                }
+                .connectBoxContent {
+                  color: #6395fd;
+                  font-size: 14px;
+                  cursor: pointer;
+                  font-weight: 400;
+                }
+              }
             }
           }
+        }
+        .preFooter {
+          width: 100%;
+          display: flex;
+          gap: 8px;
+          height: 32px;
+          align-items: center;
+          .preFooterTitle {
+            font-size: 12px;
+            line-height: 14px;
+            color: var(--o-text-color-secondary);
+          }
 
-          .connectBox {
+          .preFooterContent {
             display: flex;
-            flex-wrap: wrap;
             gap: 8px;
-            .connectCard {
-              display: flex;
-              height: 32px;
-              align-items: center;
-              background: rgba(99, 149, 253, 0.1);
-              padding: 0 8px 0 4px;
-              border-radius: 20px;
-              gap: 6px;
-              .connectBoxIndex {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                text-align: center;
-                line-height: 24px;
-                font-size: 14px;
-                color: var(--o-text-color-primary);
-                background: var(--o-bg-color-base);
-              }
-              .connectBoxContent {
-                color: #6395fd;
-                font-size: 14px;
-                cursor: pointer;
-                font-weight: 400;
-              }
+            .preFooterContentQues {
+              border-radius: 8px;
+              padding: 8px 16px;
+              background-color: var(--o-bg-color-base);
             }
           }
         }

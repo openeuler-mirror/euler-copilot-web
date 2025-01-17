@@ -56,7 +56,7 @@ const addLink = () => {
   createAppForm.value.connectList.push('');
 };
 const addRecommond = () => {
-  createAppForm.value.recommendQuestionList.unshift('');
+  createAppForm.value.recommendQuestionList.push('');
 };
 const delConnectItem = idx => {
   createAppForm.value.connectList.splice(idx, 1);
