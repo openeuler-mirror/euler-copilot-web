@@ -12,7 +12,6 @@ import CustomControl from './CustomControl.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
-import { useRunProcess } from './workFlowConfig/useRunProcess';
 import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 const { t } = useI18n();
@@ -26,7 +25,6 @@ const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
 const flowZoom = ref(1);
-const cancelOnError = ref(true);
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -38,8 +36,7 @@ function hanleAsideVisible(): void {
 
 const { onConnect, addEdges, getNodes, getEdges, findNode, removeNodes, setViewport, getViewport, fitView } =
   useVueFlow();
-const { graph, layout } = useLayout();
-const { run, stop, reset, isRunning } = useRunProcess({ graph, cancelOnError: cancelOnError.value });
+const {  layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
@@ -142,9 +139,6 @@ const handleZommOnScroll = () => {
 };
 
 async function layoutGraph(direction) {
-  await stop();
-
-  reset(nodes.value);
 
   nodes.value = layout(nodes.value, edges.value, direction);
 
