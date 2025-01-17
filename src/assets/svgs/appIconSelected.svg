@@ -1,0 +1,18 @@
+<svg width="40.000000" height="40.000000" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip776_9743">
+			<rect id="应用_选中" width="40.000000" height="40.000000" fill="white" fill-opacity="0"/>
+		</clipPath>
+		<linearGradient x1="9.600002" y1="13.734892" x2="29.639996" y2="31.386084" id="paint_linear_776_9751_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#6D75FA"/>
+			<stop offset="1.000000" stop-color="#5AB3FF"/>
+		</linearGradient>
+	</defs>
+	<g clip-path="url(#clip776_9743)">
+		<path id="矢量 380" d="M28.83 13.43L21.19 8.93C20.45 8.5 19.54 8.5 18.8 8.93L11.16 13.43C10.44 13.85 10 14.62 10 15.46L10 24.53C10 25.36 10.44 26.14 11.16 26.56L18.8 31.06C19.54 31.49 20.45 31.49 21.19 31.06L28.83 26.56C29.55 26.14 30 25.36 30 24.53L30 15.46C30 14.62 29.55 13.85 28.83 13.43ZM14.79 16.74C14.96 16.46 15.32 16.38 15.6 16.55L19.99 19.3L24.39 16.55C24.66 16.38 25.02 16.46 25.2 16.74C25.37 17.02 25.29 17.37 25.01 17.55L20.58 20.32L20.58 25.29C20.58 25.62 20.33 25.87 20 25.88C19.67 25.88 19.41 25.62 19.41 25.29L19.4 20.32L14.98 17.55C14.7 17.37 14.62 17.02 14.79 16.74Z" fill="url(#paint_linear_776_9751_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<path id="矢量 380" d="" fill="#7AA5FF" fill-opacity="0" fill-rule="evenodd"/>
+	</g>
+</svg>
