@@ -158,7 +158,7 @@ const routerToAppCenter = () => {
     width: 492px;
     height: auto;
     box-shadow: 0px 5.18px 20.72px 0px rgba(221,225,240,0.5);
-    background: linear-gradient(180.00deg,rgb(207, 215, 224),rgb(195,227,255) 33.232%,rgb(246, 246, 248)85.699%);
+    background: linear-gradient(270.00deg,rgb(227, 242, 255),rgb(195,227,255) 33.232%,rgb(197, 203, 249)85.699%);
     // opacity: 0.5;
     border-radius: 8px;
     background-size: 100% 100%;
@@ -278,18 +278,21 @@ const routerToAppCenter = () => {
         padding: 10px;
       }
 
+      &:hover {
+        box-shadow: 0 5.18px 20.72px 0 rgba(221, 225, 240, 0.5);
+        background: linear-gradient(270.00deg,rgb(229, 239, 248),rgb(199,227,250)24.366%,rgba(175, 205, 242) 57.543%,rgb(152,162,247)96.781%);
+      }
+
       img {
         width: 37px;
         height: 37px;
-        // align-self: baseline;
-        margin-right: 6px;
+        margin: 0 6px 0 8px;
       }
 
       &__text {
         width: 100%;
         display: flex;
         flex-direction: column;
-        // margin-left: -12px;
         font-size: 16px;
         font-weight: 700;
         color: var(--o-text-color-primary);
