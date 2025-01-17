@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import './workFlowStyle.scss';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip } from 'element-plus';
 import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
@@ -8,11 +8,13 @@ import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
+import CustomControl from './CustomControl.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
+import { useRunProcess } from './workFlowConfig/useRunProcess';
+import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
-
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
 const isCopilotAsideVisible = ref(true);
@@ -23,6 +25,8 @@ const workFlowItem = ref();
 const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
+const flowZoom = ref(1);
+const cancelOnError = ref(true);
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -32,7 +36,10 @@ function hanleAsideVisible(): void {
   }
 }
 
-const { onInit, onConnect, addEdges, updateNode, getNodes, getEdges, findNode, removeNodes } = useVueFlow();
+const { onConnect, addEdges, getNodes, getEdges, findNode, removeNodes, setViewport, getViewport, fitView } =
+  useVueFlow();
+const { graph, layout } = useLayout();
+const { run, stop, reset, isRunning } = useRunProcess({ graph, cancelOnError: cancelOnError.value });
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
@@ -50,6 +57,17 @@ const nodes = ref([
   },
   {
     id: '2',
+    type: 'custom-end',
+    data: {
+      label: '结束',
+      desc: '',
+      nodePosition: 'Left',
+      target: 'target',
+    },
+    position: { x: 600, y: 160 },
+  },
+  {
+    id: '3',
     type: 'custom-end',
     data: {
       label: '结束',
@@ -95,6 +113,14 @@ const nodeStancesList = ref([
   },
 ]);
 
+const handleChangeZoom = zoomValue => {
+  setViewport({
+    zoom: zoomValue,
+    x: 0,
+    y: 0,
+  });
+};
+
 onConnect(e => {
   addEdges({
     ...e,
@@ -120,6 +146,23 @@ const delNode = id => {
     node ? removeNodes(node) : '';
   }
 };
+
+const handleZommOnScroll = () => {
+  const zoomObj = getViewport();
+  flowZoom.value = Number(zoomObj.zoom.toFixed(1));
+};
+
+async function layoutGraph(direction) {
+  await stop();
+
+  reset(nodes.value);
+
+  nodes.value = layout(nodes.value, edges.value, direction);
+
+  nextTick(() => {
+    fitView();
+  });
+}
 </script>
 <template>
   <div class="workFlowContainer" @drop="onDrop">
@@ -180,9 +223,11 @@ const delNode = id => {
         class="my-diagram-class"
         @dragover="onDragOver"
         @dragleave="onDragLeave"
+        @paneScroll="handleZommOnScroll"
       >
         <Background pattern-color="#aaa" :gap="8" />
-        <MiniMap />
+        <MiniMap :width="220" mask-color="#f4f6fa" :mask-stroke-width="250" />
+        <CustomControl :handleChangeZoom="handleChangeZoom" :flowZoom="flowZoom" :layoutGraph="layoutGraph" />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
           <CustomNode v-bind="customNodeProps" @delNode="delNode"></CustomNode>
