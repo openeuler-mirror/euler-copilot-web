@@ -240,7 +240,7 @@ const closeDrawer = () => {
       @handleClose="handleClose"
     ></WorkFlowDialog>
   </div>
-  <EditYamlDrawer v-if="isEditYaml"></EditYamlDrawer>
+  <EditYamlDrawer v-if="isEditYaml"  @closeDrawer="closeDrawer"></EditYamlDrawer>
 </template>
 <style lang="scss" scoped>
 .stancesItem {

@@ -6,6 +6,7 @@
       :wrapperClosable="false"
       :modal="true"
       class="flowDrawer"
+      :before-close="closeDrawer"
     >
       <template #header>
         <div class="drawerHeader">步骤配置-LLM</div>
