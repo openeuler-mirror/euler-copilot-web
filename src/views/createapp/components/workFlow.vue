@@ -12,7 +12,7 @@ import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
-import EditYamlDia from './workFlowConfig/yamlEditDialog.vue';
+import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -240,7 +240,7 @@ const closeDrawer = () => {
       @handleClose="handleClose"
     ></WorkFlowDialog>
   </div>
-  <EditYamlDia v-if="isEditYaml"></EditYamlDia>
+  <EditYamlDrawer v-if="isEditYaml"></EditYamlDrawer>
 </template>
 <style lang="scss" scoped>
 .stancesItem {

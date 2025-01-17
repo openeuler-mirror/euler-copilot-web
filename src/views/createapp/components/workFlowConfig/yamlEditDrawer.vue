@@ -2,7 +2,6 @@
   <div class="configYaml">
     <el-drawer
       v-model="visible"
-      :direction="direction"
       :show-close="false"
       :wrapperClosable="false"
       :modal="true"
