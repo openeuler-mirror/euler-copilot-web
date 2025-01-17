@@ -65,18 +65,7 @@ const nodes = ref([
       target: 'target',
     },
     position: { x: 600, y: 160 },
-  },
-  {
-    id: '3',
-    type: 'custom-end',
-    data: {
-      label: '结束',
-      desc: '',
-      nodePosition: 'Left',
-      target: 'target',
-    },
-    position: { x: 600, y: 160 },
-  },
+  } 
 ]);
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
