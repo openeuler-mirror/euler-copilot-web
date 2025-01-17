@@ -830,20 +830,8 @@ const handlePauseAndReGenerate = (cid?: number) => {
             {{ $t('feedback.stop') }}
           </div>
         </div>
-        <div class="problem" v-if="conversationList.length === 0 && !isCreateApp">
-          <ul>
-            <li v-for="item in filterQuestions" :key="item.id" @click="selectQuestion">
-              {{ $t('question.' + item.question) }}
-            </li>
-          </ul>
-          <div class="change-button" @click="changeProblem">
-            <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/light_change.svg" alt="" />
-            <img v-else src="@/assets/svgs/dark_change.svg" alt="" />
-            <span>{{ $t('main.refresh') }}</span>
-          </div>
-        </div>
         <!-- 识别方式 -->
-        <div class="recognitionMode" v-if="!isCreateApp">
+        <!-- <div class="recognitionMode" v-if="!isCreateApp">
           <el-select
             class="mode-select"
             v-model="selectMode"
@@ -862,7 +850,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
               :disabled="item.disabled"
             />
           </el-select>
-        </div>
+        </div> -->
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
           <div class="dialogue-conversation-bottom-sendbox">
