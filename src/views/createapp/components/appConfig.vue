@@ -102,7 +102,8 @@ const httpRequest = res => {
               :http-request="httpRequest"
             >
               <img v-if="createAppForm.icon.length" :src="createAppForm.icon" class="avatar" />
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+              <div v-else class="defaultIcon"></div>
+              <div class="uploadIcon"></div>
             </el-upload>
             <span class="text">上传图标</span>
           </div>
