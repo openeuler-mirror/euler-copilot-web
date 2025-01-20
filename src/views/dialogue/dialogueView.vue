@@ -18,7 +18,7 @@ import ApiIconSelected from '@/assets/svgs/apiIconSelected.svg';
 import AppIcon from '@/assets/images/routerApp.png';
 import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
 import WitchainDIcon from '@/assets/images/witchainD.png';
-import WitchainDIconSelected from '@/assets/svgs/witchainDSelected.svg';
+import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import { useRouter } from 'vue-router';
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
