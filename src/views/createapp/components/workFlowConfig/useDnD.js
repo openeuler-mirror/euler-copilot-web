@@ -78,7 +78,7 @@ export default function useDragAndDrop() {
    *
    * @param {DragEvent} event
    */
-  function onDrop(event, createNodeType) {
+  function onDrop(event) {
     const position = screenToFlowCoordinate({
       x: event.clientX,
       y: event.clientY,
@@ -101,24 +101,13 @@ export default function useDragAndDrop() {
      */
     const { off } = onNodesInitialized(() => {
       const vueFlowContainer = document.querySelector('.my-diagram-class');
-      updateNode(nodeId, node => {
-        let position = {};
-        if (createNodeType === 'click') {
-          position = {
-            x: vueFlowContainer.getBoundingClientRect().width / 4 + node.position.x,
-            y: vueFlowContainer.getBoundingClientRect().height / 4 + node.position.y,
-          };
-        } else {
-          position = {
+      updateNode(nodeId, node => ({
+        
+          position: {
             x: node.position.x - node.dimensions.width / 2,
             y: node.position.y - node.dimensions.height / 2,
-          };
-        }
-
-        return {
-          position,
-        };
-      });
+          }
+      }));
 
       off();
     });

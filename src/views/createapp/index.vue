@@ -5,9 +5,14 @@ import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
+const publishValidate = ref(true);
 const createAppType = ref('appConfig');
 const handleChangeAppType = type => {
   createAppType.value = type;
+};
+// 获取工作流组件中的节点连接状态校验
+const validateConnect = valid => {
+  publishValidate.value = !valid;
 };
 </script>
 <template>
@@ -42,13 +47,13 @@ const handleChangeAppType = type => {
       <AppConfig />
     </div>
     <div class="createWorkFlowContainerMain" v-show="createAppType !== 'appConfig'">
-      <WorkFlow />
+      <WorkFlow @validateConnect="validateConnect" />
     </div>
     <div class="createAppContainerFooter">
       <el-button>取消</el-button>
       <el-button>保存</el-button>
       <el-button>预览</el-button>
-      <el-button type="primary">发布</el-button>
+      <el-button type="primary" :disabled="publishValidate">发布</el-button>
     </div>
   </div>
 </template>

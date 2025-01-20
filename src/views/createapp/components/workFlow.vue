@@ -28,6 +28,8 @@ const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
 const flowZoom = ref(1);
+const isNodeAndLineConnect = ref(false);
+const emits = defineEmits(['validateConnect']);
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -39,7 +41,7 @@ function hanleAsideVisible(): void {
 
 const { onConnect, addEdges, getNodes, getEdges, findNode, removeNodes, setViewport, getViewport, fitView } =
   useVueFlow();
-const {  layout } = useLayout();
+const { layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
@@ -65,7 +67,7 @@ const nodes = ref([
       target: 'target',
     },
     position: { x: 600, y: 160 },
-  } 
+  },
 ]);
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
@@ -115,8 +117,9 @@ onConnect(e => {
     ...e,
     type: 'custom',
   });
+  // 添加边连接时-判断节点是否都连接
+  nodeAndLineConnection();
 });
-
 const handleChange = () => {};
 // 打开新增工作流弹窗
 const addWorkFlow = () => {
@@ -133,6 +136,8 @@ const delNode = id => {
   if (id) {
     const node = findNode(id);
     node ? removeNodes(node) : '';
+    // 删除节点时-判断节点是否都连接
+    nodeAndLineConnection();
   }
 };
 // 编辑yaml
@@ -150,16 +155,52 @@ const handleZommOnScroll = () => {
 };
 
 async function layoutGraph(direction) {
-
   nodes.value = layout(nodes.value, edges.value, direction);
 
   nextTick(() => {
     fitView();
   });
 }
+
+const nodeAndLineConnection = () => {
+  // 获取当前所有节点和边
+  const curNodes = [...getNodes.value];
+  const curEdges = [...getEdges.value];
+  // 判断开始节点是否连接
+  let isNodeConnect = true;
+  const len = curNodes.length;
+  // 遍历每个节点
+  for (let i = 0; i < len; i++) {
+    if (curNodes[i].type === 'custom-start') {
+      // 判断开始节点是否连接
+      isNodeConnect = curEdges.some(item => item.sourceNode?.type === 'custom-start');
+    } else if (curNodes[i].type === 'custom-end') {
+      // 判断结束节点是否连接
+      isNodeConnect = curEdges.some(item => item.targetNode?.type === 'custom-end');
+    } else {
+      // 判断普通节点是否有连接-普通节点开始和结束都需要进行判断
+      const isStartCustomNodeConnect = curEdges.some(item => item.sourceNode?.id === curNodes[i].id);
+      const isEndCustomNodeConnect = curEdges.some(item => item.targetNode?.id === curNodes[i].id);
+      isNodeConnect = isStartCustomNodeConnect && isEndCustomNodeConnect;
+    }
+    if (!isNodeConnect) {
+      break;
+    }
+  }
+  // 是否所有节点都已连接
+  isNodeAndLineConnect.value = isNodeConnect;
+  emits('validateConnect', isNodeAndLineConnect.value);
+};
+
+// 拖拽添加
+const dropFunc = e => {
+  onDrop(e);
+  // 添加节点时-判断节点是否都连接
+  nodeAndLineConnection();
+};
 </script>
 <template>
-  <div class="workFlowContainer" @drop="onDrop">
+  <div class="workFlowContainer" @drop="dropFunc">
     <aside class="aside-wrapper" ref="copilotAside">
       <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
         <div class="trapezoid" @click="hanleAsideVisible" />
@@ -269,7 +310,7 @@ async function layoutGraph(direction) {
       @handleClose="handleClose"
     ></WorkFlowDialog>
   </div>
-  <EditYamlDrawer v-if="isEditYaml"  @closeDrawer="closeDrawer"></EditYamlDrawer>
+  <EditYamlDrawer v-if="isEditYaml" @closeDrawer="closeDrawer"></EditYamlDrawer>
 </template>
 <style lang="scss" scoped>
 .stancesItem {
