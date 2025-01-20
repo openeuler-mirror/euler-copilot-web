@@ -2,8 +2,7 @@ FROM node:18.18.2-alpine
 WORKDIR /opt/eulerCopilot-web
 
 COPY . .
-RUN sed -i 's/qa-robot-openeuler/euler-copilot-master/g' .env && \
-    npm install pnpm -g --registry=https://registry.npmmirror.com && \
+RUN npm install pnpm -g --registry=https://registry.npmmirror.com && \
     pnpm install --registry=https://registry.npmmirror.com && \
     pnpm run build
 
