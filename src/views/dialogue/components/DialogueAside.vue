@@ -20,6 +20,7 @@ import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import appIcon from '@/assets/images/app.png'
 import { IconChevronUp } from '@computing/opendesign-icons';
+import { onMounted } from 'vue';
 
 interface HistorySession {
   conversation_id: string;
@@ -48,11 +49,11 @@ const isCollapsed = ref(false);
 const selectedAppId = ref(null);
 //
 const apps = ref([
-  { id: 1, name: '应用 1' },
-  { id: 2, name: '应用 2' },
-  { id: 3, name: '应用 3' },
-  { id: 4, name: '应用 4' },
-  { id: 5, name: '应用 5' },
+  { appId: "1", name: '应用 1' },
+  { appId: "2", name: '应用 2' },
+  { appId: "3", name: '应用 3' },
+  { appId: "4", name: '应用 4' },
+  { appId: "5", name: '应用 5' },
 ]);
 
 const filteredHistorySessions = computed(() => {
@@ -237,6 +238,17 @@ function ensureAppAtFirstPosition() {
     apps.value.unshift(newApp);
   }
 }
+
+onMounted(async() => {
+  //获取 top5 list 
+  const [_, res] = await api.getTopFiveApp(5);
+  if(_ && res){
+    appList.value = res.result.applications;
+  }
+  else {
+    appList.value = apps.value;
+  }
+});
 
 watch(
   () => app,

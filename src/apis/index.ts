@@ -7,7 +7,7 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { accountApi, sessionApi, externalApi, apiKeyApi, knowledgeApi } from './paths';
+import { accountApi, sessionApi, externalApi, apiKeyApi, knowledgeApi, appApi, apiApi } from './paths';
 
 export const api = {
   ...accountApi,
@@ -15,4 +15,6 @@ export const api = {
   ...externalApi,
   ...apiKeyApi,
   ...knowledgeApi,
+  ...appApi,
+  ...apiApi
 };

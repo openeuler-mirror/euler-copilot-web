@@ -23,6 +23,7 @@ import i18n from 'src/i18n';
 import { ElMessageBox } from 'element-plus';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { storeToRefs } from 'pinia';
+import { Application } from 'src/apis/paths/type';
 
 const STREAM_URL = '/api/chat';
 let controller = new AbortController();
@@ -70,7 +71,7 @@ export const useSessionStore = defineStore('conversation', () => {
   // 会话列表
   const conversationList = ref<ConversationItem[]>([]);
   const app = ref<AppShowType>({});
-  const appList = ref([]);
+  const appList = ref<Application[]>();
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
   /**

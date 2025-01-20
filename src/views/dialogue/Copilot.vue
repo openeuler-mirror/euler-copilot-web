@@ -106,12 +106,16 @@ const handleSubmit = async () => {
   dialogVisible.value = false;
 };
 
-onMounted(() => {
+onMounted(async() => {
   window.scrollTo({
     top: 0,
     left: 0,
   });
-  //获取 top5 list
+  //获取 top5 list 
+  const [_, res] = await api.getTopFiveApp(5);
+  if(_ && res){
+    appList.value = res.result.applications;
+  }
 });
 
 watch(

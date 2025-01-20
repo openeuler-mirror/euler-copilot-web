@@ -87,3 +87,40 @@ export interface ConversationListItem {
 export interface ConversationList {
     conversations: Array<ConversationListItem>;
 }
+
+/*
+ * 应用数据结构
+ */
+export interface Application {
+    appId: string,
+    name: string,
+}
+
+/*
+ * 语意接口数据结构
+ */
+export interface ApiMessage {
+    apiId: string,
+    name: string,
+    type: string,
+    path: string,
+    description: string,
+}
+
+
+/*
+ * 语意接口数据结构
+ */
+export interface Service {
+    serviceId: string,
+    name: string,
+    icon: string,
+    author: string,
+    description: string,
+    favorite: boolean,
+}
+
+
+
+
+
