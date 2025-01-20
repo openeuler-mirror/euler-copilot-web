@@ -14,6 +14,8 @@ import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
+import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
+
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
 const isCopilotAsideVisible = ref(true);
@@ -24,6 +26,7 @@ const workFlowItem = ref();
 const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
+const isEditYaml = ref(false);
 const flowZoom = ref(1);
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
@@ -132,6 +135,14 @@ const delNode = id => {
     node ? removeNodes(node) : '';
   }
 };
+// 编辑yaml
+const editYamlDrawer = id => {
+  isEditYaml.value = true;
+};
+// 关闭抽屉
+const closeDrawer = () => {
+  isEditYaml.value = false;
+};
 
 const handleZommOnScroll = () => {
   const zoomObj = getViewport();
@@ -213,7 +224,7 @@ async function layoutGraph(direction) {
         <CustomControl :handleChangeZoom="handleChangeZoom" :flowZoom="flowZoom" :layoutGraph="layoutGraph" />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
-          <CustomNode v-bind="customNodeProps" @delNode="delNode"></CustomNode>
+          <CustomNode v-bind="customNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></CustomNode>
         </template>
 
         <template #node-custom-start="customNodeStartProps">
@@ -258,6 +269,7 @@ async function layoutGraph(direction) {
       @handleClose="handleClose"
     ></WorkFlowDialog>
   </div>
+  <EditYamlDrawer v-if="isEditYaml"  @closeDrawer="closeDrawer"></EditYamlDrawer>
 </template>
 <style lang="scss" scoped>
 .stancesItem {

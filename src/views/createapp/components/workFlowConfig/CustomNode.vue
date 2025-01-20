@@ -23,7 +23,7 @@ const props = defineProps({
     required: false,
   },
 });
-const emits = defineEmits(['delNode']);
+const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
 const statusList = ref(['waiting', 'success', 'error', 'default']);
 
@@ -45,6 +45,11 @@ watch(
 const delNode = id => {
   emits('delNode', id);
 };
+
+// 编辑yaml
+const editYaml = id => {
+  emits('editYamlDrawer', id);
+};
 </script>
 
 <template>
@@ -58,7 +63,7 @@ const delNode = id => {
         <div class="moreTip">
           <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
-            <el-button text class="dealItem" disabled>编辑</el-button>
+            <el-button text class="dealItem" @click="editYaml(props.id)">编辑</el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
           </el-popover>
         </div>
