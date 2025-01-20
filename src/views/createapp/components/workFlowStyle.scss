@@ -129,6 +129,20 @@
   .vue-flow__minimap {
     transform-origin: bottom right;
     background-color: var(--o-bg-color-base);
+    bottom: 57px;
+    margin-left: 24px;
+    border-radius: 8px;
+    width: 144px;
+    height: 96px;
+    svg {
+      width: 144px;
+      height: 96px;
+      border-radius: 8px;
+      path {
+        padding: 10px;
+        height: 100px !important;
+      }
+    }
   }
 
   .vue-flow__panel.right {

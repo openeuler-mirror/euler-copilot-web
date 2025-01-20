@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import './workFlowStyle.scss';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip } from 'element-plus';
 import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
@@ -8,9 +8,11 @@ import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
+import CustomControl from './CustomControl.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
+import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 
@@ -25,6 +27,7 @@ const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
+const flowZoom = ref(1);
 function hanleAsideVisible(): void {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -34,7 +37,9 @@ function hanleAsideVisible(): void {
   }
 }
 
-const { onInit, onConnect, addEdges, updateNode, getNodes, getEdges, findNode, removeNodes } = useVueFlow();
+const { onConnect, addEdges, getNodes, getEdges, findNode, removeNodes, setViewport, getViewport, fitView } =
+  useVueFlow();
+const {  layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
@@ -60,7 +65,7 @@ const nodes = ref([
       target: 'target',
     },
     position: { x: 600, y: 160 },
-  },
+  } 
 ]);
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
@@ -97,6 +102,14 @@ const nodeStancesList = ref([
   },
 ]);
 
+const handleChangeZoom = zoomValue => {
+  setViewport({
+    zoom: zoomValue,
+    x: 0,
+    y: 0,
+  });
+};
+
 onConnect(e => {
   addEdges({
     ...e,
@@ -130,6 +143,20 @@ const editYamlDrawer = id => {
 const closeDrawer = () => {
   isEditYaml.value = false;
 };
+
+const handleZommOnScroll = () => {
+  const zoomObj = getViewport();
+  flowZoom.value = Number(zoomObj.zoom.toFixed(1));
+};
+
+async function layoutGraph(direction) {
+
+  nodes.value = layout(nodes.value, edges.value, direction);
+
+  nextTick(() => {
+    fitView();
+  });
+}
 </script>
 <template>
   <div class="workFlowContainer" @drop="onDrop">
@@ -190,9 +217,11 @@ const closeDrawer = () => {
         class="my-diagram-class"
         @dragover="onDragOver"
         @dragleave="onDragLeave"
+        @paneScroll="handleZommOnScroll"
       >
         <Background pattern-color="#aaa" :gap="8" />
-        <MiniMap />
+        <MiniMap :width="220" mask-color="#f4f6fa" :mask-stroke-width="250" />
+        <CustomControl :handleChangeZoom="handleChangeZoom" :flowZoom="flowZoom" :layoutGraph="layoutGraph" />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
           <CustomNode v-bind="customNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></CustomNode>
