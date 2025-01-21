@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import './workFlowStyle.scss';
-import { nextTick, ref } from 'vue';
+import '../../styles/workFlowArrange.scss';
+import { nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip } from 'element-plus';
 import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
@@ -12,6 +12,7 @@ import CustomControl from './CustomControl.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
+import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
@@ -28,16 +29,17 @@ const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
 const flowZoom = ref(1);
+const debugDialogVisible = ref(false)
 const isNodeAndLineConnect = ref(false);
 const emits = defineEmits(['validateConnect']);
-function hanleAsideVisible(): void {
+const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
     isCopilotAsideVisible.value = false;
   } else {
     isCopilotAsideVisible.value = true;
   }
-}
+};
 
 const { onConnect, addEdges, getNodes, getEdges, findNode, removeNodes, setViewport, getViewport, fitView } =
   useVueFlow();
@@ -155,11 +157,7 @@ const handleZommOnScroll = () => {
 };
 
 async function layoutGraph(direction) {
-  nodes.value = layout(nodes.value, edges.value, direction);
-
-  nextTick(() => {
-    fitView();
-  });
+  nodes.value = layout(getNodes.value, getEdges.value, direction);
 }
 
 const nodeAndLineConnection = () => {
@@ -198,6 +196,11 @@ const dropFunc = e => {
   // 添加节点时-判断节点是否都连接
   nodeAndLineConnection();
 };
+
+const handleDebugDialogOps = (visible)=>{
+  debugDialogVisible.value = visible
+}
+
 </script>
 <template>
   <div class="workFlowContainer" @drop="dropFunc">
@@ -252,7 +255,7 @@ const dropFunc = e => {
     <div class="workFlowContainerRight">
       <VueFlow
         :nodes="nodes"
-        :default-viewport="{ zoom: 1 }"
+        :default-viewport="{ zoom: 0.8 }"
         :min-zoom="0.5"
         :max-zoom="4"
         class="my-diagram-class"
@@ -284,23 +287,26 @@ const dropFunc = e => {
         <template #connection-line="props">
           <CustomEdge v-bind="props" />
         </template>
+
+        <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps"/>
+      </VueFlow>
+      <div class="workFlowOps">
         <div class="workFlowSelect">
-          <el-select>
-            <el-option></el-option>
+          <el-select v-model="workFlowItem" placeholder="请选择" :suffix-icon="IconCaretDown">
+            <template #footer class="selectFooter">
+              <div class="addWorkFlow" @click="addWorkFlow">
+                <el-icon>
+                  <IconPlusCircle></IconPlusCircle>
+                </el-icon>
+                <span>新建工作流</span>
+              </div>
+            </template>
           </el-select>
         </div>
-      </VueFlow>
-      <div class="workFlowSelect">
-        <el-select v-model="workFlowItem" placeholder="请选择" :suffix-icon="IconCaretDown">
-          <template #footer class="selectFooter">
-            <div class="addWorkFlow" @click="addWorkFlow">
-              <el-icon>
-                <IconPlusCircle></IconPlusCircle>
-              </el-icon>
-              <span>新建工作流</span>
-            </div>
-          </template>
-        </el-select>
+        <div class="debugBtn" @click="handleDebugDialogOps(true)">
+          <img :src="debugDialogVisible ? 'src/assets/images/debugBtnDis.png' : 'src/assets/images/debugBtn.png'" />
+        </div>
+        <div class="debugStatus"></div>
       </div>
     </div>
     <WorkFlowDialog
@@ -312,38 +318,3 @@ const dropFunc = e => {
   </div>
   <EditYamlDrawer v-if="isEditYaml" @closeDrawer="closeDrawer"></EditYamlDrawer>
 </template>
-<style lang="scss" scoped>
-.stancesItem {
-  width: 264px;
-  height: 32px;
-  line-height: 32px;
-  background-color: var(--o-bash-bg);
-  color: var(--o-text-color-primary);
-  margin-bottom: 8px;
-  padding-left: 16px;
-  border-radius: 4px;
-}
-.workFlowContainerRight {
-  position: relative;
-  .workFlowSelect {
-    position: absolute;
-    left: 24px;
-    top: 24px;
-    display: block;
-    width: 180px;
-    height: 32px;
-    .el-select {
-      width: 144px;
-      height: 32px;
-    }
-  }
-}
-.addWorkFlow {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  .el-icon {
-    color: var(--o-text-color-tertiary);
-  }
-}
-</style>

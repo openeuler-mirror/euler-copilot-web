@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import './style.scss';
+import '../styles/createApp.scss';
 import { ref, reactive } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
