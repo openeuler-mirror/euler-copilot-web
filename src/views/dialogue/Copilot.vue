@@ -28,7 +28,7 @@ const modeOptions = reactive([
   },
 ]);
 
-const setPlugins = async () => {
+const setApps = async () => {
   const [_, res] = await api.getRecognitionMode();
   if (!_ && res) {
     res.result.app.forEach(item => {
@@ -57,7 +57,7 @@ const initCopilot = async (): Promise<void> => {
       await api.getRecognitionMode();
       await api.stopGeneration();
       await getHistorySession();
-      setPlugins();
+      setApps();
     }
     return;
   } else if (currRoute.value.query.id) {

@@ -48,7 +48,7 @@ export interface DialoguePanelProps {
   // 是否需要重新生成
   needRegernerate?: boolean;
   // 是否选择插件
-  userSelectedPlugins?: any;
+  userSelectedApp?: any;
   //
   recordList?: string[] | undefined;
   //
@@ -409,7 +409,7 @@ const chatWithParams = async () => {
   await sendQuestion(undefined,question, user_selected_app.value, undefined, undefined, flowId,params.value);
 }
 
-const searchPluginName = (appId) => {
+const searchAppName = (appId) => {
   for(let item in props.modeOptions){
     if(props.modeOptions[item].value == appId){
       return props.modeOptions[item].label
@@ -580,7 +580,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
         <ul class='search-suggestions_value'>
           <li class='value'
           v-for="(item, index) in props.search_suggestions" >
-          <p @click='selectQuestion(item)'><p class='test' v-if='item.appId'>#{{searchPluginName(item.appId)}}</p>{{item.question}}</p></li>
+          <p @click='selectQuestion(item)'><p class='test' v-if='item.appId'>#{{searchAppName(item.appId)}}</p>{{item.question}}</p></li>
         </ul>
       </div>
     </div>
