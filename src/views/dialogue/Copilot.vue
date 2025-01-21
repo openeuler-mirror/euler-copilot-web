@@ -31,7 +31,7 @@ const modeOptions = reactive([
 const setPlugins = async () => {
   const [_, res] = await api.getRecognitionMode();
   if (!_ && res) {
-    res.result.plugins.forEach(item => {
+    res.result.app.forEach(item => {
       const opt = {
         label: item.name,
         value: item.id,

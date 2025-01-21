@@ -22,8 +22,8 @@ export interface Step {
 
 // 定义流程信息的接口
 export interface Flow {
-    plugin_id: string;
-    flow_id: string;
+    appId: string;
+    flowId: string;
     steps: Step[];
 }
 
@@ -44,7 +44,7 @@ export interface Metadata {
 // 定义问答对数据结构
 export interface ConversationRecord {
     id: string;
-    group_id: string;
+    groupId: string;
     conversation_id: string;
     task_id: string;
     files: File[];
@@ -59,14 +59,14 @@ export interface ConversationRecordList {
 }
 
 /* 推荐问题的格式
- *  "plugin_id": "aops-apollo",  //推荐项关联的插件ID，若不关联则为空
- *  "flow_id": "query_cve_info",  //推荐项关联的工作流ID，若不关联则为空
+ *  "appId": "aops-apollo",  //推荐项关联的插件ID，若不关联则为空
+ *  "flowId": "query_cve_info",  //推荐项关联的工作流ID，若不关联则为空
  *  "flow_description": "查询机器192.168.10.1的CVE信息", //推荐项关联的工作流描述，若不关联则为空
  *  "question": "查询机器192.168.10.1的CVE信息", //推荐问题的内容
  */
 export interface Suggest {
-    plugin_id: string,
-    flow_id: string,
+    appId: string,
+    flowId: string,
     flow_description: string,
     question: string,
 }
