@@ -17,7 +17,7 @@ import { Linetooltip , Circlelegend } from './chartsCss'
 import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store'
-const { user_selected_plugins } = storeToRefs(useHistorySessionStore());
+const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggest } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
 
@@ -48,7 +48,7 @@ export interface DialoguePanelProps {
   // 是否需要重新生成
   needRegernerate?: boolean;
   // 是否选择插件
-  userSelectedPlugins?: any;
+  userSelectedApp?: any;
   //
   recordList?: string[] | undefined;
   //
@@ -131,7 +131,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
   emits("clearSuggestion", props.key);
   if (props.isFinish) {
     // 重新生成
-    reGenerateAnswer(cid, user_selected_plugins.value);
+    reGenerateAnswer(cid, user_selected_app.value);
   } else {
     // 停止生成
     pausedStream(cid);
@@ -371,7 +371,7 @@ const zoom_out = () => {
 
 const selectQuestion = (item:Suggest) => {
   let question = item.question;
-  let user_selected_flow = item.flow_id;
+  let user_selected_flow = item.flowId;
   if(user_selected_flow){
     emits('handleSendMessage',undefined,question,user_selected_flow);
   }else{
@@ -400,27 +400,27 @@ const { sendQuestion } = useSessionStore();
 
 const chatWithParams = async () => {
   visible.value = false;
-  // handleSendMessage(undefined,undefined,user_selected_plugins.value);
-  // reGenerateAnswer(props.cid, user_selected_plugins.value,"params");
+  // handleSendMessage(undefined,undefined,user_selected_app.value);
+  // reGenerateAnswer(props.cid, user_selected_app.value,"params");
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   const question = (conversationList.value[props.cid - 1]).message;
-  const flow_id = (conversationList.value[props.cid]).flowdata.flow_id;
-  await sendQuestion(undefined,question, user_selected_plugins.value, undefined, undefined, flow_id,params.value);
+  const flowId = (conversationList.value[props.cid]).flowdata.flowId;
+  await sendQuestion(undefined,question, user_selected_app.value, undefined, undefined, flowId,params.value);
 }
 
-const searchPluginName = (plugin_id) => {
+const searchAppName = (appId) => {
   for(let item in props.modeOptions){
-    if(props.modeOptions[item].value == plugin_id){
+    if(props.modeOptions[item].value == appId){
       return props.modeOptions[item].label
     }
   }
   return ''
     }
 
-const handleSendMessage = async (question, user_selected_flow, user_selected_plugins) => {
+const handleSendMessage = async (question, user_selected_flow, user_selected_app) => {
   visible.value = false;
-  // handleSendMessage(undefined,undefined,user_selected_plugins.value);
+  // handleSendMessage(undefined,undefined,user_selected_app.value);
 }
 
 </script>
@@ -580,7 +580,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_plu
         <ul class='search-suggestions_value'>
           <li class='value'
           v-for="(item, index) in props.search_suggestions" >
-          <p @click='selectQuestion(item)'><p class='test' v-if='item.plugin_id'>#{{searchPluginName(item.plugin_id)}}</p>{{item.question}}</p></li>
+          <p @click='selectQuestion(item)'><p class='test' v-if='item.appId'>#{{searchAppName(item.appId)}}</p>{{item.question}}</p></li>
         </ul>
       </div>
     </div>

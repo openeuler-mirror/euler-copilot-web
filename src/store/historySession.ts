@@ -27,7 +27,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   // 历史会话列表
   const historySession = ref<HistorySessionItem[]>([]);
   const params = ref();
-  const user_selected_plugins = ref([]);
+  const user_selected_app = ref([]);
   const selectMode = ref([])
   const currentSelectedSession = ref<string>('');
   /**
@@ -195,7 +195,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     createNewSession,
     initSessionList,
     generateSession,
-    user_selected_plugins,
+    user_selected_app,
     selectMode,
   };
 });
