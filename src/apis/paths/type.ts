@@ -107,7 +107,6 @@ export interface ApiMessage {
     description: string,
 }
 
-
 /*
  * 语意接口数据结构
  */
@@ -119,8 +118,3 @@ export interface Service {
     description: string,
     favorite: boolean,
 }
-
-
-
-
-
