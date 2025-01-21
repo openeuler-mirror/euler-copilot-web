@@ -57,6 +57,7 @@ watch(
 .vue-flow__node {
   min-width: unset !important;
   padding: 0;
+  margin-top: -4px;
   .nodeSaEBorderBox {
     div {
       text-align: center;
@@ -82,6 +83,10 @@ watch(
       }
     }
   }
+}
+
+.vue-flow__node:has(.default){
+  margin-top: 0px;
 }
 
 .nodeSaEBorder {

@@ -48,7 +48,11 @@ export function useLayout() {
     // set nodes with updated positions
     return nodes.map(node => {
       const nodeWithPosition = dagreGraph.node(node.id);
-
+      console.log(nodeWithPosition,'nodeWithPosition',node);
+      let position = { x: nodeWithPosition.x, y: nodeWithPosition.y }
+      if(['1','2'].includes(node.id)){
+        
+      }
       return {
         ...node,
         targetPosition: isHorizontal ? Position.Left : Position.Top,

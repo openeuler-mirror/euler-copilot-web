@@ -2,7 +2,7 @@
   <div class="controlBox">
     <div class="controlSearch"><IconSearch /></div>
     <div class="controlScaleNumber">
-      {{ `${zommChangeValue * 100}%` }}
+      {{ `${Number((zommChangeValue * 100).toFixed(0))}%` }}
     </div>
     <el-dropdown placement="top" @visible-change="handleVisibleChange" popper-class="controlChange" class="controlBtn">
       <span class="el-dropdown-link">
@@ -47,7 +47,7 @@ const props = withDefaults(defineProps<ControlProps>(), {});
 const zommChangeValue = ref(1);
 const dropDownVisible = ref(false);
 const handleSacl = zoomValue => {
-  zommChangeValue.value = zoomValue;
+  zommChangeValue.value = Number(zoomValue.toFixed(0));
   props.handleChangeZoom(zoomValue);
 };
 const handleVisibleChange = visible => {
