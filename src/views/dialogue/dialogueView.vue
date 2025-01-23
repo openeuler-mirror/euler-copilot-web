@@ -9,11 +9,10 @@ import Copilot from './Copilot.vue';
 import { useChangeThemeStore } from 'src/store';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
-import { fa } from 'element-plus/es/locale';
 import { ElMessage } from 'element-plus';
-import { apiKeyApi } from 'srcapis/paths';
 import { watch } from 'vue';
 import i18n from 'src/i18n'
+import { reactive } from 'vue';
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
@@ -42,7 +41,7 @@ export interface ModelForm {
   [property: string]: any;
 }
 const kb_id = localStorage.getItem("kb_id")||"";
-const ruleForm = ref<ModelForm>({
+const ruleForm = reactive<ModelForm>({
   kb_id: kb_id,
 });
 const rules = ref();
@@ -138,13 +137,14 @@ const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
       const [_, res] = await api.updateKnowledgeList({
-        kb_id: ruleForm.value.kb_id || "",
+        kb_id: ruleForm.kb_id || "",
       })
       if(!_&&res){
-        localStorage.setItem('kb_id', ruleForm.value.kb_id || "")
+        localStorage.setItem('kb_id', ruleForm.kb_id || "")
         ElMessage.success("成功");
         KnowledgeVisible.value = false;
       }else {
+        ruleForm.kb_id = "";
         ElMessage.error("失败");
         KnowledgeVisible.value = false;
       }
@@ -165,15 +165,18 @@ onMounted(() => {
   api.getKnowledgeList().then((res) => {
     ruleForm.value = res;
   });
+  if(localStorage.getItem('kb_id')){
+    ruleForm.kb_id = localStorage.getItem('kb_id');
+  }
 });
 
 watch(
   ruleForm,
   () => {
     let flag = false;
-      Object.keys(ruleForm.value).forEach((item) => {
+      Object.keys(ruleForm).forEach((item) => {
       if (rules.value?.[item]?.[0]?.required) {
-        if (!ruleForm.value?.[item]?.toString()?.length) {
+        if (!ruleForm?.[item]?.toString()?.length) {
           flag = true;
         }
       }
@@ -278,7 +281,6 @@ watch(
     >
       <el-form-item
         :label="$t('witChainD.witChainD_id')"
-        prop="openai_api_key"
         class="docName"
       >
         <el-input
