@@ -20,6 +20,7 @@ import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
 import WitchainDIcon from '@/assets/images/witchainD.png';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import { useRouter } from 'vue-router';
+import { reactive } from 'vue';
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
 const { logout } = useAccountStore();
@@ -50,9 +51,8 @@ export interface ModelForm {
   openai_api_key?: string;
   [property: string]: any;
 }
-const kb_id = localStorage.getItem('kb_id') || '';
-const ruleForm = ref<ModelForm>({
-  kb_id: kb_id,
+const ruleForm = reactive<ModelForm>({
+  kb_id: "",
 });
 const rules = ref();
 
@@ -144,13 +144,14 @@ const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
   const [_, res] = await api.updateKnowledgeList({
-    kb_id: ruleForm.value.kb_id || '',
+    kb_id: ruleForm.kb_id || '',
   });
   if (!_ && res) {
-    localStorage.setItem('kb_id', ruleForm.value.kb_id || '');
+    localStorage.setItem('kb_id', ruleForm.kb_id || '');
     ElMessage.success('成功');
     KnowledgeVisible.value = false;
   } else {
+    ruleForm.kb_id = '';
     ElMessage.error('失败');
     KnowledgeVisible.value = false;
   }
@@ -171,15 +172,18 @@ onMounted(() => {
   api.getKnowledgeList().then(res => {
     ruleForm.value = res;
   });
+  if(localStorage.getItem('kb_id')){
+    ruleForm.kb_id = localStorage.getItem('kb_id');
+  }
 });
 
 watch(
   ruleForm,
   () => {
     let flag = false;
-    Object.keys(ruleForm.value).forEach(item => {
+    Object.keys(ruleForm).forEach(item => {
       if (rules.value?.[item]?.[0]?.required) {
-        if (!ruleForm.value?.[item]?.toString()?.length) {
+        if (!ruleForm?.[item]?.toString()?.length) {
           flag = true;
         }
       }
@@ -294,7 +298,7 @@ watch(
       title="WitChainD"
     >
       <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-position="left" @validate="handleFormValidate">
-        <el-form-item label="id" prop="openai_api_key" class="docName">
+        <el-form-item :label="$t('witChainD.witChainD_id')" prop="openai_api_key" class="docName">
           <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')">
             <template #suffix>
               <el-icon class="warning-icon" v-if="!formValidateStatus.kb_id">
