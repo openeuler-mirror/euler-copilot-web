@@ -37,9 +37,11 @@ const closeDrawer = () => {
 </script>
 
 <style lang="scss">
-.flowDrawer {
+.flowDrawer.el-drawer {
   padding: 0px;
   background-color: var(--o-bg-color-base);
+  top: 48px;
+  height: calc(100% - 48px);
   .el-drawer__header {
     padding: 24px 24px 16px;
     margin-bottom: 0px;
