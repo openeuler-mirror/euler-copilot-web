@@ -173,6 +173,7 @@ export default {
   },
   witChainD: {
     witChainD: "WitChainD",
+    witChainD_id: "id",
     describe_the_witChainD: "Please enter witChainD id",
   },
   flow: {

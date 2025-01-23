@@ -459,7 +459,6 @@ export const useSessionStore = defineStore('conversation', () => {
     user_selected_flow?: string,
     params?: any,
   ): Promise<void> => {
-    const groupId = groupId?groupId:"";
     const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
     if (conversationList.value.length === 0) {
       // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
