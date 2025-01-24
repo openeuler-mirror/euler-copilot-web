@@ -10,6 +10,7 @@ import { CreateOrUpdateFlowParamsType, CreateOrUpdataFlowBodyType } from './type
 export const queryAllFlowService = (params: {
   page: number;
   pageSize: number;
+  user_sub:string;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
   return get('/api/flow/service', params);
 };

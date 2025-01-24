@@ -242,9 +242,10 @@ const updateNodeTest = state => {
 onMounted(()=>{
   api.queryAllFlowService({
     page:1,
-    pageSize:10
+    pageSize:10,
+    user_sub:'text'
   }).then(res=>{
-    console.log(res,'kkkk')
+     
   })
 })
 
