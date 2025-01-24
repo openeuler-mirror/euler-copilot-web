@@ -19,7 +19,7 @@ import { AttachAddon } from 'xterm-addon-attach';
 import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
-const { user_selected_plugins, selectMode } = storeToRefs(useHistorySessionStore());
+const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
 const session = useSessionStore();
 
@@ -183,7 +183,7 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   if (user_selected_flow) {
     await sendQuestion(groupId, question, undefined, undefined, undefined, user_selected_flow, undefined);
   } else {
-    await sendQuestion(groupId, question, user_selected_plugins.value, undefined, undefined, undefined, undefined);
+    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, undefined, undefined);
   }
 };
 
@@ -711,17 +711,17 @@ watch(
 
 watch(selectMode, (newValue, oldValue) => {
   setOptionDisabled();
-  user_selected_plugins.value = [];
+  user_selected_app.value = [];
   let first = true;
   if (selectMode.value.length !== 0) {
     if (selectMode.value[0] === 'auto') {
-      user_selected_plugins.value.push('auto');
+      user_selected_app.value.push('auto');
     } else {
       selectMode.value.forEach(item => {
         const plugin = {
           plugin_name: item,
         };
-        user_selected_plugins.value.push(plugin.plugin_name);
+        user_selected_app.value.push(plugin.plugin_name);
       });
     }
   }
@@ -800,7 +800,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
           :created-at="item.createdAt"
           :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
-          :user-selected-plugins="user_selected_plugins"
+          :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :modeOptions="modeOptions"

@@ -56,6 +56,7 @@ const editYaml = id => {
   <div class="customNodeStyle" :class="curStatus">
     <Handle type="target" :position="Position.Left"></Handle>
     <div class="outHandleRing outRingLeft"></div>
+    <div class="delOverShadow leftBox"></div>
     <div class="nodeBox">
       <div class="title" v-if="props.data.label">
         <div class="iconStyle"></div>
@@ -71,6 +72,7 @@ const editYaml = id => {
       <div class="desc" v-if="props.data.desc">{{ props.data.desc }}</div>
     </div>
     <Handle type="source" :position="Position.Right"></Handle>
+    <div class="delOverShadow rightBox"></div>
     <div class="outHandleRing outRingRight"></div>
   </div>
 </template>
@@ -79,6 +81,7 @@ const editYaml = id => {
 .vue-flow__node {
   min-width: 200px;
   padding: 0px;
+  margin-top: -4px;
   .customNodeStyle {
     width: 328px;
     height: fit-content;
@@ -128,10 +131,12 @@ const editYaml = id => {
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: rgb(253, 254, 255);
+      background: var(--o-bg-color-base);
       display: flex;
       align-items: center;
       justify-content: center;
+      border: none;
+      z-index: 2;
     }
 
     .vue-flow__handle-right::after {
@@ -148,10 +153,12 @@ const editYaml = id => {
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: rgb(253, 254, 255);
+      background: var(--o-bg-color-base);
       display: flex;
       align-items: center;
       justify-content: center;
+      border: none;
+      z-index: 2;
     }
 
     .vue-flow__handle-left::after {
@@ -181,6 +188,20 @@ const editYaml = id => {
       display: none;
       right: -12px;
       margin-top: -12px;
+    }
+    .delOverShadow {
+      width: 8px;
+      height: 40px;
+      position: absolute;
+      background-color: transparent;
+      top: 20px;
+      z-index: 1;
+    }
+    .leftBox {
+      left: -12px;
+    }
+    .rightBox {
+      right: -12px;
     }
     &:hover {
       border: 4px solid rgba(99, 149, 253, 0.3);
@@ -226,6 +247,12 @@ const editYaml = id => {
         box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
         background-clip: content-box;
       }
+      .leftBox {
+        background-color: var(--flow-node-default-over_color);
+      }
+      .rightBox {
+        background-color: var(--flow-node-default-over_color);
+      }
     }
   }
 
@@ -269,6 +296,12 @@ const editYaml = id => {
       .outRingRight {
         box-shadow: 0px 0px 0px 8px rgba(36, 171, 54, 0.1);
       }
+      .leftBox {
+        background-color: var(--flow-node-success-over_color);
+      }
+      .rightBox {
+        background-color: var(--flow-node-success-over_color);
+      }
     }
   }
 
@@ -304,6 +337,12 @@ const editYaml = id => {
         background-clip: content-box;
       }
     }
+    .leftBox {
+      background-color: transparent;
+    }
+    .rightBox {
+      background-color: transparent;
+    }
     &:hover {
       box-shadow: 0px 0px 0px 8px rgba(227, 32, 32, 0.1);
       .outRingLeft {
@@ -312,8 +351,17 @@ const editYaml = id => {
       .outRingRight {
         box-shadow: 0px 0px 0px 8px rgba(227, 32, 32, 0.1);
       }
+      .leftBox {
+        background-color: var(--flow-node-error-over_color);
+      }
+      .rightBox {
+        background-color: var(--flow-node-error-over_color);
+      }
     }
   }
+}
+.vue-flow__node:has(.default) {
+  margin-top: 0px;
 }
 .nodeDealPopper {
   width: 64px !important;

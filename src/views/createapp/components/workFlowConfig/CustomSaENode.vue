@@ -92,7 +92,7 @@ watch(
 .nodeSaEBorder {
   width: 56px;
   height: 56px;
-  background: rgb(253, 254, 255);
+  background: var(--o-bg-color-base);
   display: flex;
   align-items: center;
   border-radius: 8px;

@@ -23,6 +23,7 @@ import i18n from 'src/i18n';
 import { ElMessageBox } from 'element-plus';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { storeToRefs } from 'pinia';
+import { Application } from 'src/apis/paths/type';
 
 const STREAM_URL = '/api/chat';
 let controller = new AbortController();
@@ -70,7 +71,7 @@ export const useSessionStore = defineStore('conversation', () => {
   // 会话列表
   const conversationList = ref<ConversationItem[]>([]);
   const app = ref<AppShowType>({});
-  const appList = ref([]);
+  const appList = ref<Application[]>();
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
   /**
@@ -81,11 +82,11 @@ export const useSessionStore = defineStore('conversation', () => {
   const getStream = async (
     params: {
       question: string;
-      user_selected_plugins?: any,
+      user_selected_app?: any,
       conversation_id?: string;
       qaRecordId?: string;
       user_selected_flow?: string;
-      group_id?: string;
+      groupId?: string;
       params?: any;
     },
     ind?: number
@@ -123,11 +124,11 @@ export const useSessionStore = defineStore('conversation', () => {
             question: params.question,
             language,
             conversation_id: params.conversation_id,
-            group_id: params.group_id,
+            groupId: params.groupId,
             // record_id: params.qaRecordId,
-            plugins:[{
-              plugin_id:params.user_selected_plugins[0],
-              flow_id: params.user_selected_flow,
+            app:[{
+              appId:params.user_selected_app[0],
+              flowId: params.user_selected_flow,
               params: pp,
               auth:{},
             }],
@@ -135,7 +136,7 @@ export const useSessionStore = defineStore('conversation', () => {
           }),
         });
       }
-      else if (params.user_selected_plugins) {
+      else if (params.user_selected_app) {
         resp = await fetch(STREAM_URL, {
           signal: controller.signal,
           method: 'POST',
@@ -146,11 +147,11 @@ export const useSessionStore = defineStore('conversation', () => {
             conversation_id: params.conversation_id,
             record_id: params.qaRecordId,
             language,
-            group_id: params.group_id,
+            groupId: params.groupId,
             // record_id: params.qaRecordId,
-            plugins:[{
-              plugin_id:params.user_selected_plugins[0],
-              flow_id: "",
+            app:[{
+              appId:params.user_selected_app[0],
+              flowId: "",
               params: pp,
               auth:{},
             }],
@@ -170,11 +171,11 @@ export const useSessionStore = defineStore('conversation', () => {
             conversation_id: params.conversation_id,
             record_id: params.qaRecordId,
             language,
-            group_id: params.group_id,
+            groupId: params.groupId,
             // record_id: params.qaRecordId,
-            plugins:[{
-              plugin_id:"",
-              flow_id: "",
+            app:[{
+              appId:"",
+              flowId: "",
               params: {},
               auth:{},
             }],
@@ -254,7 +255,7 @@ export const useSessionStore = defineStore('conversation', () => {
               //初始化获取 metadata
               conversationItem.metadata = message.metadata;
               conversationItem.createdAt = message.content.created_at;
-              conversationItem.groupId = message.group_id;
+              conversationItem.groupId = message.groupId;
             }
             else if(message["event"] === "flow.start") {
               //事件流开始
@@ -270,7 +271,7 @@ export const useSessionStore = defineStore('conversation', () => {
                 progress: flow?.step_progresss||"",
                 status:'running',
                 display:true,
-                flow_id:flow?.flow_id||"",
+                flowId:flow?.flowId||"",
                 data:[[]],
               }
             }
@@ -450,15 +451,14 @@ export const useSessionStore = defineStore('conversation', () => {
    * @param regenerateInd 重新生成的回答索引
    */
   const sendQuestion = async (
-    group_id:string|undefined,
+    groupId:string|undefined,
     question: string,
-    user_selected_plugins?: string[],
+    user_selected_app?: string[],
     regenerateInd?: number,
     qaRecordId?: string,
     user_selected_flow?: string,
     params?: any,
   ): Promise<void> => {
-    const groupId = group_id?group_id:"";
     const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
     if (conversationList.value.length === 0) {
       // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
@@ -497,25 +497,25 @@ export const useSessionStore = defineStore('conversation', () => {
     }
     isAnswerGenerating.value = true;
     scrollBottom();
-    if (user_selected_flow&&user_selected_plugins) {
+    if (user_selected_flow&&user_selected_app) {
       await getStream(
         {
           question,
           qaRecordId,
-          user_selected_plugins:[...user_selected_plugins],
+          user_selected_app:[...user_selected_app],
           user_selected_flow,
-          group_id:groupId,
+          groupId:groupId,
           params:params||undefined,
         },
         regenerateInd ?? undefined
       )
-    } else if (user_selected_plugins?.length) {
+    } else if (user_selected_app?.length) {
       await getStream(
         {
           question,
           qaRecordId,
-          user_selected_plugins: [...user_selected_plugins],
-          group_id:groupId,
+          user_selected_app: [...user_selected_app],
+          groupId:groupId,
           params:params||undefined,
         },
         regenerateInd ?? undefined
@@ -525,7 +525,7 @@ export const useSessionStore = defineStore('conversation', () => {
         {
           question,
           qaRecordId,
-          group_id:groupId,
+          groupId:groupId,
         },
         regenerateInd ?? undefined
       );
@@ -545,7 +545,7 @@ export const useSessionStore = defineStore('conversation', () => {
    * 重新生成回答
    * @param cid
    */
-  const reGenerateAnswer = (cid: number, user_selected_plugins: any[],type?:string): void => {
+  const reGenerateAnswer = (cid: number, user_selected_app: any[],type?:string): void => {
     const answerInd = conversationList.value.findIndex((val) => val.cid === cid);
     const question = (conversationList.value[answerInd - 1] as UserConversationItem).message;
     const recordId = (conversationList.value[answerInd] as RobotConversationItem).recordId;
@@ -559,7 +559,7 @@ export const useSessionStore = defineStore('conversation', () => {
     if (!question) {
       return;
     }
-    sendQuestion(groupId, question, user_selected_plugins, answerInd, recordId,"");
+    sendQuestion(groupId, question, user_selected_app, answerInd, recordId,"");
   };
 
   // #region ----------------------------------------< pagenation >--------------------------------------
@@ -608,11 +608,11 @@ export const useSessionStore = defineStore('conversation', () => {
       res.result.records.forEach((record) => {
         if (
           (conversationList.value as RobotConversationItem[]).find(
-            (i) => i.groupId === record.group_id
+            (i) => i.groupId === record.groupId
           )
         ) {
           const re = (conversationList.value as RobotConversationItem[]).find(
-            (i) => i.groupId === record.group_id
+            (i) => i.groupId === record.groupId
           );
           re?.message.push(record.content.answer);
           if (typeof (re?.message) !== 'string') {
@@ -643,7 +643,7 @@ export const useSessionStore = defineStore('conversation', () => {
             isFinish: true,
             recordId: record.id,
             conversation_id: record.conversation_id,
-            groupId: record.group_id,
+            groupId: record.groupId,
             metadata: record.metadata,
           }
         );

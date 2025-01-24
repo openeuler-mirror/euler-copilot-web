@@ -67,7 +67,7 @@ export interface FlowType {
   data:any,
   display:boolean,
   progress:string,
-  flow_id?:string,
+  flowId?:string,
 }
 
 export interface FlowDataType {

@@ -7,10 +7,29 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-export * from './account';
-export * from './conversation';
-export * from './external';
-export * from './apikey';
-export * from './knowledge';
-export * from './app';
-export * from './api';
+import { get } from 'src/apis/server';
+import type { FcResponse } from 'src/apis/server';
+import { Application } from './type';
+
+type App = {
+  applications: Application[];
+}
+/**
+ * 获取最近 top5 应用   
+ * @returns
+ */
+export const getTopFiveApp = (count: number): Promise<
+  [
+    any,
+    (
+      | FcResponse<App>
+      | undefined
+    )
+  ]
+> => {
+  return get('/api/app/recent',{count});
+};
+
+export const appApi = {
+  getTopFiveApp,
+};

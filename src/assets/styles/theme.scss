@@ -12,6 +12,9 @@ body[theme='dark'] {
   --o-bash-bg: #2a2f37;
   --o-flow-code-bg: rgb(42,47,55);
   --o-flow-code-border: rgb(62,69,81);
+  --flow-node-default-over_color: #25303E;
+  --flow-node-success-over_color: #1F312A;
+  --flow-node-error-over_color: #332127;
 }
 
 body[theme='light'] {
@@ -28,4 +31,7 @@ body[theme='light'] {
   --o-bash-bg: #f4f6fa;
   --o-flow-code-bg: rgb(244,256,258);
   --o-flow-code-border: rgb(223,229,239);
+  --flow-node-default-over_color: #EEF3FE;
+  --flow-node-success-over_color: #E6F6E9;
+  --flow-node-error-over_color: #F8E7E7;
 }

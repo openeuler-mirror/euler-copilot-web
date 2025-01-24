@@ -28,10 +28,10 @@ const modeOptions = reactive([
   },
 ]);
 
-const setPlugins = async () => {
+const setApps = async () => {
   const [_, res] = await api.getRecognitionMode();
   if (!_ && res) {
-    res.result.plugins.forEach(item => {
+    res.result.app.forEach(item => {
       const opt = {
         label: item.name,
         value: item.id,
@@ -57,7 +57,7 @@ const initCopilot = async (): Promise<void> => {
       await api.getRecognitionMode();
       await api.stopGeneration();
       await getHistorySession();
-      setPlugins();
+      setApps();
     }
     return;
   } else if (currRoute.value.query.id) {
@@ -106,12 +106,16 @@ const handleSubmit = async () => {
   dialogVisible.value = false;
 };
 
-onMounted(() => {
+onMounted(async() => {
   window.scrollTo({
     top: 0,
     left: 0,
   });
-  //获取 top5 list
+  //获取 top5 list 
+  const [_, res] = await api.getTopFiveApp(5);
+  if(_ && res){
+    appList.value = res.result.applications;
+  }
 });
 
 watch(
