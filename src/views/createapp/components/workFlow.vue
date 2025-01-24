@@ -304,7 +304,8 @@ const handleDebugDialogOps = (visible)=>{
           </el-select>
         </div>
         <div class="debugBtn" @click="handleDebugDialogOps(true)">
-          <img :src="debugDialogVisible ? 'src/assets/images/debugBtnDis.png' : 'src/assets/images/debugBtn.png'" />
+          <img src="@/assets/images/debugBtnDis.png" v-if="debugDialogVisible"/>
+          <img src="@/assets/images/debugBtn.png" v-else/>
         </div>
         <div class="debugStatus"></div>
       </div>
