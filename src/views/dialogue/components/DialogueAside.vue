@@ -21,6 +21,7 @@ import i18n from 'src/i18n';
 import appIcon from '@/assets/images/app.png'
 import { IconChevronUp } from '@computing/opendesign-icons';
 import { onMounted } from 'vue';
+const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
 interface HistorySession {
   conversationId: string;
@@ -49,11 +50,11 @@ const isCollapsed = ref(false);
 const selectedAppId = ref(null);
 //
 const apps = ref([
-  { appId: "1", name: '应用 1' },
-  { appId: "2", name: '应用 2' },
-  { appId: "3", name: '应用 3' },
-  { appId: "4", name: '应用 4' },
-  { appId: "5", name: '应用 5' },
+  { id: "1", name: '应用 1' },
+  { id: "2", name: '应用 2' },
+  { id: "3", name: '应用 3' },
+  { id: "4", name: '应用 4' },
+  { id: "5", name: '应用 5' },
 ]);
 
 const filteredHistorySessions = computed(() => {
@@ -223,6 +224,8 @@ const toggleCollapse = () => {
 
 const selectApp = id => {
   selectedAppId.value = id;
+  user_selected_app.value = [];
+  user_selected_app.value.push(app.value.id);
 };
 function ensureAppAtFirstPosition() {
   if(!app.value.id){
@@ -236,6 +239,9 @@ function ensureAppAtFirstPosition() {
   } else if (index === -1) {
     apps.value.unshift(newApp);
   }
+  selectedAppId.value = app.value.id;
+  user_selected_app.value = [];
+  user_selected_app.value.push(app.value.id);
 }
 
 onMounted(async() => {
@@ -246,6 +252,10 @@ onMounted(async() => {
   }
   else {
     appList.value = apps.value;
+  }
+  if(app.value.id){
+    selectedAppId.value = app.value.id;
+    console.log(selectedAppId.value);
   }
 });
 
@@ -280,9 +290,9 @@ watch(
             <ul v-if="!isCollapsed" class="app-list">
               <li
                 v-for="app in displayedApps"
-                :key="app.appId"
+                :key="app.id"
                 @click="selectApp(app.appId)"
-                :class="{ selected: selectedAppId === app.appId }"
+                :class="{ selected: selectedAppId === app.id }"
               >
                 <span>{{ app.name }}</span>
               </li>
