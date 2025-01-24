@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip } from 'element-plus';
 import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
@@ -16,6 +16,7 @@ import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
+import { api } from 'src/apis';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -237,6 +238,16 @@ const updateNodeTest = state => {
     updateEdgeData(item.id, { targetStatus: 'error' });
   });
 };
+
+onMounted(()=>{
+  api.queryAllFlowService({
+    page:1,
+    pageSize:10,
+    user_sub:'text'
+  }).then(res=>{
+     
+  })
+})
 
 const handleDebugDialogOps = visible => {
   debugDialogVisible.value = visible;

@@ -100,18 +100,8 @@
   .createAppContainerMainRight {
     width: 100%;
     height: calc(100% - 32px);
-    background-image: url('../../assets/images/light_background.png');
-    --o-bg-image: url('../../assets/images/light_background.png');
-    --o-shell-image: url('../../assets/images/light_shell.png');
-    --o-sider: url('../../assets/images/light_sider.png');
-    --o-sider-hover: url('../../assets/images/light_sider-hover.png');
-    --o-button-color: #c3cedf;
-    --o-button-border-color: #d3dce9;
-    --o-button-disable-color: #bfc7d7;
-    --o-button-disable-background: #ebedf3;
-    --o-button-disable-border: #ebedf3;
-    --o-time-text: #dfe5ef;
-    --o-bash-bg: #f4f6fa;
+    background-image: var(--o-bg-image);
+    background-position: -520px -200px;
     .copilot-footer {
       margin-bottom: 12px;
     }
