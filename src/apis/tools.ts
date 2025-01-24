@@ -163,17 +163,17 @@ export const handleStatusError = async (
   const { status } = error.response;
   if ([401, 403, 460].includes(status)) {
     if (status === 401) {
-      handleAuthorize(status);
+      // handleAuthorize(status);
       return;
     }
     const originalRequest = error.config;
     if (originalRequest.url === '/api/auth/refresh_token') {
       // 长token过期,需要重新登录
-      handleAuthorize(status);
+      // handleAuthorize(status);
       return Promise.reject(error.response);
     }
     if (originalRequest.url === '/api/auth/user') {
-      handleAuthorize(status);
+      // handleAuthorize(status);
       return;
     }
     //引入新的cookie后，会根据用户的请求重置token有效期，先删除重发逻辑，后期修改

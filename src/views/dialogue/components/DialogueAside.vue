@@ -23,7 +23,7 @@ import { IconChevronUp } from '@computing/opendesign-icons';
 import { onMounted } from 'vue';
 
 interface HistorySession {
-  conversation_id: string;
+  conversationId: string;
   title: string;
   createdTime: string | Date;
 }
@@ -152,8 +152,8 @@ const isBatchDeletion = ref<boolean>(false);
  */
 const deleteSession = async () => {
   dialogVisible.value = false;
-  const conversation_list = deleteType.value ? selectedSessionIds.value : sessionList.value;
-  const [, res] = await api.deleteSession({ conversation_list });
+  const conversationList = deleteType.value ? selectedSessionIds.value : sessionList.value;
+  const [, res] = await api.deleteSession({ conversationList });
   if (res) {
     selectedSessionIds.value = [];
     currentSelectedSession.value = '';
@@ -192,7 +192,7 @@ function cancelDeleteSession(): void {
  */
 function selectAllSession(): void {
   isSelectedAll.value
-    ? (selectedSessionIds.value = historySession.value.map(item => item.conversation_id))
+    ? (selectedSessionIds.value = historySession.value.map(item => item.conversationId))
     : (selectedSessionIds.value = []);
 }
 
@@ -229,8 +229,7 @@ function ensureAppAtFirstPosition() {
     return;
   }
   const newApp = app.value;
-  const index = apps.value.findIndex(app => app.id === newApp.id);
-  selectApp(newApp.id);
+  const index = apps.value.findIndex(app => app.appId === newApp.appId);
   if (index !== -1 && index !== 0) {
     const [item] = apps.value.splice(index, 1);
     apps.value.unshift(item);
@@ -281,9 +280,9 @@ watch(
             <ul v-if="!isCollapsed" class="app-list">
               <li
                 v-for="app in displayedApps"
-                :key="app.id"
-                @click="selectApp(app.id)"
-                :class="{ selected: selectedAppId === app.id }"
+                :key="app.appId"
+                @click="selectApp(app.appId)"
+                :class="{ selected: selectedAppId === app.appId }"
               >
                 <span>{{ app.name }}</span>
               </li>
@@ -327,12 +326,11 @@ watch(
               @change="selectAllSession"
             />
           </div>
-
           <ul class="history-record-list" v-if="filteredHistorySessions.length">
             <ElCollapse v-model="activeNames">
               <template v-for="item in filteredHistorySessions" :key="item.key">
                 <ElCollapseItem :title="item.title" :name="item.key">
-                  <template v-for="session in item.list" :key="session.conversation_id">
+                  <template v-for="session in item.list" :key="session.conversationId">
                     <SessionCard :conversation="session" :deletion="isBatchDeletion" @deleteOne="deleteOne" />
                   </template>
                 </ElCollapseItem>
@@ -415,7 +413,6 @@ watch(
   width: 17rem;
   // background-color: rgb(244, 246, 250);
   border-radius: 8px;
-  overflow: hidden;
   .collapsible-header {
     background-color: rgb(244, 246, 250);
     padding: 1rem;
@@ -608,10 +605,10 @@ watch(
     margin-top: 15px;
     flex: 1;
     display: flex;
-    height: calc(100% - 55px - 80px);
+    height: 100%;
     flex-direction: column;
     position: relative;
-
+    overflow: auto;
     /* 滚动条轨道样式 */
     ::-webkit-scrollbar-track {
       background-color: transparent !important;

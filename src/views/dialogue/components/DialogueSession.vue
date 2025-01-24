@@ -6,7 +6,6 @@ import InitalPanel from './InitalPanel.vue';
 import InterPreview from './InterPreview.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
-
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
 import { UploadTypeName, UploadStatus, UploadType } from 'src/components/uploadFile/type';
@@ -21,7 +20,7 @@ import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
 const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
-const session = useSessionStore();
+const {session,app} = storeToRefs(useSessionStore());
 
 export interface DialogueSession {
   modeOptions: any;
@@ -36,7 +35,7 @@ enum SupportMap {
   against = 0,
 }
 // const dialogueRef = ref();
-const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
+const { pausedStream} = useSessionStore();
 const themeStore = useChangeThemeStore();
 const modeOptions = ref(props.modeOptions);
 const isCreateApp = ref(props?.isCreateApp);
@@ -181,9 +180,9 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(groupId, question, undefined, undefined, undefined, user_selected_flow, undefined);
+    await sendQuestion(groupId, question, app.value, undefined, undefined, user_selected_flow, undefined);
   } else {
-    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, undefined, undefined);
+    await sendQuestion(groupId, question, app.value, undefined, undefined, undefined, undefined);
   }
 };
 
