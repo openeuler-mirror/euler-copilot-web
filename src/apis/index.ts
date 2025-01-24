@@ -8,6 +8,8 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { accountApi, sessionApi, externalApi, apiKeyApi, knowledgeApi } from './paths';
+import { workFlowApi } from './workFlow';
+import { appCenterApi } from './appCenter';
 
 export const api = {
   ...accountApi,
@@ -15,4 +17,6 @@ export const api = {
   ...externalApi,
   ...apiKeyApi,
   ...knowledgeApi,
+  ...appCenterApi,
+  ...workFlowApi,
 };
