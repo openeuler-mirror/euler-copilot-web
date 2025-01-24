@@ -29,7 +29,7 @@ const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
 const flowZoom = ref(1);
-const debugDialogVisible = ref(false)
+const debugDialogVisible = ref(false);
 const isNodeAndLineConnect = ref(false);
 const emits = defineEmits(['validateConnect']);
 const hanleAsideVisible = () => {
@@ -41,8 +41,19 @@ const hanleAsideVisible = () => {
   }
 };
 
-const { onConnect, addEdges, getNodes, getEdges, findNode, removeNodes, setViewport, getViewport, fitView } =
-  useVueFlow();
+const {
+  onConnect,
+  updateNode,
+  updateEdgeData,
+  addEdges,
+  getNodes,
+  getEdges,
+  findNode,
+  removeNodes,
+  setViewport,
+  getViewport,
+  fitView,
+} = useVueFlow();
 const { layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
@@ -115,8 +126,18 @@ const handleChangeZoom = zoomValue => {
 };
 
 onConnect(e => {
+  // 边的起点和终点节点的两个状态
+  const sourceItem = getNodes.value.find(item => item.id === e.source);
+  const targetItem = getNodes.value.find(item => item.id === e.target);
+  // 获取当前状态
+  const sourceStatus = sourceItem?.data?.status || 'default';
+  const targetStatus = targetItem?.data?.status || 'default';
   addEdges({
     ...e,
+    data: {
+      sourceStatus,
+      targetStatus,
+    },
     type: 'custom',
   });
   // 添加边连接时-判断节点是否都连接
@@ -197,10 +218,29 @@ const dropFunc = e => {
   nodeAndLineConnection();
 };
 
-const handleDebugDialogOps = (visible)=>{
-  debugDialogVisible.value = visible
-}
+// 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
+const updateNodeTest = state => {
+  // 获取当前的success状态的
+  const nodes = getNodes.value.filter(item => item.data.status === 'success');
+  const id = nodes[0].id;
+  const data = nodes[0].data;
+  // 取第一个，状态改为error
+  updateNode(id, { data: { ...data, status: 'error' } });
+  // 遍历获取以当前节点为起源节点的边和为目的节点的边
+  const changeSourceEdges = [...getEdges.value.filter(item => item.source === id)];
+  const changeTargetEdges = [...getEdges.value.filter(item => item.target === id)];
+  // 分别遍历相应的边-并更新它们的状态为最新状态
+  changeSourceEdges.forEach(item => {
+    updateEdgeData(item.id, { sourceStatus: 'error' });
+  });
+  changeTargetEdges.forEach(item => {
+    updateEdgeData(item.id, { targetStatus: 'error' });
+  });
+};
 
+const handleDebugDialogOps = visible => {
+  debugDialogVisible.value = visible;
+};
 </script>
 <template>
   <div class="workFlowContainer" @drop="dropFunc">
@@ -247,6 +287,7 @@ const handleDebugDialogOps = (visible)=>{
                   </div>
                 </el-collapse-item>
               </el-collapse>
+              <div style="display: none" @click="updateNodeTest">测试状态修改（暂不显示）</div>
             </div>
           </div>
         </div>
@@ -255,6 +296,7 @@ const handleDebugDialogOps = (visible)=>{
     <div class="workFlowContainerRight">
       <VueFlow
         :nodes="nodes"
+        :edges="edges"
         :default-viewport="{ zoom: 0.8 }"
         :min-zoom="0.5"
         :max-zoom="4"
@@ -281,14 +323,31 @@ const handleDebugDialogOps = (visible)=>{
 
         <!-- 自定义边线 -->
         <template #edge-custom="props">
-          <CustomEdge v-bind="props" />
+          <CustomEdge
+            :id="props.id"
+            :key="props.id"
+            :sourceX="props.sourceX"
+            :sourceY="props.sourceY"
+            :targetX="props.targetX"
+            :targetY="props.targetY"
+            :sourcePosition="props.sourcePosition"
+            :targetPosition="props.targetPosition"
+            :data="JSON.parse(JSON.stringify(props.data))"
+          />
         </template>
 
         <template #connection-line="props">
-          <CustomEdge v-bind="props" />
+          <CustomEdge
+            :sourceX="props.sourceX"
+            :sourceY="props.sourceY"
+            :targetX="props.targetX"
+            :targetY="props.targetY"
+            :sourcePosition="props.sourcePosition"
+            :targetPosition="props.targetPosition"
+          />
         </template>
 
-        <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps"/>
+        <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       </VueFlow>
       <div class="workFlowOps">
         <div class="workFlowSelect">
@@ -304,9 +363,9 @@ const handleDebugDialogOps = (visible)=>{
           </el-select>
         </div>
         <div class="debugBtn" @click="handleDebugDialogOps(true)">
-          <img src="@/assets/images/debugBtnDis.png" v-if="debugDialogVisible"/>
-          <img src="@/assets/images/debugBtn.png" v-else/>
-        </div>
+            <img src="@/assets/images/debugBtnDis.png" v-if="debugDialogVisible"/>
+            <img src="@/assets/images/debugBtn.png" v-else/>
+          </div>
         <div class="debugStatus"></div>
       </div>
     </div>
