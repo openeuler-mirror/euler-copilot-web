@@ -22,7 +22,7 @@ export const stopGeneration = (): Promise<
     any,
     (
       | FcResponse<{
-          // conversation_id: string;
+          // conversationId: string;
         }>
       | undefined
     )
@@ -56,7 +56,7 @@ export const createSession = (): Promise<
     any,
     (
       | FcResponse<{
-          conversation_id: string;
+          conversationId: string;
         }>
       | undefined
     )
@@ -68,14 +68,14 @@ export const createSession = (): Promise<
  * 更新会话标题
  * @param params
  * {
- *    conversation_id:（number）会话id
+ *    conversationId:（number）会话id
  *    title：（string）会话标题
  * }
  * @returns
  */
 export const updateSession = (
   params: {
-    conversation_id: string,
+    conversationId: string,
     title: string,
   },
 ): Promise<
@@ -84,7 +84,7 @@ export const updateSession = (
     (
       | FcResponse<
           Array<{
-            conversation_id: string;
+            conversationId: string;
           }>
         >
       | undefined
@@ -94,7 +94,7 @@ export const updateSession = (
   return put(BASE_URL, {
     title: params.title,
   }, {
-    conversation_id: params.conversation_id,
+    conversationId: params.conversationId,
   });
 };
 
@@ -104,18 +104,18 @@ export const updateSession = (
  * @returns
  */
 export const deleteSession = (data: {
-  conversation_list: string[];
-}): Promise<[any, FcResponse<Array<{ conversation_list: string[] }>> | undefined]> => {
+  conversationList: string[];
+}): Promise<[any, FcResponse<Array<{ conversationList: string[] }>> | undefined]> => {
   return del(`${BASE_URL}`, data);
 };
 
 /**
  * 获取会话历史对话记录
- * @param conversation_id 
+ * @param conversationId 
  * GET /api/record/eccb08c3-0621-4602-a4d2-4eaada892557
  */
 export const getHistoryConversation = (
-  conversation_id: string
+  conversationId: string
 ): Promise<
   [
     any,
@@ -125,8 +125,8 @@ export const getHistoryConversation = (
     )
   ]
 > => {
-  // return get('/api/record', { conversation_id: conversation_id });
-  return get('/api/record/'+ conversation_id);
+  // return get('/api/record', { conversationId: conversationId });
+  return get('/api/record/'+ conversationId);
   // 修改 chat 格式
 
 };

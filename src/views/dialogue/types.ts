@@ -87,7 +87,7 @@ export interface RobotConversationItem {
   files?:any;
   flow?:any;
   cid: number;
-  conversation_id: string;
+  conversationId: string;
   recordId: string;
   extraData?:any;
   belong: RobotDialoguePanelType;

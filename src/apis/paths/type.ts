@@ -45,8 +45,7 @@ export interface Metadata {
 export interface ConversationRecord {
     id: string;
     groupId: string;
-    conversation_id: string;
-    task_id: string;
+    conversationId: string;
     files: File[];
     flow: Flow;
     content: Content;
@@ -75,8 +74,8 @@ export interface Suggest {
  * 问答列表内项的数据结构
  */
 export interface ConversationListItem {
-    conversation_id: string,
-    created_time: string,
+    conversationId: string,
+    createdTime: string,
     doc_count: number,
     title: string,
 }

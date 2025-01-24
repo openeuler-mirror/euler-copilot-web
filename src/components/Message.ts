@@ -3,7 +3,7 @@ import { ElMessage } from "element-plus";
 export const infoMsg = (msgInfo:string) => {
     ElMessage({
         type:"info",
-        showClose:true,
+        // showClose:true,
         dangerouslyUseHTMLString:true,
         message:msgInfo,
     })
@@ -11,9 +11,9 @@ export const infoMsg = (msgInfo:string) => {
 
 export const successMsg = (msgInfo:string) => {
     ElMessage({
-        customClass:"el-message--success",
+        // customClass:"el-message--success",
         type:"success",
-        showClose:true,
+        // showClose:true,
         class:"el-message--success",
         message:msgInfo,
     })
@@ -21,7 +21,7 @@ export const successMsg = (msgInfo:string) => {
 export const warningMsg = (msgInfo:string) => {
     ElMessage({
         type:"warning",
-        showClose:true,
+        // showClose:true,
         class:"el-message--warning",
         message:msgInfo,
     })
@@ -30,7 +30,7 @@ export const warningMsg = (msgInfo:string) => {
 export const errorMsg = (msgInfo:string) => {
     ElMessage({
         type:"error",
-        showClose:true,
+        // showClose:true,
         class:"el-message--error",
         message:msgInfo,
     })

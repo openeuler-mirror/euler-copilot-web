@@ -20,7 +20,7 @@ import { useLangStore } from 'src/store'
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggest } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
-
+const { app } = storeToRefs(useSessionStore());
 const { language } = storeToRefs(useLangStore());
 const { changeLanguage } = useLangStore();
 const echartsDraw = ref();
@@ -395,8 +395,9 @@ const popperSize = () => {
     return size
   }
 }
-const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
+const { conversationList } = storeToRefs(useSessionStore());
 const { sendQuestion } = useSessionStore();
+
 
 const chatWithParams = async () => {
   visible.value = false;

@@ -83,7 +83,7 @@ export const useSessionStore = defineStore('conversation', () => {
     params: {
       question: string;
       user_selected_app?: any,
-      conversation_id?: string;
+      conversationId?: string;
       qaRecordId?: string;
       user_selected_flow?: string;
       groupId?: string;
@@ -93,7 +93,7 @@ export const useSessionStore = defineStore('conversation', () => {
   ): Promise<void> => {
     const language = localStorage.getItem('localeLang') === 'EN' ? 'en' : 'zh';
     const { currentSelectedSession } = useHistorySessionStore();
-    params.conversation_id = currentSelectedSession;
+    params.conversationId = currentSelectedSession;
     // 当前问答在整个问答记录中的索引
     const answerIndex = ind ?? conversationList.value.length - 1;
     const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
@@ -123,7 +123,7 @@ export const useSessionStore = defineStore('conversation', () => {
           body: JSON.stringify({
             question: params.question,
             language,
-            conversation_id: params.conversation_id,
+            conversationId: params.conversationId,
             groupId: params.groupId,
             // record_id: params.qaRecordId,
             app:[{
@@ -144,7 +144,7 @@ export const useSessionStore = defineStore('conversation', () => {
           headers: headers,
           body: JSON.stringify({
             question: params.question,
-            conversation_id: params.conversation_id,
+            conversationId: params.conversationId,
             record_id: params.qaRecordId,
             language,
             groupId: params.groupId,
@@ -168,7 +168,7 @@ export const useSessionStore = defineStore('conversation', () => {
           headers: headers,
           body: JSON.stringify({
             question: params.question,
-            conversation_id: params.conversation_id,
+            conversationId: params.conversationId,
             record_id: params.qaRecordId,
             language,
             groupId: params.groupId,
@@ -374,7 +374,7 @@ export const useSessionStore = defineStore('conversation', () => {
     status: number,
     params: {
       question: string;
-      conversation_id?: string;
+      conversationId?: string;
       qaRecordId?: string;
     },
     ind?: number
@@ -459,10 +459,11 @@ export const useSessionStore = defineStore('conversation', () => {
     user_selected_flow?: string,
     params?: any,
   ): Promise<void> => {
+    console.log(`sendQyuestion`);
     const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
     if (conversationList.value.length === 0) {
       // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
-      updateSessionTitle({ conversation_id: currentSelectedSession, title: question.slice(0, 20) });
+      updateSessionTitle({ conversationId: currentSelectedSession, title: question.slice(0, 20) });
     }
     if (regenerateInd) {
       // 重新生成，指定某个回答，修改默认索引
@@ -490,7 +491,7 @@ export const useSessionStore = defineStore('conversation', () => {
           isFinish: false,
           recordId: '',
           groupId: '',
-          conversation_id: '',
+          conversationId: '',
           // createdAt: Date.now(),
         }
       );
@@ -596,12 +597,12 @@ export const useSessionStore = defineStore('conversation', () => {
 
   /**
    * 获取历史对话数据
-   * @param conversation_id
+   * @param conversationId
    */
-  const getConversation = async (conversation_id: string): Promise<void> => {
-    const [_, res] = await api.getHistoryConversation(conversation_id);
+  const getConversation = async (conversationId: string): Promise<void> => {
+    const [_, res] = await api.getHistoryConversation(conversationId);
     //解析读取 records字段得到对话数组列表
-    // const [_, res] = await api.getHistoryConversation(conversation_id).records;
+    // const [_, res] = await api.getHistoryConversation(conversationId).records;
 
     if (!_ && res) {
       conversationList.value = [];
@@ -642,7 +643,7 @@ export const useSessionStore = defineStore('conversation', () => {
             isSupport: false,
             isFinish: true,
             recordId: record.id,
-            conversation_id: record.conversation_id,
+            conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
           }

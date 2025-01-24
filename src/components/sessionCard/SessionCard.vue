@@ -47,7 +47,7 @@ const isImageVisible = computed(() => {
 
 const handleHover = async () => {
   // 接口获取列表数据
-  const [_, response] = await api.getUploadFiles(props.conversation.conversation_id, true, false);
+  const [_, response] = await api.getUploadFiles(props.conversation.conversationId, true, false);
   if (!_ && response) {
     hoverFiles.value = response.result.documents;
     hoverFiles.value.sort((pre, cur) => pre.created_at - cur.created_at);
@@ -98,9 +98,9 @@ const cancelChangeTitle = (): void => {
 };
 
 const bool = ref(false);
-const select = (conversation_id: string) => {
-  bool.value = selectedSessionIds.value.includes(conversation_id);
-  return selectedSessionIds.value.includes(conversation_id);
+const select = (conversationId: string) => {
+  bool.value = selectedSessionIds.value.includes(conversationId);
+  return selectedSessionIds.value.includes(conversationId);
 };
 
 const deleteOne = (name: string, list: string[]) => {
@@ -119,22 +119,22 @@ const deleteOne = (name: string, list: string[]) => {
         class="checkbox"
         v-if="deletion"
         v-model="bool"
-        @change="selectSession(conversation.conversation_id)"
-        :checked="select(conversation.conversation_id)"
+        @change="selectSession(conversation.conversationId)"
+        :checked="select(conversation.conversationId)"
       />
       <div
         class="conversation-card-item__box"
         :class="{
-          'conversation-card-item__box--selected': currentSelectedSession === conversation.conversation_id,
+          'conversation-card-item__box--selected': currentSelectedSession === conversation.conversationId,
         }"
-        @click="changeSession(conversation.conversation_id)"
+        @click="changeSession(conversation.conversationId)"
       >
         <div class="conversation-title">
           <div class="conversation-title__text">
             <input
               ref="inputRef"
               class="conversation-title__text-input"
-              v-if="isResetTitle && currentSelectedSession === conversation.conversation_id"
+              v-if="isResetTitle && currentSelectedSession === conversation.conversationId"
               type="text"
               v-model="inputValue"
               @keyup.enter="confirmChangeTitle(conversation)"
@@ -161,13 +161,13 @@ const deleteOne = (name: string, list: string[]) => {
                 v-if="themeStore.theme === 'dark'"
                 class="conversation-title__svg"
                 src="@/assets/svgs/dark_delete.svg"
-                @click="deleteOne(conversation.title, [conversation.conversation_id])"
+                @click="deleteOne(conversation.title, [conversation.conversationId])"
               />
               <img
                 v-else
                 class="conversation-title__svg"
                 src="@/assets/svgs/light_delete.svg"
-                @click="deleteOne(conversation.title, [conversation.conversation_id])"
+                @click="deleteOne(conversation.title, [conversation.conversationId])"
               />
             </el-tooltip>
           </div>
