@@ -179,10 +179,11 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   if (!currentSelectedSession.value) {
     await generateSession();
   }
+  console.log("user_selected_app",user_selected_app.value);
   if (user_selected_flow) {
-    await sendQuestion(groupId, question, app.value, undefined, undefined, user_selected_flow, undefined);
+    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, user_selected_flow, undefined);
   } else {
-    await sendQuestion(groupId, question, app.value, undefined, undefined, undefined, undefined);
+    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, undefined, undefined);
   }
 };
 

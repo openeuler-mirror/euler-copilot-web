@@ -10,7 +10,7 @@ import DialogueAside from './components/DialogueAside.vue';
 import DialogueSession from './components/DialogueSession.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
-
+const { user_selected_app } = storeToRefs(useHistorySessionStore());
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
@@ -52,13 +52,13 @@ const initCopilot = async (): Promise<void> => {
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
-    // const isLogin = await getUserInfo();
-    // if (isLogin) {
+    const isLogin = await getUserInfo();
+    if (isLogin) {
       await api.getRecognitionMode();
       await api.stopGeneration();
       await getHistorySession();
       setApps();
-    // }
+    }
     return;
   } else if (currRoute.value.query.id) {
     app.value = {
