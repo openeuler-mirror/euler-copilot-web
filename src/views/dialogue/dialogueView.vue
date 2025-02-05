@@ -207,8 +207,9 @@ watch(
           <template #reference>
             <span class="language">{{ lang }}</span>
           </template>
-          <el-button class="exit-button" type="primary" @click="changeLanguagefun('EN')">English</el-button>
-          <el-button class="exit-button" type="primary" @click="changeLanguagefun('CN')">简体中文</el-button>
+          <div class="exit-button lang-button" :class="lang==='English'?'lang-selected':''"  @click="changeLanguagefun('EN')">English</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" :class="lang==='简体中文'?'lang-selected':''"  @click="changeLanguagefun('CN')">简体中文</div>
         </el-popover>
         <div class="mode">
           <span v-if="theme === 'light'" @click="changeTheme">
@@ -223,11 +224,13 @@ watch(
           <template #reference>
             <img class="avatar" src="@/assets/svgs/user.svg" />
           </template>
-          <el-button class="exit-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</el-button>
-          <el-button class="exit-button" @click="apikeyVisible = true">API KEY</el-button>
-          <el-button class="exit-button" @click="KnowledgeVisible = true">{{
+          <div class="exit-button lang-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" @click="apikeyVisible = true">API KEY</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" @click="KnowledgeVisible = true">{{
             i18n.global.t('witChainD.witChainD')
-          }}</el-button>
+          }}</div>
         </el-popover>
       </div>
     </header>
@@ -236,7 +239,7 @@ watch(
         <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
           <span class="menu-icon">
             <el-icon class="menu-icon">
-              <img v-if="router.currentRoute.value.name === item.routerName" class="create-button__icon" :src="item.selectedSrc">
+              <img v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName)!==-1" class="create-button__icon" :src="item.selectedSrc">
               <img v-else class="create-button__icon" :src="item.src">
             </el-icon>
           </span>
@@ -503,16 +506,36 @@ watch(
   }
 }
 
-.popper-class {
-  padding: 3px 0 !important;
+.el-popover.popper-class {
+  padding: 5px 0 !important;
+  border-radius: 8px;
   .exit-button {
     width: 100%;
     border-radius: 0;
+  }
+  .lang-button{
+    text-align: center;
+    cursor: pointer;
+    line-height: 32px;
+    height: 32px;
+    
+    &:hover {
+      color: white;
+      background-color: var(--o-color-primary-tertiary);
+    }
+  }
+  .lang-selected{
+      color: white;
+      background-color: var(--o-color-primary-secondary);
+  }
+  .divider {
+    border-bottom: 1px solid var(--o-text-color-tertiary);
   }
 }
 
 .language {
   color: var(--o-text-color-primary);
+  cursor: pointer;
 }
 
 #sun-icon {
