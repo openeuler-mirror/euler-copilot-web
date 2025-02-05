@@ -50,11 +50,7 @@ const isCollapsed = ref(false);
 const selectedAppId = ref(null);
 //
 const apps = ref([
-  { id: "1", name: '应用 1' },
-  { id: "2", name: '应用 2' },
-  { id: "3", name: '应用 3' },
-  { id: "4", name: '应用 4' },
-  { id: "5", name: '应用 5' },
+  { id: "1", name: 'CVE热修复助手' },
 ]);
 
 const filteredHistorySessions = computed(() => {
@@ -255,7 +251,6 @@ onMounted(async() => {
   }
   if(app.value.id){
     selectedAppId.value = app.value.id;
-    console.log(selectedAppId.value);
   }
 });
 

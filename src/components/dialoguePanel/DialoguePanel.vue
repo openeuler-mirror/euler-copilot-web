@@ -248,10 +248,9 @@ const contentAfterMark = computed(() => {
     str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
   }
   //将table提取出来中加一个<div>父节点控制溢出
-  return str;
+  return `<pre>${str}</pre>`;
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
 });
-
 
 const prePageHandle = (cid: number) => {
   prePage(cid);

@@ -1,10 +1,15 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
 import { useChangeThemeStore } from 'src/store';
 import 'xterm/css/xterm.css';
 import router from 'src/router';
 const themeStore = useChangeThemeStore();
+import { useRoute } from 'vue-router';
+import { api } from 'src/apis';
+
+const route = useRoute();
+const appName = ref()
 
 const questions = [
   {
@@ -36,11 +41,26 @@ const questions = [
     groupId: 1,
     id: 6,
     question: 'dde_description',
-  }];
+  },
+];
 
 const routerToAppCenter = () => {
   router.push('/app');
-}
+};
+
+onMounted(() => {
+  if (route.query?.id) {
+    api
+      .querySingleAppData({
+        id: route.query?.id as string,
+      })
+      .then(res => {
+        if(res?.[1]?.result?.name){
+          appName.value = res?.[1]?.result?.name
+        }
+      });
+  }
+});
 </script>
 
 <template>
@@ -48,7 +68,8 @@ const routerToAppCenter = () => {
     <div class="inital-panel">
       <div class="introduction">
         {{ $t('main.describe1') }}
-        <img src="@/assets/images/logoText.png" alt="" />
+        <img src="@/assets/images/logoText.png" alt="" v-if="!appName?.length"/>
+        <div class="appNameTitle">{{ appName }}</div>
         {{ $t('main.describe2') }}
       </div>
       <p class="inital-panel-tips"></p>
@@ -66,17 +87,15 @@ const routerToAppCenter = () => {
             </li>
           </ul>
           <div class="eg-btn">
-            <p @click="routerToAppCenter()">
-              进入应用中心
-            </p>
+            <p @click="routerToAppCenter()">进入应用中心</p>
           </div>
         </div>
-        <div class='question'>
-          <p class='title'>{{$t('main.question')}}</p>
+        <div class="question">
+          <p class="title">{{ $t('main.question') }}</p>
           <ul class="question-list">
             <li class="question-item" v-for="item in questions" :key="item.id">
-                  <span class="question-number" :class="{'blue': item.id <= 3}">{{ item.id }}</span>
-                  {{$t('question.'+item.question)}}
+              <span class="question-number" :class="{ blue: item.id <= 3 }">{{ item.id }}</span>
+              {{ $t('question.' + item.question) }}
             </li>
           </ul>
         </div>
@@ -136,14 +155,20 @@ const routerToAppCenter = () => {
   margin-left: 50px;
 }
 
-.question-list{
+.appNameTitle{
+  color: #6c77fa;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.question-list {
   margin-top: 16px;
-  li{
+  li {
     margin-bottom: 16px;
-    span{
+    span {
       margin-right: 3px;
     }
-    .blue{
+    .blue {
       color: #5ab3ff;
     }
   }
@@ -157,8 +182,8 @@ const routerToAppCenter = () => {
     // display: block;
     width: 492px;
     height: auto;
-    box-shadow: 0px 5.18px 20.72px 0px rgba(221,225,240,0.5);
-    background: linear-gradient(270.00deg,rgb(227, 242, 255),rgb(195,227,255) 33.232%,rgb(197, 203, 249)85.699%);
+    box-shadow: 0px 5.18px 20.72px 0px rgba(221, 225, 240, 0.5);
+    background: linear-gradient(270deg, rgb(227, 242, 255), rgb(195, 227, 255) 33.232%, rgb(197, 203, 249) 85.699%);
     // opacity: 0.5;
     border-radius: 8px;
     background-size: 100% 100%;
@@ -242,7 +267,7 @@ const routerToAppCenter = () => {
         color: white;
         text-align: center;
         font-size: 14px;
-        }
+      }
     }
   }
 
@@ -280,7 +305,13 @@ const routerToAppCenter = () => {
 
       &:hover {
         box-shadow: 0 5.18px 20.72px 0 rgba(221, 225, 240, 0.5);
-        background: linear-gradient(270.00deg,rgb(229, 239, 248),rgb(199,227,250)24.366%,rgba(175, 205, 242) 57.543%,rgb(152,162,247)96.781%);
+        background: linear-gradient(
+          270deg,
+          rgb(229, 239, 248),
+          rgb(199, 227, 250) 24.366%,
+          rgba(175, 205, 242) 57.543%,
+          rgb(152, 162, 247) 96.781%
+        );
       }
 
       img {

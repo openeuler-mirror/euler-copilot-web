@@ -42,13 +42,13 @@ watch(
 
 <template>
   <div class="nodeSaEBorder">
-    <Handle :type="props.data.target" :position="Position[props.data.nodePosition]"></Handle>
+    <Handle :type="props.data.target" :position="Position[props.data.nodePosition]" :connectable-end="true"></Handle>
     <div class="outHandleRing outRingLeft"></div>
     <div class="outHandleRing outRingRight"></div>
     <div class="nodeShadow"></div>
     <div class="nodeSaEBorderBox">
-      <div v-if="props.data.label">{{ props.data.label }}</div>
-      <div class="desc" v-if="props.data.desc">{{ props.data.desc }}</div>
+      <div v-if="props.data.name">{{ props.data.name }}</div>
+      <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
     </div>
   </div>
 </template>

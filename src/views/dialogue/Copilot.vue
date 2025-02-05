@@ -51,13 +51,13 @@ const initCopilot = async (): Promise<void> => {
   }
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
-  if (currRoute.value.path === '/') {
+  if ( ['/copilot','/'].includes(currRoute.value?.path)) {
     const isLogin = await getUserInfo();
-    if (isLogin) {
-      await api.getRecognitionMode();
+    if (!isLogin) {
+      // await api.getRecognitionMode();
       await api.stopGeneration();
       await getHistorySession();
-      setApps();
+      // setApps();
     }
     return;
   } else if (currRoute.value.query.id) {
@@ -121,6 +121,7 @@ onMounted(async() => {
 watch(
   () => route.path,
   () => {
+    console.log(111)
     initCopilot();
   },
   {

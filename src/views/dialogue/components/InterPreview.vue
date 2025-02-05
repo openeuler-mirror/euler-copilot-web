@@ -1,10 +1,10 @@
 <template>
   <div class="interPreviewBox">
-    <div v-if="interPreviewInfo.appName.length" class="preTop">
+    <div v-if="interPreviewInfo.name.length" class="preTop">
       <div class="preTopContent">
         <img src="@/assets/images/preTitleIcon.png" class="preTitleIcon" />
         <div class="preMainAppName">
-          {{ interPreviewInfo.appName }}
+          {{ interPreviewInfo.name }}
         </div>
       </div>
     </div>
@@ -15,23 +15,23 @@
       <div class="preMainContanter">
         <div
           class="preMainContent"
-          v-if="interPreviewInfo.appName.length || interPreviewInfo.appIntroduction.length || connnectLinkList.length"
+          v-if="interPreviewInfo.name.length || interPreviewInfo.description.length || connnectLinkList.length"
         >
-          <div class="preMainContentTitle" v-if="interPreviewInfo.appName.length">
+          <div class="preMainContentTitle" v-if="interPreviewInfo.name.length">
             <div class="greetDes">
               <div class="greetDesContent">你好，我是</div>
               <div class="greetDesAppName greetDesContent">
-                {{ interPreviewInfo.appName }}
+                {{ interPreviewInfo.name }}
               </div>
               <div class="greetDesContent">，很高兴为你服务</div>
             </div>
-            <div class="preAppUser">
+            <!-- <div class="preAppUser">
               <div>@zhang</div>
               <div class="contentCollect"><IconUnfavorite /></div>
-            </div>
+            </div> -->
           </div>
-          <div class="preMainContentDes" v-if="interPreviewInfo.appIntroduction.length">
-            {{ interPreviewInfo.appIntroduction }}
+          <div class="preMainContentDes" v-if="interPreviewInfo.description.length">
+            {{ interPreviewInfo.description }}
           </div>
           <div class="preMainContentLink" v-if="connnectLinkList.length">
             <el-badge :value="connnectLinkList.length" class="linkBadge">
@@ -52,7 +52,7 @@
         <div class="preFooter" v-if="recommendQuestionList.length">
           <div class="preFooterTitle">推荐问题：</div>
           <div class="preFooterContent">
-            <div v-for="ques in interPreviewInfo.recommendQuestionList">
+            <div v-for="ques in recommendQuestionList">
               <div class="preFooterContentQues" v-if="ques.length">{{ ques }}</div>
             </div>
           </div>
@@ -77,8 +77,8 @@ watch(
   () => props.createAppForm,
   (newValue, oldValue) => {
     interPreviewInfo.value = props.createAppForm;
-    connnectLinkList.value = props.createAppForm.connectList.filter(item => item.length);
-    recommendQuestionList.value = props.createAppForm.recommendQuestionList.filter(item => item.length);
+    connnectLinkList.value = props.createAppForm.links.filter(item => item.length);
+    recommendQuestionList.value = props.createAppForm.recommendedQuestions.filter(item => item.length);
   },
   {
     immediate: true,

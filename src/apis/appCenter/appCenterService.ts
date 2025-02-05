@@ -28,7 +28,7 @@ export const createOrUpdateApp = (
  * @returns
  */
 export const querySingleAppData = (params: { id: string }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get(`/api/app/${params.id}`, params);
+  return get(`/api/app/${params.id}`);
 };
 
 /**
@@ -54,8 +54,8 @@ export const releaseSingleAppData = (params: { id: string }): Promise<[any, FcRe
  * @param params
  * @returns
  */
-export const changeSingleAppCollect = (params: { id: string }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return put(`/api/app/${params.id}`, params);
+export const changeSingleAppCollect = (params: { id: string,favorited:boolean }): Promise<[any, FcResponse<unknown> | undefined]> => {
+  return put(`/api/app/${params.id}`, {favorited:params.favorited});
 };
 
 
