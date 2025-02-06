@@ -47,8 +47,8 @@ const delNode = id => {
 };
 
 // 编辑yaml
-const editYaml = id => {
-  emits('editYamlDrawer', id);
+const editYaml = (nodeName ,yamlCode)=> {
+  emits('editYamlDrawer', nodeName,yamlCode);
 };
 </script>
 
@@ -58,20 +58,24 @@ const editYaml = id => {
     <div class="outHandleRing outRingLeft"></div>
     <div class="delOverShadow leftBox"></div>
     <div class="nodeBox">
-      <div class="title" v-if="props.data.label">
+      <div class="title" v-if="props.data.name">
         <div class="iconStyle"></div>
-        <div class="label">{{ props.data.label }}</div>
+        <div class="label">{{ props.data.name }}</div>
         <div class="moreTip">
           <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
-            <el-button text class="dealItem" @click="editYaml(props.id)">编辑</el-button>
+            <el-button text class="dealItem" @click="editYaml(props.data.name,props.data.parametersTemplate)">编辑</el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
           </el-popover>
         </div>
       </div>
-      <div class="desc" v-if="props.data.desc">{{ props.data.desc }}</div>
+      <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
+      <div v-if="props.data.type === 'choice'">
+        <div></div>
+      </div>
     </div>
-    <Handle type="source" :position="Position.Right"></Handle>
+    <Handle id="target-a" type="source" :position="Position.Right" :connectable-end="false" :class="{singleTarget:props.data.type !== 'choice'}"></Handle>
+    <Handle id="target-b" type="source" :position="Position.Right" :connectable-end="false" v-if="props.data.type === 'choice'"></Handle>
     <div class="delOverShadow rightBox"></div>
     <div class="outHandleRing outRingRight"></div>
   </div>
@@ -387,5 +391,15 @@ const editYaml = id => {
   &:hover {
     border: 1px solid var(--o-color-primary-secondary) !important;
   }
+}
+.customNodeStyle .vue-flow__handle[data-handleid=target-a]{
+  top: 25%;
+}
+.customNodeStyle .vue-flow__handle[data-handleid=target-b]{
+  top: 75%;
+  width: c;
+}
+.singleTarget{
+  top: 50% !important;
 }
 </style>

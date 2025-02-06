@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computing/opendesign-icons';
 import DialogueSession from '../../dialogue/components/DialogueSession.vue';
+import { useRoute } from 'vue-router';
+import { api } from 'src/apis';
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
+const route = useRoute();
+const props = withDefaults(defineProps(), {});
+
 const createAppForm = ref({
   icon: '',
-  appName: '',
-  appIntroduction: '',
-  connectList: [],
-  recommendQuestionList: [],
-  multiSession: 1,
+  name: '',
+  description: '',
+  links: [],
+  recommendedQuestions: [],
+  dialogRounds: 1,
   permissionType: 'all',
   selectedPeople: [],
 });
@@ -20,26 +25,23 @@ const searchName = ref('');
 const permissionTypeList = [
   {
     label: '公开（所有人可见）',
-    value: 'all',
+    value: 'public',
   },
   {
     label: '私密（仅自己可见）',
-    value: 'only',
+    value: 'private',
   },
   {
     label: '部分人可见',
-    value: 'part',
+    value: 'protected',
   },
 ];
 const permissionList = ref(['zjq', 'zhouweitong', 'wst', 'shihy', 'ouyangnana', 'testname1', 'testname2']);
 const curPersonList = ref([...permissionList.value]);
 // 这里后面需要换为变量-以便于中英文切换
 const createAppRole = ref({
-  icon: [{ required: true, message: '上传图标不能为空', trigger: 'change' }],
-  appName: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
-  appIntroduction: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
-  multiSession: [{ required: true, message: '请选择对话轮次不能为空', trigger: 'change' }],
-  permissionType: [{ required: true, message: '权限不能为空', trigger: 'change' }],
+  name: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
+  description: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
 });
 const createAppFormRef = ref();
 const modeOptions = reactive([
@@ -53,16 +55,16 @@ const handleChange = (val: number[]) => {
   activeNames.value = val;
 };
 const addLink = () => {
-  createAppForm.value.connectList.push('');
+  createAppForm.value.links.push('');
 };
 const addRecommond = () => {
-  createAppForm.value.recommendQuestionList.push('');
+  createAppForm.value.recommendedQuestions.push('');
 };
 const delConnectItem = idx => {
-  createAppForm.value.connectList.splice(idx, 1);
+  createAppForm.value.links.splice(idx, 1);
 };
 const delRecommendItem = idx => {
-  createAppForm.value.recommendQuestionList.splice(idx, 1);
+  createAppForm.value.recommendedQuestions.splice(idx, 1);
 };
 const searchPerson = () => {
   curPersonList.value = permissionList.value.filter(item => item.toLowerCase().includes(searchName.value));
@@ -75,6 +77,46 @@ const handleAvatarSuccess = (res, file) => {
 const httpRequest = res => {
   res.onSuccess();
 };
+
+onMounted(() => {
+  if (route.query?.appId) {
+    api
+      .querySingleAppData({
+        id: route.query?.appId as string,
+      })
+      .then(res => {
+        let appInfo = res?.[1]?.result;
+        createAppForm.value = {
+          icon: appInfo.icon,
+          name: appInfo.name,
+          description: appInfo.description,
+          links: appInfo.links.map(item => item.url),
+          recommendedQuestions: appInfo.recommendedQuestions,
+          dialogRounds: appInfo.dialogRounds,
+          permission: { visibility: appInfo.permission.visibility },
+          permissionType: appInfo.permission.visibility,
+        };
+      });
+  }
+});
+
+watch(
+  () => createAppForm.value,
+  async () => {
+    if (createAppFormRef.value && props.handleValidateContent) {
+      let formBalidate = await createAppFormRef.value.validate();
+      if (formBalidate) {
+        props.handleValidateContent(!formBalidate);
+      }
+    }
+  },
+  { deep: true, immediate: true },
+);
+
+defineExpose({
+  createAppForm,
+  createAppFormRef,
+});
 </script>
 <template>
   <el-form
@@ -92,7 +134,7 @@ const httpRequest = res => {
             <IconCaretRight />
           </el-icon>
         </template>
-        <el-form-item label="图标" prop="icon">
+        <el-form-item label="图标" prop="icon" class="notRequired">
           <div class="uploadArea">
             <el-upload
               class="placeIcon avatar-uploader"
@@ -108,20 +150,14 @@ const httpRequest = res => {
             <span class="text">上传图标</span>
           </div>
         </el-form-item>
-        <el-form-item label="应用名称" prop="appName">
-          <el-input
-            class="w320"
-            maxlength="20"
-            v-model="createAppForm.appName"
-            clearable
-            placeholder="请输入"
-          ></el-input>
+        <el-form-item label="应用名称" prop="name">
+          <el-input class="w320" maxlength="20" v-model="createAppForm.name" clearable placeholder="请输入"></el-input>
         </el-form-item>
 
-        <el-form-item label="应用简介" prop="appIntroduction">
+        <el-form-item label="应用简介" prop="description">
           <el-input
             class="w320 h80"
-            v-model="createAppForm.appIntroduction"
+            v-model="createAppForm.description"
             maxlength="150"
             place
             clearable
@@ -133,34 +169,34 @@ const httpRequest = res => {
 
         <el-form-item label="相关链接" prop="connectList" class="notRequired">
           <div class="linkLine">
-            <el-button :icon="IconPlusCircle" @click="addLink" :disabled="createAppForm.connectList.length > 4">
+            <el-button :icon="IconPlusCircle" @click="addLink" :disabled="createAppForm.links.length > 4">
               添加链接
             </el-button>
             <span class="linkText">最多添加5个链接</span>
           </div>
-          <div class="linkArea" v-for="(item, index) in createAppForm.connectList">
-            <el-input class="w320" v-model="createAppForm.connectList[index]" placeholder="请输入" clearable></el-input>
+          <div class="linkArea" v-for="(item, index) in createAppForm.links">
+            <el-input class="w320" v-model="createAppForm.links[index]" placeholder="请输入" clearable></el-input>
             <el-icon class="delIcon" @click="delConnectItem(index)">
               <IconDelete />
             </el-icon>
           </div>
         </el-form-item>
 
-        <el-form-item label="推荐问题" prop="recommendQuestionList" class="notRequired">
+        <el-form-item label="推荐问题" prop="recommendedQuestions" class="notRequired">
           <div class="linkLine">
             <el-button
               :icon="IconPlusCircle"
               @click="addRecommond"
-              :disabled="createAppForm.recommendQuestionList.length > 2"
+              :disabled="createAppForm.recommendedQuestions.length > 2"
             >
               添加问题
             </el-button>
             <span class="linkText">最多添加3个问题</span>
           </div>
-          <div class="linkArea" v-for="(item, index) in createAppForm.recommendQuestionList">
+          <div class="linkArea" v-for="(item, index) in createAppForm.recommendedQuestions">
             <el-input
               class="w320"
-              v-model="createAppForm.recommendQuestionList[index]"
+              v-model="createAppForm.recommendedQuestions[index]"
               placeholder="请输入"
               clearable
             ></el-input>
@@ -177,9 +213,9 @@ const httpRequest = res => {
             <IconCaretRight />
           </el-icon>
         </template>
-        <el-form-item label="请选择对话轮次" prop="multiSession">
+        <el-form-item label="请选择对话轮次" prop="multiSession" class="notRequired">
           <div class="multiSessionItem">
-            <el-input-number v-model="createAppForm.multiSession" :step="1" :min="1" :max="10"></el-input-number>
+            <el-input-number v-model="createAppForm.dialogRounds" :step="1" :min="1" :max="10"></el-input-number>
             <span class="sessionUnit">(1 ~ 10)</span>
           </div>
         </el-form-item>
@@ -191,7 +227,7 @@ const httpRequest = res => {
             <IconCaretRight />
           </el-icon>
         </template>
-        <el-form-item label="权限" prop="permissionType" class="permissionItem">
+        <el-form-item label="权限" prop="permissionType" class="permissionItem notRequired">
           <div class="permissionSelect">
             <el-radio-group v-model="createAppForm.permissionType">
               <el-radio v-for="(item, index) in permissionTypeList" :key="index" :value="item.value">
@@ -199,7 +235,7 @@ const httpRequest = res => {
               </el-radio>
             </el-radio-group>
           </div>
-          <div class="partPermissionPerson" v-if="createAppForm.permissionType === 'part'">
+          <div class="partPermissionPerson" v-if="createAppForm.permissionType === 'protected'">
             <el-input
               ref="inputRef"
               v-model="searchName"

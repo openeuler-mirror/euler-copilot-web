@@ -9,11 +9,11 @@
       :before-close="closeDrawer"
     >
       <template #header>
-        <div class="drawerHeader">步骤配置-LLM</div>
+        <div class="drawerHeader">步骤配置-{{ yamlNodeName }}</div>
       </template>
       <template #default>
         <div class="drawerBody">
-          <MirrorText ref="textarea" v-model:updateVal="yamlCode"></MirrorText>
+          <MirrorText ref="textarea" v-model:updateVal="yamlCode" :yamlCode="yamlCode"></MirrorText>
         </div>
       </template>
       <template #footer>
@@ -26,11 +26,26 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch, defineProps } from 'vue';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
 const visible = ref(true);
 const yamlCode = ref();
+const yamlNodeName = ref()
 const emits = defineEmits(['closeDrawer']);
+const props = defineProps<{
+  yamlContent: any;
+  nodeName:string
+}>();
+
+watch(
+  () => [props.yamlContent,props.nodeName],
+  () => {
+    yamlCode.value = props.yamlContent;
+    yamlNodeName.value = props.nodeName
+  } , { deep: true, immediate: true },
+
+);
+
 const closeDrawer = () => {
   emits('closeDrawer');
 };

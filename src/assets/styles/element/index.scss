@@ -75,3 +75,29 @@
 .exit-button{
   margin-left: 0px !important;
 }
+
+.o-message--error {
+  width: 544px;
+  background-color: var(--o-message-bg-color_error) !important;
+  border-color: var(--o-message-border-color_error) !important;
+  .el-message__content {
+    flex: 1;
+  }
+  .el-icon {
+    position: relative !important;
+    top: unset !important;
+  }
+}
+
+.o-message--success {
+  width: 544px;
+  background-color: #c2e7c7 !important;
+  border-color: #24ab36 !important;
+  .el-message__content {
+    flex: 1;
+  }
+  .el-icon {
+    position: relative !important;
+    top: unset !important;
+  }
+}

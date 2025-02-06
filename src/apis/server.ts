@@ -7,10 +7,11 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import axios from "axios";
-
-import { handleChangeRequestHeader, handleStatusError } from "./tools";
-import type { AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosHeaders } from "axios";
+import axios from 'axios';
+import { IconError } from '@computing/opendesign-icons';
+import { handleChangeRequestHeader, handleStatusError } from './tools';
+import type { AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosHeaders } from 'axios';
+import { ElMessage } from 'element-plus';
 
 export interface FcResponse<T> {
   error: string;
@@ -37,27 +38,40 @@ export const server = axios.create({
 // request interceptor
 server.interceptors.request.use(
   (
-    config: InternalAxiosRequestConfig<any>
+    config: InternalAxiosRequestConfig<any>,
   ): InternalAxiosRequestConfig<any> | Promise<InternalAxiosRequestConfig<any>> => {
     return handleChangeRequestHeader(config);
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // response interceptor
 server.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
     if (response.status !== 200) {
+      ElMessage({
+        showClose: true,
+        message: response.statusText,
+        icon: IconError,
+        customClass: 'o-message--error',
+        duration: 3000,
+      });
       return Promise.reject(new Error(response.statusText));
     }
-
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
+    ElMessage({
+      showClose: true,
+      message: error?.response?.data?.message || error.message,
+      icon: IconError,
+      customClass: 'o-message--error',
+      duration: 3000,
+    });
     return await handleStatusError(error);
-  }
+  },
 );
 
 /**
@@ -66,10 +80,7 @@ server.interceptors.response.use(
  * @param params
  * @constructor
  */
-export const get = async <T>(
-  url: string,
-  params: IAnyObj = {}
-): Promise<[IError, FcResponse<T> | undefined]> => {
+export const get = async <T>(url: string, params: IAnyObj = {}): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.get(url, { params: params });
     return [null, result.data as FcResponse<T>];
@@ -89,7 +100,7 @@ export const post = async <T>(
   url: string,
   data: IAnyObj = {},
   params: IAnyObj = {},
-  headers: IAnyObj = {}
+  headers: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.post(url, data, { params: params, headers: headers as AxiosHeaders });
@@ -109,7 +120,7 @@ export const post = async <T>(
 export const put = async <T>(
   url: string,
   data: IAnyObj = {},
-  params: IAnyObj = {}
+  params: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.put(url, data, { params: params });
@@ -128,7 +139,7 @@ export const put = async <T>(
 export const del = async <T>(
   url: string,
   data: IAnyObj = {},
-  params: IAnyObj = {}
+  params: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.delete(url, { data: data, params: params });

@@ -47,7 +47,7 @@ export interface CreateOrUpdateAppParamsType {
     /**
      * 应用简介
      */
-    description: string;
+    description?: string;
     /**
      * 对话轮次（1～10）
      */
@@ -63,7 +63,7 @@ export interface CreateOrUpdateAppParamsType {
     /**
      * 应用名称
      */
-    name: string;
+    name?: string;
     /**
      * 权限配置
      */

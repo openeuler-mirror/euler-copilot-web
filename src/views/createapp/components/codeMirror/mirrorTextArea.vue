@@ -10,7 +10,7 @@
   />
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { yaml } from '@codemirror/lang-yaml';
 
@@ -21,6 +21,16 @@ const handleChange = (e: string) => {
   code.value = e;
   emits('update:updateVal', code.value);
 };
+const props = defineProps<{
+  yamlCode: any;
+}>();
+watch(
+  () => props.yamlCode,
+  () => {
+    code.value = props.yamlCode;
+  },
+  { deep: true, immediate: true },
+);
 </script>
 <style lang="scss">
 .v-codemirror {

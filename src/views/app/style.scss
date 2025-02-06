@@ -70,6 +70,9 @@
           box-sizing: border-box;
           border: 1px solid transparent;
           cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
           border-radius: 8px;
           width: 320px;
           height: 136px;
@@ -79,6 +82,8 @@
             display: flex;
             .appCenterCardIcon {
               width: 80px;
+              display: flex;
+              align-items: center;
               .menu-icon {
                 width: 40px;
               }
@@ -109,6 +114,11 @@
                     height: 16px;
                     path {
                       fill: var(--o-text-color-tertiary);
+                    }
+                  }
+                  .appFavorite {
+                    path {
+                      fill: rgb(99, 149, 253);
                     }
                   }
                 }
