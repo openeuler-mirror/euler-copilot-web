@@ -6,6 +6,7 @@ import { ElTooltip } from 'element-plus';
 import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
+import BranchNode from './workFlowConfig/BranchNode.vue';
 import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
 import CustomControl from './CustomControl.vue';
@@ -18,6 +19,7 @@ import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@comp
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
 import yaml from 'js-yaml';
+import { BranchSourceIdType } from './types';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -75,6 +77,7 @@ const nodes = ref([
       nodePosition: 'Right',
       target: 'source',
     },
+    deletable: false,
     position: { x: 100, y: 160 },
   },
   {
@@ -86,6 +89,7 @@ const nodes = ref([
       nodePosition: 'Left',
       target: 'target',
     },
+    deletable: false,
     position: { x: 600, y: 160 },
   },
 ]);
@@ -122,6 +126,35 @@ const nodeStancesList = ref([
       desc: '条件说明',
     },
   },
+  {
+    id: '14',
+    type: 'branch',
+    mark: 'iiiiii',
+    data: {
+      label: 'LLM(分支节点)',
+      desc: '调用大模型，生成自然语言报告',
+    },
+  },
+  {
+    id: '15',
+    type: 'branch',
+    mark: 'iiiiii',
+    data: {
+      label: 'LLM(分支节点-成功状态)',
+      desc: '调用大模型，生成自然语言报告',
+      status: 'success',
+    },
+  },
+  {
+    id: '16',
+    type: 'branch',
+    mark: 'iiiiii',
+    data: {
+      label: 'LLM(分支节点-失败状态)',
+      desc: '调用大模型，生成自然语言报告',
+      status: 'error',
+    },
+  },
 ]);
 
 const apiServiceNodeList = ref([]);
@@ -136,8 +169,8 @@ const handleChangeZoom = zoomValue => {
 
 onConnect(e => {
   // 边的起点和终点节点的两个状态
-  const sourceItem = getNodes.value.find(item => item.id === e.source);
-  const targetItem = getNodes.value.find(item => item.id === e.target);
+  const sourceItem = findNode(e.source);
+  const targetItem = findNode(e.target);
   // 获取当前状态
   const sourceStatus = sourceItem?.data?.status || 'default';
   const targetStatus = targetItem?.data?.status || 'default';
@@ -184,6 +217,11 @@ const handleClose = () => {
 const delNode = id => {
   if (id) {
     const node = findNode(id);
+    // 获取以该节点为target的相连的其他节点
+    const connectEdges = getEdges.value.filter(edge => edge.target === id);
+    connectEdges.forEach(item => {
+      updateConnectNodeHandle(item.source, item.sourceHandle, true);
+    });
     node ? removeNodes(node) : '';
     // 删除节点时-判断节点是否都连接
     nodeAndLineConnection();
@@ -202,12 +240,10 @@ const closeDrawer = () => {
 
 const handleZommOnScroll = () => {
   const zoomObj = getViewport();
-  localStorage.setItem('nodes','[{"id":"node1","type":"custom-start","dimensions":{"width":56,"height":56},"computedPosition":{"x":28.75,"y":440,"z":0},"handleBounds":{"source":[{"id":null,"position":"right","nodeId":"node1","type":"source","x":50.627403259277344,"y":16.686248779296875,"width":16,"height":16}],"target":[]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":28.75,"y":440},"data":{"name":"开始","desc":"","nodePosition":"Right","target":"source"},"events":{}},{"id":"node2","type":"custom-end","dimensions":{"width":56,"height":56},"computedPosition":{"x":1713.75,"y":585,"z":1000},"handleBounds":{"source":[],"target":[{"id":null,"position":"left","nodeId":"node2","type":"target","x":-17.254791259765625,"y":16.686248779296875,"width":16,"height":16}]},"selected":true,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":1713.75,"y":585},"data":{"name":"结束","desc":"","nodePosition":"Left","target":"target"},"events":{}},{"id":"node9","type":"custom","dimensions":{"width":328,"height":96},"computedPosition":{"x":124.75,"y":414.5,"z":0},"handleBounds":{"source":[{"id":"target-a","position":"right","nodeId":"node9","type":"source","x":315.99998474121094,"y":17.99999237060547,"width":16,"height":16},{"id":"target-b","position":"right","nodeId":"node9","type":"source","x":315.99998474121094,"y":62.00000762939453,"width":16,"height":16}],"target":[{"id":null,"position":"left","nodeId":"node9","type":"target","x":-4.0000152587890625,"y":40,"width":16,"height":16}]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":124.75,"y":414.5},"data":{"serviceId":"6a08c845-abdc-45fb-853e-54a806437dab","apiId":"57aaf87c-d8ca-4b4d-967d-5c62bb6e7ec2","type":"choice","name":"【LLM】意图识别","description":"利用大模型能力选择分支","parametersTemplate":{"fixed_params":{},"params_schema":{"base_url":{"type":"string","description":"大模型的地址"},"api_key":{"type":"string","description":"大模型的api_key"},"prompt":{"type":"string","description":"大模型的提示词"}},"output_schema":{"content":{"type":"str","description":"大模型的返回内容"}},"choice":[{"branch":"valid","description":"是否进行CVE扫描"},{"branch":"invalid","description":"其他"}]},"editable":true,"createdAt":1737962938.624},"events":{},"class":"round-start"},{"id":"node10","type":"custom","dimensions":{"width":328,"height":88},"computedPosition":{"x":509.75,"y":291,"z":0},"handleBounds":{"source":[{"id":"target-a","position":"right","nodeId":"node10","type":"source","x":316.00006103515625,"y":36.000022888183594,"width":16,"height":16}],"target":[{"id":null,"position":"left","nodeId":"node10","type":"target","x":-4.000091552734375,"y":36.000022888183594,"width":16,"height":16}]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":509.75,"y":291},"data":{"serviceId":"6d7f65ff-55de-4206-9e5b-87aa2b529bd4","apiId":"b3a8faf5-786d-4e34-9d82-47512a134069","type":"search","name":"【API】扫描CVE漏洞","description":"扫描某个机器所有的CVE漏洞","parametersTemplate":{"fixed_params":{},"params_schema":{"host":{"type":"string","description":"需要扫描的机器IP地址"}},"output_schema":{"task_id":{"type":"str"}}},"editable":true,"createdAt":1737962938.624},"events":{},"class":"round-start"},{"id":"node11","type":"custom","dimensions":{"width":328,"height":96},"computedPosition":{"x":901,"y":205.75,"z":0},"handleBounds":{"source":[{"id":"target-a","position":"right","nodeId":"node11","type":"source","x":316.00006103515625,"y":17.99999237060547,"width":16,"height":16},{"id":"target-b","position":"right","nodeId":"node11","type":"source","x":316.00006103515625,"y":62.00000762939453,"width":16,"height":16}],"target":[{"id":null,"position":"left","nodeId":"node11","type":"target","x":-3.99993896484375,"y":40,"width":16,"height":16}]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":901,"y":205.75},"data":{"serviceId":"6a08c845-abdc-45fb-853e-54a806437dab","apiId":"d6919926-282e-47d0-84e9-8310930f0141","type":"choice","name":"【CHOICE】条件分支","description":"条件分支节点","parametersTemplate":{"fixed_params":{},"params_schema":{"use_llm":{"type":"boolean","description":"是否使用大模型"}},"output_schema":{},"choice":[{"branch":"valid","description":"扫描到CVE漏洞"},{"branch":"invalid","description":"其他"}]},"editable":true,"createdAt":1737962938.624},"events":{},"class":"round-start"},{"id":"node12","type":"custom","dimensions":{"width":328,"height":96},"computedPosition":{"x":1279.75,"y":79.5,"z":0},"handleBounds":{"source":[{"id":"target-a","position":"right","nodeId":"node12","type":"source","x":315.9999084472656,"y":17.99999237060547,"width":16,"height":16},{"id":"target-b","position":"right","nodeId":"node12","type":"source","x":315.9999084472656,"y":62.00000762939453,"width":16,"height":16}],"target":[{"id":null,"position":"left","nodeId":"node12","type":"target","x":-3.99993896484375,"y":40,"width":16,"height":16}]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":1279.75,"y":79.5},"data":{"serviceId":"6a08c845-abdc-45fb-853e-54a806437dab","apiId":"57aaf87c-d8ca-4b4d-967d-5c62bb6e7ec2","type":"choice","name":"【LLM】意图识别","description":"利用大模型能力选择分支","parametersTemplate":{"fixed_params":{},"params_schema":{"base_url":{"type":"string","description":"大模型的地址"},"api_key":{"type":"string","description":"大模型的api_key"},"prompt":{"type":"string","description":"大模型的提示词"}},"output_schema":{"content":{"type":"str","description":"大模型的返回内容"}},"choice":[{"branch":"valid","description":"是否进行CVE热修复"},{"branch":"invalid","description":"其他"}]},"editable":true,"createdAt":1737962938.624},"events":{},"class":"round-start"},{"id":"node13","type":"custom","dimensions":{"width":328,"height":88},"computedPosition":{"x":1696,"y":61,"z":0},"handleBounds":{"source":[{"id":"target-a","position":"right","nodeId":"node13","type":"source","x":315.9999084472656,"y":36.000003814697266,"width":16,"height":16}],"target":[{"id":null,"position":"left","nodeId":"node13","type":"target","x":-4.000091552734375,"y":36.000003814697266,"width":16,"height":16}]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":1696,"y":61},"data":{"serviceId":"6d7f65ff-55de-4206-9e5b-87aa2b529bd4","apiId":"bc30f899-3404-43d8-9036-bf05da6aee3a","type":"search","name":"【API】修复CVE漏洞","description":"修复某个机器上的CVE漏洞","parametersTemplate":{"fixed_params":{},"params_schema":{"host":{"type":"string","description":"需要扫描的机器IP地址"},"cve_id":{"type":"string","description":"cve漏洞的id"}},"output_schema":{"task_report":{"type":"dict[str,Any]","description":"cve修复任务详情"}}},"editable":true,"createdAt":1737962938.624},"events":{},"class":"round-start"},{"id":"node14","type":"custom","dimensions":{"width":328,"height":96},"computedPosition":{"x":1858.5,"y":322,"z":0},"handleBounds":{"source":[{"id":"target-a","position":"right","nodeId":"node14","type":"source","x":316.00006103515625,"y":17.99999237060547,"width":16,"height":16},{"id":"target-b","position":"right","nodeId":"node14","type":"source","x":316.00006103515625,"y":62.00000762939453,"width":16,"height":16}],"target":[{"id":null,"position":"left","nodeId":"node14","type":"target","x":-4.000091552734375,"y":40,"width":16,"height":16}]},"selected":false,"dragging":false,"resizing":false,"initialized":false,"isParent":false,"position":{"x":1858.5,"y":322},"data":{"serviceId":"6a08c845-abdc-45fb-853e-54a806437dab","apiId":"d6919926-282e-47d0-84e9-8310930f0141","type":"choice","name":"【CHOICE】条件分支","description":"条件分支节点","parametersTemplate":{"fixed_params":{},"params_schema":{"use_llm":{"type":"boolean","description":"是否使用大模型"}},"output_schema":{},"choice":[{"branch":"valid","description":"扫描到CVE漏洞"},{"branch":"invalid","description":"其他"}]},"editable":true,"createdAt":1737962938.624},"events":{},"class":"round-start"}]'); localStorage.setItem('edges',JSON.stringify(getEdges.value));
   flowZoom.value = Number(zoomObj.zoom.toFixed(1));
 };
 
 async function layoutGraph(direction) {
- 
   nodes.value = layout(getNodes.value, getEdges.value, direction);
 }
 
@@ -269,10 +305,6 @@ const updateNodeTest = state => {
 };
 
 onMounted(() => {
-  let nodes = localStorage.getItem("nodes");
-  setNodes(JSON.parse(nodes));
-  let edges = localStorage.getItem('edges');
-  setEdges(JSON.parse(edges));
   api
     .queryAllFlowService({
       page: 1,
@@ -302,6 +334,31 @@ const handleDemo = () => {
     nodes: getNodes.value,
     edges: getEdges.value,
   };
+};
+
+const edgesChange = edges => {
+  if (edges?.[0]?.type === 'remove' && edges[0]?.source) {
+    updateConnectNodeHandle(edges[0].source, edges[0]?.sourceHandle, true);
+    // 删除节点时-判断节点是否都连接
+    nodeAndLineConnection();
+  }
+};
+
+const updateConnectNodeHandle = (id, handle, connectable) => {
+  const node = findNode(id);
+  let handleType = 'isConnectSource';
+  // 默认为单节点
+  if (handle) {
+    // 说明是分支节点
+    handleType = handle === BranchSourceIdType.SOURCEA ? 'isConnectSourceA' : 'isConnectSourceB';
+  }
+  updateNode(id, { data: { ...node?.data, [handleType]: connectable } });
+};
+
+const nodesChange = nodes => {
+  if (nodes?.[0]?.type === 'remove') {
+    delNode(nodes[0].id);
+  }
 };
 
 defineExpose({
@@ -372,6 +429,8 @@ defineExpose({
         class="my-diagram-class"
         @dragover="onDragOver"
         @dragleave="onDragLeave"
+        @edges-change="edgesChange"
+        @nodes-change="nodesChange"
         @paneScroll="handleZommOnScroll"
       >
         <Background pattern-color="#aaa" :gap="8" />
@@ -380,6 +439,11 @@ defineExpose({
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
           <CustomNode v-bind="customNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></CustomNode>
+        </template>
+
+        <!-- 自定义分支节点 -->
+        <template #node-branch="branchNodeProps">
+          <BranchNode v-bind="branchNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></BranchNode>
         </template>
 
         <template #node-custom-start="customNodeStartProps">

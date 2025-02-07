@@ -14,6 +14,10 @@ const props = defineProps({
     type: String,
     required: false,
   },
+  deletable: {
+    type: Boolean,
+    required: false,
+  },
   position: {
     type: Object,
     required: false,
@@ -47,10 +51,11 @@ watch(
     <div class="outHandleRing outRingRight"></div>
     <div class="nodeShadow"></div>
     <div class="nodeSaEBorderBox">
-      <div v-if="props.data.name">{{ props.data.name }}</div>
-      <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
+      <img v-if="props.data.name === '开始'" src="@/assets/images/flow_start.svg" alt="">
+      <img v-else="props.data.name === '结束'" src="@/assets/images/flow_end.svg" alt="">
     </div>
   </div>
+  <div class="saEText">{{ props.data.name }}</div>
 </template>
 
 <style lang="scss">
@@ -82,6 +87,16 @@ watch(
         }
       }
     }
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .saEText {
+    color: var(--o-text-color-primary);
+    height: 24px;
+    text-align: center;
+    margin-top: 18px;
   }
 }
 
@@ -148,7 +163,7 @@ watch(
       z-index: -1;
       border-bottom: 4px solid transparent;
       &::after {
-        border: 3px solid rgba(99, 149, 253, 0.3);
+        border: 4px solid rgba(99, 149, 253, 0.3);
         background: rgba(99, 149, 253);
         background-clip: content-box;
       }
@@ -164,7 +179,7 @@ watch(
       z-index: -1;
       border-top: 4px solid transparent;
       &::after {
-        border: 3px solid rgba(99, 149, 253, 0.3);
+        border: 4px solid rgba(99, 149, 253, 0.3);
         background: rgba(99, 149, 253);
         background-clip: content-box;
       }
@@ -193,7 +208,7 @@ watch(
     content: '';
     width: 12px;
     height: 12px;
-    border: 3px solid rgb(223, 229, 239);
+    border: 4px solid rgb(223, 229, 239);
     border-radius: 50%;
     background: rgb(141, 152, 170);
   }
@@ -214,7 +229,7 @@ watch(
     content: '';
     width: 12px;
     height: 12px;
-    border: 3px solid rgb(223, 229, 239);
+    border: 4px solid rgb(223, 229, 239);
     border-radius: 50%;
     background: rgb(141, 152, 170);
   }

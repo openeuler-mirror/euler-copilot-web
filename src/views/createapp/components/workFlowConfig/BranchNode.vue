@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch } from 'vue';
+import { BranchSourceIdType } from '../types';
 const props = defineProps({
   id: {
     type: String,
@@ -42,13 +43,14 @@ watch(
   { deep: true, immediate: true },
 );
 
+
 const delNode = id => {
   emits('delNode', id);
 };
 
 // 编辑yaml
-const editYaml = (nodeName ,yamlCode)=> {
-  emits('editYamlDrawer', nodeName,yamlCode);
+const editYaml = (nodeName, yamlCode)=> {
+  emits('editYamlDrawer', nodeName, yamlCode);
 };
 </script>
 
@@ -70,13 +72,13 @@ const editYaml = (nodeName ,yamlCode)=> {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
-      <div v-if="props.data.type === 'choice'">
-        <div></div>
-      </div>
     </div>
-    <Handle type="source" :position="Position.Right" :connectable="props.data?.isConnectSource"></Handle>
-    <div class="delOverShadow rightBox"></div>
-    <div class="outHandleRing outRingRight"></div>
+    <Handle class="souceFirstHandle" :connectable="props.data?.isConnectSourceA" :id="BranchSourceIdType.SOURCEA" type="source" :position="Position.Right"></Handle>
+    <Handle class="souceSecondHandle" :connectable="props.data?.isConnectSourceB" :id="BranchSourceIdType.SOURCEB" type="source" :position="Position.Right"></Handle>
+    <div class="delOverShadow rightBox" style="top: 0%"></div>
+    <div class="delOverShadow rightBox" style="top: 50%"></div>
+    <div class="outHandleRing outRingRight" style="top: 30%"></div>
+    <div class="outHandleRing outRingRight" style="top: 70%"></div>
   </div>
 </template>
 
@@ -129,7 +131,6 @@ const editYaml = (nodeName ,yamlCode)=> {
       }
     }
     .vue-flow__handle-right {
-      top: 50%;
       right: 0px;
       width: 16px;
       height: 16px;
@@ -140,6 +141,13 @@ const editYaml = (nodeName ,yamlCode)=> {
       justify-content: center;
       border: none;
       z-index: 2;
+    }
+    .vue-flow__handle-right.souceFirstHandle {
+      top: 30%;
+    }
+    
+    .vue-flow__handle-right.souceSecondHandle {
+      top: 70%;
     }
 
     .vue-flow__handle-right::after {
@@ -194,7 +202,7 @@ const editYaml = (nodeName ,yamlCode)=> {
     }
     .delOverShadow {
       width: 8px;
-      height: 40px;
+      height: 50%;
       position: absolute;
       background-color: transparent;
       top: 20px;
@@ -239,6 +247,12 @@ const editYaml = (nodeName ,yamlCode)=> {
           background: rgba(99, 149, 253);
           background-clip: content-box;
         }
+      }
+      .vue-flow__handle-right.souceFirstHandle {
+        top: 30%;
+      }
+      .vue-flow__handle-right.souceSecondHandle {
+        top: 70%;
       }
       .outRingLeft {
         display: block;
@@ -285,6 +299,12 @@ const editYaml = (nodeName ,yamlCode)=> {
       border: 4px solid rgba(36, 171, 54, 0.3);
       border-left: 4px solid transparent;
       border-bottom: 4px solid transparent;
+      .vue-flow__handle-right.souceFirstHandle {
+        top: 30%;
+      }
+      .vue-flow__handle-right.souceSecondHandle {
+        top: 70%;
+      }
       &::after {
         border: 4px solid rgb(36, 171, 54, 0.3);
         background: rgb(36, 171, 54);
@@ -334,6 +354,12 @@ const editYaml = (nodeName ,yamlCode)=> {
       border: 4px solid rgba(227, 32, 32, 0.3);
       border-left: 4px solid transparent;
       border-bottom: 4px solid transparent;
+      .vue-flow__handle-right.souceFirstHandle {
+        top: 30%;
+      }
+      .vue-flow__handle-right.souceSecondHandle {
+        top: 70%;
+      }
       &::after {
         border: 4px solid rgb(227, 32, 32, 0.3);
         background: rgb(227, 32, 32);
