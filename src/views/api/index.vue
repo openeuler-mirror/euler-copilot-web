@@ -22,7 +22,7 @@
       <div class="appCenterCardContainer">
         <div class="appCenterCardBox">
           <div v-for="appItem in appList" class="appCenterCardSingle">
-            <div class="appCenterCardTop">
+            <div class="appCenterCardTop" @click="router.push(`/copilot?appId=123&name=234`)">
               <div class="appCenterCardIcon">
                 <el-icon class="menu-icon"
                   ><img class="create-button__icon" src="@/assets/svgs/robot_icon.svg"
@@ -62,14 +62,10 @@ import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 import { IconCaretDown, IconSearch, IconFavorite, IconUnfavorite } from '@computing/opendesign-icons';
 import './style.scss';
 import { reactive, ref } from 'vue';
+import router from 'src/router';
 const appList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-
 const drawer = ref(false);
 const direction = ref('rtl');
-const form = reactive({
-  name: '',
-  description: '',
-});
 
 const openSidebar = () => {
   drawer.value = true;

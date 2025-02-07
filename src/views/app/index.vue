@@ -127,7 +127,7 @@ const handleCreateApp = () => {
 
 const routerToDetail = appItem => {
   //获取appItem.id & appItem.name
-  router.push(`/copilot?id=${appItem.appId}&name=${encodeURIComponent(encodeURI(appItem.name))}`);
+  router.push(`/copilot?appId=${appItem.appId}&name=${encodeURIComponent(encodeURI(appItem.name))}`);
 };
 
 const handleParmasQueryAppList = (params?: any) => {
