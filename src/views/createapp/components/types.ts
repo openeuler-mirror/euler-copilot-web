@@ -12,6 +12,11 @@ import type { UserDialoguePanelType, RobotDialoguePanelType } from 'src/componen
 // 工具类型
 export type LinkType = 'redirect' | 'action';
 
+export enum BranchSourceIdType {
+  SOURCEA = "source_a",
+  SOURCEB = "source_b",
+}
+
 export interface LinkItem {
   key: string;
   label: string;
