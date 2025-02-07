@@ -49,8 +49,14 @@ const initCopilot = async (): Promise<void> => {
   } else {
     localStorage.setItem('theme', 'light');
   }
-  userinfo.value.organization = type;
   const currRoute = router.currentRoute;
+  if (currRoute.value.query.appId) {
+    app.value = {
+      appId: String(currRoute.value.query.appId),
+      name: String(currRoute.value.query.name),
+    };
+  }
+  userinfo.value.organization = type;
   if ( ['/copilot','/'].includes(currRoute.value?.path)) {
     const isLogin = await getUserInfo();
     if (!isLogin) {
@@ -58,16 +64,9 @@ const initCopilot = async (): Promise<void> => {
       await api.stopGeneration();
       await getHistorySession();
       // setApps();
-    }
-    return;
-  } else if (currRoute.value.query.id) {
-    app.value = {
-      id: String(currRoute.value.query.id),
-      name: String(currRoute.value.query.name),
-    };
-  } else {
-    console.log('else');
   }
+    return;
+  } 
 };
 
 const dialogVisible = ref(false);
@@ -121,7 +120,6 @@ onMounted(async() => {
 watch(
   () => route.path,
   () => {
-    console.log(111)
     initCopilot();
   },
   {

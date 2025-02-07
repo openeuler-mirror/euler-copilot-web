@@ -78,8 +78,8 @@ export interface FlowDataType {
 }
 
 export interface AppShowType {
-  id?: string,
-  name?:string,
+  appId: string,
+  name:string,
 }
 
 
