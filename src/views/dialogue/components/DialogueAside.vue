@@ -50,7 +50,7 @@ const isCollapsed = ref(false);
 const selectedAppId = ref(null);
 //
 const apps = ref([
-  { id: "1", name: 'CVE热修复助手' },
+  { appId: "1", name: 'CVE热修复助手' },
 ]);
 
 const filteredHistorySessions = computed(() => {
@@ -219,9 +219,13 @@ const toggleCollapse = () => {
 };
 
 const selectApp = id => {
-  selectedAppId.value = id;
   user_selected_app.value = [];
-  user_selected_app.value.push(app.value.id);
+  if(selectedAppId.value === id) {
+    selectedAppId.value = "";
+  }else{
+    selectedAppId.value = id;
+    user_selected_app.value.push(id);
+  }
 };
 function ensureAppAtFirstPosition() {
   if(!app.value.id){
@@ -237,7 +241,7 @@ function ensureAppAtFirstPosition() {
   }
   selectedAppId.value = app.value.id;
   user_selected_app.value = [];
-  user_selected_app.value.push(app.value.id);
+  user_selected_app.value.push(app.value.appId);
 }
 
 onMounted(async() => {
@@ -287,7 +291,7 @@ watch(
                 v-for="app in displayedApps"
                 :key="app.id"
                 @click="selectApp(app.appId)"
-                :class="{ selected: selectedAppId === app.id }"
+                :class="{ selected: selectedAppId === app.appId }"
               >
                 <span>{{ app.name }}</span>
               </li>

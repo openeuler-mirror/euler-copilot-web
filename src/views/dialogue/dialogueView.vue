@@ -42,7 +42,7 @@ const routerList = [
   { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
   { name: '语义中心', path: '/api' , src:ApiIcon , selectedSrc:ApiIconSelected ,routerName: 'api' },
   { name: '应用中心', path: '/app' , src:AppIcon , selectedSrc:AppIconSelected ,routerName: 'app' },
-  { name: '工具', path: '/tools' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
+  { name: '知识库', path: '/tools' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
 ];
 export interface ModelForm {
   max_tokens?: number;
