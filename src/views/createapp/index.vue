@@ -115,8 +115,7 @@ const handleJumperAppCenter = () => {
       <el-button>取消</el-button>
       <el-button>保存</el-button>
       <el-button :disabled="true">预览</el-button>
-      <!-- :disabled="appFormValidate || appFormValidate" -->
-      <el-button type="primary" @click="handlePulishApp()">发布</el-button>
+      <el-button type="primary" :disabled="publishValidate" @click="handlePulishApp()">发布</el-button>
     </div>
   </div>
 </template>
@@ -130,13 +129,11 @@ const handleJumperAppCenter = () => {
 ::-webkit-scrollbar {
   width: 3px !important;
   height: 3px !important;
-  // display: none;
 }
 
 /* 滚动条的滑块 */
 ::-webkit-scrollbar-thumb {
   background-color: #c3cedf;
   border-radius: 3px;
-  // display: none;
 }
 </style>
