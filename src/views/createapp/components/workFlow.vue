@@ -38,6 +38,7 @@ const debugDialogVisible = ref(false);
 const isNodeAndLineConnect = ref(false);
 const apiServiceList = ref([]);
 const yamlContent = ref();
+const hasWorkFlow = ref(true);
 const emits = defineEmits(['validateConnect']);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
@@ -482,7 +483,7 @@ defineExpose({
 
         <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       </VueFlow>
-      <div class="workFlowOps">
+      <div class="workFlowOps" v-if="hasWorkFlow">
         <div class="workFlowSelect">
           <el-select v-model="workFlowItem" placeholder="请选择" :suffix-icon="IconCaretDown">
             <template #footer class="selectFooter">
@@ -500,6 +501,11 @@ defineExpose({
           <img src="@/assets/images/debugBtn.png" v-else />
         </div>
         <div class="debugStatus"></div>
+      </div>
+      <div class="noWorkFlow" v-else>
+        <div class="noFlow"></div>
+        <div class="noFlowDesc">暂无工作流</div>
+        <el-button type="primary" class="w96 addWorkFlow" @click="addWorkFlow">新建工作流</el-button>
       </div>
     </div>
     <WorkFlowDialog

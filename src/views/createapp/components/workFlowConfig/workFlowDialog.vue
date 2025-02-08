@@ -9,10 +9,10 @@
       label-position="left"
     >
       <el-form-item prop="name" label="工作流名称">
-        <el-input v-model="workFlowData.name" placeholder="请输入" class="w320 o-validate-input" clearable></el-input>
+        <el-input v-model="workFlowData.name" placeholder="请输入" maxlength="20" class="w320 o-validate-input" clearable></el-input>
       </el-form-item>
       <el-form-item prop="desc" label="工作流描述">
-        <el-input v-model="workFlowData.desc" placeholder="请输入" class="w320 o-validate-input" clearable></el-input>
+        <el-input type="textarea" show-word-limit maxlength="150" v-model="workFlowData.desc" placeholder="请输入" class="w320 workFlowDesc o-validate-input" clearable></el-input>
       </el-form-item>
     </el-form>
     <template #footer>

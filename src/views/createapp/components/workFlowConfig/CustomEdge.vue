@@ -1,5 +1,5 @@
 <template>
-  <g :id="'edge' + props.id">
+  <g>
     <linearGradient id="success_success">
       <stop offset="0" stop-color="rgba(36, 171, 54, 0.2)" />
     </linearGradient>
@@ -14,7 +14,7 @@
       <stop offset="0" stop-color="rgba(227, 32, 32, 0.2)" />
       <stop offset="100" stop-color="rgba(36, 171, 54, 0.2)" />
     </linearGradient>
-    <linearGradient id="success_runing" >
+    <linearGradient id="success_runing">
       <stop offset="0" stop-color="rgba(36, 171, 54, 0.2)" />
       <stop offset="100" stop-color="rgba(99, 149, 253, 0.3)" />
     </linearGradient>
@@ -23,10 +23,8 @@
       <stop offset="100" stop-color="#DFE5EF" />
     </linearGradient>
     <path
-      :id="'line' + props.id"
       v-if="props.id && connectStatus.includes(status)"
-      :key="pathKey"
-      :d="`M  ${targetX } ${targetY - 1}` + path"
+      :d="`M ${targetX} ${targetY - 1}` +  path"
       fill="none"
       :stroke="`url(#${status})`"
       stroke-width="4"
@@ -58,7 +56,6 @@ const connectStatus = ref([
   'success_runing',
   'connect_runing',
 ]);
-const pathKey = ref(false)
 const props = defineProps({
   id: {
     type: String,
@@ -101,7 +98,6 @@ watch(
     if (!props.id) {
       return;
     }
-    pathKey.value = !pathKey.key;
     // 否则需要根据当前的起源节点和目的节点的位置，对相应的状态进行修改符合样式
     if (props?.targetX < props?.sourceX) {
       if (props.data.sourceStatus === 'success' && props.data.targetStatus === 'error') {
