@@ -1,6 +1,6 @@
 export default {
   home: {
-    name: 'openEuler Copilot System',
+    name: 'EulerCopilot',
   },
   tabs: {
     work: '作品',
@@ -73,7 +73,7 @@ export default {
     feedbackSuccesful: "反馈成功",
     regenerate: "重新生成",
     try_ask_me: "你可以继续问我：",
-    eulercopilot_is_thinking: "openEuler Copilot System正在生成回答...",
+    eulercopilot_is_thinking: "EulerCopilot正在生成回答...",
     generation_stopped: "回答已停止生成",
     stop: "停止回答",
     stopSuccessful: "暂停成功",

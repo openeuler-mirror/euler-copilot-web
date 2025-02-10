@@ -68,7 +68,7 @@ onMounted(() => {
     <div class="inital-panel">
       <div class="introduction">
         {{ $t('main.describe1') }}
-        <img src="@/assets/images/logoText.png" alt="" v-if="!appName?.length"/>
+        <img src="@/assets/images/logo-euler-copilot.png" alt="" v-if="!appName?.length"/>
         <div class="appNameTitle">{{ appName }}</div>
         {{ $t('main.describe2') }}
       </div>
