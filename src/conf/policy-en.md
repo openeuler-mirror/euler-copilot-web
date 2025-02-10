@@ -1,4 +1,4 @@
-# openEuler Copilot System Privacy Policy
+# EulerCopilot Privacy Policy
 
 The OpenAtom Foundation ("Foundation", "we", "our", or "us") understands the importance of your privacy and fully respects it. Please read this Privacy Statement ("Statement") carefully before you submit your personal data to us. If you have any questions about how we process your personal data, please feel free to contact us.
 

@@ -1,6 +1,6 @@
 export default {
     home: {
-      name: 'openEuler Copilot System',
+      name: 'EulerCopilot',
     },
     tabs: {
       work: 'Work',
@@ -73,7 +73,7 @@ export default {
       feedbackSuccesful:"Feedback succeeded.",
       regenerate: "Regenerate", // 这里我保留了原样，因为通常键名不加双引号  
       try_ask_me: "Try ask me:",  
-      eulercopilot_is_thinking: "openEuler Copilot System is thinking…",  
+      eulercopilot_is_thinking: "EulerCopilot is thinking…",  
       generation_stopped: "Generation stopped.",  
       stop: "Stop",  
       stopSuccessful: "Stop Successfully", 
