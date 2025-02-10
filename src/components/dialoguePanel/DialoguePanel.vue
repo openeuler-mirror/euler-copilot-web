@@ -13,14 +13,16 @@ import ReportPopover from "src/views/dialogue/components/ReportPopover.vue";
 import { onMounted, watch, onBeforeUnmount,reactive } from "vue";
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
-import { Linetooltip , Circlelegend } from './chartsCss'
 import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store'
+import JsonFormComponent from './JsonFormComponent.vue'
+import { Metadata } from "srcapis/paths/type";
+import DialogueFlow from "./DialogueFlow.vue";
+import DialogueThought from "./DialogueThought.vue";
 const { user_selected_plugins } = storeToRefs(useHistorySessionStore());
 import { Suggest } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
-
 const { language } = storeToRefs(useLangStore());
 const { changeLanguage } = useLangStore();
 const echartsDraw = ref();
@@ -68,11 +70,8 @@ export interface DialoguePanelProps {
   //
   modeOptions:any;
 }
-import JsonFormComponent from './JsonFormComponent.vue'
-import { Metadata } from "srcapis/paths/type";
-import DialogueFlow from "./DialogueFlow.vue";
-import { emit, title } from "process";
 
+const thoughtContent = ref('');
 var option = ref();
 var show = ref(false);
 const size = reactive({
@@ -238,18 +237,24 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return "";
   }
+  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
   let str = marked.parse(
     xss(props.content[props.currentSelected])
       .replace(/&gt;/g, ">")
       .replace(/&lt;/g, "<")
   )
+  //将table提取出来中加一个<div>父节点控制溢出
   let tableStart = str.indexOf('<table>');
   if(tableStart!== -1){
     str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
   }
-  //将table提取出来中加一个<div>父节点控制溢出
-  return str;
-  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
+  str = str+`dsadadsadada
+      <think>12121212</think>
+    `
+  //仅获取第一个遇到的 think 标签
+  thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  //将<think>标签替换为空
+  return str.replace(/<think>([\s\S]*?)<\/think>/g,'');
 });
 
 
@@ -380,12 +385,6 @@ const selectQuestion = (item:Suggest) => {
   
 };
 
-// const selectQuestion = (item:object) => {
-//   let question = item.question;
-//   let user_selected_flow = item.flow;
-//   emits('handleSendMessage',question,user_selected_flow);
-// };
-
 const popperSize = () => {
   if(language.value == "EN"){
     size.width = 418;
@@ -449,6 +448,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_plu
     <!-- AI回答 -->
     <div class="dialogue-panel__robot" v-else>
       <div class="dialogue-panel__robot-content">
+      <DialogueThought :content=thoughtContent v-if="thoughtContent" />
       <DialogueFlow v-if="flowdata"  :flowdata="props.flowdata"/> 
       <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
