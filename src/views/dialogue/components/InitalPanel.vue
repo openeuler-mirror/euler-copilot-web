@@ -97,7 +97,7 @@ const initTerm = () => {
   <div class="dialogue-panel">
     <div class="inital-panel">
       <div class="introduction">{{$t('main.describe1')}}
-        <img src="@/assets/images/logoText.png" alt="">
+        <img src="@/assets/images/logo-euler-copilot.png" alt="">
         {{$t('main.describe2')}}
       </div>
       <p class="inital-panel-tips">
