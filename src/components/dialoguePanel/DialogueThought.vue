@@ -6,7 +6,9 @@
           <div
             :class="{ 'is-collapsed': isCollapsed }"
             class="collapse-icon"
-          >></div>
+          >
+          <img src="@/assets/images/flow_arrow.png" alt="" class="o-collapse-icon">
+        </div>
           <span class="collapse-text">思考</span>
         </div>
       </div>
@@ -49,7 +51,6 @@
       padding: 0.5rem 1rem;
       cursor: pointer;
       background-color: #f8f8f8;
-      border-bottom: 1px dashed #ccc;
       
       .think-label {
         font-size: 0.9rem;
