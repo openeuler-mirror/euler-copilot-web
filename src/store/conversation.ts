@@ -126,12 +126,12 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: params.conversationId,
             groupId: params.groupId,
             // record_id: params.qaRecordId,
-            app:[{
+            app:{
               appId:params.user_selected_app[0],
               flowId: params.user_selected_flow,
               params: pp,
               auth:{},
-            }],
+            },
             features:features,
           }),
         });
@@ -149,12 +149,12 @@ export const useSessionStore = defineStore('conversation', () => {
             language,
             groupId: params.groupId,
             // record_id: params.qaRecordId,
-            app:[{
+            app:{
               appId:params.user_selected_app[0],
               flowId: "",
               params: pp,
               auth:{},
-            }],
+            },
             features:features,
           }),
         });
@@ -173,12 +173,12 @@ export const useSessionStore = defineStore('conversation', () => {
             language,
             groupId: params.groupId,
             // record_id: params.qaRecordId,
-            app:[{
+            app:{
               appId:"",
               flowId: "",
               params: {},
               auth:{},
-            }],
+            },
             features:features,
           }),
         });
