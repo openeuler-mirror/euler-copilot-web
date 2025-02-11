@@ -16,6 +16,10 @@ const appFormValidate = ref(true);
 const createAppType = ref('appConfig');
 const appConfigRef = ref();
 const workFlowRef = ref();
+const flowList = ref([]);
+// 后续的判断校验图标
+const interfaceValid = ref('');
+const flowValid = ref('');
 const handleChangeAppType = type => {
   createAppType.value = type;
 };
@@ -60,6 +64,15 @@ const validateConnect = valid => {
   publishValidate.value = !valid;
 };
 
+// 获取工作流列表
+const getFlowList = (flowDataList) => {
+  flowList.value = flowDataList;
+}
+
+// 保存当前工作流
+const saveFlow = () => {
+  workFlowRef.value.saveFlow();
+}
 watch(
   () => router,
   () => {
@@ -94,26 +107,26 @@ const handleJumperAppCenter = () => {
           :class="{ createAppBtnActive: createAppType === 'appConfig' }"
           @click="handleChangeAppType('appConfig')"
         >
-          界面配置
+          界面配置<span>{{ interfaceValid }}</span>
         </div>
         <div
           class="createAppBtn"
           :class="{ createAppBtnActive: createAppType !== 'appConfig' }"
           @click="handleChangeAppType('workFlow')"
         >
-          工作流编排
+          工作流编排<span>{{ flowValid }}</span>
         </div>
       </div>
     </div>
     <div class="createAppContainerMain" v-show="createAppType === 'appConfig'">
-      <AppConfig :handleValidateContent="handleValidateContent" ref="appConfigRef" />
+      <AppConfig :handleValidateContent="handleValidateContent" @getFlowList="getFlowList" ref="appConfigRef" />
     </div>
     <div class="createWorkFlowContainerMain" v-show="createAppType !== 'appConfig'">
-      <WorkFlow @validateConnect="validateConnect" ref="workFlowRef" />
+      <WorkFlow @validateConnect="validateConnect" :flowList="flowList" ref="workFlowRef" />
     </div>
     <div class="createAppContainerFooter">
       <el-button>取消</el-button>
-      <el-button>保存</el-button>
+      <el-button @click="saveFlow">保存</el-button>
       <el-button :disabled="true">预览</el-button>
       <el-button type="primary" :disabled="publishValidate" @click="handlePulishApp()">发布</el-button>
     </div>

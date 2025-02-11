@@ -9,10 +9,24 @@
       label-position="left"
     >
       <el-form-item prop="name" label="工作流名称">
-        <el-input v-model="workFlowData.name" placeholder="请输入" maxlength="20" class="w320 o-validate-input" clearable></el-input>
+        <el-input
+          v-model="workFlowData.name"
+          placeholder="请输入"
+          maxlength="20"
+          class="w320 o-validate-input"
+          clearable
+        ></el-input>
       </el-form-item>
       <el-form-item prop="desc" label="工作流描述">
-        <el-input type="textarea" show-word-limit maxlength="150" v-model="workFlowData.desc" placeholder="请输入" class="w320 workFlowDesc o-validate-input" clearable></el-input>
+        <el-input
+          type="textarea"
+          show-word-limit
+          maxlength="150"
+          v-model="workFlowData.description"
+          placeholder="请输入"
+          class="w320 workFlowDesc o-validate-input"
+          clearable
+        ></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -25,7 +39,12 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { api } from 'src/apis';
+import { useRoute } from 'vue-router';
+import { nanoid } from 'nanoid';
+import { ElMessage } from 'element-plus';
 const workFlowDiaVisible = ref(true);
+const route = useRoute();
 const props = defineProps({
   diaType: {
     type: String,
@@ -34,20 +53,88 @@ const props = defineProps({
     type: Object,
   },
 });
-const emits = defineEmits(['handleClose']);
+const emits = defineEmits(['handleClose', 'createFlowId']);
 const workFlowForm = ref();
 const workFlowData = ref({
   name: '',
-  desc: '',
+  description: '',
 });
 const workFlowRules = ref({
   name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
-  desc: [{ required: true, message: '请输入工作流描述', trigger: 'blur' }],
+  description: [{ required: true, message: '请输入工作流描述', trigger: 'blur' }],
 });
 const onCancel = () => {
   emits('handleClose');
 };
-const handleSubmit = () => {};
+const handleSubmit = () => {
+  // 创建工作流
+  const appId = route.query?.appId;
+  // 创建使用生成的flowId
+  const flowId = nanoid();
+  // 调用接口新建工作流
+  api
+    .createOrUpdateFlowTopology(
+      {
+        appId: appId,
+        flowId,
+        topologyCheck: false,
+      },
+      {
+        flow: {
+          name: workFlowData.value.name,
+          description: workFlowData.value.description,
+          enable: true,
+          editable: true,
+          // 创建工作流时，默认包含开始结束固定两节点，这两个节点非后端返回，其apiId与serviceId不为空即可
+          nodes: [
+            {
+              apiId: 'startId',
+              name: 'start',
+              serviceId: 'startService',
+              type: 'start',
+              description: 'startNode',
+              editable: false,
+              enable: true,
+              nodeId: 'node1',
+              position: {
+                x: 100,
+                y: 160,
+              },
+            },
+            {
+              apiId: 'endId',
+              name: 'end',
+              serviceId: 'endService',
+              type: 'end',
+              description: 'endNode',
+              editable: false,
+              enable: true,
+              nodeId: 'node2',
+              position: {
+                x: 600,
+                y: 160,
+              },
+            },
+          ],
+          // 初始创建的工作流边为空
+          edges: [
+          ],
+        },
+        focusPoint: {
+          x: 800,
+          y: 800,
+        },
+      },
+    )
+    .then(res => {
+      if (res[1]?.result?.flow) {
+        ElMessage.success('创建成功');
+        // 将创建成功后的flow对象传给父组件
+        emits('createFlowId', {...res[1].result.flow});
+        onCancel();
+      }
+    });
+};
 </script>
 <style lang="scss">
 .workFlowDia.el-dialog {

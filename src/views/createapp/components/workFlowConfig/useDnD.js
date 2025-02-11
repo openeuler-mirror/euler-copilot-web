@@ -38,7 +38,7 @@ export default function useDragAndDrop() {
       event.dataTransfer.setData('application/vueflow', type);
       event.dataTransfer.effectAllowed = 'move';
     }
-    draggedType.value = type;
+    draggedType.value = type === 'choice' ? 'branch' : 'custom';
     isDragging.value = true;
     nodeData.value = { ...info };
 
@@ -102,16 +102,14 @@ export default function useDragAndDrop() {
     const { off } = onNodesInitialized(() => {
       const vueFlowContainer = document.querySelector('.my-diagram-class');
       updateNode(nodeId, node => ({
-        
-          position: {
-            x: node.position.x - node.dimensions.width / 2,
-            y: node.position.y - node.dimensions.height / 2,
-          }
+        position: {
+          x: node.position.x - node.dimensions.width / 2,
+          y: node.position.y - node.dimensions.height / 2,
+        },
       }));
 
       off();
     });
-
     addNodes(newNode);
   }
 

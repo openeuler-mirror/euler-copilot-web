@@ -10,6 +10,7 @@ const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const route = useRoute();
 const props = withDefaults(defineProps(), {});
+const emits = defineEmits(['getFlowList']);
 
 const createAppForm = ref({
   icon: '',
@@ -17,10 +18,11 @@ const createAppForm = ref({
   description: '',
   links: [],
   recommendedQuestions: [],
-  dialogRounds: 1,
-  permissionType: 'all',
+  dialogRounds: 3,
+  permissionType: 'private',
   selectedPeople: [],
 });
+const flowDataList = ref([]);
 const searchName = ref('');
 const permissionTypeList = [
   {
@@ -42,6 +44,8 @@ const curPersonList = ref([...permissionList.value]);
 const createAppRole = ref({
   name: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
   description: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
+  dialogRounds: [{ required: true, message: '对话轮次不能为空', trigger: 'change' }],
+  descripermissionTypeption: [{ required: true, message: '权限不能为空', trigger: 'change' }],
 });
 const createAppFormRef = ref();
 const modeOptions = reactive([
@@ -85,17 +89,21 @@ onMounted(() => {
         id: route.query?.appId as string,
       })
       .then(res => {
-        let appInfo = res?.[1]?.result;
-        createAppForm.value = {
-          icon: appInfo.icon,
-          name: appInfo.name,
-          description: appInfo.description,
-          links: appInfo.links.map(item => item.url),
-          recommendedQuestions: appInfo.recommendedQuestions,
-          dialogRounds: appInfo.dialogRounds,
-          permission: { visibility: appInfo.permission.visibility },
-          permissionType: appInfo.permission.visibility,
-        };
+        const appInfo = res?.[1]?.result;
+        if (appInfo) {
+          createAppForm.value = {
+            icon: appInfo.icon,
+            name: appInfo.name,
+            description: appInfo.description,
+            links: appInfo.links.map(item => item.url),
+            recommendedQuestions: appInfo.recommendedQuestions,
+            dialogRounds: appInfo.dialogRounds,
+            permission: { visibility: appInfo.permission.visibility },
+            permissionType: appInfo.permission.visibility,
+          };
+          flowDataList.value = appInfo.workflows;
+          emits('getFlowList', flowDataList.value);
+        }
       });
   }
 });
@@ -213,7 +221,7 @@ defineExpose({
             <IconCaretRight />
           </el-icon>
         </template>
-        <el-form-item label="请选择对话轮次" prop="multiSession" class="notRequired">
+        <el-form-item label="请选择对话轮次" prop="dialogRounds">
           <div class="multiSessionItem">
             <el-input-number v-model="createAppForm.dialogRounds" :step="1" :min="1" :max="10"></el-input-number>
             <span class="sessionUnit">(1 ~ 10)</span>
@@ -227,7 +235,7 @@ defineExpose({
             <IconCaretRight />
           </el-icon>
         </template>
-        <el-form-item label="权限" prop="permissionType" class="permissionItem notRequired">
+        <el-form-item label="权限" prop="permissionType" class="permissionItem">
           <div class="permissionSelect">
             <el-radio-group v-model="createAppForm.permissionType">
               <el-radio v-for="(item, index) in permissionTypeList" :key="index" :value="item.value">
