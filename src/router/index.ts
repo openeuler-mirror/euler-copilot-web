@@ -37,10 +37,6 @@ const router = createRouter({
       name: 'tools',
       component: (): Promise<typeof import('src/views/tools/index.vue')> =>
         import('src/views/tools/index.vue'),
-      beforeEnter: (to, from, next) => {
-        window.location.href = 'https://www.baidu.com'
-        //之后改成 witchain——D
-      }
     },
     {
       path: '/404',
