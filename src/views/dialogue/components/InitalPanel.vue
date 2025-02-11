@@ -1,135 +1,100 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
 import { useChangeThemeStore } from 'src/store';
 import 'xterm/css/xterm.css';
-import { Terminal } from 'xterm';
-import {FitAddon} from 'xterm-addon-fit';
-import { AttachAddon } from 'xterm-addon-attach';
-import { successMsg } from 'src/components/Message';
+import router from 'src/router';
 const themeStore = useChangeThemeStore();
-const openShell = () => {
-  isTermShow.value = true;
-  fnChangeShellBox(true);
-  document.getElementById("shellView").style.width = "calc(100% - 48px)";
-  document.getElementById("shellView").style.height = "calc(100% - 104px)";
-  document.getElementById("shellView").style.margin = "64px 24px 40px 24px";
-  document.getElementById("shellView").style.borderRadius = "8px";
-}
+import { useRoute } from 'vue-router';
+import { api } from 'src/apis';
 
-const closeShell = () => {
-  isTermShow.value = false;
-  fnChangeShellBox(false);
-  // document.getElementById("shellView").style.width = "0%";
-}
+const route = useRoute();
+const appName = ref()
 
-let socket = ref(null);
-const terminal = ref(null);  //绑定dom组件
-const fitAddon = new FitAddon();
+const questions = [
+  {
+    groupId: 0,
+    id: 1,
+    question: 'open_euler_community_edition_categories',
+  },
+  {
+    groupId: 0,
+    id: 2,
+    question: 'lts_release_cycle_and_support',
+  },
+  {
+    groupId: 0,
+    id: 3,
+    question: 'innovation_release_cycle_and_support',
+  },
+  {
+    groupId: 0,
+    id: 4,
+    question: 'container_cloud_platform_solution',
+  },
+  {
+    groupId: 1,
+    id: 5,
+    question: 'sec_gear_main_functions',
+  },
+  {
+    groupId: 1,
+    id: 6,
+    question: 'dde_description',
+  },
+];
 
-let term = ref(null);
-let termLoading = ref(false);
-let isTermShow = ref(false);
-const activePane = ref('shell');
-const fnChangeShellBox = (isShow) => {
-  if (isShow) {
-    if (!socket.value){
-      termLoading.value = true;
-      createWs();
-    }
-  }else {
-    // 关闭连接
-    if (socket.value) {
-      socket.value.close();
-      socket.value = null;
-    }
-    if (term.value) {
-      term.value.dispose();
-    }
+const routerToAppCenter = () => {
+  router.push('/app');
+};
+
+onMounted(() => {
+  if (route.query?.id) {
+    api
+      .querySingleAppData({
+        id: route.query?.id as string,
+      })
+      .then(res => {
+        if(res?.[1]?.result?.name){
+          appName.value = res?.[1]?.result?.name
+        }
+      });
   }
-
-}
-
-
-const createWs = () => {
-  const hostname = window.location.host;
-  socket.value = new WebSocket(`wss://${hostname}/api/shell/ws/0`);
-  socket.value.onopen = () => {
-    termLoading.value = false;
-    // socket.value.send(JSON.stringify({
-    //   ctrl: 'resize',
-    //   data: {
-    //     width: 500,
-    //   }
-    // }));
-  }
-  socket.value.onclose = () => {
-    // console.log('close');
-  }
-  socket.value.onerror = (e) => {
-    term.value.write(`\x1b[31m${e}\x1b[m\r\n`);
-    termLoading.value = false;
-  }
-  initTerm();
-}
-
-const initTerm = () => {
-  term.value = new Terminal({
-    fontSize: 14,
-    cursorBlink: true,
-  })
-  const attachAddon = new AttachAddon(socket.value);
-  term.value.open(terminal.value);
-  fitAddon.activate(term.value) // 自适应尺寸
-  attachAddon.activate(term.value);
-
-  setTimeout(() => {
-    fitAddon.fit();
-  }, 5);
-  term.value.focus();
-  window.onresize = () => {
-    fitAddon.fit();
-  }
-}
+});
 </script>
 
 <template>
   <div class="dialogue-panel">
     <div class="inital-panel">
-      <div class="introduction">{{$t('main.describe1')}}
-        <img src="@/assets/images/logo-euler-copilot.png" alt="">
-        {{$t('main.describe2')}}
+      <div class="introduction">
+        {{ $t('main.describe1') }}
+        <img src="@/assets/images/logo-euler-copilot.png" alt="" v-if="!appName?.length"/>
+        <div class="appNameTitle">{{ appName }}</div>
+        {{ $t('main.describe2') }}
       </div>
-      <p class="inital-panel-tips">
-      </p>
-      <div class='container'>
+      <p class="inital-panel-tips"></p>
+      <div class="container">
         <div class="eg">
-          <p>{{$t('main.left_describe')}}</p>
+          <p>{{ $t('main.left_describe') }}</p>
           <ul class="eg-list">
             <li class="eg-list-item" v-for="item in EG_LIST" :key="item.key" :style="item.style">
               <img v-if="themeStore.theme === 'dark'" :src="item.iconDark" />
-              <img v-else :src="item.icon" alt="">
+              <img v-else :src="item.icon" alt="" />
               <div class="eg-list-item__text">
-                <p>{{ $t('main.'+item.key) }}</p>
-                <span class="eg-list-item__text-desc">{{
-                  $t('main.'+item.insertMessage)
-                }}</span>
+                <p>{{ $t('main.' + item.key) }}</p>
+                <span class="eg-list-item__text-desc">{{ $t('main.' + item.insertMessage) }}</span>
               </div>
             </li>
           </ul>
         </div>
-        <div class='shell'>
-          <p class='title'>{{$t('main.smart_shell')}}</p>
-          <div class='dse'>
-            {{$t('main.smart_shell_describe')}}
-          </div>
-        </div>
-        <div id='shellView' class='sidenav'>
-          <a href='' class='closebtn' @click='closeShell()'>x</a>
-          <div v-show="isTermShow" class="dialogue-shell">
-            <div style="height: 100%; width: 100%" ref="terminal" v-loading="termLoading">
-            </div>
-          </div>
+        <div class="question">
+          <p class="title">{{ $t('main.question') }}</p>
+          <ul class="question-list">
+            <li class="question-item" v-for="item in questions" :key="item.id">
+              <span class="question-number" :class="{ blue: item.id <= 3 }">{{ item.id }}</span>
+              {{ $t('question.' + item.question) }}
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -137,8 +102,7 @@ const initTerm = () => {
 </template>
 
 <style lang="scss" scoped>
-
-.dialogue-shell{
+.dialogue-shell {
   width: 100%;
   height: 100%;
 }
@@ -188,17 +152,37 @@ const initTerm = () => {
   margin-left: 50px;
 }
 
+.appNameTitle{
+  color: #6c77fa;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.question-list {
+  margin-top: 16px;
+  li {
+    margin-bottom: 16px;
+    span {
+      margin-right: 3px;
+    }
+    .blue {
+      color: #5ab3ff;
+    }
+  }
+}
 
 .container {
   display: flex;
   justify-content: center;
 
-  .shell {
+  .question {
     // display: block;
-    width: 264px;
+    width: 492px;
     height: auto;
-    // background-color: var(--o-bg-color-base);
-    background: var(--o-shell-image) no-repeat;
+    box-shadow: 0px 5.18px 20.72px 0px rgba(221, 225, 240, 0.5);
+    background: linear-gradient(270deg, rgb(227, 242, 255), rgb(195, 227, 255) 33.232%, rgb(197, 203, 249) 85.699%);
+    // opacity: 0.5;
+    border-radius: 8px;
     background-size: 100% 100%;
     margin-left: 12px;
     padding: 24px;
@@ -216,34 +200,6 @@ const initTerm = () => {
       margin-top: 12px;
       font-size: 14px;
       color: var(--o-text-color-secondary);
-    }
-
-    &-btn {
-      display: flex;
-      height: 100%;
-      position: relative;
-
-      // align-items: center;
-      p {
-        display: block;
-        align-self: center;
-        position: absolute;
-        width: 96px;
-        line-height: 32px;
-        border-radius: 100px;
-        height: 32px;
-        background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-        height: 32px;
-        align-self: center;
-        // margin: 0px 0px 12px 12px;
-        color: white;
-        bottom: 0px;
-
-        p {
-          text-align: center;
-          font-size: 14px;
-        }
-      }
     }
   }
 }
@@ -285,11 +241,30 @@ const initTerm = () => {
     background-color: var(--o-bg-color-base);
     padding: 24px;
     border-radius: 8px;
-    min-width: 640px;
-
+    width: 492px;
+    height: 320px;
     p {
       font-size: 16px;
       color: var(--o-text-color-secondary);
+    }
+    &-btn {
+      display: flex;
+      position: relative;
+      top: 50px;
+      p {
+        display: block;
+        align-self: center;
+        position: absolute;
+        width: 120px;
+        line-height: 32px;
+        border-radius: 100px;
+        height: 32px;
+        background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
+        height: 32px;
+        color: white;
+        text-align: center;
+        font-size: 14px;
+      }
     }
   }
 
@@ -301,7 +276,7 @@ const initTerm = () => {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-
+    margin-top: 8px;
     li {
       cursor: text;
     }
@@ -310,11 +285,11 @@ const initTerm = () => {
       display: flex;
       align-items: center;
       width: calc(50% - 8px);
-      height: 64px;
-      background-color: transparent;
-      margin-top: 20px;
+      height: 80px;
+      // background: rgb(244, 246, 250);
+      margin-top: 8px;
       overflow: hidden;
-
+      border-radius: 8px;
       @media screen and (max-width: 1368px) {
         width: calc(50% - 4px);
         padding: 10px;
@@ -325,19 +300,27 @@ const initTerm = () => {
         padding: 10px;
       }
 
+      &:hover {
+        box-shadow: 0 5.18px 20.72px 0 rgba(221, 225, 240, 0.5);
+        background: linear-gradient(
+          270deg,
+          rgb(229, 239, 248),
+          rgb(199, 227, 250) 24.366%,
+          rgba(175, 205, 242) 57.543%,
+          rgb(152, 162, 247) 96.781%
+        );
+      }
+
       img {
         width: 37px;
         height: 37px;
-        // align-self: baseline;
-        margin-right: 6px;
+        margin: 0 6px 0 8px;
       }
-
 
       &__text {
         width: 100%;
         display: flex;
         flex-direction: column;
-        // margin-left: -12px;
         font-size: 16px;
         font-weight: 700;
         color: var(--o-text-color-primary);

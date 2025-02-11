@@ -207,11 +207,6 @@ function hanleAsideVisible(): void {
 
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
-        <ElButton class="create-button" @click="createNewSession">
-          <img class="create-button__icon" src="@/assets/svgs/create.svg" />
-          <span>{{ $t('history.new_chat') }}</span>
-        </ElButton>
-
         <!-- 历史记录 -->
         <div class="history-record">
           <div class="history-record-title">
@@ -441,7 +436,6 @@ function hanleAsideVisible(): void {
   }
 
   .history-record {
-    margin-top: 15px;
     flex: 1;
     display: flex;
     height: calc(100% - 55px - 80px);
