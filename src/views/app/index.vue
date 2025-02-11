@@ -89,10 +89,11 @@ import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 
 import { IconCaretDown, IconSearch, IconFavorite, IconUnfavorite, IconSuccess } from '@computing/opendesign-icons';
 import './style.scss';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { IconAlarm } from '@computing/opendesign-icons';
 const router = useRouter();
 const appType = ref('my');
 const appSearchType = ref('all');
@@ -184,22 +185,27 @@ const handleSearchAppList = type => {
 
 const handleDelApp = (e, item) => {
   e.stopPropagation();
-  api
-    .deleteSingleAppData({
-      id: item.appId,
-    })
-    .then(res => {
-      if (res[1]) {
-        ElMessage({
-          showClose: true,
-          message: '删除成功',
-          icon: IconSuccess,
-          customClass: 'o-message--success',
-          duration: 3000,
-        });
-        handleParmasQueryAppList();
-      }
-    });
+  ElMessageBox.confirm('确定删除此应用吗？', '提示', {
+    type: 'warning',
+    icon: markRaw(IconAlarm),
+  }).then(() => {
+    api
+      .deleteSingleAppData({
+        id: item.appId,
+      })
+      .then(res => {
+        if (res[1]) {
+          ElMessage({
+            showClose: true,
+            message: '删除成功',
+            icon: IconSuccess,
+            customClass: 'o-message--success',
+            duration: 3000,
+          });
+          handleParmasQueryAppList();
+        }
+      });
+  });
 };
 
 const handleEditApp = (e, item) => {

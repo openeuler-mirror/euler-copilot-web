@@ -180,3 +180,27 @@
     color: var(--o-color-white) !important;
   }
 }
+// 应用中心删除二次提示样式
+.el-message-box {
+  min-width: 400px;
+  padding: 0px !important;
+  border-radius: 8px;
+  .el-message-box__headerbtn {
+    width: 16px;
+    height: 16px;
+    right: 20px;
+  }
+  .el-message-box__status {
+    top: 0px;
+  }
+  .el-message-box__message {
+    padding-left: 4px;
+  }
+  .el-message-box__btns {
+    flex-direction: row;
+    .el-button {
+      width: 64px;
+      height: 24px;
+    }
+  }
+}

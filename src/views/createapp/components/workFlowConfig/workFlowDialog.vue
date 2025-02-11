@@ -89,7 +89,7 @@ const handleSubmit = () => {
           nodes: [
             {
               apiId: 'startId',
-              name: 'start',
+              name: '开始',
               serviceId: 'startService',
               type: 'start',
               description: 'startNode',
@@ -103,7 +103,7 @@ const handleSubmit = () => {
             },
             {
               apiId: 'endId',
-              name: 'end',
+              name: '结束',
               serviceId: 'endService',
               type: 'end',
               description: 'endNode',

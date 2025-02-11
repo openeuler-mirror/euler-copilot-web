@@ -111,6 +111,15 @@
       .el-collapse-item__header {
         padding: 0 !important;
         height: 28px;
+        font-size: 14px;
+        color: var(--o-text-color-primary);
+        display: flex;
+        gap: 8px;
+        text-align: left;
+        flex-wrap: nowrap;
+        .el-icon {
+          color: var(--o-text-color-tertiary);
+        }
       }
       .el-collapse-item__content {
         margin-left: 0px;
@@ -192,14 +201,6 @@
       }
     }
   }
-  .addWorkFlow {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    .el-icon {
-      color: var(--o-text-color-tertiary);
-    }
-  }
 
   .vueFlowContainer {
     width: 100%;
@@ -230,6 +231,16 @@
   .vue-flow__panel.right {
     right: unset;
     left: 0;
+  }
+}
+
+.addWorkFlow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--o-text-color-secondary);
+  .el-icon {
+    color: var(--o-text-color-tertiary);
   }
 }
 

@@ -3,7 +3,7 @@ import '../../styles/workFlowArrange.scss';
 import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip, ElMessage } from 'element-plus';
-import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
+import { VueFlow, useVueFlow, Panel, Position } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import BranchNode from './workFlowConfig/BranchNode.vue';
@@ -28,7 +28,7 @@ const isCopilotAsideVisible = ref(true);
 const apiSearchValue = ref();
 const activeNames = ref([]);
 const activeName = ref();
-const workFlowItem = ref();
+const workFlowItemName = ref();
 const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
@@ -44,7 +44,7 @@ const emits = defineEmits(['validateConnect']);
 const route = useRoute();
 const workFlowList = ref([]);
 const props = defineProps(['flowList']);
-const flowObj = ref();
+const flowObj = ref({});
 const nodes = ref([]);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
@@ -363,13 +363,15 @@ const nodesChange = nodes => {
 };
 
 // 子组件获取的flow
-const getCreatedFlow = (flowObj) => {
+const getCreatedFlow = createdFlowObj => {
   if (flowObj) {
-    flowObj.value = flowObj;
+    flowObj.value = { ...createdFlowObj };
   }
+  // 更新当前应用下的工作流列表下拉框
   queryFlow();
   handleClose();
-}
+  redrageFlow(flowObj.value.nodes, flowObj.value.edges);
+};
 
 const queryFlow = () => {
   // 查询当前应用下的flowIdList
@@ -397,11 +399,16 @@ const editFlow = item => {
     .then(res => {
       if (res[1]?.result?.flow) {
         flowObj.value = res[1].result.flow;
+        redrageFlow(flowObj.value.nodes, flowObj.value.edges);
       }
     });
 };
 
 const delFlow = item => {
+  // 删除的如果是当前选中的，需要将选中的清空
+  if (workFlowItemName.value === item.name) {
+    workFlowItemName.value = '';
+  }
   api
     .delFlowTopology({
       appId: route.query?.appId,
@@ -418,7 +425,51 @@ const delFlow = item => {
 
 // 下拉选择对应的工作流
 const choiceFlowId = flowItem => {
-  workFlowItem.value = flowItem.name;
+  workFlowItemName.value = flowItem.name;
+  editFlow(flowItem);
+  console.log(flowItem);
+};
+
+const redrageFlow = (nodesList, edgesList) => {
+  console.log(getEdges.value, 'getEdge');
+  const newNodeList = nodesList.map(node => {
+    let newNode = {
+      id: node.nodeId,
+      type: node.type,
+      data: {
+        name: node.name,
+        description: node.description,
+      },
+      position: node.position,
+      deletable: true,
+    };
+    if (node.type === 'start' || node.type === 'end') {
+      newNode.data = {
+        ...newNode.data,
+        target: node.type === 'start' ? 'source' : 'target',
+        nodePosition: node.type === 'start' ? 'Right' : 'Left',
+      };
+      newNode.deletable = false;
+    } else if (node.type === 'choice') {
+      newNode.type = 'branch';
+    } else {
+      newNode.type = 'custom';
+    }
+    return newNode;
+  });
+  const newEdgeList = edgesList.map(edge => {
+    let newEdge = {
+      id: edge.edgeId,
+      source: edge.sourceNode,
+      target: edge.targetNode,
+      branchId: edge.branchId,
+      type: 'normal',
+    };
+    // 线分支条件需后续添加
+    return newEdge;
+  });
+  setNodes(newNodeList);
+  setEdges(newEdgeList);
 };
 
 const saveFlow = () => {
@@ -433,10 +484,10 @@ const saveFlow = () => {
       enable: true,
       editable: false,
       position: item.position,
-      apiId: item.data.nodeMetaDataId, 
+      apiId: item.data.nodeMetaDataId,
       serviceId: item.data.serviceId,
       nodeId: item.id,
-      ...item.data
+      ...item.data,
     };
     if (item.type === 'end' || item.type === 'start') {
       // 更新开始结束节点结构
@@ -457,7 +508,7 @@ const saveFlow = () => {
       sourceNode: item.sourceNode.id,
       targetNode: item.targetNode.id,
       type: item.type,
-      branchId: item.sourceHandle || ''
+      branchId: item.sourceHandle || '',
     };
     return newEdge;
   });
@@ -483,7 +534,7 @@ const saveFlow = () => {
     )
     .then(res => {
       if (res[1].result) {
-        ElMessage.success('更新成功')
+        ElMessage.success('更新成功');
         queryFlow();
       }
     });
@@ -516,11 +567,7 @@ defineExpose({
             </div>
             <div class="apiContanter">
               <el-collapse v-model="activeName" @change="handleChange" class="o-hpc-collapse">
-                <el-collapse-item
-                  title="Consistency"
-                  :name="item.serviceId"
-                  v-for="item in apiServiceList"
-                >
+                <el-collapse-item title="Consistency" :name="item.serviceId" v-for="item in apiServiceList">
                   <template #title>
                     <el-icon
                       class="el-collapse-item__arrow"
@@ -535,7 +582,7 @@ defineExpose({
                     v-for="(node, index) in item.nodeMetaDatas"
                     :key="index"
                     :draggable="true"
-                    @dragstart="onDragStart($event, node.type, { serviceId: item.serviceId, ...node }, flowObj?.flowId)"
+                    @dragstart="onDragStart($event, node.type, { serviceId: item.serviceId, ...node })"
                   >
                     {{ node.name }}
                   </div>
@@ -612,7 +659,7 @@ defineExpose({
       </VueFlow>
       <div class="workFlowOps" v-if="hasWorkFlow">
         <div class="workFlowSelect">
-          <el-select v-model="workFlowItem" placeholder="请选择" :suffix-icon="IconCaretDown">
+          <el-select v-model="workFlowItemName" placeholder="请选择" :suffix-icon="IconCaretDown">
             <el-option
               class="workFlowOption"
               v-for="(item, index) in workFlowList"
