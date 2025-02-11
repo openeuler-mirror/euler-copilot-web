@@ -232,6 +232,11 @@
         }
         .el-form-item__label {
           height: 16px;
+          &::before {
+            content: '*';
+            margin-right: 4px;
+            color: var(--el-color-danger);
+          }
         }
         .el-radio-group {
           display: flex;

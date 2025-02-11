@@ -19,10 +19,6 @@ const props = defineProps({
     type: Object,
     required: false,
   },
-  mark: {
-    type: String,
-    required: false,
-  },
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
@@ -73,6 +69,9 @@ const editYaml = (nodeName, yamlCode) => {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
+      <div class="branchDesc" v-if="props.data.parametersTemplate?.choice">
+        <div v-for="(item, index) in props.data.parametersTemplate.choice" :key="index"> {{ item.description }}</div>
+      </div>
     </div>
     <Handle
       class="souceFirstHandle"

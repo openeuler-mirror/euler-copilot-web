@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElTooltip } from 'element-plus';
+import { ElTooltip, ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
@@ -20,6 +20,7 @@ import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
 import yaml from 'js-yaml';
 import { BranchSourceIdType } from './types';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -40,6 +41,11 @@ const apiServiceList = ref([]);
 const yamlContent = ref();
 const hasWorkFlow = ref(true);
 const emits = defineEmits(['validateConnect']);
+const route = useRoute();
+const workFlowList = ref([]);
+const props = defineProps(['flowList']);
+const flowObj = ref();
+const nodes = ref([]);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -68,13 +74,13 @@ const { layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
-const nodes = ref([
+const initNodes = ref([
   {
     id: 'node1',
-    type: 'custom-start',
+    type: 'start',
     data: {
       name: '开始',
-      desc: '',
+      description: '',
       nodePosition: 'Right',
       target: 'source',
     },
@@ -83,10 +89,10 @@ const nodes = ref([
   },
   {
     id: 'node2',
-    type: 'custom-end',
+    type: 'end',
     data: {
       name: '结束',
-      desc: '',
+      description: '',
       nodePosition: 'Left',
       target: 'target',
     },
@@ -158,8 +164,6 @@ const nodeStancesList = ref([
   },
 ]);
 
-const apiServiceNodeList = ref([]);
-
 const handleChangeZoom = zoomValue => {
   setViewport({
     zoom: zoomValue,
@@ -168,6 +172,16 @@ const handleChangeZoom = zoomValue => {
   });
 };
 
+watch(
+  props,
+  () => {
+    nodes.value = initNodes.value;
+    // 获取当前工作流
+    workFlowList.value = [...props.flowList];
+  },
+  { deep: true, immediate: true },
+);
+
 onConnect(e => {
   // 边的起点和终点节点的两个状态
   const sourceItem = findNode(e.source);
@@ -175,13 +189,17 @@ onConnect(e => {
   // 获取当前状态
   const sourceStatus = sourceItem?.data?.status || 'default';
   const targetStatus = targetItem?.data?.status || 'default';
+  // 更新source源节点handle连接状态
+  if (sourceItem?.id) {
+    updateConnectNodeHandle(sourceItem.id, e.sourceHandle, false);
+  }
   addEdges({
     ...e,
     data: {
       sourceStatus,
       targetStatus,
     },
-    type: 'custom',
+    type: 'normal',
   });
   // 添加边连接时-判断节点是否都连接
   nodeAndLineConnection();
@@ -190,20 +208,6 @@ const handleChange = activeList => {
   activeNames.value = activeName.value;
 };
 
-const serviceIdObj = ref({});
-
-const handleClickCollapse = serviceId => {
-  if (!serviceIdObj.value[serviceId]) {
-    api
-      .querySingleFlowServiceNode({
-        serviceId: serviceId,
-      })
-      .then(node => {
-        serviceIdObj.value[serviceId] = node[1]?.result.nodeMetaDatas;
-        apiServiceNodeList.value = node[1]?.result.nodeMetaDatas;
-      });
-  }
-};
 // 打开新增工作流弹窗
 const addWorkFlow = () => {
   // 待增加新增弹窗
@@ -257,12 +261,12 @@ const nodeAndLineConnection = () => {
   const len = curNodes.length;
   // 遍历每个节点
   for (let i = 0; i < len; i++) {
-    if (curNodes[i].type === 'custom-start') {
+    if (curNodes[i].type === 'start') {
       // 判断开始节点是否连接
-      isNodeConnect = curEdges.some(item => item.sourceNode?.type === 'custom-start');
-    } else if (curNodes[i].type === 'custom-end') {
+      isNodeConnect = curEdges.some(item => item.sourceNode?.type === 'start');
+    } else if (curNodes[i].type === 'end') {
       // 判断结束节点是否连接
-      isNodeConnect = curEdges.some(item => item.targetNode?.type === 'custom-end');
+      isNodeConnect = curEdges.some(item => item.targetNode?.type === 'end');
     } else {
       // 判断普通节点是否有连接-普通节点开始和结束都需要进行判断
       const isStartCustomNodeConnect = curEdges.some(item => item.sourceNode?.id === curNodes[i].id);
@@ -280,6 +284,10 @@ const nodeAndLineConnection = () => {
 
 // 拖拽添加
 const dropFunc = e => {
+  if (!flowObj.value?.flowId) {
+    ElMessage.warning('请先创建/编辑工作流');
+    return;
+  }
   onDrop(e);
   // 添加节点时-判断节点是否都连接
   nodeAndLineConnection();
@@ -315,14 +323,6 @@ onMounted(() => {
       apiServiceList.value = res[1]?.result.services;
       activeName.value = [res[1]?.result.services[0]?.serviceId];
       activeNames.value = [res[1]?.result.services[0]?.serviceId];
-      api
-        .querySingleFlowServiceNode({
-          serviceId: res[1]?.result.services[0]?.serviceId,
-        })
-        .then(node => {
-          serviceIdObj.value[res[1]?.result.services[0]?.serviceId] = node[1]?.result.nodeMetaDatas;
-          apiServiceNodeList.value = node[1]?.result.nodeMetaDatas;
-        });
     });
 });
 
@@ -362,8 +362,136 @@ const nodesChange = nodes => {
   }
 };
 
+// 子组件获取的flow
+const getCreatedFlow = (flowObj) => {
+  if (flowObj) {
+    flowObj.value = flowObj;
+  }
+  queryFlow();
+  handleClose();
+}
+
+const queryFlow = () => {
+  // 查询当前应用下的flowIdList
+  if (route.query?.appId) {
+    api
+      .querySingleAppData({
+        id: route.query?.appId as string,
+      })
+      .then(res => {
+        const appInfo = res?.[1]?.result;
+        if (appInfo) {
+          workFlowList.value = appInfo.workflows || [];
+        }
+      });
+  }
+};
+
+// 点击编辑工作流--查询当前工作流数据-后续添加回显
+const editFlow = item => {
+  api
+    .querySingleFlowTopology({
+      appId: route.query?.appId,
+      flowId: item.id,
+    })
+    .then(res => {
+      if (res[1]?.result?.flow) {
+        flowObj.value = res[1].result.flow;
+      }
+    });
+};
+
+const delFlow = item => {
+  api
+    .delFlowTopology({
+      appId: route.query?.appId,
+      flowId: item.id,
+    })
+    .then(res => {
+      if (res[1]?.result) {
+        ElMessage.success('删除工作流成功');
+        // 并且需要更新工作流下拉框
+        queryFlow();
+      }
+    });
+};
+
+// 下拉选择对应的工作流
+const choiceFlowId = flowItem => {
+  workFlowItem.value = flowItem.name;
+};
+
+const saveFlow = () => {
+  const appId = route.query?.appId;
+
+  if (!flowObj.value.flowId) {
+    return;
+  }
+  // 将对应的节点和边存储格式改造
+  const updateNodes = getNodes.value.map(item => {
+    let newItem = {
+      enable: true,
+      editable: false,
+      position: item.position,
+      apiId: item.data.nodeMetaDataId, 
+      serviceId: item.data.serviceId,
+      nodeId: item.id,
+      ...item.data
+    };
+    if (item.type === 'end' || item.type === 'start') {
+      // 更新开始结束节点结构
+      newItem = {
+        ...newItem,
+        apiId: item.type, // 这两个id个应该没有-暂时随意复制
+        serviceId: item.type,
+        nodeId: item.id,
+        type: item.type,
+      };
+    }
+    return newItem;
+  });
+  // 更新对应的边的结构
+  const updateEdges = getEdges.value.map(item => {
+    let newEdge = {
+      edgeId: item.id,
+      sourceNode: item.sourceNode.id,
+      targetNode: item.targetNode.id,
+      type: item.type,
+      branchId: item.sourceHandle || ''
+    };
+    return newEdge;
+  });
+  // 更新最新的节点与边的数据
+  api
+    .createOrUpdateFlowTopology(
+      {
+        appId: appId,
+        flowId: flowObj.value.flowId,
+        topologyCheck: false,
+      },
+      {
+        flow: {
+          ...flowObj.value,
+          nodes: updateNodes,
+          edges: updateEdges,
+        },
+        focusPoint: {
+          x: 800,
+          y: 800,
+        },
+      },
+    )
+    .then(res => {
+      if (res[1].result) {
+        ElMessage.success('更新成功')
+        queryFlow();
+      }
+    });
+};
+
 defineExpose({
   handleDemo,
+  saveFlow,
 });
 </script>
 <template>
@@ -390,7 +518,6 @@ defineExpose({
               <el-collapse v-model="activeName" @change="handleChange" class="o-hpc-collapse">
                 <el-collapse-item
                   title="Consistency"
-                  @click="handleClickCollapse(item.serviceId)"
                   :name="item.serviceId"
                   v-for="item in apiServiceList"
                 >
@@ -405,10 +532,10 @@ defineExpose({
                   </template>
                   <div
                     class="stancesItem"
-                    v-for="(node, index) in serviceIdObj[item.serviceId]"
-                    :key="node.apiId"
+                    v-for="(node, index) in item.nodeMetaDatas"
+                    :key="index"
                     :draggable="true"
-                    @dragstart="onDragStart($event, 'custom', { serviceId: item.serviceId, ...node })"
+                    @dragstart="onDragStart($event, node.type, { serviceId: item.serviceId, ...node }, flowObj?.flowId)"
                   >
                     {{ node.name }}
                   </div>
@@ -447,16 +574,16 @@ defineExpose({
           <BranchNode v-bind="branchNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></BranchNode>
         </template>
 
-        <template #node-custom-start="customNodeStartProps">
-          <CustomSaENode v-bind="customNodeStartProps"></CustomSaENode>
+        <template #node-start="nodeStartProps">
+          <CustomSaENode v-bind="nodeStartProps"></CustomSaENode>
         </template>
 
-        <template #node-custom-end="customNodeEndProps">
-          <CustomSaENode v-bind="customNodeEndProps"></CustomSaENode>
+        <template #node-end="nodeEndProps">
+          <CustomSaENode v-bind="nodeEndProps"></CustomSaENode>
         </template>
 
         <!-- 自定义边线 -->
-        <template #edge-custom="props">
+        <template #edge-normal="props">
           <CustomEdge
             :id="props.id"
             :key="props.id"
@@ -486,6 +613,20 @@ defineExpose({
       <div class="workFlowOps" v-if="hasWorkFlow">
         <div class="workFlowSelect">
           <el-select v-model="workFlowItem" placeholder="请选择" :suffix-icon="IconCaretDown">
+            <el-option
+              class="workFlowOption"
+              v-for="(item, index) in workFlowList"
+              :key="index"
+              @click="choiceFlowId(item)"
+            >
+              <div class="flowName">{{ item.name }}</div>
+              <div class="dealIcon">
+                <img class="conversation-title__svg" src="@/assets/svgs/light_editor.svg" @click="editFlow(item)" />
+              </div>
+              <div class="dealIcon">
+                <img class="conversation-title__svg" src="@/assets/svgs/light_delete.svg" @click.stop="delFlow(item)" />
+              </div>
+            </el-option>
             <template #footer class="selectFooter">
               <div class="addWorkFlow" @click="addWorkFlow">
                 <el-icon>
@@ -513,6 +654,7 @@ defineExpose({
       :editData="editData"
       :dialogType="dialogType"
       @handleClose="handleClose"
+      @createFlowId="getCreatedFlow"
     ></WorkFlowDialog>
   </div>
   <EditYamlDrawer

@@ -7,7 +7,7 @@ const props = defineProps({
     required: true,
   },
   data: {
-    type: Object, // 目前定义的对象中只有label，desc属性是有的，后续可能会有展开的情形
+    type: Object, // 目前定义的对象中只有label，description属性是有的，后续可能会有展开的情形
     required: true,
   },
   type: {
@@ -59,8 +59,8 @@ watch(
 </template>
 
 <style lang="scss">
-.vue-flow__node-custom-start,
-.vue-flow__node-custom-end {
+.vue-flow__node-start,
+.vue-flow__node-end {
   margin-top: 0px;
   &:has(.default) {
     margin-top: -4px;

@@ -55,17 +55,16 @@ export const createOrUpdateFlowTopology = (
  * @returns
  */
 export const delFlowTopology = (params: {
-  appId: number;
-  flowId: number;
+  appId: string;
+  flowId: string;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return del('/api/flow', params);
+  return del(`/api/flow?appId=${params.appId}&flowId=${params.flowId}`);
 };
-
 
 export const workFlowApi = {
   queryAllFlowService,
   querySingleFlowServiceNode,
   querySingleFlowTopology,
   delFlowTopology,
-  createOrUpdateFlowTopology
+  createOrUpdateFlowTopology,
 };

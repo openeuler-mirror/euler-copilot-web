@@ -112,6 +112,9 @@
         padding: 0 !important;
         height: 28px;
       }
+      .el-collapse-item__content {
+        margin-left: 0px;
+      }
     }
   }
 
@@ -230,6 +233,18 @@
   }
 }
 
+.workFlowOption {
+  display: flex;
+  .flowName {
+    flex: 1;
+  }
+  .dealIcon {
+    display: inline-block;
+    width: 16px;
+    line-height: 32px;
+    flex: right;
+  }
+}
 // 各节点的状态样式提取
 .vue-flow__node {
   min-width: 200px;
@@ -277,6 +292,9 @@
       .desc {
         font-size: 12px;
         color: var(--o-text-color-tertiary);
+      }
+      .branchDesc {
+        font-size: 12px;
       }
     }
     .vue-flow__handle-right {
@@ -344,10 +362,10 @@
     }
     .delOverShadow {
       width: 8px;
-      height: 40px;
+      height: 60%;
       position: absolute;
       background-color: transparent;
-      top: 20px;
+      top: 20%;
       z-index: 1;
     }
     .leftBox {
