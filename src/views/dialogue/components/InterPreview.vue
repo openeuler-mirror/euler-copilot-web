@@ -38,11 +38,11 @@
               <div class="contentLinkTitle">相关链接</div>
             </el-badge>
             <div class="connectBox">
-              <div v-for="(connect, index) in connnectLinkList">
+              <div v-for="(connect, index) in connnectLinkList" >
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
                   <el-link class="connectBoxContent" type="primary" :href="connect">
-                    {{ connect }}
+                    <TextMoreTootip :value="connect" :row="1" />
                   </el-link>
                 </div>
               </div>
@@ -53,7 +53,9 @@
           <div class="preFooterTitle">推荐问题：</div>
           <div class="preFooterContent">
             <div v-for="ques in recommendQuestionList">
-              <div class="preFooterContentQues" v-if="ques.length">{{ ques }}</div>
+              <div class="preFooterContentQues" v-if="ques.length">
+                <TextMoreTootip :value="ques" :row="1" />
+              </div>
             </div>
           </div>
         </div>
@@ -65,6 +67,7 @@
 import '../../styles/InterPreview.scss';
 import { ref, watch } from 'vue';
 import { IconUnfavorite } from '@computing/opendesign-icons';
+import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 
 interface InterPreProps {
   createAppForm: any;

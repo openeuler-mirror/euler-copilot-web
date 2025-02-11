@@ -183,7 +183,7 @@ defineExpose({
             <span class="linkText">最多添加5个链接</span>
           </div>
           <div class="linkArea" v-for="(item, index) in createAppForm.links">
-            <el-input class="w320" v-model="createAppForm.links[index]" placeholder="请输入" clearable></el-input>
+            <el-input class="w320" maxlength="200" v-model="createAppForm.links[index]" placeholder="请输入" clearable></el-input>
             <el-icon class="delIcon" @click="delConnectItem(index)">
               <IconDelete />
             </el-icon>
@@ -204,6 +204,7 @@ defineExpose({
           <div class="linkArea" v-for="(item, index) in createAppForm.recommendedQuestions">
             <el-input
               class="w320"
+              maxlength="30"
               v-model="createAppForm.recommendedQuestions[index]"
               placeholder="请输入"
               clearable
