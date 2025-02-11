@@ -18,6 +18,8 @@ import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
 import WitchainDIcon from '@/assets/images/witchainD.png';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
+const { createNewSession } = useHistorySessionStore();
+
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
 const { logout } = useAccountStore();
@@ -140,7 +142,6 @@ const copy = () => {
   navigator.clipboard.writeText(apikey.value);
 }
 
-
 const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
@@ -195,6 +196,13 @@ watch(
   { deep: true }
 );
 
+const addNewSession = async(routerName: string) => {
+  console.log(router.currentRoute.value.name, routerName)
+  if(router.currentRoute.value.name === routerName){
+    await createNewSession();
+  }
+}
+
 </script>
 
 <template>
@@ -240,7 +248,7 @@ watch(
       <div class="dialogue-menu">
         <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
           <span class="menu-icon">
-            <el-icon class="menu-icon">
+            <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
               <img v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName)!==-1" class="create-button__icon" :src="item.selectedSrc">
               <img v-else class="create-button__icon" :src="item.src">
             </el-icon>
