@@ -59,7 +59,7 @@ const initCopilot = async (): Promise<void> => {
   userinfo.value.organization = type;
   if ( ['/copilot','/'].includes(currRoute.value?.path)) {
     const isLogin = await getUserInfo();
-    if (!isLogin) {
+    if (isLogin) {
       // await api.getRecognitionMode();
       await api.stopGeneration();
       await getHistorySession();
