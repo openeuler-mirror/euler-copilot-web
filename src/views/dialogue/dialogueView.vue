@@ -13,6 +13,12 @@ import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n'
 import { reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import CopilotIcon from '@/assets/images/routerCopilot.png';
+import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
+import WitchainDIcon from '@/assets/images/witchainD.png';
+import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
+const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
@@ -30,7 +36,11 @@ const hidden = ref(false);
 const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
-
+const router = useRouter();
+const routerList = [
+  { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
+  { name: '知识库', path: '/tools' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
+];
 
 
 export interface ModelForm {
@@ -132,7 +142,6 @@ const copy = () => {
   navigator.clipboard.writeText(apikey.value);
 }
 
-
 const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
@@ -187,6 +196,13 @@ watch(
   { deep: true }
 );
 
+const addNewSession = async(routerName: string) => {
+  console.log(router.currentRoute.value.name, routerName)
+  if(router.currentRoute.value.name === routerName){
+    await createNewSession();
+  }
+}
+
 </script>
 
 <template>
@@ -201,8 +217,9 @@ watch(
           <template #reference>
             <span class="language">{{ lang }}</span>
           </template>
-          <el-button class="exit-button" type="primary" @click="changeLanguagefun('EN')">English</el-button>
-          <el-button class="exit-button" type="primary" @click="changeLanguagefun('CN')">简体中文</el-button>
+          <div class="exit-button lang-button" :class="lang==='English'?'lang-selected':''"  @click="changeLanguagefun('EN')">English</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" :class="lang==='简体中文'?'lang-selected':''"  @click="changeLanguagefun('CN')">简体中文</div>
         </el-popover>
         <div class="mode">
           <span v-if="theme === 'light'" @click="changeTheme">
@@ -217,106 +234,161 @@ watch(
           <template #reference>
             <img class="avatar" src="@/assets/svgs/user.svg" />
           </template>
-          <el-button class="exit-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</el-button>
-          <el-button class="exit-button" @click="apikeyVisible = true">API KEY</el-button>
-          <el-button class="exit-button" @click="KnowledgeVisible = true">{{ i18n.global.t('witChainD.witChainD') }}</el-button>
+          <div class="exit-button lang-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" @click="apikeyVisible = true">API KEY</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" @click="KnowledgeVisible = true">{{
+            i18n.global.t('witChainD.witChainD')
+          }}</div>
         </el-popover>
       </div>
     </header>
-    <Copilot />
-    <el-dialog 
-    class="apikey" 
-    v-model="apikeyVisible" 
-    title="API KEY"
-    width="50%" 
-    align-center
-    :before-close='handleDialogClose'
+    <div class="dialogue-container">
+      <div class="dialogue-menu">
+        <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
+          <span class="menu-icon">
+            <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
+              <img v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName)!==-1" class="create-button__icon" :src="item.selectedSrc">
+              <img v-else class="create-button__icon" :src="item.src">
+            </el-icon>
+          </span>
+          <span class="menu-text">{{ item.name }}</span>
+        </router-link>
+      </div>
+      <div class="dialogue-content">
+        <RouterView />
+      </div>
+    </div>
+    <el-dialog
+      class="apikey"
+      v-model="apikeyVisible"
+      title="API KEY"
+      width="50%"
+      align-center
+      :before-close="handleDialogClose"
     >
-    <div class="apikey_view">
-      <el-alert v-if='apikey' class='apikey_view_alert' type="info" :show-icon='true' :closable='false'>{{ i18n.global.t('apikey.save_apikey') }}</el-alert>
-      <div class='apikey_view_main'>
-        <div class='main'>
-          <div class='main_view' v-if="!apikey&&hidden">
-            <span>******************************</span>
-          </div>
-          <div class='main_view' v-else-if='!apikey'>
-            <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
-            <img v-else src="src/assets/svgs/light_null.svg" alt="">
-            <span>{{ i18n.global.t('apikey.no_apikey') }}</span>
-          </div>
-          <div class='main_view' v-else>
-            <div class='main_view_span'>
-              <div>{{apikey}}</div>
+      <div class="apikey_view">
+        <el-alert v-if="apikey" class="apikey_view_alert" type="info" :show-icon="true" :closable="false">{{
+          i18n.global.t('apikey.save_apikey')
+        }}</el-alert>
+        <div class="apikey_view_main">
+          <div class="main">
+            <div class="main_view" v-if="!apikey && hidden">
+              <span>******************************</span>
             </div>
-          </div>
-          <div v-if='apikey'>
-            <el-button type='primary' @click='copy' >{{ i18n.global.t('feedback.copy') }}</el-button>
-            <el-button @click='revokeApi'>{{ i18n.global.t('feedback.revoke') }}</el-button>
-          </div>
-          <div v-else-if='!apikey&&!revoke'>
-            <el-button type='primary' @click='updateApi'>{{ i18n.global.t('feedback.refresh') }}</el-button>
-            <el-button @click='revokeApi'>{{ i18n.global.t('feedback.revoke') }}</el-button>
-          </div>
-          <div v-else>
-            <el-button type='primary' @click='createApi'>{{ i18n.global.t('apikey.create_apikey') }}</el-button>
+            <div class="main_view" v-else-if="!apikey">
+              <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
+              <img v-else src="src/assets/svgs/light_null.svg" alt="" />
+              <span>{{ i18n.global.t('apikey.no_apikey') }}</span>
+            </div>
+            <div class="main_view" v-else>
+              <div class="main_view_span">
+                <div>{{ apikey }}</div>
+              </div>
+            </div>
+            <div v-if="apikey">
+              <el-button type="primary" @click="copy">{{ i18n.global.t('feedback.copy') }}</el-button>
+              <el-button @click="revokeApi">{{ i18n.global.t('feedback.revoke') }}</el-button>
+            </div>
+            <div v-else-if="!apikey && !revoke">
+              <el-button type="primary" @click="updateApi">{{ i18n.global.t('feedback.refresh') }}</el-button>
+              <el-button @click="revokeApi">{{ i18n.global.t('feedback.revoke') }}</el-button>
+            </div>
+            <div v-else>
+              <el-button type="primary" @click="createApi">{{ i18n.global.t('apikey.create_apikey') }}</el-button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </el-dialog>
-  <el-dialog
-    align-center
-    v-model="KnowledgeVisible"
-    class="model-dialog"
-    width="560"
-    @close="handleKnowledgeDialogClose"
-    :title="$t('witChainD.witChainD')"
-  >
-    <el-form
-      ref="ruleFormRef"
-      :model="ruleForm"
-      :rules="rules"
-      label-position="left"
-      @validate="handleFormValidate"
+    </el-dialog>
+    <el-dialog
+      align-center
+      v-model="KnowledgeVisible"
+      class="model-dialog"
+      width="560"
+      @close="handleKnowledgeDialogClose"
+      title="WitChainD"
     >
-      <el-form-item
-        :label="$t('witChainD.witChainD_id')"
-        class="docName"
-      >
-        <el-input
-          v-model="ruleForm.kb_id"
-          :placeholder="$t('witChainD.describe_the_witChainD')"
-        >
-          <template #suffix>
-            <el-icon
-              class="warning-icon"
-              v-if="!formValidateStatus.kb_id"
-            >
-              <WarningFilled />
-            </el-icon>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item class="model-ops-btn">
-        <el-button
-          class="resetBtn"
-          type="primary"
-          :disabled="isSubmitDisabled"
-          @click="handleConfirmCreateModel(ruleFormRef)"
-        >
-           {{ i18n.global.t('history.ok') }}
-        </el-button>
-        <el-button class="resetBtn" @click="handleKnowledgeDialogClose">
-          {{ i18n.global.t('history.cancel') }}
-        </el-button>
-      </el-form-item>
-    </el-form>
-  </el-dialog>
+      <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-position="left" @validate="handleFormValidate">
+        <el-form-item :label="$t('witChainD.witChainD_id')" prop="openai_api_key" class="docName">
+          <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')">
+            <template #suffix>
+              <el-icon class="warning-icon" v-if="!formValidateStatus.kb_id">
+                <WarningFilled />
+              </el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item class="model-ops-btn">
+          <el-button
+            class="resetBtn"
+            type="primary"
+            :disabled="isSubmitDisabled"
+            @click="handleConfirmCreateModel(ruleFormRef)"
+          >
+            {{ i18n.global.t('history.ok') }}
+          </el-button>
+          <el-button class="resetBtn" @click="handleKnowledgeDialogClose">
+            {{ i18n.global.t('history.cancel') }}
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
 <style lang="scss">
-
+.dialogue-container {
+  display: flex;
+  height: calc(100% - 48px);
+}
+//hover active selected 样式待填充
+.dialogue-menu {
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 100%;
+  padding-top: 8px;
+  background-color: var(--o-bg-color-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .menu-item {
+    display: flex;
+    font-style: none;
+    text-decoration: none;
+    width: 64px;
+    height: 64px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    .menu-icon {
+      align-items: center;
+      img{
+        //hover颜色待改进
+        width: 40px;
+          &:hover {
+            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+          }
+          &:active {
+            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+          }
+      }
+    }
+    .menu-text {
+      font-style: none;
+      display: block;
+      font-size: 12px;
+      color: var(--o-text-color-primary);
+    }
+  }
+}
+.dialogue-content {
+  height: 100%;
+  flex: 1;
+}
 .model-dialog {
   padding: 0 !important;
   .el-dialog__title {

@@ -51,16 +51,16 @@ const initCopilot = async (): Promise<void> => {
   }
   userinfo.value.organization = type;
   const currRoute = router.currentRoute;
-  if (currRoute.value.path === '/') {
+  if ( ['/copilot','/'].includes(currRoute.value?.path)) {
     const isLogin = await getUserInfo();
     if (isLogin) {
       await api.getRecognitionMode()
       await api.stopGeneration();
       await getHistorySession();
       setPlugins();
-    }
-    return;
   }
+    return;
+  } 
 };
 
 const dialogVisible = ref(false);
@@ -117,9 +117,7 @@ watch(
       <DialogueSession :modeOptions="modeOptions" />
     </div>
   </div>
-  <footer class="copilot-footer">
-    <CommonFooter />
-  </footer>
+
   <EulerDialog
     :visible="dialogVisible"
     :content="agreement"
@@ -128,18 +126,18 @@ watch(
     @submit="handleSubmit"
   ></EulerDialog>
   <EulerDialog
-      :visible="agreeDialogVisiable"
-      :content="tip"
-      :need-check="false"
-      height="300px"
-      agreement-name="内测声明"
-      @submit="agreeDialogVisiable = false"
-    ></EulerDialog>
+    :visible="agreeDialogVisiable"
+    :content="tip"
+    :need-check="false"
+    height="300px"
+    agreement-name="内测声明"
+    @submit="agreeDialogVisiable = false"
+  ></EulerDialog>
 </template>
 <style lang="scss" scoped>
 .copilot-container {
-  padding: 16px 24px 16px 24px;
-  height: calc(100% - 65px);
+  padding: 16px 24px 16px 8px;
+  height: 100%;
   display: flex;
   justify-content: space-between;
   &-main {
@@ -150,7 +148,24 @@ watch(
     margin-bottom: 12px;
   }
 }
+.copilot-aside {
+  width: 64px;
+  height: calc(100% - 8px);
+  background-color: #1f2937;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+}
+
 .micro-copilot-container {
   height: calc(100% - 25px);
+}
+.el-menu {
+  width: 64px;
+  margin-right: 8px;
 }
 </style>

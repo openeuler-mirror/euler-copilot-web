@@ -9,6 +9,7 @@ export default {
       like: 'Like',
     },
     main: {
+      question:"Recommended Questions",
       describe1:"Hi! I'm",
       describe2:", and I'm happy to be of service.",
       left_describe:"Feel free to ask me, your AI assistant, about any of these topics, or anything else that's on your mind!~",

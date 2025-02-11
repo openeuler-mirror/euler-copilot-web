@@ -9,6 +9,7 @@ export default {
     like: '喜欢',
   },
   main: {
+    question:"推荐问题",
     describe1: '你好，我是',
     describe2: '，很高兴为你服务',
     left_describe: '作为你的智能助手，你可以试着问我关于以下方面的内容哦~',
