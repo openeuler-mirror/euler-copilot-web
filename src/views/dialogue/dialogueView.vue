@@ -217,9 +217,8 @@ const addNewSession = async(routerName: string) => {
           <template #reference>
             <span class="language">{{ lang }}</span>
           </template>
-          <div class="exit-button lang-button" :class="lang==='English'?'lang-selected':''"  @click="changeLanguagefun('EN')">English</div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" :class="lang==='简体中文'?'lang-selected':''"  @click="changeLanguagefun('CN')">简体中文</div>
+          <el-button class="exit-button" @click="changeLanguagefun('EN')">English</el-button>
+          <el-button class="exit-button" @click="changeLanguagefun('CN')">简体中文</el-button>
         </el-popover>
         <div class="mode">
           <span v-if="theme === 'light'" @click="changeTheme">
@@ -234,13 +233,9 @@ const addNewSession = async(routerName: string) => {
           <template #reference>
             <img class="avatar" src="@/assets/svgs/user.svg" />
           </template>
-          <div class="exit-button lang-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" @click="apikeyVisible = true">API KEY</div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" @click="KnowledgeVisible = true">{{
-            i18n.global.t('witChainD.witChainD')
-          }}</div>
+          <el-button class="exit-button" @click="logoutHandler">{{ $t('Login.logout') }}</el-button>
+          <el-button class="exit-button" @click="apikeyVisible = true">API KEY</el-button>
+          <el-button class="exit-button" @click="KnowledgeVisible = true">{{ i18n.global.t('witChainD.witChainD') }}</el-button>
         </el-popover>
       </div>
     </header>

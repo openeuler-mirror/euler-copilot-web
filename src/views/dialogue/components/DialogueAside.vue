@@ -204,7 +204,6 @@ function hanleAsideVisible(): void {
     <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
       <div class="trapezoid" @click="hanleAsideVisible" />
     </ElTooltip>
-
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
         <!-- 历史记录 -->
