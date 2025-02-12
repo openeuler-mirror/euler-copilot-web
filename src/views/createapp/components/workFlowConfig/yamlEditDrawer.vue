@@ -13,7 +13,23 @@
       </template>
       <template #default>
         <div class="drawerBody">
-          <MirrorText ref="textarea" v-model:updateVal="yamlCode" :yamlCode="yamlCode"></MirrorText>
+          <el-collapse v-model="activeName" class="o-hpc-collapse yamlContent">
+            <el-collapse-item title="Consistency" :key="item.title" :name="item.title" v-for="item in yamlExpress">
+              <template #title>
+                <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes(item.title) }">
+                  <IconCaretRight />
+                </el-icon>
+                <span>{{ item.title }}</span>
+              </template>
+
+              <MirrorText
+                ref="textarea"
+                v-model:updateVal="item.yamlCode"
+                :yamlCode="item.yamlCode"
+                :disabled="item.disabled"
+              ></MirrorText>
+            </el-collapse-item>
+          </el-collapse>
         </div>
       </template>
       <template #footer>
@@ -28,24 +44,42 @@
 <script lang="ts" setup>
 import { ref, watch, defineProps } from 'vue';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
+import { IconCaretRight } from '@computing/opendesign-icons';
+import yaml from 'js-yaml';
 const visible = ref(true);
-const yamlCode = ref();
-const yamlNodeName = ref()
+const yamlInputCode = ref();
+const yamlOutputCode = ref();
+const yamlNodeName = ref();
+const yamlExpress = ref([
+  {
+    title: '输入内容',
+    yamlCode: '',
+    disabled: false,
+  },
+  {
+    title: '输出内容',
+    yamlCode: '',
+    disabled: true,
+  },
+]);
+const activeName = ref([yamlExpress.value[0].title, yamlExpress.value[1].title]);
 const emits = defineEmits(['closeDrawer']);
 const props = defineProps<{
   yamlContent: any;
-  nodeName:string
+  nodeName: string;
 }>();
 
 watch(
-  () => [props.yamlContent,props.nodeName],
+  () => [props.yamlContent, props.nodeName],
   () => {
-    yamlCode.value = props.yamlContent;
-    yamlNodeName.value = props.nodeName
-  } , { deep: true, immediate: true },
-
+    yamlInputCode.value = yaml.dump(props.yamlContent.input_parameters);
+    yamlOutputCode.value = yaml.dump(props.yamlContent.output_parameters);
+    yamlNodeName.value = props.nodeName;
+    yamlExpress.value[0].yamlCode = yaml.dump(props.yamlContent.input_parameters);
+    yamlExpress.value[1].yamlCode = yaml.dump(props.yamlContent.output_parameters);
+  },
+  { deep: true, immediate: true },
 );
-
 const closeDrawer = () => {
   emits('closeDrawer');
 };

@@ -5,6 +5,7 @@
     :autofocus="true"
     :extensions="extensions"
     :indent-with-tab="true"
+    :disabled="isDisabled"
     @change="handleChange"
     :tab-size="2"
   />
@@ -16,6 +17,7 @@ import { yaml } from '@codemirror/lang-yaml';
 
 const emits = defineEmits(['update:updateVal']);
 const code = ref('');
+const isDisabled = ref(false);
 const extensions = [yaml()];
 const handleChange = (e: string) => {
   code.value = e;
@@ -23,11 +25,13 @@ const handleChange = (e: string) => {
 };
 const props = defineProps<{
   yamlCode: any;
+  disabled: boolean;
 }>();
 watch(
   () => props.yamlCode,
   () => {
     code.value = props.yamlCode;
+    isDisabled.value = props.disabled;
   },
   { deep: true, immediate: true },
 );

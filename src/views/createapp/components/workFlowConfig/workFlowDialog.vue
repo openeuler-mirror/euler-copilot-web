@@ -41,7 +41,7 @@
 import { ref } from 'vue';
 import { api } from 'src/apis';
 import { useRoute } from 'vue-router';
-import { nanoid } from 'nanoid';
+import { v4 as uuidv4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 const workFlowDiaVisible = ref(true);
 const route = useRoute();
@@ -70,7 +70,7 @@ const handleSubmit = () => {
   // 创建工作流
   const appId = route.query?.appId;
   // 创建使用生成的flowId
-  const flowId = nanoid();
+  const flowId = uuidv4();
   // 调用接口新建工作流
   api
     .createOrUpdateFlowTopology(
