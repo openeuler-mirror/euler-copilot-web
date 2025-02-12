@@ -61,7 +61,7 @@ const editYaml = (nodeName, yamlCode) => {
         <div class="moreTip">
           <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
-            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parametersTemplate)"
+            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parameters)"
               >编辑</el-button
             >
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
@@ -69,8 +69,8 @@ const editYaml = (nodeName, yamlCode) => {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
-      <div class="branchDesc" v-if="props.data.parametersTemplate?.choice">
-        <div v-for="(item, index) in props.data.parametersTemplate.choice" :key="index"> {{ item.description }}</div>
+      <div class="branchDesc" v-if="props.data.parameters?.input_parameters?.choices">
+        <div v-for="(item, index) in props.data.parameters.input_parameters.choices" :key="index"> {{ item.description }}</div>
       </div>
     </div>
     <Handle

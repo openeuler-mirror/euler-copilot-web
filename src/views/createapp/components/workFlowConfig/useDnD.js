@@ -1,13 +1,12 @@
 import { useVueFlow } from '@vue-flow/core';
 import { ref, watch } from 'vue';
-
-let id = 3;
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * @returns {string} - A unique id.
  */
 function getId() {
-  return `node${id++}`;
+  return uuidv4();
 }
 
 /**

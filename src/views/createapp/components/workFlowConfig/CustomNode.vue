@@ -64,9 +64,7 @@ const editYaml = (nodeName, yamlCode) => {
         <div class="moreTip">
           <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
-            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parametersTemplate)"
-              >编辑</el-button
-            >
+            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parameters)">编辑</el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
           </el-popover>
         </div>

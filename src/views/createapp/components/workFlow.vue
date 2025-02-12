@@ -175,9 +175,13 @@ const handleChangeZoom = zoomValue => {
 watch(
   props,
   () => {
-    nodes.value = initNodes.value;
     // 获取当前工作流
     workFlowList.value = [...props.flowList];
+    if (workFlowList.value.length) {
+      nodes.value = initNodes.value;
+      // 默认选中第一个
+      choiceFlowId(workFlowList.value?.[0]);
+    }
   },
   { deep: true, immediate: true },
 );
@@ -234,7 +238,7 @@ const delNode = id => {
 };
 // 编辑yaml
 const editYamlDrawer = (name, yamlCode) => {
-  yamlContent.value = yaml.dump(yamlCode);
+  yamlContent.value = yamlCode;
   nodeName.value = name;
   isEditYaml.value = true;
 };
@@ -366,14 +370,15 @@ const nodesChange = nodes => {
 const getCreatedFlow = createdFlowObj => {
   if (flowObj) {
     flowObj.value = { ...createdFlowObj };
+    workFlowItemName.value = createdFlowObj.name;
+    redrageFlow(createdFlowObj?.nodes, createdFlowObj?.edges);
   }
   // 更新当前应用下的工作流列表下拉框
-  queryFlow();
+  queryFlow('create');
   handleClose();
-  redrageFlow(flowObj.value.nodes, flowObj.value.edges);
 };
 
-const queryFlow = () => {
+const queryFlow = (deal: string) => {
   // 查询当前应用下的flowIdList
   if (route.query?.appId) {
     api
@@ -383,7 +388,15 @@ const queryFlow = () => {
       .then(res => {
         const appInfo = res?.[1]?.result;
         if (appInfo) {
-          workFlowList.value = appInfo.workflows || [];
+          workFlowList.value = appInfo.workflows ? [...appInfo.workflows] : [];
+          if (!workFlowList.value.length) {
+            nodes.value = [];
+          } else {
+            if (deal === 'del') {
+              // 默认展示第一个
+              choiceFlowId(workFlowList.value[0]);
+            }
+          }
         }
       });
   }
@@ -404,6 +417,7 @@ const editFlow = item => {
     });
 };
 
+// 删除工作流
 const delFlow = item => {
   // 删除的如果是当前选中的，需要将选中的清空
   if (workFlowItemName.value === item.name) {
@@ -417,8 +431,8 @@ const delFlow = item => {
     .then(res => {
       if (res[1]?.result) {
         ElMessage.success('删除工作流成功');
-        // 并且需要更新工作流下拉框
-        queryFlow();
+        // 并且需要更新工作流下拉框--默认选中第一项
+        queryFlow('del');
       }
     });
 };
@@ -427,11 +441,9 @@ const delFlow = item => {
 const choiceFlowId = flowItem => {
   workFlowItemName.value = flowItem.name;
   editFlow(flowItem);
-  console.log(flowItem);
 };
 
 const redrageFlow = (nodesList, edgesList) => {
-  console.log(getEdges.value, 'getEdge');
   const newNodeList = nodesList.map(node => {
     let newNode = {
       id: node.nodeId,
@@ -439,6 +451,7 @@ const redrageFlow = (nodesList, edgesList) => {
       data: {
         name: node.name,
         description: node.description,
+        parameters: node.parameters,
       },
       position: node.position,
       deletable: true,
@@ -452,6 +465,7 @@ const redrageFlow = (nodesList, edgesList) => {
       newNode.deletable = false;
     } else if (node.type === 'choice') {
       newNode.type = 'branch';
+      newNode.data.parameters['input_parameters'] = node.parameters;
     } else {
       newNode.type = 'custom';
     }
@@ -464,6 +478,7 @@ const redrageFlow = (nodesList, edgesList) => {
       target: edge.targetNode,
       branchId: edge.branchId,
       type: 'normal',
+      sourceHandle: edge.branchId, // 这里是分支边需要以确定源头handle
     };
     // 线分支条件需后续添加
     return newEdge;
@@ -474,7 +489,6 @@ const redrageFlow = (nodesList, edgesList) => {
 
 const saveFlow = () => {
   const appId = route.query?.appId;
-
   if (!flowObj.value.flowId) {
     return;
   }
@@ -497,6 +511,13 @@ const saveFlow = () => {
         serviceId: item.type,
         nodeId: item.id,
         type: item.type,
+      };
+    } else if (item.type === 'branch') {
+      // 这里是需要将parameters
+      newItem = {
+        ...newItem,
+        type: 'choice',
+        parameters: item.data.parameters,
       };
     }
     return newItem;
@@ -535,7 +556,7 @@ const saveFlow = () => {
     .then(res => {
       if (res[1].result) {
         ElMessage.success('更新成功');
-        queryFlow();
+        queryFlow('update');
       }
     });
 };
@@ -657,13 +678,15 @@ defineExpose({
 
         <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       </VueFlow>
-      <div class="workFlowOps" v-if="hasWorkFlow">
+      <div class="workFlowOps" v-if="workFlowList.length">
         <div class="workFlowSelect">
           <el-select v-model="workFlowItemName" placeholder="请选择" :suffix-icon="IconCaretDown">
             <el-option
               class="workFlowOption"
               v-for="(item, index) in workFlowList"
-              :key="index"
+              :label="item.name"
+              :value="item.name"
+              :key="item.id"
               @click="choiceFlowId(item)"
             >
               <div class="flowName">{{ item.name }}</div>
