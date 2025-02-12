@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from './InitalPanel.vue';
@@ -8,18 +8,14 @@ import { useSessionStore, useChangeThemeStore } from 'src/store';
 
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
-import { UploadTypeName, UploadStatus, UploadType } from 'src/components/uploadFile/type';
+import { UploadTypeName, UploadStatus } from 'src/components/uploadFile/type';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
-import { FitAddon } from 'xterm-addon-fit';
-import { AttachAddon } from 'xterm-addon-attach';
-import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
 const { user_selected_plugins, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
-const session = useSessionStore();
 
 export interface DialogueSession {
   modeOptions: any;
@@ -144,9 +140,6 @@ const questions = [
 ];
 
 let groupid = ref(0);
-
-const tagNum = ref(3);
-
 let filterQuestions = computed(() => questions.filter(item => item.groupId === groupid.value % 6));
 
 // 对话输入内容
@@ -162,7 +155,6 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
  */
 const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string[]) => {
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
-  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
   dialogueInput.value = '';
@@ -270,110 +262,6 @@ const selectQuestion = event => {
   dialogueInput.value = event.target.innerText;
 };
 
-const getMode = async () => {
-  if (modeOptions.value.length === 1) {
-    const [_, res] = await api.getRecognitionMode();
-    if (!_ && res) {
-      res.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.plugin_name,
-          disabled: false,
-        };
-        opt ? modeOptions.value.push(opt) : '';
-      });
-    }
-  } else {
-    return;
-  }
-};
-
-const setOptionDisabled = () => {
-  if (selectMode.value.length === 0) {
-    modeOptions.value.map(item => {
-      item.disabled = false;
-      return item;
-    });
-  } else {
-    const isAuto = selectMode.value.some(item => item === 'auto');
-    let first = true;
-    modeOptions.value.map(item => {
-      if (!first) {
-        item.disabled = isAuto ? true : false;
-      } else {
-        item.disabled = isAuto ? false : true;
-      }
-      first = false;
-      return item;
-    });
-  }
-};
-
-let socket = ref(null);
-const terminal = ref(null);
-const fitAddon = new FitAddon();
-
-let term = ref(null);
-let termLoading = ref(false);
-let isTermShow = ref(false);
-const activePane = ref('shell');
-
-const fnChangeShellBox = isShow => {
-  if (isShow) {
-    if (!socket.value) {
-      termLoading.value = true;
-      createWs();
-    }
-  } else {
-    // 关闭连接
-    if (socket.value) {
-      socket.value.close();
-      socket.value = null;
-    }
-    if (term.value) {
-      term.value.dispose();
-    }
-  }
-};
-
-// 创建WebSocket
-const createWs = () => {
-  socket.value = new WebSocket('ws://10.24.107.18:8002/shell/ws/1/213');
-  socket.value.onopen = () => {
-    termLoading.value = false;
-    // socket.value.send(JSON.stringify({
-    //   ctrl: 'resize',
-    //   data: {
-    //     width: 500,
-    //   }
-    // }));
-  };
-  socket.value.onclose = () => {
-    // console.log('close');
-  };
-  socket.value.onerror = e => {
-    term.value.write(`\x1b[31m${e}\x1b[m\r\n`);
-  };
-  initTerm();
-};
-
-const initTerm = () => {
-  term.value = new Terminal({
-    fontSize: 14,
-    cursorBlink: true,
-    row: 32,
-  });
-  const attachAddon = new AttachAddon(socket.value);
-  term.value.open(terminal.value);
-  fitAddon.activate(term.value); // 自适应尺寸
-  attachAddon.activate(term.value);
-
-  nextTick(() => {
-    fitAddon.fit();
-  });
-  term.value.focus();
-};
-
 // 上传按钮对象
 const uploadButton = ref();
 // 最大上传数量
@@ -409,21 +297,17 @@ watch(currentSelectedSession, async (newVal) => {
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
   let curPolling = pollingMap.get(newVal);
-  
   let isNewSession = false;
   if (!newFileView) {
     isNewSession = true;
     uploadViewsMap.set(newVal, []);
   }
-
   if (!newExistList) {
     existUploadMap.set(newVal, []);
   }
-
   if (!curPolling) {
     pollingMap.set(newVal, getPollingProcess(newVal));
   }
-
   existUploadList = existUploadMap.get(newVal);
   uploadFilesView.value = uploadViewsMap.get(newVal);
   curPolling = pollingMap.get(newVal);
@@ -627,7 +511,6 @@ const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promis
         }
       }
     });
-
     // 轮询状态api 更新解析状态 existUploadList列表
     let curPollingProcess = pollingMap.get(sessionId);
     if (!curPollingProcess) {
@@ -657,10 +540,8 @@ const onFileChange = event => {
   }
   // 生成需要上传的文件
   const formData = generateUploadData(files);
-
   // 更新视图列表
   updateUploadView(files, curUploadBatch);
-
   // 上传api请求
   updateFilesInSession(formData, curUploadBatch, currentSelectedSession.value);
 };
@@ -705,70 +586,15 @@ watch(
 );
 
 watch(selectMode, (newValue, oldValue) => {
-  setOptionDisabled();
   user_selected_plugins.value = [];
-  let first = true;
-  if (selectMode.value.length !== 0) {
-    if (selectMode.value[0] === 'auto') {
-      user_selected_plugins.value.push('auto');
-    } else {
-      selectMode.value.forEach(item => {
-        const plugin = {
-          plugin_name: item,
-        };
-        user_selected_plugins.value.push(plugin.plugin_name);
-      });
-    }
+  if (selectMode.value !== 'auto') {
+    const plugin = {
+      plugin_name: selectMode.value,
+    };
+    user_selected_plugins.value.push(plugin.plugin_name);
   }
-  nextTick(() => {
-    const totalW = (document.querySelector('.recognitionMode') as HTMLElement).offsetWidth;
-    const selectPreW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
-    const allTags = document.querySelectorAll('.recognitionMode .el-select-tags-wrapper .el-tag--info');
-    document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? ((document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).style.display = 'flex')
-      : '';
-    const allTagsWidth = document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? (document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).offsetWidth
-      : '';
-    const nTag = allTags[allTags.length - 1] as HTMLElement;
-    const isNExist = true;
-    if (selectPreW >= totalW && newValue.length > oldValue.length && isNExist) {
-      return;
-    }
-    if (totalW > allTagsWidth + 100) {
-      (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${allTagsWidth + 70}px`;
-    } else {
-      (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${totalW}px`;
-    }
-    if (allTags.length > 3) {
-      const lastTag = allTags[allTags.length - 3] as HTMLElement;
-      const selectDomW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
-      let show_w = 0;
-      if (selectDomW >= totalW) {
-        show_w = selectDomW - lastTag.offsetWidth + 200;
-        if (show_w >= totalW) {
-          tagNum.value = Math.min(tagNum.value, selectMode.value.length - 2);
-        } else {
-          tagNum.value = Math.min(tagNum.value, selectMode.value.length - 1);
-        }
-      } else {
-        tagNum.value = allTags.length;
-      }
-    }
-  });
 });
 
-watch(isTermShow, (newValue, oldValue) => {
-  fnChangeShellBox(newValue);
-});
-
-/**
- * 暂停和重新生成问答
- */
-const handlePauseAndReGenerate = (cid?: number) => {
-  // 停止生成handlePauseAndReGenerate
-  pausedStream(cid);
-};
 </script>
 
 <template>
@@ -839,11 +665,6 @@ const handlePauseAndReGenerate = (cid?: number) => {
           <el-select
             class="mode-select"
             v-model="selectMode"
-            multiple
-            collapse-tags
-            filterable
-            allow-create
-            default-first-option
             :placeholder="$t('main.query_interpretation')"
           >
             <el-option
@@ -851,7 +672,6 @@ const handlePauseAndReGenerate = (cid?: number) => {
               :key="item.value"
               :label="item.label"
               :value="item.value"
-              :disabled="item.disabled"
             />
           </el-select>
         </div>
@@ -963,7 +783,6 @@ button[disabled]:hover {
   align-items: center;
   justify-content: space-between;
   min-width: 500px;
-
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
     background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
@@ -1002,6 +821,7 @@ button[disabled]:hover {
     width: 100%;
     height: calc(100%);
     overflow-y: auto;
+    padding-left: 24px;
     .initial-message {
       background-color: #fff;
     }
