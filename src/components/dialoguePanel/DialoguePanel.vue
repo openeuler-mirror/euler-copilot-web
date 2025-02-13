@@ -249,10 +249,22 @@ const contentAfterMark = computed(() => {
   if(tableStart!== -1){
     str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
   }
+  str = str + '<think><p>1212121212</p>eqwewqewqeqewqewq</think>'
   //仅获取第一个遇到的 think 标签
-  if(str.match(/<think>([\s\S]*?)<\/think>/)){
-  thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  // if(str.match(/<think>([\s\S]*?)<\/think>/)){
+  // thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  // }
+  let thinkStart = str.indexOf('<think>');
+  if (thinkStart !== -1) {
+    let thinkEnd = str.indexOf('</think>', thinkStart);
+    if (thinkEnd !== -1) {
+      // 提取 <think> 标签中的内容
+      thoughtContent.value = str.slice(thinkStart + 7, thinkEnd);
+        // 将 <think> 标签替换为空
+      str = str.slice(0, thinkStart) + str.slice(thinkEnd + 8);
+    }
   }
+
   //将<think>标签替换为空
   return str.replace(/<think>([\s\S]*?)<\/think>/g,'');
 });
