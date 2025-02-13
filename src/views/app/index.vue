@@ -51,7 +51,11 @@
               <div class="appCenterCardContent">
                 <div class="appCenterCardContentTop">
                   <div class="appCenterCardContentTitle">{{ appItem.name }}</div>
-                  <div class="appCenterCardContentCollect" @click="handleFavorite($event, appItem)">
+                  <div
+                    class="appCenterCardContentCollect"
+                    :class="appItem.published ? '' : 'noClick'"
+                    @click.stop="handleFavorite($event, appItem)"
+                  >
                     <IconFavorite v-if="appItem.favorited" class="appFavorite" />
                     <IconUnfavorite v-else="appItem.favorited" />
                   </div>
@@ -67,6 +71,10 @@
                 <el-button text @click="handleEditApp($event, appItem)">编辑</el-button>
                 <el-button text @click="handleDelApp($event, appItem)">删除</el-button>
               </div>
+            </div>
+            <div class="unPublishSymbol" v-if="!appItem.published">
+              <div class="coverIcon"></div>
+              <div class="textDesc">未发布</div>
             </div>
           </div>
         </div>
@@ -159,6 +167,10 @@ const handleQueryAppList = (payload?: any) => {
 };
 
 const handleFavorite = (e, item) => {
+  // 未发布的不可收藏
+  if (!item.published) {
+    return;
+  }
   e.stopPropagation();
   api
     .changeSingleAppCollect({
@@ -225,16 +237,40 @@ onMounted(() => {
   handleQueryAppList();
 });
 </script>
-<style scoped>
-.container {
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+<style lang="scss" scoped>
+.appCenterCardSingle {
+  position: relative;
+  .unPublishSymbol {
+    position: absolute;
+    width: 56px;
+    height: 16px;
+    display: flex;
+    left: 8px;
+    top: -4px;
+    .coverIcon {
+      width: 0px;
+      height: 0px;
+      border: 2px;
+      border-color: #5481de #5481de transparent transparent;
+      border-left: 2px solid transparent;
+      border-top: 2px solid transparent;
+      border-right: 2px solid #5481de;
+      border-bottom: 2px solid #5481de;
+    }
+    .textDesc {
+      flex: 1;
+      line-height: 16px;
+      color: #fff;
+      text-align: center;
+      font-size: 12px;
+      border-top-right-radius: 4px;
+      border-bottom-left-radius: 4px;
+      background: #6395fd;
+    }
+  }
+  .noClick {
+    cursor: not-allowed;
+  }
 }
 
 img {

@@ -24,6 +24,8 @@ const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
 const statusList = ref(['waiting', 'success', 'error', 'default']);
 
+const branchIdList = ref([]);
+
 const curStatus = ref('');
 
 watch(
@@ -34,6 +36,9 @@ watch(
       curStatus.value = 'default';
     } else {
       curStatus.value = props.data?.status;
+    }
+    if (props.data?.parameters?.input_parameters?.choices) {
+      branchIdList.value = props.data?.parameters?.input_parameters?.choices.map(item => item?.branchId);
     }
   },
   { deep: true, immediate: true },
@@ -54,6 +59,7 @@ const editYaml = (nodeName, yamlCode) => {
     <Handle type="target" :position="Position.Left"></Handle>
     <div class="outHandleRing outRingLeft"></div>
     <div class="delOverShadow leftBox"></div>
+    <div class="delOverShadow leftNodeBox"></div>
     <div class="nodeBox">
       <div class="title" v-if="props.data.name">
         <div class="iconStyle"></div>
@@ -61,36 +67,23 @@ const editYaml = (nodeName, yamlCode) => {
         <div class="moreTip">
           <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
-            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parameters)"
-              >编辑</el-button
-            >
+            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parameters)">编辑</el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
           </el-popover>
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
       <div class="branchDesc" v-if="props.data.parameters?.input_parameters?.choices">
-        <div v-for="(item, index) in props.data.parameters.input_parameters.choices" :key="index"> {{ item.description }}</div>
+        <div class="branchItem" v-for="(item, index) in props.data.parameters.input_parameters.choices" :key="index">
+          {{ item.description }}
+
+          <Handle class="souceFirstHandle" :id="branchIdList[index]" type="source" :position="Position.Right"></Handle>
+
+          <div class="delOverShadow rightBox" style="top: 0%"></div>
+          <div class="outHandleRing outRingRight" style="top: 30%"></div>
+        </div>
       </div>
     </div>
-    <Handle
-      class="souceFirstHandle"
-      :connectable="props.data?.isConnectSourceA"
-      :id="BranchSourceIdType.SOURCEA"
-      type="source"
-      :position="Position.Right"
-    ></Handle>
-    <Handle
-      class="souceSecondHandle"
-      :connectable="props.data?.isConnectSourceB"
-      :id="BranchSourceIdType.SOURCEB"
-      type="source"
-      :position="Position.Right"
-    ></Handle>
-    <div class="delOverShadow rightBox" style="top: 0%"></div>
-    <div class="delOverShadow rightBox" style="top: 50%"></div>
-    <div class="outHandleRing outRingRight" style="top: 30%"></div>
-    <div class="outHandleRing outRingRight" style="top: 70%"></div>
   </div>
 </template>
 
@@ -102,6 +95,30 @@ const editYaml = (nodeName, yamlCode) => {
     }
     .vue-flow__handle-right.souceSecondHandle {
       top: 70%;
+    }
+    // 分支样式
+    .branchDesc {
+      font-size: 12px;
+      .branchItem {
+        position: relative;
+        margin-bottom: 8px;
+        .vue-flow__handle-right {
+          right: -18px;
+        }
+        &:last-child {
+          margin-bottom: 0px;
+        }
+      }
+    }
+    &:hover {
+      .branchItem {
+        .vue-flow__handle-right {
+          right: -30px;
+        }
+        .rightBox {
+          display: none;
+        }
+      }
     }
   }
 }

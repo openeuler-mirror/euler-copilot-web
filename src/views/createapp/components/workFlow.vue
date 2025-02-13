@@ -18,7 +18,6 @@ import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
-import yaml from 'js-yaml';
 import { BranchSourceIdType } from './types';
 import { useRoute } from 'vue-router';
 
@@ -38,8 +37,8 @@ const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const isNodeAndLineConnect = ref(false);
 const apiServiceList = ref([]);
+const allApiServiceList = ref([]);
 const yamlContent = ref();
-const hasWorkFlow = ref(true);
 const emits = defineEmits(['validateConnect']);
 const route = useRoute();
 const workFlowList = ref([]);
@@ -325,10 +324,22 @@ onMounted(() => {
     })
     .then(res => {
       apiServiceList.value = res[1]?.result.services;
+      allApiServiceList.value = res[1]?.result.services;
       activeName.value = [res[1]?.result.services[0]?.serviceId];
       activeNames.value = [res[1]?.result.services[0]?.serviceId];
     });
 });
+
+// 过滤工作流接口返回的可拖拽节点
+const searchApiList = () => {
+  apiServiceList.value = allApiServiceList.value.map(item => {
+    const filterObj = { ...item, nodeMetaDatas: [] };
+    if (item?.nodeMetaDatas) {
+      filterObj.nodeMetaDatas = item.nodeMetaDatas.filter(item => item?.name.includes(apiSearchValue.value));
+    }
+    return filterObj;
+  });
+};
 
 const handleDebugDialogOps = visible => {
   debugDialogVisible.value = visible;
@@ -554,7 +565,7 @@ const saveFlow = () => {
       },
     )
     .then(res => {
-      if (res[1].result) {
+      if (res[1]?.result) {
         ElMessage.success('更新成功');
         queryFlow('update');
       }
@@ -582,6 +593,7 @@ defineExpose({
                 v-model="apiSearchValue"
                 class="o-style-search"
                 placeholder="搜索"
+                @input="searchApiList"
                 :prefix-icon="IconSearch"
                 clearable
               ></el-input>
@@ -609,7 +621,6 @@ defineExpose({
                   </div>
                 </el-collapse-item>
               </el-collapse>
-              <div style="display: none" @click="updateNodeTest">测试状态修改（暂不显示）</div>
             </div>
           </div>
         </div>

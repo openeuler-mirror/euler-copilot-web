@@ -16,6 +16,7 @@ body[theme='dark'] {
   --flow-instance-hover-color: #1F2329;
   --flow-instance-shadow: 0 4px 16px 0 rgba(253, 254, 255, 0.1);
   --flow-node-default-over-color: #25303E;
+  --flow-node-boder-default-over: #314265;
   --flow-node-success-over-color: #1F312A;
   --flow-node-error-over-color: #332127;
 }
@@ -37,7 +38,8 @@ body[theme='light'] {
   --o-flow-code-border: rgb(223,229,239);
   --flow-instance-hover-color: #FDFEFF;
   --flow-instance-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
-  --flow-node-default-over-color: #EEF3FE;
-  --flow-node-success-over-color: #E6F6E9;
-  --flow-node-error-over-color: #F8E7E7;
+  --flow-node-default-over-color: #edf2fd;
+  --flow-node-boder-default-over: #c7d6f5;
+  --flow-node-success-over-color: #e6f6e9;
+  --flow-node-error-over-color: #f8e7e7;
 }

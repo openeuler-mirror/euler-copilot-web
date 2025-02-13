@@ -25,34 +25,16 @@ const handleChangeAppType = type => {
 };
 
 const handlePulishApp = () => {
-  let appFormValue = appConfigRef.value.createAppForm;
-  if (appFormValue) {
-    api
-      .createOrUpdateApp({
-        appId: route.query?.appId as string,
-        icon: appFormValue.icon,
-        name: appFormValue.name,
-        description: appFormValue.description,
-        links: appFormValue.links.map(item => {
-          return { url: item, title: item };
-        }),
-        recommendedQuestions: appFormValue.recommendedQuestions,
-        dialogRounds: appFormValue.dialogRounds,
-        permission: appFormValue.permission,
-      })
-      .then(res => {
-        if (res[1]) {
-          ElMessage({
-            showClose: true,
-            message: '修改成功',
-            icon: IconSuccess,
-            customClass: 'o-message--success',
-            duration: 2000,
-          });
-          router.push('/app');
-        }
-      });
-  }
+  // 发布接口
+  api
+    .releaseSingleAppData({
+      id: route.query?.appId as string,
+    })
+    .then(res => {
+      if (res[1]?.result) {
+        ElMessage.success('发布成功');
+      }
+    });
 };
 
 const handleValidateContent = valid => {
@@ -65,14 +47,46 @@ const validateConnect = valid => {
 };
 
 // 获取工作流列表
-const getFlowList = (flowDataList) => {
+const getFlowList = flowDataList => {
   flowList.value = flowDataList;
-}
+};
 
-// 保存当前工作流
-const saveFlow = () => {
-  workFlowRef.value.saveFlow();
-}
+// 保存按钮
+const saveConfigOrFlow = () => {
+  console.log(createAppType.value, 'createAppType');
+  if (createAppType.value === 'appConfig') {
+    let appFormValue = appConfigRef.value.createAppForm;
+    if (appFormValue) {
+      api
+        .createOrUpdateApp({
+          appId: route.query?.appId as string,
+          icon: appFormValue.icon,
+          name: appFormValue.name,
+          description: appFormValue.description,
+          links: appFormValue.links.map(item => {
+            return { url: item, title: '' };
+          }),
+          recommendedQuestions: appFormValue.recommendedQuestions,
+          dialogRounds: appFormValue.dialogRounds,
+          permission: appFormValue.permission,
+        })
+        .then(res => {
+          if (res[1]) {
+            ElMessage({
+              showClose: true,
+              message: '更新成功',
+              icon: IconSuccess,
+              customClass: 'o-message--success',
+              duration: 2000,
+            });
+          }
+        });
+    }
+  } else {
+    // 工作流页面保存当前的工作流
+    workFlowRef.value.saveFlow();
+  }
+};
 watch(
   () => router,
   () => {
@@ -126,9 +140,9 @@ const handleJumperAppCenter = () => {
     </div>
     <div class="createAppContainerFooter">
       <el-button>取消</el-button>
-      <el-button @click="saveFlow">保存</el-button>
+      <el-button @click="saveConfigOrFlow">保存</el-button>
       <el-button :disabled="true">预览</el-button>
-      <el-button type="primary" :disabled="publishValidate" @click="handlePulishApp()">发布</el-button>
+      <el-button type="primary" @click="handlePulishApp()">发布</el-button>
     </div>
   </div>
 </template>
