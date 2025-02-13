@@ -154,7 +154,7 @@ const handleQueryAppList = (payload?: any) => {
     .then(res => {
       appList.value = res[1]?.result.applications;
       currentPage.value = res[1]?.result.currentPage;
-      totalCount.value = res[1]?.result.total;
+      totalCount.value = res[1]?.result.totalApps;
     });
 };
 
