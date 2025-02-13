@@ -246,7 +246,7 @@ onMounted(() => {
     height: 16px;
     display: flex;
     left: 8px;
-    top: -2px;
+    top: -4px;
     .coverIcon {
       width: 0px;
       height: 0px;
