@@ -17,7 +17,7 @@
           clearable
         ></el-input>
       </el-form-item>
-      <el-form-item prop="desc" label="工作流描述">
+      <el-form-item prop="description" label="工作流描述">
         <el-input
           type="textarea"
           show-word-limit
@@ -31,7 +31,7 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button class="o-dlg-btn" type="primary" size="small" @click="handleSubmit">确定</el-button>
+        <el-button class="o-dlg-btn" type="primary" size="small" @click="handleSubmit(workFlowForm)">确定</el-button>
         <el-button class="o-dlg-btn" size="small" @click="onCancel">取消</el-button>
       </span>
     </template>
@@ -42,7 +42,7 @@ import { ref } from 'vue';
 import { api } from 'src/apis';
 import { useRoute } from 'vue-router';
 import { v4 as uuidv4 } from 'uuid';
-import { ElMessage } from 'element-plus';
+import { ElMessage, FormInstance } from 'element-plus';
 const workFlowDiaVisible = ref(true);
 const route = useRoute();
 const props = defineProps({
@@ -66,74 +66,78 @@ const workFlowRules = ref({
 const onCancel = () => {
   emits('handleClose');
 };
-const handleSubmit = () => {
-  // 创建工作流
-  const appId = route.query?.appId;
-  // 创建使用生成的flowId
-  const flowId = uuidv4();
-  // 调用接口新建工作流
-  api
-    .createOrUpdateFlowTopology(
-      {
-        appId: appId,
-        flowId,
-        topologyCheck: false,
-      },
-      {
-        flow: {
-          name: workFlowData.value.name,
-          description: workFlowData.value.description,
-          enable: true,
-          editable: true,
-          // 创建工作流时，默认包含开始结束固定两节点，这两个节点非后端返回，其apiId与serviceId不为空即可
-          nodes: [
-            {
-              apiId: 'startId',
-              name: '开始',
-              serviceId: 'startService',
-              type: 'start',
-              description: 'startNode',
-              editable: false,
+const handleSubmit = (formEl: FormInstance | undefined) => {
+  // 校验必填项是否填写
+  formEl?.validate(valid => {
+    if (valid) {
+      // 创建工作流
+      const appId = route.query?.appId;
+      // 创建使用生成的flowId
+      const flowId = uuidv4();
+      // 调用接口新建工作流
+      api
+        .createOrUpdateFlowTopology(
+          {
+            appId: appId,
+            flowId,
+            topologyCheck: false,
+          },
+          {
+            flow: {
+              name: workFlowData.value.name,
+              description: workFlowData.value.description,
               enable: true,
-              nodeId: 'node1',
-              position: {
-                x: 100,
-                y: 160,
-              },
+              editable: true,
+              // 创建工作流时，默认包含开始结束固定两节点，这两个节点非后端返回，其apiId与serviceId不为空即可
+              nodes: [
+                {
+                  apiId: 'startId',
+                  name: '开始',
+                  serviceId: 'startService',
+                  type: 'start',
+                  description: 'startNode',
+                  editable: false,
+                  enable: true,
+                  nodeId: 'node1',
+                  position: {
+                    x: 100,
+                    y: 160,
+                  },
+                },
+                {
+                  apiId: 'endId',
+                  name: '结束',
+                  serviceId: 'endService',
+                  type: 'end',
+                  description: 'endNode',
+                  editable: false,
+                  enable: true,
+                  nodeId: 'node2',
+                  position: {
+                    x: 600,
+                    y: 160,
+                  },
+                },
+              ],
+              // 初始创建的工作流边为空
+              edges: [],
             },
-            {
-              apiId: 'endId',
-              name: '结束',
-              serviceId: 'endService',
-              type: 'end',
-              description: 'endNode',
-              editable: false,
-              enable: true,
-              nodeId: 'node2',
-              position: {
-                x: 600,
-                y: 160,
-              },
+            focusPoint: {
+              x: 800,
+              y: 800,
             },
-          ],
-          // 初始创建的工作流边为空
-          edges: [
-          ],
-        },
-        focusPoint: {
-          x: 800,
-          y: 800,
-        },
-      },
-    )
-    .then(res => {
-      if (res[1]?.result?.flow) {
-        ElMessage.success('创建成功');
-        // 将创建成功后的flow对象传给父组件
-        emits('createFlowId', {...res[1].result.flow});
-        onCancel();
-      }
-    });
+          },
+        )
+        .then(res => {
+          if (res[1]?.result?.flow) {
+            ElMessage.success('创建成功');
+            // 将创建成功后的flow对象传给父组件
+            emits('createFlowId', { ...res[1].result.flow });
+            onCancel();
+          }
+        });
+    }
+  });
 };
 </script>
 <style lang="scss">
