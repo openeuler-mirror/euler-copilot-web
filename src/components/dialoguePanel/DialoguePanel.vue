@@ -234,6 +234,7 @@ const isReportVisible = ref<boolean>(false);
 const txt2imgPathZoom = ref('');
 // 解析完成后的文本内容
 const contentAfterMark = computed(() => {
+  
   if (!props.content) {
     return "";
   }
