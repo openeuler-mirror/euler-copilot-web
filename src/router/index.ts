@@ -33,8 +33,8 @@ const router = createRouter({
         import('src/views/dialogue/Copilot.vue'),
     },
     {
-      path: '/tools',
-      name: 'tools',
+      path: '/witchainD',
+      name: 'witchainD',
       component: (): Promise<typeof import('src/views/tools/index.vue')> =>
         import('src/views/tools/index.vue'),
     },

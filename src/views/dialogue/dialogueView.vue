@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, effect, onMounted, ref, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import { useHistorySessionStore, useSessionStore, useAccountStore, useLangStore } from 'src/store';
@@ -11,13 +11,14 @@ import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
-import i18n from 'src/i18n'
+import i18n from 'src/i18n';
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
 import WitchainDIcon from '@/assets/images/witchainD.png';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
+import tools from '../tools/index.vue';
 const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
@@ -38,10 +39,15 @@ const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
 const routerList = [
-  { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
-  { name: '知识库', path: '/tools' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
+  { name: '对话', path: '/', src: CopilotIcon, selectedSrc: CopilotIconSelected, routerName: 'dialogue' },
+  {
+    name: '知识库',
+    path: '/witchainD',
+    src: WitchainDIcon,
+    selectedSrc: WitchainDIconSelected,
+    routerName: 'witchainD',
+  },
 ];
-
 
 export interface ModelForm {
   max_tokens?: number;
@@ -50,7 +56,7 @@ export interface ModelForm {
   openai_api_key?: string;
   [property: string]: any;
 }
-const kb_id = localStorage.getItem("kb_id")||"";
+const kb_id = localStorage.getItem('kb_id') || '';
 const ruleForm = reactive<ModelForm>({
   kb_id: kb_id,
 });
@@ -59,8 +65,6 @@ const rules = ref();
 const formValidateStatus = ref<any>({
   kb_id: true,
 });
-
-
 
 const logoutHandler = () => {
   logout();
@@ -102,61 +106,61 @@ const changeTheme = () => {
   themeStore.theme = theme.value;
 };
 
-const createApi = async() => {
+const createApi = async () => {
   apikey.value = '';
   revoke.value = false;
-  let action = 'create'
-  await api.getApiKey()
-  const [_, res] = await api.changeApiKey({action});
-    if (!_ && res) {
-      apikey.value = res.result.api_key;
-    }
-}
+  let action = 'create';
+  await api.getApiKey();
+  const [_, res] = await api.changeApiKey({ action });
+  if (!_ && res) {
+    apikey.value = res.result.api_key;
+  }
+};
 
-const updateApi = async() => {
+const updateApi = async () => {
   apikey.value = '';
-  let action = 'update'
-  await api.changeApiKey({action});
+  let action = 'update';
+  await api.changeApiKey({ action });
   revoke.value = false;
-}
+};
 
-const revokeApi = async() => {
-  let action = 'revoke'
-  await api.changeApiKey({action});
+const revokeApi = async () => {
+  let action = 'revoke';
+  await api.changeApiKey({ action });
   revoke.value = true;
   apikey.value = false;
   hidden.value = false;
-}
+};
 
 const handleDialogClose = () => {
   apikey.value = false;
   hidden.value = true;
   apikeyVisible.value = false;
-}
+};
 
 const handleKnowledgeDialogClose = () => {
   KnowledgeVisible.value = false;
-}
+};
 
 const copy = () => {
   navigator.clipboard.writeText(apikey.value);
-}
+};
 
 const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
-      const [_, res] = await api.updateKnowledgeList({
-        kb_id: ruleForm.kb_id || "",
-      })
-      if(!_&&res){
-        localStorage.setItem('kb_id', ruleForm.kb_id || "")
-        ElMessage.success("成功");
-        KnowledgeVisible.value = false;
-      }else {
-        ruleForm.kb_id = "";
-        ElMessage.error("失败");
-        KnowledgeVisible.value = false;
-      }
+  const [_, res] = await api.updateKnowledgeList({
+    kb_id: ruleForm.kb_id || '',
+  });
+  if (!_ && res) {
+    localStorage.setItem('kb_id', ruleForm.kb_id || '');
+    ElMessage.success('成功');
+    KnowledgeVisible.value = false;
+  } else {
+    ruleForm.kb_id = '';
+    ElMessage.error('失败');
+    KnowledgeVisible.value = false;
+  }
 };
 
 const changeLanguagefun = (lang: 'CN' | 'EN') => {
@@ -171,10 +175,10 @@ onMounted(() => {
   if (localStorage.getItem('theme')) {
     document.body.setAttribute('theme', localStorage.getItem('theme') || 'light');
   }
-  api.getKnowledgeList().then((res) => {
+  api.getKnowledgeList().then(res => {
     ruleForm.value = res;
   });
-  if(localStorage.getItem('kb_id')){
+  if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
 });
@@ -183,7 +187,7 @@ watch(
   ruleForm,
   () => {
     let flag = false;
-      Object.keys(ruleForm).forEach((item) => {
+    Object.keys(ruleForm).forEach(item => {
       if (rules.value?.[item]?.[0]?.required) {
         if (!ruleForm?.[item]?.toString()?.length) {
           flag = true;
@@ -193,16 +197,14 @@ watch(
 
     isSubmitDisabled.value = flag;
   },
-  { deep: true }
+  { deep: true },
 );
 
-const addNewSession = async(routerName: string) => {
-  console.log(router.currentRoute.value.name, routerName)
-  if(router.currentRoute.value.name === routerName){
+const addNewSession = async (routerName: string) => {
+  if (router.currentRoute.value.name === routerName) {
     await createNewSession();
   }
-}
-
+};
 </script>
 
 <template>
@@ -217,8 +219,21 @@ const addNewSession = async(routerName: string) => {
           <template #reference>
             <span class="language">{{ lang }}</span>
           </template>
-          <el-button class="exit-button" @click="changeLanguagefun('EN')">English</el-button>
-          <el-button class="exit-button" @click="changeLanguagefun('CN')">简体中文</el-button>
+          <div
+            class="exit-button lang-button"
+            :class="lang === 'English' ? 'lang-selected' : ''"
+            @click="changeLanguagefun('EN')"
+          >
+            English
+          </div>
+          <div class="divider"></div>
+          <div
+            class="exit-button lang-button"
+            :class="lang === '简体中文' ? 'lang-selected' : ''"
+            @click="changeLanguagefun('CN')"
+          >
+            简体中文
+          </div>
         </el-popover>
         <div class="mode">
           <span v-if="theme === 'light'" @click="changeTheme">
@@ -233,9 +248,13 @@ const addNewSession = async(routerName: string) => {
           <template #reference>
             <img class="avatar" src="@/assets/svgs/user.svg" />
           </template>
-          <el-button class="exit-button" @click="logoutHandler">{{ $t('Login.logout') }}</el-button>
-          <el-button class="exit-button" @click="apikeyVisible = true">API KEY</el-button>
-          <el-button class="exit-button" @click="KnowledgeVisible = true">{{ i18n.global.t('witChainD.witChainD') }}</el-button>
+          <div class="exit-button lang-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" @click="apikeyVisible = true">API KEY</div>
+          <div class="divider"></div>
+          <div class="exit-button lang-button" @click="KnowledgeVisible = true">
+            {{ i18n.global.t('witChainD.witChainD') }}
+          </div>
         </el-popover>
       </div>
     </header>
@@ -244,15 +263,22 @@ const addNewSession = async(routerName: string) => {
         <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
           <span class="menu-icon">
             <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
-              <img v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName)!==-1" class="create-button__icon" :src="item.selectedSrc">
-              <img v-else class="create-button__icon" :src="item.src">
+              <img
+                v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1"
+                class="create-button__icon"
+                :src="item.selectedSrc"
+              />
+              <img v-else class="create-button__icon" :src="item.src" />
             </el-icon>
           </span>
           <span class="menu-text">{{ item.name }}</span>
         </router-link>
       </div>
       <div class="dialogue-content">
-        <RouterView />
+        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
+          <tools />
+        </KeepAlive>
+        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
       </div>
     </div>
     <el-dialog
@@ -361,15 +387,15 @@ const addNewSession = async(routerName: string) => {
     cursor: pointer;
     .menu-icon {
       align-items: center;
-      img{
+      img {
         //hover颜色待改进
         width: 40px;
-          &:hover {
-            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
-          }
-          &:active {
-            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
-          }
+        &:hover {
+          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+        }
+        &:active {
+          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+        }
       }
     }
     .menu-text {
@@ -387,7 +413,7 @@ const addNewSession = async(routerName: string) => {
 .model-dialog {
   padding: 0 !important;
   .el-dialog__title {
-    font-family: "HarmonyOS Sans SC Bold", sans-serif !important;
+    font-family: 'HarmonyOS Sans SC Bold', sans-serif !important;
     font-weight: 800;
   }
   .el-input {
@@ -462,7 +488,6 @@ const addNewSession = async(routerName: string) => {
 
 .apikey {
   &_view {
-
     // height: 400px;
     &_alert {
       margin-bottom: 8px;
@@ -482,12 +507,12 @@ const addNewSession = async(routerName: string) => {
           flex-direction: column;
           align-items: center;
           margin-top: 32px;
-          &_span{
-            height: 80px;  
+          &_span {
+            height: 80px;
             margin: 0px;
-            div{
+            div {
               margin: 0px;
-              width:300px;
+              width: 300px;
               font-size: 20px;
               word-wrap: break-word;
             }
@@ -501,8 +526,8 @@ const addNewSession = async(routerName: string) => {
         span {
           font-size: 12px;
         }
-        div{
-          button{
+        div {
+          button {
             margin-top: 32px;
           }
         }
@@ -511,16 +536,36 @@ const addNewSession = async(routerName: string) => {
   }
 }
 
-.popper-class {
-  padding: 3px 0 !important;
+.el-popover.popper-class {
+  padding: 5px 0 !important;
+  border-radius: 8px;
   .exit-button {
     width: 100%;
     border-radius: 0;
+  }
+  .lang-button {
+    text-align: center;
+    cursor: pointer;
+    line-height: 32px;
+    height: 32px;
+
+    &:hover {
+      color: white;
+      background-color: var(--o-color-primary-tertiary);
+    }
+  }
+  .lang-selected {
+    color: white;
+    background-color: var(--o-color-primary-secondary);
+  }
+  .divider {
+    border-bottom: 1px solid var(--o-text-color-tertiary);
   }
 }
 
 .language {
   color: var(--o-text-color-primary);
+  cursor: pointer;
 }
 
 #sun-icon {
