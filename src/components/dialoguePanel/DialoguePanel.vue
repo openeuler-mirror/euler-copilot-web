@@ -59,14 +59,16 @@ export interface DialoguePanelProps {
   echartsObj?:any;
   //
   test?:any;
-  //
+  //--时间-问题数-token
   metadata?:Metadata;
-  //
+  // -工作流的相关数据
   flowdata?:any;
-  //
+  // 缺少的参数列表-有可能
   paramsList?:any;
-  //
+  // 工作流调试用不到
   modeOptions:any;
+  // 新增是否是工作流调试的-用于修改调试抽屉样式
+  isWorkFlowDebug: boolean;
 }
 import JsonFormComponent from './JsonFormComponent.vue'
 import { Metadata } from "srcapis/paths/type";
@@ -425,7 +427,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
 
 </script>
 <template>
-  <div class="dialogue-panel">
+  <div class="dialogue-panel" :class="{ workFlowDebugStyle: props.isWorkFlowDebug }">
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
         {{ dayjs(createdAt * 1000).format("YYYY-MM-DD HH:mm:ss") }}
@@ -435,7 +437,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
       </div>
       <div class="dialogue-panel__content">
         <img v-if="avatar" :src="avatar" />
-        <div v-else>
+        <div v-else class="userArea">
           <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_user.png" />
           <img v-else src="@/assets/images/light_user.png" />
         </div>
@@ -449,6 +451,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
     <!-- AI回答 -->
     <div class="dialogue-panel__robot" v-else>
       <div class="dialogue-panel__robot-content">
+        <!-- 这里是flowData -->
       <DialogueFlow v-if="flowdata"  :flowdata="props.flowdata"/> 
       <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
@@ -1097,6 +1100,50 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
   :deep(.el-loading-spinner .circular) {
     width: 20px;
     height: 20px;
+  }
+}
+// 工作流调试抽屉样式--
+.workFlowDebugStyle {
+  width: auto;
+  padding-right: 24px;
+  .dialogue-panel__content {
+    gap: 16px;
+    .userArea {
+      min-width: 48px;
+      height: 48px;
+      img {
+        left: 0px;
+      }
+    }
+    .content {
+      margin-left: 0px;
+      min-height: 48px;
+    }
+  }
+  .dialogue-panel__user-time {
+    height: 20px;
+    line-height: 20px;    
+  }
+  .dialogue-panel__robot {
+    gap: 16px;
+    padding-left: 64px;
+  .dialogue-panel__robot-content {
+    border-radius: 8px;
+    // 调试抽屉中echarts无需显示
+    .answer_img {
+      display: none;
+    }
+    .loading-echarts {
+      display: none;
+    }
+    &::before {
+      left: 0;
+    }
+  }
+  }
+  // 调试抽屉中不需要显示底部反对等功能图标
+  .dialogue-panel__robot-bottom {
+    display: none;
   }
 }
 </style>

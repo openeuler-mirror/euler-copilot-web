@@ -79,6 +79,7 @@ watch(
     align-items: center;
     border-radius: 8px;
     justify-content: center;
+    background-color: var(--o-bg-color-base);
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
     transform: rotate(45deg);
     border: none;

@@ -53,7 +53,7 @@
                   <div class="appCenterCardContentTitle">{{ appItem.name }}</div>
                   <div
                     class="appCenterCardContentCollect"
-                    :class="appItem.published ? '' : 'noClick'"
+                    :class="!appItem.published && appType === 'createdByMe' ? 'noClick' : ''"
                     @click.stop="handleFavorite($event, appItem)"
                   >
                     <IconFavorite v-if="appItem.favorited" class="appFavorite" />
@@ -72,7 +72,7 @@
                 <el-button text @click="handleDelApp($event, appItem)">删除</el-button>
               </div>
             </div>
-            <div class="unPublishSymbol" v-if="!appItem.published">
+            <div class="unPublishSymbol" v-if="!appItem.published && appType === 'createdByMe'">
               <div class="coverIcon"></div>
               <div class="textDesc">未发布</div>
             </div>
@@ -168,7 +168,7 @@ const handleQueryAppList = (payload?: any) => {
 
 const handleFavorite = (e, item) => {
   // 未发布的不可收藏
-  if (!item.published) {
+  if (!item.published && appType.value === 'createdByMe') {
     return;
   }
   e.stopPropagation();
