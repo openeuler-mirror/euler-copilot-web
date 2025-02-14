@@ -1127,19 +1127,19 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
   .dialogue-panel__robot {
     gap: 16px;
     padding-left: 64px;
-  .dialogue-panel__robot-content {
-    border-radius: 8px;
-    // 调试抽屉中echarts无需显示
-    .answer_img {
-      display: none;
+    .dialogue-panel__robot-content {
+      border-radius: 8px;
+      // 调试抽屉中echarts无需显示
+      .answer_img {
+        display: none;
+      }
+      .loading-echarts {
+        display: none;
+      }
+      &::before {
+        left: 0;
+      }
     }
-    .loading-echarts {
-      display: none;
-    }
-    &::before {
-      left: 0;
-    }
-  }
   }
   // 调试抽屉中不需要显示底部反对等功能图标
   .dialogue-panel__robot-bottom {
