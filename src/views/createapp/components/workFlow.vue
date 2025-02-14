@@ -599,9 +599,9 @@ defineExpose({
             :targetPosition="props.targetPosition"
           />
         </template>
-        <!-- vue-flow工作流的debug抽屉 -->
-        <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       </VueFlow>
+      <!-- vue-flow工作流的debug抽屉 -->
+      <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       <div class="workFlowOps" v-if="workFlowList.length">
         <!-- 工作流画布左上方选择工作流以及调试按钮等区域 -->
         <div class="workFlowSelect">
@@ -636,7 +636,6 @@ defineExpose({
           <img src="@/assets/images/debugBtnDis.png" v-if="debugDialogVisible" />
           <img src="@/assets/images/debugBtn.png" v-else />
         </div>
-        <div @click="editNodesStatus">修改节点状态</div>
         <div class="debugStatus"></div>
       </div>
       <!-- 暂无工作流展示 -->

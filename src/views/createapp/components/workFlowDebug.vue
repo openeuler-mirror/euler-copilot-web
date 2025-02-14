@@ -70,6 +70,8 @@ import { api } from 'src/apis';
 const { sendQuestion } = useSessionStore();
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
+const { generateSession } = useHistorySessionStore();
+const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
 export interface DialogueSession {
   modeOptions: any;
@@ -105,6 +107,10 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
   dialogueInput.value = '';
+
+  if (!currentSelectedSession.value) {
+    await generateSession();
+  }
   if (user_selected_flow) {
     await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, user_selected_flow, undefined);
   } else {
