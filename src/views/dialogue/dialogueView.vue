@@ -181,6 +181,10 @@ onMounted(() => {
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
+  console.log('onMounted',window.location.host);
+  const iframe = document.getElementById('my-iframe');
+  console.log('iframe',`${window.location.origin}/witchaind`);
+  iframe.src = `${window.location.origin}/witchaind`;
 });
 
 watch(
