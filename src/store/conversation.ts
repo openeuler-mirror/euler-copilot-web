@@ -537,6 +537,10 @@ export const useSessionStore = defineStore('conversation', () => {
     const answerIndex = conversationList.value.findIndex((val) => val.cid === cid) !== -1 ? conversationList.value.findIndex((val) => val.cid === cid) : conversationList.value.length - 1;
     isPaused.value = true;
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+    if(!conversationItem.message[conversationItem.currentInd]){
+      conversationItem.message[conversationItem.currentInd] += "暂停成功"
+    }
     cancel();
     await api.stopGeneration();
   };
