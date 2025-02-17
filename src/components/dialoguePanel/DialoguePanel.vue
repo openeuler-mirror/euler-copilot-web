@@ -255,7 +255,6 @@ const contentAfterMark = computed(() => {
     // 计算 <a> 之后的字符串
     const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
     thoughtContent.value = contentAfterA;
-    console.log(thoughtContent.value);
     return "";
   }
   else if(startIndex !== -1 && endIndex !== -1){

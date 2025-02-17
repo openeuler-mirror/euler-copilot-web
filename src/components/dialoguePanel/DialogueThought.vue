@@ -34,11 +34,8 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return '';
   }
-  console.log(props.content);
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
   let str = marked.parse(xss(props.content).replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
-  console.log(str);
-
   return str;
 });
 </script>
