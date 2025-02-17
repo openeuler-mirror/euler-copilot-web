@@ -57,7 +57,6 @@ const hanleAsideVisible = () => {
 const {
   onConnect,
   updateNode,
-  updateEdgeData,
   addEdges,
   getNodes,
   getEdges,
@@ -65,13 +64,12 @@ const {
   removeNodes,
   setViewport,
   getViewport,
-  fitView,
   setNodes,
   setEdges,
 } = useVueFlow();
 const { layout } = useLayout();
 
-const { onDragOver, onDrop, onDragLeave, isDragOver, onDragStart } = useDragAndDrop();
+const { onDragOver, onDrop, onDragLeave, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
 const initNodes = ref([
   {
@@ -101,67 +99,6 @@ const initNodes = ref([
 ]);
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
-// 下方为死数据--之后有接口请将其替换为接口
-const nodeStancesList = ref([
-  {
-    id: '11',
-    type: 'custom',
-    mark: 'iiiiii',
-    data: {
-      label: '知识库(成功节点)',
-      desc: '这里是知识库说明',
-      status: 'success',
-    },
-  },
-  {
-    id: '12',
-    type: 'custom',
-    mark: 'iiiiii',
-    data: {
-      label: 'LLM(失败节点)',
-      desc: '调用大模型，生成自然语言报告',
-      status: 'error',
-    },
-  },
-  {
-    id: '13',
-    type: 'custom',
-    mark: 'iiiiii',
-    data: {
-      label: '条件(正常初始化节点)',
-      desc: '条件说明',
-    },
-  },
-  {
-    id: '14',
-    type: 'branch',
-    mark: 'iiiiii',
-    data: {
-      label: 'LLM(分支节点)',
-      desc: '调用大模型，生成自然语言报告',
-    },
-  },
-  {
-    id: '15',
-    type: 'branch',
-    mark: 'iiiiii',
-    data: {
-      label: 'LLM(分支节点-成功状态)',
-      desc: '调用大模型，生成自然语言报告',
-      status: 'success',
-    },
-  },
-  {
-    id: '16',
-    type: 'branch',
-    mark: 'iiiiii',
-    data: {
-      label: 'LLM(分支节点-失败状态)',
-      desc: '调用大模型，生成自然语言报告',
-      status: 'error',
-    },
-  },
-]);
 
 const handleChangeZoom = zoomValue => {
   setViewport({
@@ -296,26 +233,6 @@ const dropFunc = e => {
   nodeAndLineConnection();
 };
 
-// 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
-const updateNodeTest = state => {
-  // 获取当前的success状态的
-  const nodes = getNodes.value.filter(item => item.data.status === 'success');
-  const id = nodes[0].id;
-  const data = nodes[0].data;
-  // 取第一个，状态改为error
-  updateNode(id, { data: { ...data, status: 'error' } });
-  // 遍历获取以当前节点为起源节点的边和为目的节点的边
-  const changeSourceEdges = [...getEdges.value.filter(item => item.source === id)];
-  const changeTargetEdges = [...getEdges.value.filter(item => item.target === id)];
-  // 分别遍历相应的边-并更新它们的状态为最新状态
-  changeSourceEdges.forEach(item => {
-    updateEdgeData(item.id, { sourceStatus: 'error' });
-  });
-  changeTargetEdges.forEach(item => {
-    updateEdgeData(item.id, { targetStatus: 'error' });
-  });
-};
-
 onMounted(() => {
   api
     .queryAllFlowService({
@@ -343,13 +260,6 @@ const searchApiList = () => {
 
 const handleDebugDialogOps = visible => {
   debugDialogVisible.value = visible;
-};
-
-const handleDemo = () => {
-  return {
-    nodes: getNodes.value,
-    edges: getEdges.value,
-  };
 };
 
 const edgesChange = edges => {
@@ -382,6 +292,7 @@ const getCreatedFlow = createdFlowObj => {
   if (flowObj) {
     flowObj.value = { ...createdFlowObj };
     workFlowItemName.value = createdFlowObj.name;
+    // 回显工作流节点和边
     redrageFlow(createdFlowObj?.nodes, createdFlowObj?.edges);
   }
   // 更新当前应用下的工作流列表下拉框
@@ -454,6 +365,7 @@ const choiceFlowId = flowItem => {
   editFlow(flowItem);
 };
 
+// 回显工作流节点和边
 const redrageFlow = (nodesList, edgesList) => {
   const newNodeList = nodesList.map(node => {
     let newNode = {
@@ -467,6 +379,7 @@ const redrageFlow = (nodesList, edgesList) => {
       position: node.position,
       deletable: true,
     };
+    // 这里节点/handle的类型要根据返回的类型转换下
     if (node.type === 'start' || node.type === 'end') {
       newNode.data = {
         ...newNode.data,
@@ -483,7 +396,7 @@ const redrageFlow = (nodesList, edgesList) => {
     return newNode;
   });
   const newEdgeList = edgesList.map(edge => {
-    let newEdge = {
+    const newEdge = {
       id: edge.edgeId,
       source: edge.sourceNode,
       target: edge.targetNode,
@@ -573,7 +486,6 @@ const saveFlow = () => {
 };
 
 defineExpose({
-  handleDemo,
   saveFlow,
 });
 </script>
@@ -627,6 +539,7 @@ defineExpose({
       </transition>
     </aside>
     <div class="workFlowContainerRight">
+      <!-- vue-flow画布节点等区域 -->
       <VueFlow
         :nodes="nodes"
         :edges="edges"
@@ -675,7 +588,7 @@ defineExpose({
             :data="JSON.parse(JSON.stringify(props.data))"
           />
         </template>
-
+        <!-- 连接边线 -->
         <template #connection-line="props">
           <CustomEdge
             :sourceX="props.sourceX"
@@ -686,10 +599,11 @@ defineExpose({
             :targetPosition="props.targetPosition"
           />
         </template>
-
-        <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       </VueFlow>
+      <!-- vue-flow工作流的debug抽屉 -->
+      <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
       <div class="workFlowOps" v-if="workFlowList.length">
+        <!-- 工作流画布左上方选择工作流以及调试按钮等区域 -->
         <div class="workFlowSelect">
           <el-select v-model="workFlowItemName" placeholder="请选择" :suffix-icon="IconCaretDown">
             <el-option
@@ -724,12 +638,14 @@ defineExpose({
         </div>
         <div class="debugStatus"></div>
       </div>
+      <!-- 暂无工作流展示 -->
       <div class="noWorkFlow" v-else>
         <div class="noFlow"></div>
         <div class="noFlowDesc">暂无工作流</div>
         <el-button type="primary" class="w96 addWorkFlow" @click="addWorkFlow">新建工作流</el-button>
       </div>
     </div>
+    <!-- 工作流新建弹窗 -->
     <WorkFlowDialog
       v-if="isAddWorkFlow"
       :editData="editData"
@@ -738,6 +654,7 @@ defineExpose({
       @createFlowId="getCreatedFlow"
     ></WorkFlowDialog>
   </div>
+  <!-- 节点yaml数据抽屉 -->
   <EditYamlDrawer
     v-if="isEditYaml"
     @closeDrawer="closeDrawer"

@@ -53,7 +53,6 @@ const getFlowList = flowDataList => {
 
 // 保存按钮
 const saveConfigOrFlow = () => {
-  console.log(createAppType.value, 'createAppType');
   if (createAppType.value === 'appConfig') {
     let appFormValue = appConfigRef.value.createAppForm;
     if (appFormValue) {

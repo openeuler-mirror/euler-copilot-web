@@ -90,6 +90,7 @@ const closeDrawer = () => {
   padding: 0px;
   background-color: var(--o-bg-color-base);
   top: 48px;
+  width: 700px !important;
   height: calc(100% - 48px);
   .el-drawer__header {
     padding: 24px 24px 16px;

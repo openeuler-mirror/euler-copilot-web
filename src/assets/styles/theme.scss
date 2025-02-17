@@ -15,6 +15,7 @@ body[theme='dark'] {
   --o-flow-code-border: rgb(62,69,81);
   --flow-instance-hover-color: #1F2329;
   --flow-instance-shadow: 0 4px 16px 0 rgba(253, 254, 255, 0.1);
+  --flow-nodeBox-shadow: 0 8px 16px 0 rgba(253, 254, 255, 0.1);
   --flow-node-default-over-color: #25303E;
   --flow-node-boder-default-over: #314265;
   --flow-node-success-over-color: #1F312A;
@@ -38,6 +39,7 @@ body[theme='light'] {
   --o-flow-code-border: rgb(223,229,239);
   --flow-instance-hover-color: #FDFEFF;
   --flow-instance-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+  --flow-nodeBox-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
   --flow-node-default-over-color: #edf2fd;
   --flow-node-boder-default-over: #c7d6f5;
   --flow-node-success-over-color: #e6f6e9;
