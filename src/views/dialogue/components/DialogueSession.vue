@@ -28,7 +28,7 @@ enum SupportMap {
   against = 0,
 }
 // const dialogueRef = ref();
-const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
+const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const modeOptions = ref(props.modeOptions);
 const questions = [
@@ -584,6 +584,17 @@ watch(
     deep: true,
   }
 );
+
+/**
+ * 暂停和重新生成问答
+ */
+ const handlePauseAndReGenerate = (cid?: number) => {
+  if (!cid) {
+    return;
+  }
+    pausedStream(cid);
+};
+
 
 watch(selectMode, (newValue, oldValue) => {
   user_selected_plugins.value = [];

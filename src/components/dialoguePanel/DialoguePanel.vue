@@ -126,10 +126,10 @@ const handlePauseAndReGenerate = (cid?: number) => {
   if (!cid) {
     return;
   }
-
   emits("clearSuggestion", props.key);
   if (props.isFinish) {
     // 重新生成
+    thoughtContent.value = "";
     reGenerateAnswer(cid, user_selected_plugins.value);
   } else {
     // 停止生成
@@ -265,6 +265,7 @@ const contentAfterMark = computed(() => {
 
 
 const prePageHandle = (cid: number) => {
+  thoughtContent.value = "";
   prePage(cid);
   if (index.value === 0) {
     index.value = 0;
@@ -275,6 +276,7 @@ const prePageHandle = (cid: number) => {
 };
 
 const nextPageHandle = (cid: number) => {
+  thoughtContent.value = "";
   nextPage(cid);
   if (index.value === (props.isLikeList as number[]).length - 1) {
     index.value = (props.isLikeList as number[]).length - 1;
@@ -306,6 +308,7 @@ const handleIsLike = () => {
 };
 
 onMounted(() => {
+  thoughtContent.value = "";
   isLike.value = props.isLikeList;
   setTimeout(() => {
     handleIsLike();
