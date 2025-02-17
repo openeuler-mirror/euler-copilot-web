@@ -4,7 +4,7 @@
       <iframe
         id="my-iframe"
         frameborder="0"
-        sandbox="allow-scripts allow-popups allow-same-origin"
+        sandbox="allow-scripts allow-popups allow-same-origin allow-downloads"
         height="100%"
         width="100%"
       ></iframe>
