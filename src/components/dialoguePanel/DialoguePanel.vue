@@ -234,7 +234,6 @@ const isReportVisible = ref<boolean>(false);
 const txt2imgPathZoom = ref('');
 // 解析完成后的文本内容
 const contentAfterMark = computed(() => {
-  
   if (!props.content) {
     return "";
   }
@@ -250,22 +249,18 @@ const contentAfterMark = computed(() => {
     str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
   }
   //仅获取第一个遇到的 think 标签
-  // if(str.match(/<think>([\s\S]*?)<\/think>/)){
-  // thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
-  // }
-  let thinkStart = str.indexOf('<think>');
-  if (thinkStart !== -1) {
-    let thinkEnd = str.indexOf('</think>', thinkStart);
-    if (thinkEnd !== -1) {
-      // 提取 <think> 标签中的内容
-      thoughtContent.value = str.slice(thinkStart + 7, thinkEnd);
-        // 将 <think> 标签替换为空
-      str = str.slice(0, thinkStart) + str.slice(thinkEnd + 8);
-    }
+  const startIndex = str.indexOf('<think>');
+  const endIndex = str.indexOf('</think>');
+  if (startIndex !== -1 && endIndex === -1) {
+    // 计算 <a> 之后的字符串
+    const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
+    thoughtContent.value = contentAfterA;
+    return "";
   }
-
-  //将<think>标签替换为空
-  return str.replace(/<think>([\s\S]*?)<\/think>/g,'');
+  else if(startIndex !== -1 && endIndex !== -1){
+  thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  }
+  return str.replace(/<think>([\s\S]*?)<\/think>/g,'');  
 });
 
 
@@ -486,7 +481,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_plu
         <el-button class="confirm-button"  @click="visible = false">{{$t('history.cancel')}}</el-button>
       </div>
     </el-dialog>
-      <div class="loading" v-if="!contentAfterMark && !isFinish && !$slots.default &&!flowdata">
+      <div class="loading" v-if="!contentAfterMark && !isFinish && !$slots.default &&!flowdata &&!thoughtContent">
         <img src="@/assets/images/loading.png" alt="" class="loading-icon">
         <div class="loading-text">{{$t('feedback.eulercopilot_is_thinking')}}</div>
       </div>

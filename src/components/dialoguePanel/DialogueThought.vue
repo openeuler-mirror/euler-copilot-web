@@ -25,7 +25,7 @@ const props = defineProps({
     required: true,
   },
 });
-const isCollapsed = ref(true);
+const isCollapsed = ref(false);
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
@@ -34,11 +34,8 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return '';
   }
-  console.log(props.content);
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
   let str = marked.parse(xss(props.content).replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
-  console.log(str);
-
   return str;
 });
 </script>
@@ -59,7 +56,6 @@ const contentAfterMark = computed(() => {
     background-color: #f8f8f8;
 
     .think-label {
-      font-size: 0.9rem;
       font-weight: bold;
       color: #666;
       position: absolute;
@@ -72,20 +68,18 @@ const contentAfterMark = computed(() => {
     .collapse-control {
       display: flex;
       align-items: center;
-
+      transform-origin: center center;
       .collapse-icon {
         width: 1.2rem;
         height: 1.2rem;
         transition: transform 0.3s ease;
-
+        top: 6px;
         &.is-collapsed {
+          top: 5px;
           transform: rotate(-90deg);
         }
       }
-
       .collapse-text {
-        margin-left: 0.5rem;
-        font-size: 0.9rem;
         color: #666;
       }
     }
