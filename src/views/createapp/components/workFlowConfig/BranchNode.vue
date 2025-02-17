@@ -2,6 +2,7 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch } from 'vue';
 import { BranchSourceIdType } from '../types';
+import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
 const props = defineProps({
   id: {
     type: String,
@@ -22,7 +23,7 @@ const props = defineProps({
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
-const statusList = ref(['waiting', 'success', 'error', 'default']);
+const statusList = ref(['running', 'success', 'error']);
 
 const branchIdList = ref([]);
 
@@ -78,12 +79,13 @@ const editYaml = (nodeName, yamlCode) => {
           {{ item.description }}
 
           <Handle class="souceFirstHandle" :id="branchIdList[index]" type="source" :position="Position.Right"></Handle>
-
           <div class="delOverShadow rightBox" style="top: 0%"></div>
           <div class="outHandleRing outRingRight" style="top: 30%"></div>
         </div>
       </div>
     </div>
+    <!-- 调试时出现-暂时隐藏 -->
+    <NodeMirrorText style="display: none"></NodeMirrorText>
   </div>
 </template>
 

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch } from 'vue';
+import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
 const props = defineProps({
   id: {
     type: String,
@@ -25,7 +26,7 @@ const props = defineProps({
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
-const statusList = ref(['waiting', 'success', 'error', 'default']);
+const statusList = ref(['running', 'success', 'error']);
 
 const curStatus = ref('');
 
@@ -77,5 +78,7 @@ const editYaml = (nodeName, yamlCode) => {
     <Handle type="source" :position="Position.Right" :connectable="props.data?.isConnectSource"></Handle>
     <div class="delOverShadow rightBox"></div>
     <div class="outHandleRing outRingRight"></div>
+    <!-- 调试时出现-暂时隐藏 -->
+    <NodeMirrorText style="display: none"></NodeMirrorText>
   </div>
 </template>
