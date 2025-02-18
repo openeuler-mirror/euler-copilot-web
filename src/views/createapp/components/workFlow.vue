@@ -389,7 +389,7 @@ const redrageFlow = (nodesList, edgesList) => {
       newNode.deletable = false;
     } else if (node.type === 'choice') {
       newNode.type = 'branch';
-      newNode.data.parameters['input_parameters'] = node.parameters;
+      newNode.data.parameters['input_parameters'] = { ...node.parameters };
     } else {
       newNode.type = 'custom';
     }
@@ -457,6 +457,26 @@ const saveFlow = () => {
     };
     return newEdge;
   });
+  console.log(
+    {
+      appId: appId,
+      flowId: flowObj.value.flowId,
+      topologyCheck: false,
+    },
+    '---------',
+    {
+      flow: {
+        ...flowObj.value,
+        nodes: updateNodes,
+        edges: updateEdges,
+      },
+      focusPoint: {
+        x: 800,
+        y: 800,
+      },
+    },
+  );
+  // return;
   // 更新最新的节点与边的数据
   api
     .createOrUpdateFlowTopology(

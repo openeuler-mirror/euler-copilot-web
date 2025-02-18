@@ -1118,6 +1118,9 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
     .content {
       margin-left: 0px;
       min-height: 48px;
+      .message {
+        white-space: pre-line;
+      }
     }
   }
   .dialogue-panel__user-time {
