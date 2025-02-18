@@ -57,15 +57,13 @@
 </template>
 <script setup lang="ts">
 import '../../styles/workFlowDebug.scss';
-import { computed, watch, ref } from 'vue';
+import { ref } from 'vue';
 import { IconX } from '@computing/opendesign-icons';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import type { ConversationItem, RobotConversationItem } from 'src/views/dialogue/types';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import { useHistorySessionStore } from 'src/store/historySession';
-import { successMsg, errorMsg } from 'src/components/Message';
 import { storeToRefs } from 'pinia';
-import { api } from 'src/apis';
 // 对话列表
 const { sendQuestion } = useSessionStore();
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
