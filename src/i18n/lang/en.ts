@@ -96,7 +96,9 @@ export default {
       submit: "Submit",  
       report: "Report",  
       reason_for_reporting: "Reason for Reporting",
-      enter_a_description_for_your_report:"Enter a description for your report."
+      enter_a_description_for_your_report:"Enter a description for your report.",
+      revoke:"Revoke",
+      refresh:"Refresh",
     },
     Report:{
       pornographic_content: "Pornographic content",  

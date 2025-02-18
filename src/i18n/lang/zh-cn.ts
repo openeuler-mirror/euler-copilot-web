@@ -96,7 +96,9 @@ export default {
     submit: "提交",
     report: "举报",
     reason_for_reporting: "选择举报类型",
-    enter_a_description_for_your_report: "请输入举报描述"
+    enter_a_description_for_your_report: "请输入举报描述",
+    revoke:"撤销",
+    refresh:"重新生成",
   },
   Report: {
     pornographic_content: "低俗色情",

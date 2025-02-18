@@ -19,6 +19,7 @@ import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
 import WitchainDIcon from '@/assets/images/witchainD.png';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import tools from '../tools/index.vue';
+import { successMsg } from 'src/components/Message';
 const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
@@ -122,6 +123,11 @@ const updateApi = async () => {
   let action = 'update';
   await api.changeApiKey({ action });
   revoke.value = false;
+  await api.getApiKey();
+  const [_, res] = await api.changeApiKey({ action });
+  if (!_ && res) {
+    apikey.value = res.result.api_key;
+  }
 };
 
 const revokeApi = async () => {
@@ -144,6 +150,7 @@ const handleKnowledgeDialogClose = () => {
 
 const copy = () => {
   navigator.clipboard.writeText(apikey.value);
+  successMsg('复制成功');
 };
 
 const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
