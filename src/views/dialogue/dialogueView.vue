@@ -1,26 +1,24 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, effect, onMounted, ref, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import { useHistorySessionStore, useSessionStore, useAccountStore, useLangStore } from 'src/store';
 import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
+import Copilot from './Copilot.vue';
 import { useChangeThemeStore } from 'src/store';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
+import { reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
-import ApiIcon from '@/assets/images/routerApi.png';
-import ApiIconSelected from '@/assets/svgs/apiIconSelected.svg';
-import AppIcon from '@/assets/images/routerApp.png';
-import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
 import WitchainDIcon from '@/assets/images/witchainD.png';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
-import { useRouter } from 'vue-router';
-import { reactive } from 'vue';
+import tools from '../tools/index.vue';
 const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
@@ -41,11 +39,16 @@ const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
 const routerList = [
-  { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
-  { name: '语义中心', path: '/api' , src:ApiIcon , selectedSrc:ApiIconSelected ,routerName: 'api' },
-  { name: '应用中心', path: '/app' , src:AppIcon , selectedSrc:AppIconSelected ,routerName: 'app' },
-  { name: '知识库', path: '/tools' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
+  { name: '对话', path: '/', src: CopilotIcon, selectedSrc: CopilotIconSelected, routerName: 'dialogue' },
+  {
+    name: '知识库',
+    path: '/witchainD',
+    src: WitchainDIcon,
+    selectedSrc: WitchainDIconSelected,
+    routerName: 'witchainD',
+  },
 ];
+
 export interface ModelForm {
   max_tokens?: number;
   model_name?: string;
@@ -53,8 +56,9 @@ export interface ModelForm {
   openai_api_key?: string;
   [property: string]: any;
 }
+const kb_id = localStorage.getItem('kb_id') || '';
 const ruleForm = reactive<ModelForm>({
-  kb_id: "",
+  kb_id: kb_id,
 });
 const rules = ref();
 
@@ -174,17 +178,15 @@ onMounted(() => {
   api.getKnowledgeList().then(res => {
     ruleForm.value = res;
   });
-  if(localStorage.getItem('kb_id')){
+  if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
+  console.log('onMounted',window.location.host);
+  const iframe = document.getElementById('my-iframe');
+  console.log('iframe',`${window.location.origin}/witchaind`);
+  // iframe.src = `${window.location.origin}/witchaind`;
+  iframe.src = `http://localhost:3002`;
 });
-
-const addNewSession = async(routerName: string) => {
-  console.log(router.currentRoute.value.name, routerName)
-  if(router.currentRoute.value.name === routerName){
-    await createNewSession();
-  }
-}
 
 watch(
   ruleForm,
@@ -202,6 +204,12 @@ watch(
   },
   { deep: true },
 );
+
+const addNewSession = async (routerName: string) => {
+  if (router.currentRoute.value.name === routerName) {
+    await createNewSession();
+  }
+};
 </script>
 
 <template>
@@ -216,9 +224,21 @@ watch(
           <template #reference>
             <span class="language">{{ lang }}</span>
           </template>
-          <div class="exit-button lang-button" :class="lang==='English'?'lang-selected':''"  @click="changeLanguagefun('EN')">English</div>
+          <div
+            class="exit-button lang-button"
+            :class="lang === 'English' ? 'lang-selected' : ''"
+            @click="changeLanguagefun('EN')"
+          >
+            English
+          </div>
           <div class="divider"></div>
-          <div class="exit-button lang-button" :class="lang==='简体中文'?'lang-selected':''"  @click="changeLanguagefun('CN')">简体中文</div>
+          <div
+            class="exit-button lang-button"
+            :class="lang === '简体中文' ? 'lang-selected' : ''"
+            @click="changeLanguagefun('CN')"
+          >
+            简体中文
+          </div>
         </el-popover>
         <div class="mode">
           <span v-if="theme === 'light'" @click="changeTheme">
@@ -237,9 +257,9 @@ watch(
           <div class="divider"></div>
           <div class="exit-button lang-button" @click="apikeyVisible = true">API KEY</div>
           <div class="divider"></div>
-          <div class="exit-button lang-button" @click="KnowledgeVisible = true">{{
-            i18n.global.t('witChainD.witChainD')
-          }}</div>
+          <div class="exit-button lang-button" @click="KnowledgeVisible = true">
+            {{ i18n.global.t('witChainD.witChainD') }}
+          </div>
         </el-popover>
       </div>
     </header>
@@ -248,15 +268,22 @@ watch(
         <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
           <span class="menu-icon">
             <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
-              <img v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName)!==-1" class="create-button__icon" :src="item.selectedSrc">
-              <img v-else class="create-button__icon" :src="item.src">
+              <img
+                v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1"
+                class="create-button__icon"
+                :src="item.selectedSrc"
+              />
+              <img v-else class="create-button__icon" :src="item.src" />
             </el-icon>
           </span>
           <span class="menu-text">{{ item.name }}</span>
         </router-link>
       </div>
       <div class="dialogue-content">
-        <RouterView />
+        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
+          <tools />
+        </KeepAlive>
+        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
       </div>
     </div>
     <el-dialog
@@ -365,15 +392,15 @@ watch(
     cursor: pointer;
     .menu-icon {
       align-items: center;
-      img{
+      img {
         //hover颜色待改进
         width: 40px;
-          &:hover {
-            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
-          }
-          &:active {
-            filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
-          }
+        &:hover {
+          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+        }
+        &:active {
+          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+        }
       }
     }
     .menu-text {
@@ -388,7 +415,6 @@ watch(
   height: 100%;
   flex: 1;
 }
-
 .model-dialog {
   padding: 0 !important;
   .el-dialog__title {
@@ -522,20 +548,20 @@ watch(
     width: 100%;
     border-radius: 0;
   }
-  .lang-button{
+  .lang-button {
     text-align: center;
     cursor: pointer;
     line-height: 32px;
     height: 32px;
-    
+
     &:hover {
       color: white;
       background-color: var(--o-color-primary-tertiary);
     }
   }
-  .lang-selected{
-      color: white;
-      background-color: var(--o-color-primary-secondary);
+  .lang-selected {
+    color: white;
+    background-color: var(--o-color-primary-secondary);
   }
   .divider {
     border-bottom: 1px solid var(--o-text-color-tertiary);
@@ -569,7 +595,8 @@ watch(
 <style lang="scss" scoped>
 .dialogue {
   height: 100%;
-  min-height: 864px;
+  min-height: 768px;
+  min-width: 1388px;
   overflow: scroll;
   display: flex;
   flex-direction: column;
