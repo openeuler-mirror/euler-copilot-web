@@ -110,11 +110,6 @@ onMounted(async() => {
     top: 0,
     left: 0,
   });
-  //获取 top5 list 
-  const [_, res] = await api.getTopFiveApp(5);
-  if(_ && res){
-    appList.value = res.result.applications;
-  }
 });
 
 watch(

@@ -57,7 +57,6 @@ const handleHover = async () => {
       x: rect?.x,
       y: rect?.y,
     };
-  } else {
   }
 };
 

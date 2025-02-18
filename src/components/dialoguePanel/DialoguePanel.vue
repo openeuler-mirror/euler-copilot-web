@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import xss from "xss";
 import { errorMsg, successMsg } from "src/components/Message";
 import ReportPopover from "src/views/dialogue/components/ReportPopover.vue";
+import DialogueThought from "./DialogueThought.vue";
 import { onMounted, watch, onBeforeUnmount,reactive } from "vue";
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
@@ -90,7 +91,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   // currentSelected: 0,
   needRegernerate: false,
 });
-
+const thoughtContent = ref('');
 const index = ref(0);
 const isLike = ref(props.isLikeList);
 const emits = defineEmits<{
@@ -133,6 +134,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
   emits("clearSuggestion", props.key);
   if (props.isFinish) {
     // 重新生成
+    thoughtContent.value = "";
     reGenerateAnswer(cid, user_selected_app.value);
   } else {
     // 停止生成
@@ -240,21 +242,34 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return "";
   }
+  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
   let str = marked.parse(
     xss(props.content[props.currentSelected])
       .replace(/&gt;/g, ">")
       .replace(/&lt;/g, "<")
   )
+  //将table提取出来中加一个<div>父节点控制溢出
   let tableStart = str.indexOf('<table>');
   if(tableStart!== -1){
     str = str.slice(0, tableStart) + '<div class="overflowTable">' + str.slice(tableStart, str.indexOf('</table>') + '</table>'.length).replace('</table>', '</table></div>') + str.slice(str.indexOf('</table>') + '</table>'.length);
   }
-  //将table提取出来中加一个<div>父节点控制溢出
-  return `<pre>${str}</pre>`;
-  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
+  //仅获取第一个遇到的 think 标签
+  const startIndex = str.indexOf('<think>');
+  const endIndex = str.indexOf('</think>');
+  if (startIndex !== -1 && endIndex === -1) {
+    // 计算 <a> 之后的字符串
+    const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
+    thoughtContent.value = contentAfterA;
+    return "";
+  }
+  else if(startIndex !== -1 && endIndex !== -1){
+  thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  }
+  return str.replace(/<think>([\s\S]*?)<\/think>/g,'');  
 });
 
 const prePageHandle = (cid: number) => {
+  thoughtContent.value = "";
   prePage(cid);
   if (index.value === 0) {
     index.value = 0;
@@ -265,6 +280,7 @@ const prePageHandle = (cid: number) => {
 };
 
 const nextPageHandle = (cid: number) => {
+  thoughtContent.value = "";
   nextPage(cid);
   if (index.value === (props.isLikeList as number[]).length - 1) {
     index.value = (props.isLikeList as number[]).length - 1;
@@ -452,11 +468,12 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
     <div class="dialogue-panel__robot" v-else>
       <div class="dialogue-panel__robot-content">
         <!-- 这里是flowData -->
+      <DialogueThought :content=thoughtContent v-if="thoughtContent" />
       <DialogueFlow v-if="flowdata"  :flowdata="props.flowdata"/> 
       <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
       <a v-if="props.paramsList" @click="visible = true">补充参数</a>
-        <img class="answer_img" src="" alt="" @click="zoom_in($event)" />
+        <!-- <img class="answer_img" src="" alt="" @click="zoom_in($event)" /> -->
         <div class="loading-echarts">
           <div ref="echartsDraw"  class="draw" style=" color: grey ;"></div>
         </div>
@@ -478,7 +495,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
         <el-button class="confirm-button"  @click="visible = false">{{$t('history.cancel')}}</el-button>
       </div>
     </el-dialog>
-      <div class="loading" v-if="!contentAfterMark && !isFinish && !$slots.default &&!flowdata">
+      <div class="loading" v-if="!contentAfterMark && !isFinish && !$slots.default &&!flowdata &&!thoughtContent">
         <img src="@/assets/images/loading.png" alt="" class="loading-icon">
         <div class="loading-text">{{$t('feedback.eulercopilot_is_thinking')}}</div>
       </div>
