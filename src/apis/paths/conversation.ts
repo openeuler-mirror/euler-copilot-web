@@ -64,6 +64,20 @@ export const createSession = (): Promise<
 > => {
   return post(BASE_URL);
 };
+
+
+/**
+ * 创建工作流debug会话
+ * @param params
+ * @returns
+ */
+export const createSessionDebug = (params:any): Promise<
+[
+  any, any
+]
+> => {
+  return post(`/api/conversation?debug=${params.debug}`)
+};
 /**
  * 更新会话标题
  * @param params
@@ -233,6 +247,7 @@ export const deleteUploadedFile = (
 
 export const sessionApi = {
   createSession,
+  createSessionDebug,
   updateSession,
   deleteSession,
   getSessionRecord,

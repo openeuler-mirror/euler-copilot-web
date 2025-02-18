@@ -39,6 +39,7 @@ const isNodeAndLineConnect = ref(false);
 const apiServiceList = ref([]);
 const allApiServiceList = ref([]);
 const yamlContent = ref();
+const nodeYamlId = ref();
 const emits = defineEmits(['validateConnect']);
 const route = useRoute();
 const workFlowList = ref([]);
@@ -173,10 +174,11 @@ const delNode = id => {
   }
 };
 // 编辑yaml
-const editYamlDrawer = (name, yamlCode) => {
+const editYamlDrawer = (name, yamlCode, nodeId) => {
   yamlContent.value = yamlCode;
   nodeName.value = name;
   isEditYaml.value = true;
+  nodeYamlId.value = nodeId;
 };
 // 关闭抽屉
 const closeDrawer = () => {
@@ -260,6 +262,9 @@ const searchApiList = () => {
 
 const handleDebugDialogOps = visible => {
   debugDialogVisible.value = visible;
+};
+
+const getNodeStatus = nodes => {
 };
 
 const edgesChange = edges => {
@@ -411,13 +416,13 @@ const redrageFlow = (nodesList, edgesList) => {
   setEdges(newEdgeList);
 };
 
-const saveFlow = () => {
+const saveFlow = (updateNodeParameter?) => {
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
     return;
   }
   // 将对应的节点和边存储格式改造
-  const updateNodes = getNodes.value.map(item => {
+  let updateNodes = getNodes.value.map(item => {
     let newItem = {
       enable: true,
       editable: false,
@@ -476,6 +481,18 @@ const saveFlow = () => {
       },
     },
   );
+  // 判断是否调用修改yaml文件，以确定是否修改对应的input_paramteters
+  if (updateNodeParameter) {
+    updateNodes.forEach(item => {
+      if (item.nodeId === updateNodeParameter.id) {
+        if (item.type === 'choice') {
+          item.parameters.input_parameters.choices = updateNodeParameter.inputStream;
+        } else {
+          item.parameters.input_parameters = updateNodeParameter.inputStream;
+        }
+      }
+    });
+  }
   // return;
   // 更新最新的节点与边的数据
   api
@@ -503,6 +520,15 @@ const saveFlow = () => {
         queryFlow('update');
       }
     });
+};
+
+const saveNode = (yamlCode, nodeId) => {
+  // 调用更新接口更新当前节点数据
+  const updateNodeParameter = {
+    id: nodeId,
+    inputStream: yamlCode,
+  };
+  saveFlow(updateNodeParameter);
 };
 
 defineExpose({
@@ -594,7 +620,7 @@ defineExpose({
           <CustomSaENode v-bind="nodeEndProps"></CustomSaENode>
         </template>
 
-        <!-- 自定义边线 -->
+        <!-- 自定义边线-连接后 -->
         <template #edge-normal="props">
           <CustomEdge
             :id="props.id"
@@ -608,7 +634,7 @@ defineExpose({
             :data="JSON.parse(JSON.stringify(props.data))"
           />
         </template>
-        <!-- 连接边线 -->
+        <!-- 连接时边线 -->
         <template #connection-line="props">
           <CustomEdge
             :sourceX="props.sourceX"
@@ -621,7 +647,13 @@ defineExpose({
         </template>
       </VueFlow>
       <!-- vue-flow工作流的debug抽屉 -->
-      <WorkFlowDebug v-if="debugDialogVisible" :handleDebugDialogOps="handleDebugDialogOps" />
+      <WorkFlowDebug
+        v-if="debugDialogVisible"
+        :appId="route.query?.appId"
+        :flowId="flowObj?.flowId"
+        :handleDebugDialogOps="handleDebugDialogOps"
+        @getNodeStatus="getNodeStatus"
+      />
       <div class="workFlowOps" v-if="workFlowList.length">
         <!-- 工作流画布左上方选择工作流以及调试按钮等区域 -->
         <div class="workFlowSelect">
@@ -678,7 +710,11 @@ defineExpose({
   <EditYamlDrawer
     v-if="isEditYaml"
     @closeDrawer="closeDrawer"
+    @saveNode="saveNode"
+    :appId="route.query?.appId"
+    :flowId="flowObj?.flowId"
     :yamlContent="yamlContent"
     :nodeName="nodeName"
+    :nodeYamlId="nodeYamlId"
   ></EditYamlDrawer>
 </template>

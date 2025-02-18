@@ -35,7 +35,7 @@
       <template #footer>
         <div class="drawerFooter">
           <el-button @click="closeDrawer">关闭</el-button>
-          <el-button type="primary" @click="closeDrawer">完成</el-button>
+          <el-button type="primary" @click="updateNodeYaml">完成</el-button>
         </div>
       </template>
     </el-drawer>
@@ -46,6 +46,7 @@ import { ref, watch, defineProps } from 'vue';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
+import { ElMessage } from 'element-plus';
 const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
@@ -63,10 +64,13 @@ const yamlExpress = ref([
   },
 ]);
 const activeName = ref([yamlExpress.value[0].title, yamlExpress.value[1].title]);
-const emits = defineEmits(['closeDrawer']);
+const emits = defineEmits(['closeDrawer', 'saveNode']);
 const props = defineProps<{
   yamlContent: any;
   nodeName: string;
+  appId: any;
+  flowId: any;
+  nodeYamlId: any;
 }>();
 
 watch(
@@ -83,6 +87,18 @@ watch(
 const closeDrawer = () => {
   emits('closeDrawer');
 };
+// 完成yaml更新
+const updateNodeYaml = () => {
+  let transResult;
+  try {
+    transResult = yaml.load(yamlExpress.value[0].yamlCode);
+  } catch(error) {
+    ElMessage.error('请检查格式是否正确');
+  }
+  // 调用接口并更新
+  emits('saveNode', transResult, props.nodeYamlId);
+  closeDrawer();
+}
 </script>
 
 <style lang="scss">
