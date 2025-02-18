@@ -13,6 +13,7 @@ import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n'
 import { reactive } from 'vue';
+import { successMsg } from 'src/components/Message';
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
@@ -108,6 +109,12 @@ const updateApi = async() => {
   let action = 'update'
   await api.changeApiKey({action});
   revoke.value = false;
+  await api.getApiKey();
+  const [_, res] = await api.changeApiKey({ action });
+  if (!_ && res) {
+    apikey.value = res.result.api_key;
+  }
+
 }
 
 const revokeApi = async() => {
@@ -130,6 +137,7 @@ const handleKnowledgeDialogClose = () => {
 
 const copy = () => {
   navigator.clipboard.writeText(apikey.value);
+  successMsg('复制成功');
 }
 
 
