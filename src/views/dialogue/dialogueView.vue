@@ -123,6 +123,11 @@ const updateApi = async () => {
   let action = 'update';
   await api.changeApiKey({ action });
   revoke.value = false;
+  await api.getApiKey();
+  const [_, res] = await api.changeApiKey({ action });
+  if (!_ && res) {
+    apikey.value = res.result.api_key;
+  }
 };
 
 const revokeApi = async () => {
