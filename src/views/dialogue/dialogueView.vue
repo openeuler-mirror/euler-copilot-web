@@ -184,8 +184,8 @@ onMounted(() => {
   console.log('onMounted',window.location.host);
   const iframe = document.getElementById('my-iframe');
   console.log('iframe',`${window.location.origin}/witchaind`);
-  // iframe.src = `${window.location.origin}/witchaind`;
-  iframe.src = `http://localhost:3002`;
+  iframe.src = `${window.location.origin}/witchaind`;
+  // iframe.src = `http://localhost:3002`;
 });
 
 watch(
