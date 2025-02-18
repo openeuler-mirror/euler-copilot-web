@@ -481,6 +481,11 @@ watch(
       &.selected {
         background: linear-gradient(127.6deg, rgba(109, 117, 250, 0.2) -1.725%, rgba(90, 179, 255, 0.2) 98.22%);
         color: var(--o-text-color-primary);
+        > span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
     }
   }

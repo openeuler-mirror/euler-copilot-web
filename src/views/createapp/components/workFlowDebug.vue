@@ -36,7 +36,6 @@
         <div class="textareaInput">
           <textarea
             ref="inputRef"
-            :disabled="isCreateApp"
             v-model="dialogueInput"
             maxlength="2000"
             :placeholder="$t('main.ask_me_anything')"
@@ -70,19 +69,23 @@ import { api } from 'src/apis';
 const { sendQuestion } = useSessionStore();
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
-const { generateSession } = useHistorySessionStore();
+const { generateSession, generateSessionDebug } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
-export interface DialogueSession {
-  modeOptions: any;
-  isCreateApp: any;
-  createAppForm: any;
-}
+const props = defineProps({
+  flowId: {
+    default: '',
+  },
+  appId: {
+    default: '',
+  },
+  handleDebugDialogOps: {
+    type: Function,
+  },
+});
 interface DebugProps {
   handleDebugDialogOps: any;
 }
-
-const props = defineProps<DebugProps>();
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -107,15 +110,10 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
   dialogueInput.value = '';
-
   if (!currentSelectedSession.value) {
-    await generateSession();
+    await generateSessionDebug({ debug: true });
   }
-  if (user_selected_flow) {
-    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, user_selected_flow, undefined);
-  } else {
-    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, undefined, undefined);
-  }
+  await sendQuestion(groupId, question, [props.appId], undefined, undefined, props.flowId, undefined);
 };
 
 const clearSuggestion = (index: number): void => {

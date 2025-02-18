@@ -51,7 +51,7 @@ const delNode = id => {
 
 // 编辑yaml
 const editYaml = (nodeName, yamlCode) => {
-  emits('editYamlDrawer', nodeName, yamlCode);
+  emits('editYamlDrawer', nodeName, yamlCode, props.id);
 };
 </script>
 

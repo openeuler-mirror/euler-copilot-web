@@ -33,6 +33,7 @@ const handlePulishApp = () => {
     .then(res => {
       if (res[1]?.result) {
         ElMessage.success('发布成功');
+        router.push(`/app`);
       }
     });
 };
