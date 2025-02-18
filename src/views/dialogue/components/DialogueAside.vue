@@ -251,7 +251,6 @@ onMounted(async() => {
   else {
     appList.value = apps.value;
   }
-  appList.value = apps.value;
   if(app.value.appId){
     selectedAppId.value = app.value.appId;
   }
