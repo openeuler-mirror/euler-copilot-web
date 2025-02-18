@@ -42,9 +42,10 @@ const contentAfterMark = computed(() => {
 
 <style lang="scss" scoped>
 .dialogue-thought {
+  background-color: var(--o-bg-color-base);
   position: relative;
   margin: 1rem 0;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--o-think-border);
   border-radius: 8px;
 
   .thought-header {
@@ -53,18 +54,14 @@ const contentAfterMark = computed(() => {
     align-items: center;
     padding: 0.5rem 1rem;
     cursor: pointer;
-    background-color: #f8f8f8;
-
+    background-color: var(--o-think-header-bg);
     .think-label {
       font-weight: bold;
-      color: #666;
       position: absolute;
       top: -0.7rem;
       left: 1rem;
       padding: 0 0.5rem;
-      // background-color: white;
     }
-
     .collapse-control {
       display: flex;
       align-items: center;
@@ -80,14 +77,14 @@ const contentAfterMark = computed(() => {
         }
       }
       .collapse-text {
-        color: #666;
+        color: var(--o-think-header-text);
       }
     }
   }
 
   .thought-content {
     padding: 1rem;
-    background-color: #fff;
+    // background-color: #fff;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
   }

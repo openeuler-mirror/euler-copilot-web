@@ -308,7 +308,6 @@ const handleIsLike = () => {
 };
 
 onMounted(() => {
-  thoughtContent.value = "";
   isLike.value = props.isLikeList;
   setTimeout(() => {
     handleIsLike();
