@@ -12,6 +12,9 @@ body[theme='dark'] {
   --o-bash-bg: #2a2f37;
   --o-flow-code-bg: rgb(42,47,55);
   --o-flow-code-border: rgb(62,69,81);
+  --o-think-border:#8d98aa;
+  --o-think-header-bg:#2a2f37;
+  --o-think-header-text:#e4e8ee;
 }
 
 body[theme='light'] {
@@ -28,4 +31,7 @@ body[theme='light'] {
   --o-bash-bg: #f4f6fa;
   --o-flow-code-bg: rgb(244,256,258);
   --o-flow-code-border: rgb(223,229,239);
+  --o-think-border:#ccc;
+  --o-think-header-bg:#f8f8f8;
+  --o-think-header-text:#8d98aa;
 }
