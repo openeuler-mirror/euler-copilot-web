@@ -38,9 +38,10 @@ watch(
     } else {
       curStatus.value = props.data?.status;
     }
-    if (props.data?.parameters?.input_parameters?.choices) {
-      branchIdList.value = props.data?.parameters?.input_parameters?.choices.map(item => item?.branchId);
+    if (props.data.parameters?.input_parameters?.input_parameters) {
+      branchIdList.value = props.data.parameters.input_parameters.input_parameters.choices?.choices?.map(item => item?.branchId);
     }
+    console.log(props.data.parameters?.input_parameters?.input_parameters?.choices?.choices, 'props', branchIdList.value)
   },
   { deep: true, immediate: true },
 );
@@ -74,8 +75,8 @@ const editYaml = (nodeName, yamlCode) => {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
-      <div class="branchDesc" v-if="props.data.parameters?.input_parameters?.choices">
-        <div class="branchItem" v-for="(item, index) in props.data.parameters.input_parameters.choices" :key="index">
+      <div class="branchDesc" v-if="props.data.parameters.input_parameters.input_parameters.choices?.choices">
+        <div class="branchItem" v-for="(item, index) in props.data.parameters.input_parameters.input_parameters.choices.choices" :key="index">
           {{ item.description }}
 
           <Handle class="souceFirstHandle" :id="branchIdList[index]" type="source" :position="Position.Right"></Handle>

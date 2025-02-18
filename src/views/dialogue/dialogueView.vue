@@ -17,6 +17,10 @@ import { useRouter } from 'vue-router';
 import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
 import WitchainDIcon from '@/assets/images/witchainD.png';
+import ApiIcon from '@/assets/images/routerApi.png';
+import ApiIconSelected from '@/assets/svgs/apiIconSelected.svg';
+import AppIcon from '@/assets/images/routerApp.png';
+import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import tools from '../tools/index.vue';
 const { createNewSession } = useHistorySessionStore();
@@ -39,14 +43,10 @@ const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
 const routerList = [
-  { name: '对话', path: '/', src: CopilotIcon, selectedSrc: CopilotIconSelected, routerName: 'dialogue' },
-  {
-    name: '知识库',
-    path: '/witchainD',
-    src: WitchainDIcon,
-    selectedSrc: WitchainDIconSelected,
-    routerName: 'witchainD',
-  },
+  { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
+  { name: '语义中心', path: '/api' , src:ApiIcon , selectedSrc:ApiIconSelected ,routerName: 'api' },
+  { name: '应用中心', path: '/app' , src:AppIcon , selectedSrc:AppIconSelected ,routerName: 'app' },
+  { name: '知识库', path: '/witchainD' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
 ];
 
 export interface ModelForm {
