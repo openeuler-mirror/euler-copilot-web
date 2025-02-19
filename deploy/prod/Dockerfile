@@ -7,7 +7,7 @@ RUN npm install pnpm -g --registry=https://registry.npmmirror.com && \
     pnpm run build
 
 
-FROM openeuler/openeuler:22.03-lts-sp4
+FROM hub.oepkgs.net/openeuler/openeuler:22.03-lts-sp4
 
 ENV TZ Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
