@@ -417,16 +417,14 @@ watch(
 
 .collapsible-apps {
   width: 17rem;
-  // background-color: rgb(244, 246, 250);
   border-radius: 8px;
   .collapsible-header {
-    background-color: rgb(244, 246, 250);
+    background-color: var(--o-think-header-bg);
     padding: 1rem;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    // margin-bottom: 12px;
     cursor: pointer;
     .header-content {
       display: flex;
@@ -440,7 +438,7 @@ watch(
       }
       span {
         font-weight: 600;
-        color: #374151;
+        color: var(--o-text-color-secondary);
       }
     }
 

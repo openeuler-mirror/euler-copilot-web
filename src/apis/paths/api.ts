@@ -51,7 +51,7 @@ export const changeSingleApiCollect = (params: { serviceId: string,favorited:boo
 
 
 
-export const apiCenterApi = {
+export const apiApi = {
   queryApiList,
   createOrUpdateApi,
   querySingleApiData,
