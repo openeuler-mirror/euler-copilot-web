@@ -88,7 +88,7 @@ export interface ConversationList {
 }
 
 /*
- * 应用数据结构
+ * 语义接口数据结构
  */
 export interface Application {
     appId: string,
@@ -116,4 +116,60 @@ export interface Service {
     author: string,
     description: string,
     favorite: boolean,
+}
+
+export interface QueryApiListParamsType {
+    /**
+     * 筛选“我创建的”语义接口
+     */
+    createdByMe?: boolean;
+    /**
+     * 筛选“我收藏的”语义接口
+     */
+    favorited?: boolean;
+    /**
+     * 搜索关键字
+     */
+    keyword?: string;
+    /**
+     * 页码
+     */
+    page?: number;
+    /**
+     * 每页数量
+     */
+    pageSize?: number;
+    /**
+     * 搜索类型：全部字段或仅按名称/简介/作者字段；若不填，则视为 'all'
+     */
+    searchType?: SearchType;
+    [property: string]: any;
+}
+
+/**
+ * 搜索类型：全部字段或仅按名称/简介/作者字段；若不填，则视为 'all'
+ */
+export enum SearchType {
+    All = "all",
+    Author = "author",
+    Description = "description",
+    Name = "name",
+}
+
+/**
+ * CreateAppRequest, 创建/更新语义接口请求数据结构
+ */
+export interface CreateOrUpdateApiParamsType {
+    /**
+     * 语义接口ID
+     */
+    serviceId?: string;
+    /**
+     * 语义接口yaml 文件（json 格式）
+     */
+    data?: string;
+    /**
+     * 对话轮次（1～10）
+     */
+    [property: string]: any;
 }

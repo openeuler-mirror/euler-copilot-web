@@ -75,15 +75,7 @@
     </div>
     <el-drawer v-model="drawer" :title="actionName" :direction="direction" :before-close="handleClose">
       <h1>{{ action }}</h1>
-      <Upload
-      :singleFileLimit="true"
-      :singleFileSize="0.05"
-      :tipText="$t('dialogTipText.fileAllFormat')"
-      accept=".md,.xlsx,.pdf,.docx,.txt"
-      :maxFileNum="128"
-      :maxSize="0.5"
-      uploadType="file"
-    />
+      <Upload />
     </el-drawer>
   </div>
 </template>
