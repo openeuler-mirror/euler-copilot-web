@@ -96,7 +96,7 @@ export interface Application {
 }
 
 /*
- * 语意接口数据结构
+ * 语义接口数据结构
  */
 export interface ApiMessage {
     apiId: string,
@@ -107,7 +107,7 @@ export interface ApiMessage {
 }
 
 /*
- * 语意接口数据结构
+ * 语义接口数据结构
  */
 export interface Service {
     serviceId: string,

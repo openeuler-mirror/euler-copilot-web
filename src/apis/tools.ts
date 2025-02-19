@@ -76,7 +76,7 @@ export const handleAuthorize = async (errStatus: number): Promise<void> => {
     window.open(LOGOUT_CALLBACK_URL, '_self');
   }
   else{
-    errorMsg(`${errStatus} is error`);
+    // errorMsg(`${errStatus} is error`);
   }
 };
 
