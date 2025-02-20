@@ -259,9 +259,6 @@ export const useSessionStore = defineStore('conversation', () => {
               conversationItem.message[conversationItem.currentInd] += message.content.text;
               scrollBottom();
               // conversationItem.message[conversationItem.currentInd] += message.content.text;
-            }else if (message["event"] === 'text') {
-              conversationItem.message[conversationItem.currentInd] += message.content;
-              scrollBottom();
             }
             else if(message["event"] === "heartbeat") {
               // conversationItem.files = [...conversationItem.files, message.content];
