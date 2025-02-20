@@ -20,6 +20,8 @@ import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
 import { BranchSourceIdType } from './types';
 import { useRoute } from 'vue-router';
+import yaml from 'js-yaml';
+import $bus from 'src/bus/index';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -46,6 +48,7 @@ const workFlowList = ref([]);
 const props = defineProps(['flowList']);
 const flowObj = ref({});
 const nodes = ref([]);
+const debugResult = ref('success');
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -60,6 +63,7 @@ const {
   updateNode,
   addEdges,
   getNodes,
+  updateEdgeData,
   getEdges,
   findNode,
   removeNodes,
@@ -264,9 +268,6 @@ const handleDebugDialogOps = visible => {
   debugDialogVisible.value = visible;
 };
 
-const getNodeStatus = nodes => {
-};
-
 const edgesChange = edges => {
   if (edges?.[0]?.type === 'remove' && edges[0]?.source) {
     updateConnectNodeHandle(edges[0].source, edges[0]?.sourceHandle, true);
@@ -394,7 +395,6 @@ const redrageFlow = (nodesList, edgesList) => {
       newNode.deletable = false;
     } else if (node.type === 'choice') {
       newNode.type = 'branch';
-      newNode.data.parameters['input_parameters'] = { ...node.parameters };
     } else {
       newNode.type = 'custom';
     }
@@ -414,6 +414,48 @@ const redrageFlow = (nodesList, edgesList) => {
   });
   setNodes(newNodeList);
   setEdges(newEdgeList);
+};
+
+// 接受工作流调试时获取的相应的数据
+$bus.on('getNodesStatue', lines => {
+  // 对相应节点修改状态--此处需要分为开始/结束,分支,普通三种节点修改
+  try {
+    lines?.forEach(item => {
+      const newLines = yaml.load(item);
+      // step.input和step.output对应的节点状态需要修改
+      if (newLines?.data?.event === 'step.input' || newLines?.data?.event === 'step.output') {
+        if (newLines?.data?.flow?.stepId) {
+          // output-节点运行结束时，获取节点运行的耗时
+          const constTime = newLines.data.event === 'step.output' ? `${newLines.data?.time_cost?.toFixed(3)}s` : '';
+          updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
+        }
+      }
+    });
+  } catch (error) {
+    ElMessage.error('请检查格式是否正确');
+  }
+
+  // 修改节点时，需要将对应节点的边也进行修改
+});
+
+// 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
+const updateNodeFunc = (id, status, constTime) => {
+  // 获取到当前的nodeId,更新状态
+  const node = findNode(id);
+  const data = node?.data;
+  // 更新当前节点的状态，以及运行时间
+  updateNode(id, { data: { ...data, status, constTime } });
+  // 遍历获取以当前节点为起源节点的边和为目的节点的边
+  const changeSourceEdges = [...getEdges.value.filter(item => item.source === id)];
+  const changeTargetEdges = [...getEdges.value.filter(item => item.target === id)];
+  // 分别遍历相应的以该节点为起源的边-并更新它们的状态为最新状态
+  changeSourceEdges.forEach(item => {
+    updateEdgeData(item.id, { sourceStatus: 'success' });
+  });
+  // 分别遍历相应相应的以该节点为目标的边-并更新它们的状态为最新状态
+  changeTargetEdges.forEach(item => {
+    updateEdgeData(item.id, { targetStatus: 'success' });
+  });
 };
 
 const saveFlow = (updateNodeParameter?) => {
@@ -462,25 +504,6 @@ const saveFlow = (updateNodeParameter?) => {
     };
     return newEdge;
   });
-  console.log(
-    {
-      appId: appId,
-      flowId: flowObj.value.flowId,
-      topologyCheck: false,
-    },
-    '---------',
-    {
-      flow: {
-        ...flowObj.value,
-        nodes: updateNodes,
-        edges: updateEdges,
-      },
-      focusPoint: {
-        x: 800,
-        y: 800,
-      },
-    },
-  );
   // 判断是否调用修改yaml文件，以确定是否修改对应的input_paramteters
   if (updateNodeParameter) {
     updateNodes.forEach(item => {
@@ -652,7 +675,6 @@ defineExpose({
         :appId="route.query?.appId"
         :flowId="flowObj?.flowId"
         :handleDebugDialogOps="handleDebugDialogOps"
-        @getNodeStatus="getNodeStatus"
       />
       <div class="workFlowOps" v-if="workFlowList.length">
         <!-- 工作流画布左上方选择工作流以及调试按钮等区域 -->
@@ -689,6 +711,11 @@ defineExpose({
           <img src="@/assets/images/debugBtn.png" v-else />
         </div>
         <div class="debugStatus"></div>
+        <div class="debugResult" style="display: none">
+          <div class="icon" :class="`${debugResult}Icon`"></div>
+          <div class="resultText">运行成功 -- 暂不展示</div>
+          <span class="time" :class="`${debugResult}Bg`">0.132s</span>
+        </div>
       </div>
       <!-- 暂无工作流展示 -->
       <div class="noWorkFlow" v-else>
@@ -718,3 +745,46 @@ defineExpose({
     :nodeYamlId="nodeYamlId"
   ></EditYamlDrawer>
 </template>
+<style lang="scss">
+.debugResult {
+  display: flex;
+  height: 32px;
+  padding: 8px 0px;
+  gap: 8px;
+  align-items: center;
+  .icon {
+    width: 16px;
+    height: 16px;
+    background-size: contain !important;
+  }
+  .successIcon {
+    background: url(@/assets/images/flow_success.png) center center no-repeat;
+  }
+
+  .errorIcon {
+    background: url(@/assets/images/flow_fail.png) center center no-repeat;
+  }
+
+  .runningIcon {
+    background: url(@/assets/images/loading.png) center center no-repeat;
+  }
+  .time {
+    height: 16px;
+    line-height: 16px;
+    padding: 0px 8px;
+    border-radius: 4px;
+  }
+  .successBg {
+    background-color: rgba(36, 171, 54, 0.2);
+    color: #24ab36;
+  }
+  .errorBg {
+    background-color: #fbdede;
+    color: #e32020;
+  }
+  .flexRight {
+    margin-left: auto;
+    margin-right: -4px;
+  }
+}
+</style>

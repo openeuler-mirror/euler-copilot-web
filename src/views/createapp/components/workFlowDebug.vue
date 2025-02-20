@@ -111,7 +111,7 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   if (!currentSelectedSession.value) {
     await generateSessionDebug({ debug: true });
   }
-  await sendQuestion(groupId, question, [props.appId], undefined, undefined, props.flowId, undefined);
+  await sendQuestion(groupId, question, [props.appId], undefined, undefined, props.flowId, undefined, true);
 };
 
 const clearSuggestion = (index: number): void => {
