@@ -106,7 +106,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
         conversationId: item.conversationId,
         createdTime: item.createdTime,
         title: item.title,
-        docCount: item.doc_count || 0,
+        docCount: item.docCount || 0,
       }));
       if (res.result.conversations.length === 0) {
         await generateSession();

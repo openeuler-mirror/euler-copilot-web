@@ -1,40 +1,41 @@
-.appCenterBox {
+.apiCenterBox {
   display: flex;
   justify-content: center;
-  width: 100%;
-  .appCenterMain {
+  min-width: 1032px;
+  .apiCenterMain {
     color: var(--o-text-color-secondary);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     margin-top: 48px;
-    .appCenterTitle {
+    .apiCenterTitle {
       color: var(--o-text-color-primary);
       font-size: 24px;
       font-weight: 700;
       line-height: 36px;
       margin-bottom: 16px;
     }
-    .appCenterSearch {
-      margin-bottom: 34px;
-      :first-of-type .el-input__wrapper {
+    .apiCenterSearch {
+      display: flex;
+      margin-bottom: 32px;
+      :first-of-type .el-input__wrapier {
         width: 280px;
         border-radius: 0px 4px 4px 0px;
       }
       .el-input-group__prepend {
         border-radius: 4px 0px 0px 4px;
-        .el-input__wrapper {
+        .el-input__wrapier {
           border-radius: 4px 0px 0px 4px;
         }
       }
 
-      .createApp {
+      .createapi {
         margin-left: 16px;
       }
     }
 
-    .appCenterType {
+    .apiCenterType {
       display: flex;
       width: 400px;
       height: 32px;
@@ -43,7 +44,7 @@
       gap: 2px;
       border-radius: 4px;
       background-color: var(--o-border-color-base);
-      .appCenterBtn {
+      .apiCenterBtn {
         width: 130px;
         height: 28px;
         display: flex;
@@ -55,43 +56,53 @@
         color: var(--o-text-color-primary);
       }
     }
-    .appCenterCardContainer {
-      margin-top: 16px;
-      width: fit-content;
+    .apiCenterCardContainer {
+      padding-top: 16px;
       max-width: 1336px;
-      .appCenterCardBox {
+      max-height: calc(100vh - 327px);
+      overflow-y: scroll;
+      .apiCenterCardBox {
         width: fit-content;
         display: flex;
         flex-wrap: wrap;
+        box-sizing: border-box;
         gap: 16px;
-        .appCenterCardSingle {
+        .apiCenterCardSingle {
+          box-sizing: border-box;
+          border: 1px solid transparent;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
           border-radius: 8px;
           width: 320px;
           height: 136px;
           padding: 16px;
           background-color: var(--o-bg-color-base);
-          .appCenterCardTop {
+          .apiCenterCardTop {
             display: flex;
-            .appCenterCardIcon {
+            .apiCenterCardIcon {
               width: 80px;
+              display: flex;
+              align-items: center;
               .menu-icon {
                 width: 40px;
               }
             }
-            .appCenterCardContent {
+            .apiCenterCardContent {
               flex: 1;
               display: flex;
               flex-direction: column;
               gap: 4px;
-              .appCenterCardContentTop {
+              .apiCenterCardContentTop {
                 display: flex;
                 justify-content: space-between;
-                .appCenterCardContentTitle {
+                .apiCenterCardContentTitle {
                   color: var(--o-text-color-primary);
                   font-size: 16px;
                   line-height: 24px;
                 }
-                .appCenterCardContentCollect {
+                .apiCenterCardContentCollect {
                   width: 24px;
                   height: 24px;
                   background-color: var(--o-bg-color-light);
@@ -106,28 +117,28 @@
                       fill: var(--o-text-color-tertiary);
                     }
                   }
-                  .appFavorite {
+                  .apiFavorite {
                     path {
                       fill: rgb(99, 149, 253);
                     }
                   }
                 }
               }
-              .appCenterCardContentDes {
+              .apiCenterCardContentDes {
                 font-size: 14px;
                 line-height: 22px;
               }
             }
           }
-          .appCenterCardBottom {
+          .apiCenterCardBottom {
             margin-top: 16px;
             display: flex;
             justify-content: space-between;
-            .appCenterCardUser {
+            .apiCenterCardUser {
               font-size: 12px;
               line-height: 16px;
             }
-            .appCenterCardOps {
+            .apiCenterCardOps {
               .el-button span {
                 color: #6395fd;
                 font-size: 12px;
@@ -135,12 +146,62 @@
             }
           }
         }
+        .apiCenterCardSingle:hover {
+          box-sizing: border-box;
+          border: 1px solid #7aa5ff;
+          background: linear-gradient(
+            127deg,
+            rgba(109, 117, 250, 0.07) 1.003%,
+            rgba(90, 179, 255, 0.07) 98.421%
+          ) !important;
+        }
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 8px;
+      background: transparent;
+    }
+    @media screen and (width <= 1400px) {
+      .apiCenterCardContainer {
+        width: 1000px;
+      }
+    }
+
+    .el-pagination {
+      margin-top: 16px;
+      .el-select__wrapier {
+        background-color: transparent;
       }
     }
   }
-  .appCenterBtnActive {
+  .apiCenterBtnActive {
     background-color: var(--o-color-primary) !important;
     border-color: var(--o-color-primary) !important;
     color: var(--o-color-white) !important;
+  }
+}
+// 应用中心删除二次提示样式
+.el-message-box {
+  min-width: 400px;
+  padding: 0px !important;
+  border-radius: 8px;
+  .el-message-box__headerbtn {
+    width: 16px;
+    height: 16px;
+    right: 20px;
+  }
+  .el-message-box__status {
+    top: 0px;
+  }
+  .el-message-box__message {
+    padding-left: 4px;
+  }
+  .el-message-box__btns {
+    flex-direction: row;
+    .el-button {
+      width: 64px;
+      height: 24px;
+    }
   }
 }

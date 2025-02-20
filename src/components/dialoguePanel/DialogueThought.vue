@@ -4,7 +4,9 @@
       <!-- <span class="think-label">think</span> -->
       <div class="collapse-control">
         <div :class="{ 'is-collapsed': isCollapsed }" class="collapse-icon">
-          <img src="@/assets/images/flow_arrow.png" alt="" class="o-collapse-icon" />
+           <el-icon>
+            <IconCaretDown/>
+           </el-icon>
         </div>
         <span class="collapse-text">思考</span>
       </div>
@@ -16,6 +18,7 @@
 </template>
 
 <script setup>
+import { IconCaretDown } from '@computing/opendesign-icons';
 import { ref, computed } from 'vue';
 import marked from 'src/utils/marked.js';
 import xss from 'xss';

@@ -25,7 +25,7 @@ const questions = [
   {
     groupId: 0,
     id: 3,
-    question: 'innovation_release_cycle_and_support',
+    question: 'open_euler_pkgship',
   },
   {
     groupId: 0,
@@ -283,13 +283,12 @@ onMounted(() => {
     li {
       cursor: text;
     }
-
     &-item {
       display: flex;
       align-items: center;
       width: calc(50% - 8px);
       height: 80px;
-      background: rgb(244, 246, 250);
+      background: var(--o-bg-color-base);
       margin-top: 8px;
       overflow: hidden;
       border-radius: 8px;

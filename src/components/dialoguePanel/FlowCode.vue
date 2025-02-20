@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, withDefaults, watch,shallowRef, reactive } from 'vue';
 import { Codemirror } from 'vue-codemirror';
-import { StreamLanguage } from '@codemirror/language';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark'
 import { useHistorySessionStore } from 'src/store';
