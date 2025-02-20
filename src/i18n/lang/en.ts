@@ -37,7 +37,7 @@ export default {
       service_agreement:"Service Agreement",
       privacy_policy:"Privacy Policy",
       contact_us:"Contact Us",
-      version:"Version 1.0.0"
+      version:"Version 0.9.5"
     },
     history:{
       new_chat: "New Chat",  

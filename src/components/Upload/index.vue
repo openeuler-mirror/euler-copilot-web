@@ -1,30 +1,77 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus';
-import { ref } from 'vue';
-import * as jsYaml from 'js-yaml'; 
+import { ref, watch } from 'vue';
+import * as jsYaml from 'js-yaml';
 import { IconUpload, IconVisible, IconDelete } from '@computing/opendesign-icons';
-import type { UploadFile, ElUploadProgressEvent, ElFile, ElUploadRequestOptions } from 'element-plus/es/components/upload/src/upload.type';
+import type {
+  UploadFile,
+  ElUploadProgressEvent,
+  ElFile,
+} from 'element-plus/es/components/upload/src/upload.type';
+import { Codemirror } from 'vue-codemirror';
+import { onMounted } from 'vue';
+import { api } from 'src/apis';
 
 const handleUploadMyFile = (options: any) => {
   console.log(options);
 };
 
-// 自定义上传函数
-const doUpload = (options: any) => {
-  handleUploadMyFile(options);
+const handleCreateapi = (data: any) => {
+  console.log(data);
+  api
+    .createOrUpdateApi({
+      serviceId:'',
+      data
+    })
+    .then(res => {
+     console.log(res);
+     getYamlJson.value = res.data;
+     uploadtype.value = 'get';
+    });
 };
 
+const props = defineProps({
+  type: {
+    type: String,
+    default: '',
+  },
+  disable: {
+    type: Boolean,
+    default: false,
+  },
+  closeDrawer: {
+    type: Function,
+    default: () => {},
+  },
+});
+const emits = defineEmits<{
+  (e: 'closeDrawer'): void;
+}>();
+
+const handleClose = () => {
+  //清空数据
+  yamlContent.value = '';
+  yamlToJsonContent.value = '';
+  getYamlJson.value = '';
+  emits('closeDrawer');
+};
+
+const uploadtype = ref(props.type);
+
+const yamlContent = ref('tt:123');
+const yamlToJsonContent = ref('');
+const getYamlJson = ref('');
 const imageUrl = ref('');
 const progressVal = ref(0);
 const uploadDone = ref(false);
 // 上传前检查
-const beforeUpload = async (file: ElFile) => { 
+const beforeUpload = async (file: ElFile) => {
   const isYaml = file.type === 'application/x-yaml' || file.type === 'text/yaml'; // 也可能遇到 text/yaml 类型
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isYaml) {
     ElMessage({
       message: 'File must be YAML format!',
-      type: 'error', 
+      type: 'error',
     });
     return false;
   }
@@ -38,24 +85,20 @@ const beforeUpload = async (file: ElFile) => {
 
   try {
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      const yamlContent = event.target?.result as string;
+    reader.onload = async event => {
+      yamlContent.value = event.target?.result as string;
       //yaml 展示
       console.log('YAML Content:', yamlContent);
       try {
-        const jsonContent = jsYaml.load(yamlContent); // 将 YAML 字符串解析为 JSON 对象
-        console.log('JSON Content:', jsonContent);
+        // emits('changeAction',"edit");
+        yamlToJsonContent.value = jsYaml.load(yamlContent.value);
+        uploadtype.value = 'edit';
       } catch (yamlParseError) {
         console.error('Error parsing YAML to JSON:', yamlParseError);
       }
-      // 假设 uploadDone 是一个外部定义的响应式变量
-      // uploadDone.value = true; // 可能你想在这里设置上传完成状态
-      // 注意：由于 FileReader 是异步的，直接返回 true 或 false 在这里没有意义
-      // 因为函数已经返回过了（在 await reader.readAsText(file) 之前）
-      // 你可能需要在外部处理上传逻辑，或者将这个函数改为 async/await 风格并在外部调用处处理
     };
 
-    reader.onerror = (error) => {
+    reader.onerror = error => {
       console.error('Error reading file:', error);
       ElMessage({
         message: 'Error reading file!',
@@ -67,19 +110,9 @@ const beforeUpload = async (file: ElFile) => {
     await new Promise((resolve, reject) => {
       reader.readAsText(file);
       reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
-      reader.onerror = (error) => reject(error); // 如果出错则拒绝 Promise
+      reader.onerror = error => reject(error); // 如果出错则拒绝 Promise
     });
-
-    // 注意：由于 FileReader 是异步的，并且我们使用了 await，这里不会立即返回
-    // 但是由于我们的函数签名没有使用 async/await 风格，这可能会导致一些混淆
-    // 最好的做法是将这个函数改为返回 Promise 或者使用回调来处理异步逻辑
-
-    // 由于我们的逻辑已经处理了所有情况，并且没有明确的返回值需求（除了异步处理），
-    // 我们可以简单地不返回任何值（或者返回 undefined/null 来表示处理完成，但这通常不是最佳实践）
-    // 在实际应用中，你可能需要调整这部分逻辑以适应你的应用架构
-
-    // 临时返回 true 表示文件通过了校验（但注意，真正的上传逻辑应该在外部处理）
-    return true; // 这行实际上在当前的 async 函数中是没有意义的，因为函数已经因为 await 而“暂停”了
+    return true; 
   } catch (error) {
     console.error('Error during file upload process:', error);
     ElMessage({
@@ -88,11 +121,8 @@ const beforeUpload = async (file: ElFile) => {
     });
     return false; // 同样，这行在当前的 async 函数中可能没有实际意义
   }
-
-  // 注意：由于上面的 async/await 和 FileReader 的使用方式，
-  // 下面的返回语句实际上永远不会被执行到（除非去掉 await 和相关的异步逻辑）
-  // return false; // 这行是多余的，应该被移除
 };
+
 const beforeUploadPromise = (fileWrapper: { file: File }): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     // ...（上面的异步逻辑，但在最后调用 resolve(true) 或 reject(false)）
@@ -115,11 +145,16 @@ const doDelete = (e: Event) => {
 };
 const doPreview = (e: Event) => {
   e.stopPropagation();
-  console.log('click Preview');
 };
+
+onMounted(() => {
+  console.log(props);
+});
+
 </script>
 <template>
   <el-upload
+    v-if="uploadtype === 'upload'"
     action=""
     drag
     multiple
@@ -159,9 +194,57 @@ const doPreview = (e: Event) => {
       </div>
     </div>
   </el-upload>
+  <div class="code-container" v-if="uploadtype !== 'upload'">
+    <Codemirror
+      v-model="yamlContent"
+      placeholder="Code goes here..."
+      :autofocus="true"
+      :indent-with-tab="true"
+      :tab-size="2"
+      :extensions="extensions"
+      :disabled="disabled"
+      @ready="handleReady"
+    />
+  </div>
+  <div class="code-container" v-if="uploadtype !== 'get'">
+    {{ getYamlJson }}
+  </div>
+  <div class="drawerFooter" v-if="uploadtype === 'upload'">
+    <el-button @click="handleClose">取消</el-button>
+    <el-button type="primary" @click="handleClose">确定</el-button>
+  </div>
+  <div class="drawerFooter" v-if="uploadtype === 'edit'">
+    <el-button @click="handleClose">取消</el-button>
+    <el-button @click="handleClose">编辑</el-button>
+    <el-button type="primary" @click="handleCreateapi(yamlToJsonContent)">解析</el-button>
+  </div>
+  <div class="drawerFooter" v-if="uploadtype === 'get'">
+    <el-button @click="handleClose">取消</el-button>
+    <el-button type="primary" @click="handleClose">确定</el-button>
+  </div>
 </template>
 
 <style scoped>
+.v-codemirror {
+  height: 100%;
+  width: 100%;
+  .cm-editor {
+    height: 100%;
+    border: 1px solid var(--o-time-text);
+    .cm-gutters {
+      background-color: var(--o-bash-bg);
+    }
+  }
+  .cm-focused {
+    outline: none;
+  }
+}
+
+.drawerFooter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+}
 .upload-box {
   cursor: pointer;
   position: relative;

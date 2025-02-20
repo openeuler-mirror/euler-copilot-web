@@ -37,7 +37,7 @@ export default {
     service_agreement: "服务协议",
     privacy_policy: "隐私政策",
     contact_us: "联系我们",
-    version: "版本号0.9.1-内测版"
+    version: "版本号0.9.5-内测版"
   },
   history: {
     new_chat: "新建对话",

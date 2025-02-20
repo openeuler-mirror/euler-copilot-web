@@ -25,7 +25,7 @@ const questions = [
   {
     groupId: 0,
     id: 3,
-    question: 'innovation_release_cycle_and_support',
+    question: 'open_euler_pkgship',
   },
   {
     groupId: 0,

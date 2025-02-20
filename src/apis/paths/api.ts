@@ -7,8 +7,10 @@ import { QueryApiListParamsType, CreateOrUpdateApiParamsType } from './type';
  * @param params
  * @returns
  */
+// 导出一个函数queryApiList，用于查询API列表
 export const queryApiList = (params: QueryApiListParamsType): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get('/api/api', params);
+  // 调用get函数，传入/api/service路径和params参数，返回一个Promise对象
+  return get('/api/service', params);
 };
 
 /**
@@ -48,9 +50,6 @@ export const deleteSingleApiData = (params: { serviceId: string }): Promise<[any
 export const changeSingleApiCollect = (params: { serviceId: string,favorited:boolean }): Promise<[any, FcResponse<unknown> | undefined]> => {
   return put(`/api/service/${params.serviceId}`, {favorited:params.favorited});
 };
-
-
-
 export const apiApi = {
   queryApiList,
   createOrUpdateApi,

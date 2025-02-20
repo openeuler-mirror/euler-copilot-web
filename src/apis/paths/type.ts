@@ -76,7 +76,7 @@ export interface Suggest {
 export interface ConversationListItem {
     conversationId: string,
     createdTime: string,
-    doc_count: number,
+    docCount: number,
     title: string,
 }
 

@@ -5,10 +5,11 @@
       <div class="apiCenterSearch">
         <el-input style="max-width: 400px" placeholder="搜索" :suffix-icon="IconSearch">
           <template #prepend>
-            <el-select placeholder="全部" style="width: 115px" :suffix-icon="IconCaretDown">
-              <el-option label="Restaurant" value="1" />
-              <el-option label="Order No." value="2" />
-              <el-option label="Tel" value="3" />
+            <el-select v-model="apiSearchType" style="width: 115px" :suffix-icon="IconCaretDown">
+              <el-option label="全部" value="all" />
+              <el-option label="接口名称" value="name" />
+              <el-option label="接口简介" value="description" />
+              <el-option label="用户名称" value="author" />
             </el-select>
           </template>
         </el-input>
@@ -73,9 +74,22 @@
         </div>
       </div>
     </div>
-    <el-drawer v-model="drawer" :title="actionName" :direction="direction" :before-close="handleClose">
-      <h1>{{ action }}</h1>
-      <Upload />
+    <el-drawer class="el-drawer" v-model="drawer" :title="actionName" :direction="direction" :before-close="handleClose">
+      <div v-if="actions === 'upload'">
+        <Upload
+        type="upload"
+        @closeDrawer="handleClose" />
+      </div>
+      <div v-if="actions === 'get'">
+        <Upload
+        type="get"
+        @closeDrawer="handleClose" />
+      </div>
+      <div v-if="actions === 'edit'">
+        <Upload
+        type="edit"
+        @closeDrawer="handleClose" />
+      </div>
     </el-drawer>
   </div>
 </template>
@@ -89,13 +103,13 @@ import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
 import Upload from "@/components/Upload/index.vue";
-import UploadProgress from "@/components/Upload/uploadProgress.vue";
+
 const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 const drawer = ref(false);
 const direction = ref('rtl');
-const action = ref('');
 const actionName = ref('');
 const router = useRouter();
+const actions = ref();
 const apiType = ref('my');
 const apiSearchType = ref('all');
 const apiSearchValue = ref();
@@ -113,38 +127,33 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
   handleParmasQueryapiList();
 };
 
-const openSidebar = (actions: string) => {
+const openSidebar = (action: string) => {
   drawer.value = true;
-  action.value = actions;
-  if( actions === 'upload') {
+  actions.value = action;
+  if( action === 'upload') {
     // 展示上传的框架
     actionName.value = '上传语义接口';
-  }else if( actions === 'edit') {
+  }else if( action === 'edit') {
     // 展示编辑的框架
     actionName.value = '编辑语义接口';
-  }else if( actions === 'get'){
+  }else if( action === 'get'){
     // 展示查看的框架
-    
-  }else{
-    // 展示xx的框架
+    actionName.value = '查看语义接口';
   }
-  console.log('actions', actions);
 };
 
-const handleClose = done => {
-  done();
+const handleClose = () => {
+  drawer.value = false;
 };
 
-const handleCreateapi = () => {
+const handleCreateapi = (data: any) => {
   api
-    .createOrUpdateapi({
-      name: '默认应用',
-      description: '我的应用',
+    .createOrUpdateApi({
+      serviceId:'',
+      data
     })
     .then(res => {
-      if (res[1]) {
-        router.push(`/createapi?apiId=${res?.[1]?.result.apiId}`);
-      }
+     console.log(res);
     });
 };
 
@@ -158,7 +167,7 @@ const handleParmasQueryapiList = (params?: any) => {
   if (apiType.value !== 'my') {
     payload[apiType.value] = true;
   }
-  handleQueryapiList({
+  handleQueryApiList({
     searchType: apiSearchType.value,
     keyword: apiSearchValue.value,
     ...payload,
@@ -166,9 +175,9 @@ const handleParmasQueryapiList = (params?: any) => {
   });
 };
 
-const handleQueryapiList = (payload?: any) => {
+const handleQueryApiList = (payload?: any) => {
   api
-    .queryapiList({
+    .queryApiList({
       page: currentPage.value,
       pageSize: currentPageSize.value,
       ...payload,
@@ -187,8 +196,8 @@ const handleFavorite = (e, item) => {
   }
   e.stopPropagation();
   api
-    .changeSingleapiCollect({
-      id: item.apiId,
+    .changeSingleApiCollect({
+      serviceId: item.apiId,
       favorited: !item.favorited,
     })
     .then(res => {
@@ -211,13 +220,13 @@ const handleSearchapiList = type => {
 
 const handleDelapi = (e, item) => {
   e.stopPropagation();
-  ElMessageBox.confirm('确定删除此应用吗？', '提示', {
+  ElMessageBox.confirm('确定删除此接口吗？', '提示', {
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(() => {
     api
-      .deleteSingleapiData({
-        id: item.apiId,
+      .deleteSingleApiData({
+        serviceId: item.apiId,
       })
       .then(res => {
         if (res[1]) {
@@ -239,19 +248,23 @@ const handleEditapi = (e, item) => {
   router.push(`/createapi?apiId=${item.apiId}`);
 };
 
-// watch(
-//   () => [apiSearchValue, apiSearchType],
-//   () => {
-//     handleParmasQueryapiList();
-//   },
-//   { deep: true },
-// );
+watch(
+  () => [apiSearchValue, apiSearchType],
+  () => {
+    handleParmasQueryapiList();
+  },
+  { deep: true },
+);
 
-// onMounted(() => {
-//   handleQueryapiList();
-// });
+onMounted(() => {
+  handleQueryApiList();
+});
 </script>
 <style lang="scss" scoped>
+.el-drawer{
+  margin: 0px;
+  padding: 0px;
+}
 .apiCenterCardSingle {
   position: relative;
   .unPublishSymbol {
