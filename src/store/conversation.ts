@@ -24,8 +24,9 @@ import { ElMessageBox } from 'element-plus';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { storeToRefs } from 'pinia';
 import { Application } from 'src/apis/paths/type';
-
+import $bus from 'src/bus/index'
 const STREAM_URL = '/api/chat';
+const newStreamUrl = 'api/mock/chat';
 let controller = new AbortController();
 export var txt2imgPath = ref("");
 export var echartsObj = ref({});
@@ -88,6 +89,7 @@ export const useSessionStore = defineStore('conversation', () => {
       user_selected_flow?: string;
       groupId?: string;
       params?: any;
+      type?: any;
     },
     ind?: number
   ): Promise<void> => {
@@ -115,26 +117,44 @@ export const useSessionStore = defineStore('conversation', () => {
         pp = {};
       }
       if (params.user_selected_flow) {
-        resp = await fetch(STREAM_URL, {
-          signal: controller.signal,
-          method: 'POST',
-          keepalive: true,
-          headers: headers,
-          body: JSON.stringify({
-            question: params.question,
-            language,
-            conversationId: params.conversationId,
-            groupId: params.groupId,
-            // record_id: params.qaRecordId,
-            app:{
+        // 之前的对话历史记录
+        if (!params.type) {
+          resp = await fetch(STREAM_URL, {
+            signal: controller.signal,
+            method: 'POST',
+            keepalive: true,
+            headers: headers,
+            body: JSON.stringify({
+              question: params.question,
+              language,
+              conversationId: params.conversationId,
+              groupId: params.groupId,
+              // record_id: params.qaRecordId,
+              app:{
+                appId:params.user_selected_app[0],
+                flowId: params.user_selected_flow,
+                params: pp,
+                auth:{},
+              },
+              features:features,
+            }),
+          });
+        } else {
+          // 新的工作流调试记录
+          resp = await fetch(newStreamUrl, {
+            signal: controller.signal,
+            method: 'POST',
+            keepalive: true,
+            headers: headers,
+            body: JSON.stringify({
+              question: params.question,
               appId:params.user_selected_app[0],
+              conversationId: params.conversationId,
               flowId: params.user_selected_flow,
-              params: pp,
-              auth:{},
-            },
-            features:features,
-          }),
-        });
+            }),
+          });
+
+        }
       }
       else if (params.user_selected_app) {
         resp = await fetch(STREAM_URL, {
@@ -258,17 +278,13 @@ export const useSessionStore = defineStore('conversation', () => {
               conversationItem.groupId = message.groupId;
             }
             else if(message["event"] === "flow.start") {
-              //事件流开始
-              // display:boolean,
-              // progress:string,
-              // id:number
-              // title:string,
-              // data:any,
+              //事件流开始--后续验证对话无下拉连接后则完全替换
               let flow = message.flow;
               conversationItem.flowdata = {
-                id: flow?.step_name||"",
+                id: flow?.stepName||"",
                 title: i18n.global.t('flow.flow_start'),
-                progress: flow?.step_progresss||"",
+                // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
+                progress: flow?.stepProgress || "",
                 status:'running',
                 display:true,
                 flowId:flow?.flowId||"",
@@ -281,25 +297,25 @@ export const useSessionStore = defineStore('conversation', () => {
               //   target.data.input = message
               // }
                 conversationItem.flowdata?.data[0].push({
-                  id:message.flow?.step_name,
-                  title:message.flow?.step_name,
-                  status:message.flow?.step_status,
+                  id:message.flow?.stepName,
+                  title:message.flow?.stepName,
+                  status:message.flow?.stepStatus,
                   data:{
                     input:message.content,
                   }
                 })
                 if(conversationItem.flowdata){
-                  conversationItem.flowdata.progress = message.flow?.step_progress;
-                  conversationItem.flowdata.status = message.flow?.step_status;    
+                  conversationItem.flowdata.progress = message.flow?.stepProgress;
+                  conversationItem.flowdata.status = message.flow?.stepStatus;    
                 }
             }
             else if(message["event"] === "step.output") {
-              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow.step_name);
+              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow.stepName);
               if (target) {
                 target.data.output = message.content
-                target.status = message.flow.step_status;
+                target.status = message.flow?.stepStatus;
                 if(message.flow.step_status === "error"){
-                  conversationItem.flowdata.status = message.flow?.step_status;   
+                  conversationItem.flowdata.status = message.flow?.stepStatus;
                 }
               }
             }
@@ -310,15 +326,15 @@ export const useSessionStore = defineStore('conversation', () => {
                 conversationItem.flowdata?.data[0].push({
                   id:"end",
                   title:"end",
-                  status:message.flow?.step_status,
+                  status:message.flow?.stepStatus,
                   data:{
                     input:message.content,
                   }
                 })
                 conversationItem.flowdata = {
-                  id: flow?.step_name,
+                  id: flow?.stepName,
                   title: i18n.global.t('flow.flow_end'),
-                  progress: flow?.step_progress,
+                  progress: flow?.stepProgress,
                   status:"success",
                   display:true,
                   data:conversationItem.flowdata.data,
@@ -336,6 +352,10 @@ export const useSessionStore = defineStore('conversation', () => {
             } 
           }
         });
+        // 将lines传递给workflow-以更新工作流节点的状态
+        if(params.user_selected_flow && params.user_selected_app) {
+          $bus.emit('getNodesStatue', lines);
+        }
       }
     } catch (err: any) {
       isPaused.value = true;
@@ -458,11 +478,12 @@ export const useSessionStore = defineStore('conversation', () => {
     qaRecordId?: string,
     user_selected_flow?: string,
     params?: any,
+    type?: any,
   ): Promise<void> => {
     const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
     if (conversationList.value.length === 0) {
       // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
-      updateSessionTitle({ conversationId: currentSelectedSession, title: question.slice(0, 20) });
+      const res = await updateSessionTitle({ conversationId: currentSelectedSession, title: question.slice(0, 20) });
     }
     if (regenerateInd) {
       // 重新生成，指定某个回答，修改默认索引
@@ -506,6 +527,7 @@ export const useSessionStore = defineStore('conversation', () => {
           user_selected_flow,
           groupId:groupId,
           params:params||undefined,
+          type: type
         },
         regenerateInd ?? undefined
       )

@@ -50,7 +50,6 @@ const isCollapsed = ref(false);
 const selectedAppId = ref(null);
 //
 const apps = ref([
-  { appId: "1", name: 'CVE热修复助手' },
 ]);
 
 const filteredHistorySessions = computed(() => {

@@ -29,19 +29,27 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { IconChevronDown } from '@computing/opendesign-icons';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { useChangeThemeStore } from 'src/store/conversation';
 import yaml from 'js-yaml';
 import { writeText } from 'src/utils';
 import { errorMsg, successMsg } from 'src/components/Message';
-
+const props = defineProps({
+  status: {
+    default: 'default',
+  },
+  costTime: {
+    default: '',
+  },
+  inputAndOutput: Object,
+});
 const themeStore = useChangeThemeStore();
 const nodeResult = ref();
 const resultInfo = ref({
   time: '3.1s',
-  status: 'error', // 成功/失败/运行中三种状态
+  status: '', // 成功/失败/运行中三种状态
   infoList: [
     {
       id: '1',
@@ -50,16 +58,44 @@ const resultInfo = ref({
         // 定义的假数据，后期由接口获取
         {
           name: '输入',
-          code: '{' + '"code1": "200",' + '"label1": "succeed",' + '"templateDocument": "Description"' + '}',
+          code: '',
         },
         {
           name: '输出',
-          code: '{' + '"code2": "200",' + '"label2": "succeed"' + '}',
+          code: '',
         },
       ],
     },
   ],
 });
+
+const statusInfoTitle = ref({
+  default: '',
+  success: '运行成功',
+  error: '运行失败',
+  running: '运行中',
+});
+
+watch(
+  () => props,
+  () => {
+    resultInfo.value.status = props.status;
+    // 目前props.status只有success、error、running三种
+    resultInfo.value.infoList[0].title = statusInfoTitle.value[props.status];
+    if (props?.inputAndOutput) {
+
+      resultInfo.value.time = props.inputAndOutput.input_parameters.timeout ?? 0;
+      resultInfo.value.infoList[0].desc[0].code = props.inputAndOutput.input_parameters;
+      resultInfo.value.infoList[0].desc[1].code = props.inputAndOutput.output_parameters;
+    }
+    if (props.status === 'success' || props.status === 'error') {
+      resultInfo.value.time = props.costTime;
+    } else {
+      resultInfo.value.time = '';
+    }
+  },
+  { deep: true, immediate: true },
+);
 
 // 复制
 const handleCopy = code => {
@@ -73,6 +109,14 @@ const handleCopy = code => {
 };
 </script>
 <style lang="scss">
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 .resultDropDown {
   position: absolute;
   width: 100%;

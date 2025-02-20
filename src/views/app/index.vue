@@ -35,7 +35,7 @@
         </div>
       </div>
       <div class="appCenterCardContainer">
-        <div class="appCenterCardBox">
+        <div class="appCenterCardBox" v-if="appList.length">
           <div
             v-for="(appItem, index) in appList"
             :key="index"
@@ -78,9 +78,10 @@
             </div>
           </div>
         </div>
+        <div class="appCenterNoData" v-else></div>
       </div>
       <el-pagination
-        v-if="true"
+        v-if="totalCount >= 16"
         v-model:current-page="currentPage"
         v-model:page-size="currentPageSize"
         :page-sizes="pagination.pageSizes"
@@ -135,8 +136,11 @@ const handleCreateApp = () => {
 };
 
 const routerToDetail = appItem => {
+  if (!appItem.published && appType.value === 'createdByMe') {
+    return;
+  }
   //获取appItem.id & appItem.name
-  router.push(`/copilot?appId=${appItem.appId}&name=${encodeURIComponent(encodeURI(appItem.name))}`);
+  router.push(`/copilot?appId=${appItem.appId}&name=${appItem.name}`);
 };
 
 const handleParmasQueryAppList = (params?: any) => {

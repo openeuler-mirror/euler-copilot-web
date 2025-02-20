@@ -28,7 +28,11 @@ const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
 const statusList = ref(['running', 'success', 'error']);
 
+// 当前节点状态-工作流调试结果-成功/失败/运行中
 const curStatus = ref('');
+
+// 当前节点运行耗时
+const costTime = ref('');
 
 watch(
   () => props.data,
@@ -39,10 +43,12 @@ watch(
     } else {
       curStatus.value = props.data?.status;
     }
+    costTime.value = props.data?.constTime || '';
   },
   { deep: true, immediate: true },
 );
 
+// 删除节点
 const delNode = id => {
   emits('delNode', id);
 };
@@ -79,6 +85,12 @@ const editYaml = (nodeName, yamlCode) => {
     <div class="delOverShadow rightBox"></div>
     <div class="outHandleRing outRingRight"></div>
     <!-- 调试时出现-暂时隐藏 -->
-    <NodeMirrorText style="display: none"></NodeMirrorText>
+    <NodeMirrorText
+      v-if="curStatus !== 'default'"
+      :status="curStatus"
+      :costTime="costTime"
+      :inputAndOutput="props.data?.parameters"
+      style="display: block"
+    ></NodeMirrorText>
   </div>
 </template>

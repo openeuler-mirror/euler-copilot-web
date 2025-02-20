@@ -20,6 +20,8 @@ body[theme='dark'] {
   --flow-node-boder-default-over: #314265;
   --flow-node-success-over-color: #1F312A;
   --flow-node-error-over-color: #332127;
+  --flow-branch-node-error-node-cover-color: #602c27;
+  --flow-branch-node-success-node-cover-color: #295336;
 }
 
 body[theme='light'] {
@@ -44,4 +46,6 @@ body[theme='light'] {
   --flow-node-boder-default-over: #c7d6f5;
   --flow-node-success-over-color: #e6f6e9;
   --flow-node-error-over-color: #f8e7e7;
+  --flow-branch-node-error-node-cover-color: #edb3b3;
+  --flow-branch-node-success-node-cover-color: #b3dbb8;
 }

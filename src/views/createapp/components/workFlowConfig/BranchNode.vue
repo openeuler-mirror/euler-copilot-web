@@ -23,11 +23,15 @@ const props = defineProps({
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
-const statusList = ref(['running', 'success', 'error']);
+const statusList = ref(['pending', 'success', 'error']);
 
 const branchIdList = ref([]);
 
+// 当前节点状态-工作流调试结果-成功/失败/运行中
 const curStatus = ref('');
+
+// 当前节点运行耗时
+const costTime = ref('');
 
 watch(
   () => props.data,
@@ -38,10 +42,12 @@ watch(
     } else {
       curStatus.value = props.data?.status;
     }
-    if (props.data.parameters?.input_parameters?.input_parameters) {
-      branchIdList.value = props.data.parameters.input_parameters.input_parameters.choices?.choices?.map(item => item?.branchId);
+    costTime.value = props.data?.constTime || '';
+    if (props.data?.parameters?.input_parameters?.choices) {
+      branchIdList.value = props.data?.parameters?.input_parameters?.choices.map(
+        item => item?.branchId,
+      );
     }
-    console.log(props.data.parameters?.input_parameters?.input_parameters?.choices?.choices, 'props', branchIdList.value)
   },
   { deep: true, immediate: true },
 );
@@ -75,10 +81,13 @@ const editYaml = (nodeName, yamlCode) => {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
-      <div class="branchDesc" v-if="props.data.parameters.input_parameters.input_parameters.choices?.choices">
-        <div class="branchItem" v-for="(item, index) in props.data.parameters.input_parameters.input_parameters.choices.choices" :key="index">
+      <div class="branchDesc" v-if="props.data?.parameters?.input_parameters?.choices">
+        <div
+          class="branchItem"
+          v-for="(item, index) in props.data?.parameters?.input_parameters?.choices"
+          :key="index"
+        >
           {{ item.description }}
-
           <Handle class="souceFirstHandle" :id="branchIdList[index]" type="source" :position="Position.Right"></Handle>
           <div class="delOverShadow rightBox" style="top: 0%"></div>
           <div class="outHandleRing outRingRight" style="top: 30%"></div>
@@ -86,7 +95,13 @@ const editYaml = (nodeName, yamlCode) => {
       </div>
     </div>
     <!-- 调试时出现-暂时隐藏 -->
-    <NodeMirrorText style="display: none"></NodeMirrorText>
+    <NodeMirrorText
+      v-if="curStatus !== 'default'"
+      :status="curStatus"
+      :costTime="costTime"
+      :inputAndOutput="props.data?.parameters"
+      style="display: block"
+    ></NodeMirrorText>
   </div>
 </template>
 
@@ -106,7 +121,7 @@ const editYaml = (nodeName, yamlCode) => {
         position: relative;
         margin-bottom: 8px;
         .vue-flow__handle-right {
-          right: -18px;
+          right: -30px;
         }
         &:last-child {
           margin-bottom: 0px;
@@ -120,6 +135,22 @@ const editYaml = (nodeName, yamlCode) => {
         }
         .rightBox {
           display: none;
+        }
+      }
+    }
+  }
+  .customNodeStyle.default {
+    .branchDesc {
+      .branchItem {
+        .vue-flow__handle-right {
+          right: -18px;
+        }
+      }
+    }
+    &:hover {
+      .branchItem {
+        .vue-flow__handle-right {
+          right: -30px;
         }
       }
     }

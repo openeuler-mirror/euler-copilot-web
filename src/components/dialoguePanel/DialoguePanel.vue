@@ -1119,10 +1119,13 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
     height: 20px;
   }
 }
-// 工作流调试抽屉样式--
+// 工作流调试抽屉样式
 .workFlowDebugStyle {
   width: auto;
   padding-right: 24px;
+  .loading {
+    display: none;
+  }
   .dialogue-panel__content {
     gap: 16px;
     .userArea {
