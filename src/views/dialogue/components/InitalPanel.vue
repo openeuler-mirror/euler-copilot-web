@@ -303,14 +303,7 @@ onMounted(() => {
       }
 
       &:hover {
-        box-shadow: 0 5.18px 20.72px 0 rgba(221, 225, 240, 0.5);
-        background: linear-gradient(
-          270deg,
-          rgb(229, 239, 248),
-          rgb(199, 227, 250) 24.366%,
-          rgba(175, 205, 242) 57.543%,
-          rgb(152, 162, 247) 96.781%
-        );
+        cursor: pointer;
       }
 
       img {
@@ -340,6 +333,9 @@ onMounted(() => {
         color: var(--o-text-color-primary);
       }
     }
+  }
+  .eg-btn{
+    cursor: pointer;
   }
 }
 </style>
