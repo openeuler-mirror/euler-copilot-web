@@ -36,6 +36,7 @@ import { useChangeThemeStore } from 'src/store/conversation';
 import yaml from 'js-yaml';
 import { writeText } from 'src/utils';
 import { errorMsg, successMsg } from 'src/components/Message';
+import { StatusInfoTitle } from '../types';
 const props = defineProps({
   status: {
     default: 'default',
@@ -69,19 +70,12 @@ const resultInfo = ref({
   ],
 });
 
-const statusInfoTitle = ref({
-  default: '',
-  success: '运行成功',
-  error: '运行失败',
-  running: '运行中',
-});
-
 watch(
   () => props,
   () => {
     resultInfo.value.status = props.status;
     // 目前props.status只有success、error、running三种
-    resultInfo.value.infoList[0].title = statusInfoTitle.value[props.status];
+    resultInfo.value.infoList[0].title = StatusInfoTitle[props.status];
     if (props?.inputAndOutput) {
 
       resultInfo.value.time = props.inputAndOutput.input_parameters.timeout ?? 0;
@@ -104,7 +98,7 @@ const handleCopy = code => {
     errorMsg('无可复制的信息');
     return;
   }
-  writeText(code);
+  writeText(yaml.dump(code));
   successMsg('复制成功');
 };
 </script>
@@ -156,14 +150,6 @@ const handleCopy = code => {
       line-height: 16px;
       padding: 0px 8px;
       border-radius: 4px;
-    }
-    .successBg {
-      background-color: rgba(36, 171, 54, 0.2);
-      color: #24ab36;
-    }
-    .errorBg {
-      background-color: #fbdede;
-      color: #e32020;
     }
     .flexRight {
       margin-left: auto;

@@ -18,7 +18,7 @@ import { useLayout } from './workFlowConfig/useLayout';
 import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
-import { BranchSourceIdType } from './types';
+import { BranchSourceIdType, StatusInfoTitle } from './types';
 import { useRoute } from 'vue-router';
 import yaml from 'js-yaml';
 import $bus from 'src/bus/index';
@@ -48,7 +48,9 @@ const workFlowList = ref([]);
 const props = defineProps(['flowList']);
 const flowObj = ref({});
 const nodes = ref([]);
-const debugResult = ref('success');
+const debugResult = ref('');
+const debugTime = ref('');
+const totalTime = ref(0);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -264,8 +266,10 @@ const searchApiList = () => {
   });
 };
 
-const handleDebugDialogOps = visible => {
+const handleDebugDialogOps = (visible) => {
   debugDialogVisible.value = visible;
+  // 调试弹窗关闭时---结果清空
+  debugResult.value = '';
 };
 
 const edgesChange = edges => {
@@ -329,7 +333,6 @@ const queryFlow = (deal: string) => {
       });
   }
 };
-
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
 const editFlow = item => {
   api
@@ -424,11 +427,22 @@ $bus.on('getNodesStatue', lines => {
       const newLines = yaml.load(item);
       // step.input和step.output对应的节点状态需要修改
       if (newLines?.data?.event === 'step.input' || newLines?.data?.event === 'step.output') {
-        if (newLines?.data?.flow?.stepId) {
           // output-节点运行结束时，获取节点运行的耗时
-          const constTime = newLines.data.event === 'step.output' ? `${newLines.data?.time_cost?.toFixed(3)}s` : '';
+          let constTime = '';
+          if (newLines.data.event === 'step.output') {
+            totalTime.value += newLines.data?.time_cost;
+            constTime = `${newLines.data?.time_cost?.toFixed(3)}s`
+          }
           updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
-        }
+      } else if (newLines?.data?.event === 'flow.stop') {
+        debugResult.value = newLines.data.flow?.stepStatus;
+        debugTime.value = `${totalTime.value.toFixed(3)}s`
+      } else if (newLines?.data?.event === 'flow.start'){
+        totalTime.value = 0;
+        debugTime.value = '';
+        debugResult.value = newLines.data.flow?.stepStatus;
+      } else {
+        // do nothing
       }
     });
   } catch (error) {
@@ -711,10 +725,11 @@ defineExpose({
           <img src="@/assets/images/debugBtn.png" v-else />
         </div>
         <div class="debugStatus"></div>
-        <div class="debugResult" style="display: none">
+        <!-- 这里显示调试最终结果与耗时 -->
+        <div class="debugResult" v-if="debugResult">
           <div class="icon" :class="`${debugResult}Icon`"></div>
-          <div class="resultText">运行成功 -- 暂不展示</div>
-          <span class="time" :class="`${debugResult}Bg`">0.132s</span>
+          <div class="resultText">{{ StatusInfoTitle[debugResult] }}</div>
+          <span class="time" :class="`${debugResult}Bg`" v-if="debugResult !=='running'">{{ debugTime }}</span>
         </div>
       </div>
       <!-- 暂无工作流展示 -->
@@ -765,7 +780,7 @@ defineExpose({
     background: url(@/assets/images/flow_fail.png) center center no-repeat;
   }
 
-  .runningIcon {
+  .runningIcon, .pendingIcon {
     background: url(@/assets/images/loading.png) center center no-repeat;
   }
   .time {
@@ -773,14 +788,6 @@ defineExpose({
     line-height: 16px;
     padding: 0px 8px;
     border-radius: 4px;
-  }
-  .successBg {
-    background-color: rgba(36, 171, 54, 0.2);
-    color: #24ab36;
-  }
-  .errorBg {
-    background-color: #fbdede;
-    color: #e32020;
   }
   .flexRight {
     margin-left: auto;

@@ -469,7 +469,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
       <div class="dialogue-panel__robot-content">
         <!-- 这里是flowData -->
       <DialogueThought :content=thoughtContent v-if="thoughtContent" />
-      <DialogueFlow v-if="flowdata"  :flowdata="props.flowdata"/> 
+      <DialogueFlow v-if="flowdata" :isWorkFlowDebug="props.isWorkFlowDebug"  :flowdata="props.flowdata"/> 
       <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
       <a v-if="props.paramsList" @click="visible = true">补充参数</a>
@@ -1152,6 +1152,76 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
     padding-left: 64px;
     .dialogue-panel__robot-content {
       border-radius: 8px;
+      // 工作流调试时控制显示
+      .dialogue-thought {
+        // ai思考无需显示
+        display: none;
+      }
+      ::v-deep(.demo-collapse) {
+        border-radius: 4px;
+        .title.el-collapse-item {
+          .loading-text {
+            display: flex;
+            text-align: left;
+            align-items: center;
+            .textTitle {
+              flex: 1;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            .totalTime {
+              min-width: 54px;
+              width: fit-content;
+              padding: 0px 8px;
+              height: 16px;
+              line-height: 16px;
+              font-size: 12px;
+              border-radius: 4px;
+            }
+            .totalTime.errorBg {
+              background-color: rgba(227, 32, 32, 0.2);
+            }
+          }
+        }
+        .normal.el-collapse-item {
+          border-bottom: 1px dashed #dfe5ef;
+          .el-collapse-item__header {
+            background-color: var(--o-bg-color-base) !important;
+            color: var(--o-text-color-primary);
+            padding-right: 0px;
+            .o-collapse-icon {
+              width: 16px;
+              height: 16px;
+            }
+            .title {
+              flex: 1;
+              text-align: left;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            .time {
+              min-width: 54px;
+              width: fit-content;
+              padding: 0px 8px;
+              height: 16px;
+              line-height: 16px;
+              border-radius: 4px;
+              font-size: 12px;
+            }
+            &::after {
+              background-color: transparent;
+            }
+          }
+          &:last-child {
+            border-bottom: 1px solid transparent;
+          }
+        }
+        .el-collapse-item__content {
+          margin:0px 16px;
+        }
+      }
       // 调试抽屉中echarts无需显示
       .answer_img {
         display: none;

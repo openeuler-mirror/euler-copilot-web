@@ -17,6 +17,14 @@ export enum BranchSourceIdType {
   SOURCEB = "source_b",
 }
 
+export const StatusInfoTitle = {
+  default: '',
+  success: '运行成功',
+  error: '运行失败',
+  running: '运行中',
+  pending: '运行中',
+};
+
 export interface LinkItem {
   key: string;
   label: string;

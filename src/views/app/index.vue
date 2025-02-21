@@ -136,7 +136,7 @@ const handleCreateApp = () => {
 };
 
 const routerToDetail = appItem => {
-  if (!appItem.published && appType.value === 'createdByMe') {
+  if (!appItem.published) {
     return;
   }
   //获取appItem.id & appItem.name
