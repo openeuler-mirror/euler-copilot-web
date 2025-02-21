@@ -23,7 +23,7 @@ const props = defineProps({
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
-const statusList = ref(['pending', 'success', 'error']);
+const statusList = ref(['running', 'success', 'error']);
 
 const branchIdList = ref([]);
 

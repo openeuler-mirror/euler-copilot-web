@@ -24,7 +24,7 @@ const props = defineProps({
   },
 });
 
-const statusList = ref(['waiting', 'success', 'error', 'default']);
+const statusList = ref(['running', 'success', 'error']);
 
 const curStatus = ref('');
 

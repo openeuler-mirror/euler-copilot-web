@@ -6,7 +6,7 @@
     </div>
     <div class="divider"></div>
     <div class="debugContent">
-      <div class="debugCheckArea">
+      <div class="debugCheckArea" v-if="testFlag">
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
@@ -63,12 +63,16 @@ import type { ConversationItem, RobotConversationItem } from 'src/views/dialogue
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { storeToRefs } from 'pinia';
+import { api } from '@/apis';
+import { onBeforeRouteLeave } from 'vue-router';
 // 对话列表
 const { sendQuestion } = useSessionStore();
+const testFlag = ref(true);
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 const { generateSession, generateSessionDebug } = useHistorySessionStore();
-const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
+const { historySession, currentSelectedSession, isSelectedAll, selectedSessionIds } = storeToRefs(useHistorySessionStore());
+const { app, appList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
 const props = defineProps({
   flowId: {
@@ -87,7 +91,6 @@ interface DebugProps {
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
-
 /**
  *
  * @param item
@@ -134,6 +137,31 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 const handleCloseDebugDialog = () => {
+  testFlag.value = false
+  delChat();
   props.handleDebugDialogOps(false);
 };
+
+// 关闭或者跳转前需要将会话删除
+const delChat = async () => {
+  if (!currentSelectedSession.value) {
+    // 如果还没生成会话Id, 无需调用接口删除
+    return;
+  } else {
+    // 调用接口，删除当前对话
+    const res = await api.deleteSession({ conversationList: [currentSelectedSession.value] });
+    if (res[1]?.result) {
+      // 删除成功
+      conversationList.value = [];
+      selectedSessionIds.value = [];
+      currentSelectedSession.value = '';
+      historySession.value = [];=
+    }
+  }
+}
+
+onBeforeRouteLeave((to, from ,next) => {
+  handleCloseDebugDialog();
+  next();
+})
 </script>

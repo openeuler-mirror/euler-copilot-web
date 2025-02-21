@@ -292,6 +292,7 @@ const isAllowToSend = computed(() => {
 
 // 会话切换时
 watch(currentSelectedSession, async newVal => {
+  if (!newVal) return;
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
   let curPolling = pollingMap.get(newVal);
