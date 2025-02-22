@@ -3,7 +3,7 @@
     <div class="apiCenterMain">
       <div class="apiCenterTitle">语义接口中心</div>
       <div class="apiCenterSearch">
-        <el-input style="max-width: 400px" placeholder="搜索" :suffix-icon="IconSearch">
+        <el-input style="max-width: 400px" v-model="apiSearchValue" placeholder="搜索" :suffix-icon="IconSearch">
           <template #prepend>
             <el-select v-model="apiSearchType" style="width: 115px" :suffix-icon="IconCaretDown">
               <el-option label="全部" value="all" />
@@ -183,9 +183,9 @@ const handleQueryApiList = (payload?: any) => {
       ...payload,
     })
     .then(res => {
-      apiList.value = res[1]?.result.apilications;
+      apiList.value = res[1]?.result.services;
       currentPage.value = res[1]?.result.currentPage;
-      totalCount.value = res[1]?.result.totalapis;
+      totalCount.value = res[1]?.result.totalCount;
     });
 };
 
