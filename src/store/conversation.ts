@@ -314,6 +314,8 @@ export const useSessionStore = defineStore('conversation', () => {
               if (target) {
                 target.data.output = message.content
                 target.status = message.flow?.stepStatus;
+                // 工作流添加每阶段的时间耗时
+                target['costTime'] = message.time_cost;
                 if(message.flow.step_status === "error"){
                   conversationItem.flowdata.status = message.flow?.stepStatus;
                 }
@@ -322,7 +324,17 @@ export const useSessionStore = defineStore('conversation', () => {
             else if(message["event"] === "flow.stop") {
               //时间流结束
               let flow = message.content.flow;
-              if(message.content.type !== "schema"){
+              if (params.type) {
+                // 如果是工作流的调试功能-添加status/data
+                conversationItem.flowdata = {
+                  id: flow?.stepName,
+                  title: i18n.global.t('flow.flow_end'),
+                  progress: flow?.stepProgress,
+                  status: message.flow?.stepStatus,
+                  display:true,
+                  data:conversationItem?.flowdata?.data,
+                };
+              }else if(message.content.type !== "schema"){
                 conversationItem.flowdata?.data[0].push({
                   id:"end",
                   title:"end",

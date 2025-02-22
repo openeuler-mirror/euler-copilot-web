@@ -139,7 +139,7 @@ const handleJumperAppCenter = () => {
       <WorkFlow @validateConnect="validateConnect" :flowList="flowList" ref="workFlowRef" />
     </div>
     <div class="createAppContainerFooter">
-      <el-button>取消</el-button>
+      <el-button @click="handleJumperAppCenter">取消</el-button>
       <el-button @click="saveConfigOrFlow">保存</el-button>
       <el-button :disabled="true">预览</el-button>
       <el-button type="primary" @click="handlePulishApp()">发布</el-button>

@@ -337,6 +337,15 @@
     border-color: var(--o-color-primary) !important;
     color: var(--o-color-white) !important;
   }
+  // 成功失败样式
+  .successBg {
+    background-color: rgba(36, 171, 54, 0.2);
+    color: #24ab36;
+  }
+  .errorBg {
+    background-color: #fbdede;
+    color: #e32020;
+  }
 }
 
 .w320 {
