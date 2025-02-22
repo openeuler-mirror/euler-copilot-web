@@ -3,7 +3,7 @@
     <div class="apiCenterMain">
       <div class="apiCenterTitle">语义接口中心</div>
       <div class="apiCenterSearch">
-        <el-input style="max-width: 400px" placeholder="搜索" :suffix-icon="IconSearch">
+        <el-input style="max-width: 400px" v-model="apiSearchValue" placeholder="搜索" :suffix-icon="IconSearch">
           <template #prepend>
             <el-select v-model="apiSearchType" style="width: 115px" :suffix-icon="IconCaretDown">
               <el-option label="全部" value="all" />
@@ -13,7 +13,7 @@
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createapi" @click="openSidebar('upload')">上传</el-button>
+        <el-button type="primary" class="createapi" @click="openSidebar('upload', '')">上传</el-button>
       </div>
       <div class="apiCenterType">
         <div class="apiCenterBtn" :class="{ apiCenterBtnActive: apiType === 'my' }" @click="handleSearchapiList('my')">
@@ -24,7 +24,7 @@
           :class="{ apiCenterBtnActive: apiType === 'createdByMe' }"
           @click="handleSearchapiList('createdByMe')"
         >
-        我的上传
+          我的上传
         </div>
         <div
           class="apiCenterBtn"
@@ -37,7 +37,7 @@
       <div class="apiCenterCardContainer">
         <div class="apiCenterCardBox">
           <div v-for="apiItem in apiList" class="apiCenterCardSingle">
-            <div class="apiCenterCardTop" @click="openSidebar('get')">
+            <div class="apiCenterCardTop" @click="openSidebar('get', apiItem.serviceId)">
               <div class="apiCenterCardIcon">
                 <el-icon class="menu-icon"
                   ><img class="create-button__icon" src="@/assets/svgs/robot_icon.svg"
@@ -45,7 +45,7 @@
               </div>
               <div class="apiCenterCardContent">
                 <div class="apiCenterCardContentTop">
-                  <div class="apiCenterCardContentTitle">智能助手</div>
+                  <div class="apiCenterCardContentTitle">{{ apiItem.name }}</div>
                   <div
                     class="apiCenterCardContentCollect"
                     :class="!apiItem.published && apiType === 'createdByMe' ? 'noClick' : ''"
@@ -56,39 +56,37 @@
                   </div>
                 </div>
                 <div class="apiCenterCardContentDes">
-                  <TextMoreTootip
-                    value="测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试"
-                    :row="2"
-                  />
+                  <TextMoreTootip :value="apiItem.description" :row="2" />
                 </div>
               </div>
             </div>
             <div class="apiCenterCardBottom">
-              <div class="apiCenterCardUser">@zhang</div>
+              <div class="apiCenterCardUser">@{{ apiItem.author }}</div>
               <div class="apiCenterCardOps">
-                <el-button text @click="openSidebar('edit')">编辑</el-button>
-                <el-button text>删除</el-button>
+                <el-button text @click="openSidebar('edit', apiItem.serviceId)">编辑</el-button>
+                <el-button text @click="handleDelapi(apiItem)">删除</el-button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <el-drawer class="el-drawer" v-model="drawer" :title="actionName" :direction="direction" :before-close="handleClose">
+    <el-drawer
+      class="el-drawer"
+      v-model="drawer"
+      :title="actionName"
+      destory-on-close="true"
+      :direction="direction"
+      :before-close="handleClose"
+    >
       <div v-if="actions === 'upload'">
-        <Upload
-        type="upload"
-        @closeDrawer="handleClose" />
+        <Upload type="upload" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
       </div>
       <div v-if="actions === 'get'">
-        <Upload
-        type="get"
-        @closeDrawer="handleClose" />
+        <Upload type="get" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceJson="getServiceJson" />
       </div>
       <div v-if="actions === 'edit'">
-        <Upload
-        type="edit"
-        @closeDrawer="handleClose" />
+        <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
       </div>
     </el-drawer>
   </div>
@@ -100,9 +98,10 @@ import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 import { ref, onMounted, watch, markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
-import Upload from "@/components/Upload/index.vue";
+import Upload from '@/components/Upload/index.vue';
+import { successMsg } from 'src/components/Message';
 
 const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 const drawer = ref(false);
@@ -112,6 +111,9 @@ const router = useRouter();
 const actions = ref();
 const apiType = ref('my');
 const apiSearchType = ref('all');
+const selectedServiceId = ref('');
+const getServiceJson = ref('');
+const getServiceYaml = ref('');
 const apiSearchValue = ref();
 const pagination = ref({
   pageSizes: [16, 32, 64],
@@ -127,39 +129,49 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
   handleParmasQueryapiList();
 };
 
-const openSidebar = (action: string) => {
+const getServiceJsonFun = async (id: string) => {
+  await api.querySingleApiData({ serviceId: id }).then(res => {
+    if (res) {
+      getServiceJson.value = res[1]?.result.apis;
+    } else {
+      console.log(res);
+    }
+  });
+};
+
+// const getServiceYamlFun = async (id: string) => {
+//   await api.querySingleApiData({serviceId:id,edit:true}).then((res) => {
+//       if(res) {
+//         console.log(res[1]?.result.data);
+//         // getServiceYaml.value = res[1]?.result.data;
+//         console.log(getServiceYaml.value);
+//       } else {
+//       console.log(res);
+//     }
+//   })
+// }
+
+const openSidebar = (action: string, id: string) => {
+  console.log(id);
   drawer.value = true;
   actions.value = action;
-  if( action === 'upload') {
+  if (action === 'upload') {
     // 展示上传的框架
     actionName.value = '上传语义接口';
-  }else if( action === 'edit') {
+  } else if (action === 'edit') {
     // 展示编辑的框架
     actionName.value = '编辑语义接口';
-  }else if( action === 'get'){
+    selectedServiceId.value = id;
+  } else if (action === 'get') {
     // 展示查看的框架
     actionName.value = '查看语义接口';
+    selectedServiceId.value = id;
+    getServiceJsonFun(id);
   }
 };
 
 const handleClose = () => {
   drawer.value = false;
-};
-
-const handleCreateapi = (data: any) => {
-  api
-    .createOrUpdateApi({
-      serviceId:'',
-      data
-    })
-    .then(res => {
-     console.log(res);
-    });
-};
-
-const routerToDetail = apiItem => {
-  //获取apiItem.id & apiItem.name
-  router.push(`/copilot?apiId=${apiItem.apiId}&name=${encodeURIComponent(encodeURI(apiItem.name))}`);
 };
 
 const handleParmasQueryapiList = (params?: any) => {
@@ -183,9 +195,9 @@ const handleQueryApiList = (payload?: any) => {
       ...payload,
     })
     .then(res => {
-      apiList.value = res[1]?.result.apilications;
+      apiList.value = res[1]?.result.services;
       currentPage.value = res[1]?.result.currentPage;
-      totalCount.value = res[1]?.result.totalapis;
+      totalCount.value = res[1]?.result.totalCount;
     });
 };
 
@@ -197,7 +209,7 @@ const handleFavorite = (e, item) => {
   e.stopPropagation();
   api
     .changeSingleApiCollect({
-      serviceId: item.apiId,
+      serviceId: item.serviceId,
       favorited: !item.favorited,
     })
     .then(res => {
@@ -218,25 +230,18 @@ const handleSearchapiList = type => {
   }
 };
 
-const handleDelapi = (e, item) => {
-  e.stopPropagation();
+const handleDelapi = item => {
   ElMessageBox.confirm('确定删除此接口吗？', '提示', {
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(() => {
     api
       .deleteSingleApiData({
-        serviceId: item.apiId,
+        serviceId: item.serviceId,
       })
       .then(res => {
         if (res[1]) {
-          ElMessage({
-            showClose: true,
-            message: '删除成功',
-            icon: IconSuccess,
-            customClass: 'o-message--success',
-            duration: 3000,
-          });
+          successMsg('删除成功');
           handleParmasQueryapiList();
         }
       });
@@ -261,7 +266,7 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
-.el-drawer{
+.el-drawer {
   margin: 0px;
   padding: 0px;
 }

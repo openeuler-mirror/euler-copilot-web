@@ -3,30 +3,21 @@ import { ElMessage } from 'element-plus';
 import { ref, watch } from 'vue';
 import * as jsYaml from 'js-yaml';
 import { IconUpload, IconVisible, IconDelete } from '@computing/opendesign-icons';
-import type {
-  UploadFile,
-  ElUploadProgressEvent,
-  ElFile,
-} from 'element-plus/es/components/upload/src/upload.type';
+import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
 import { Codemirror } from 'vue-codemirror';
 import { onMounted } from 'vue';
 import { api } from 'src/apis';
-
-const handleUploadMyFile = (options: any) => {
-  console.log(options);
-};
+import { IconChevronDown } from '@computing/opendesign-icons';
 
 const handleCreateapi = (data: any) => {
-  console.log(data);
   api
     .createOrUpdateApi({
-      serviceId:'',
-      data
+      serviceId: '',
+      data,
     })
     .then(res => {
-     console.log(res);
-     getYamlJson.value = res.data;
-     uploadtype.value = 'get';
+      getServiceJson.value = res[1].result.apis;
+      uploadtype.value = 'get';
     });
 };
 
@@ -43,6 +34,18 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
+  serviceId: {
+    type: String,
+    default: '',
+  },
+  getServiceJson: {
+    type: String,
+    default: '',
+  },
+  getServiceYaml: {
+    type: String,
+    default: '',
+  },
 });
 const emits = defineEmits<{
   (e: 'closeDrawer'): void;
@@ -50,17 +53,17 @@ const emits = defineEmits<{
 
 const handleClose = () => {
   //清空数据
-  yamlContent.value = '';
+  getServiceYaml.value = '';
   yamlToJsonContent.value = '';
-  getYamlJson.value = '';
+  getServiceJson.value = '';
   emits('closeDrawer');
 };
 
 const uploadtype = ref(props.type);
 
-const yamlContent = ref('tt:123');
+const getServiceYaml = ref('');
 const yamlToJsonContent = ref('');
-const getYamlJson = ref('');
+const getServiceJson = ref('');
 const imageUrl = ref('');
 const progressVal = ref(0);
 const uploadDone = ref(false);
@@ -86,12 +89,10 @@ const beforeUpload = async (file: ElFile) => {
   try {
     const reader = new FileReader();
     reader.onload = async event => {
-      yamlContent.value = event.target?.result as string;
+      getServiceYaml.value = event.target?.result as string;
       //yaml 展示
-      console.log('YAML Content:', yamlContent);
       try {
-        // emits('changeAction',"edit");
-        yamlToJsonContent.value = jsYaml.load(yamlContent.value);
+        yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
         uploadtype.value = 'edit';
       } catch (yamlParseError) {
         console.error('Error parsing YAML to JSON:', yamlParseError);
@@ -112,7 +113,7 @@ const beforeUpload = async (file: ElFile) => {
       reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
       reader.onerror = error => reject(error); // 如果出错则拒绝 Promise
     });
-    return true; 
+    return true;
   } catch (error) {
     console.error('Error during file upload process:', error);
     ElMessage({
@@ -139,18 +140,24 @@ const handleSuccess = (res: ElUploadProgressEvent, file: UploadFile) => {
 };
 const doDelete = (e: Event) => {
   e.stopPropagation();
-  console.log('click Delete');
-  imageUrl.value = '';
   uploadDone.value = false;
 };
 const doPreview = (e: Event) => {
   e.stopPropagation();
 };
 
-onMounted(() => {
-  console.log(props);
-});
-
+watch(
+  () => props,
+  () => {
+    getServiceJson.value = props.getServiceJson;
+    getServiceYaml.value = props.getServiceYaml;
+    if (props.type === 'edit' && props) {
+      console.log('edit');
+      // getServiceYamlFun(props.serviceId);
+    }
+  },
+  { immediate: true, deep: true },
+);
 </script>
 <template>
   <el-upload
@@ -194,9 +201,9 @@ onMounted(() => {
       </div>
     </div>
   </el-upload>
-  <div class="code-container" v-if="uploadtype !== 'upload'">
+  <div class="code-container" v-if="uploadtype === 'edit'">
     <Codemirror
-      v-model="yamlContent"
+      v-model="getServiceYaml"
       placeholder="Code goes here..."
       :autofocus="true"
       :indent-with-tab="true"
@@ -206,8 +213,25 @@ onMounted(() => {
       @ready="handleReady"
     />
   </div>
-  <div class="code-container" v-if="uploadtype !== 'get'">
-    {{ getYamlJson }}
+  <div class="json-container" v-if="uploadtype === 'get'">
+    <el-collapse v-model="getServiceJson" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
+      <!-- 这里直接展示输入和输出 -->
+      <el-collapse-item v-for="(item, index) in getServiceJson" :key="index" :name="item.name">
+        <template #title>
+          <span>{{ item.name }}</span>
+          <!-- 这里接口返回的需要限制最大位数 -->
+          <el-icon class="el-collapse-item__arrow">
+            <IconChevronDown></IconChevronDown>
+          </el-icon>
+        </template>
+        <div class="o-collapse-content">
+          <div class="itemTitle">
+            <div class="subName">{{ item.path }}</div>
+            <div class="subName">{{ item.description }}</div>
+          </div>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'upload'">
     <el-button @click="handleClose">取消</el-button>
@@ -225,6 +249,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.json-container {
+  max-height: 80%;
+  overflow-y: hidden;
+}
 .v-codemirror {
   height: 100%;
   width: 100%;
