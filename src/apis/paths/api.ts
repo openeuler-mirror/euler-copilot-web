@@ -29,8 +29,8 @@ export const createOrUpdateApi = (
  * @param params
  * @returns
  */
-export const querySingleApiData = (params: { serviceId: string }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get(`/api/service/${params.serviceId}`);
+export const querySingleApiData = (params: { serviceId: string,edit?: boolean}): Promise<[any, FcResponse<unknown> | undefined]> => {
+  return get(`/api/service/${params.serviceId}`,{edit: params.edit});
 };
 
 /**

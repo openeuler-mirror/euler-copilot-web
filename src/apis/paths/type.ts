@@ -173,3 +173,25 @@ export interface CreateOrUpdateApiParamsType {
      */
     [property: string]: any;
 }
+
+/**
+ * serviceApiData, 获取语义接口返回数据结构
+ */
+export interface serviceApiData{
+    /**
+     * 语义接口名称
+     */
+    name?: string;
+    /**
+     * 语义接口path
+     */
+    path?: string;
+    /**
+     * 语义接口描述
+     */
+    description?: string;
+    /**
+     * 对话轮次（1～10）
+     */
+    [property: string]: any;
+}
