@@ -155,7 +155,7 @@ const delChat = async () => {
       conversationList.value = [];
       selectedSessionIds.value = [];
       currentSelectedSession.value = '';
-      historySession.value = [];=
+      historySession.value = [];
     }
   }
 }
