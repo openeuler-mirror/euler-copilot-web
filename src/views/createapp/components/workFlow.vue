@@ -48,7 +48,7 @@ const workFlowList = ref([]);
 const props = defineProps(['flowList']);
 const flowObj = ref({});
 const nodes = ref([]);
-const debugResult = ref('');
+const debugStatus = ref('');
 const debugTime = ref('');
 const totalTime = ref(0);
 const hanleAsideVisible = () => {
@@ -269,7 +269,18 @@ const searchApiList = () => {
 const handleDebugDialogOps = (visible) => {
   debugDialogVisible.value = visible;
   // 调试弹窗关闭时---结果清空
-  debugResult.value = '';
+  debugStatus.value = '';
+  // 调试弹窗关闭时---节点状态清空
+  getNodes.value.forEach(node => {
+    updateNode(node.id, {data: {...node.data, status:'default', costTime: ''} });
+  })
+  // 调试弹窗关闭时---需要将边状态清空
+  getEdges.value.forEach(edge => {
+    console.log(edge, 'ecge')
+    // 更新节点的起源与终点
+    updateEdgeData(edge.id, {targetStatus: 'default'})
+    updateEdgeData(edge.id, {sourceStatus: 'default'})
+  })
 };
 
 const edgesChange = edges => {
@@ -425,6 +436,17 @@ $bus.on('getNodesStatue', lines => {
   try {
     lines?.forEach(item => {
       const newLines = yaml.load(item);
+      // 工作流开始时更新debugResult
+      if (newLines?.data?.event === 'flow.start'){
+        totalTime.value = 0;
+        debugTime.value = '';
+        debugStatus.value = newLines.data.flow?.stepStatus;
+      }
+      
+      // 这里判断是否有调试状态的值，无值不处理
+      if (!debugStatus.value) {
+        return;
+      }
       // step.input和step.output对应的节点状态需要修改
       if (newLines?.data?.event === 'step.input' || newLines?.data?.event === 'step.output') {
           // output-节点运行结束时，获取节点运行的耗时
@@ -435,12 +457,8 @@ $bus.on('getNodesStatue', lines => {
           }
           updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
       } else if (newLines?.data?.event === 'flow.stop') {
-        debugResult.value = newLines.data.flow?.stepStatus;
+        debugStatus.value = newLines.data.flow?.stepStatus;
         debugTime.value = `${totalTime.value.toFixed(3)}s`
-      } else if (newLines?.data?.event === 'flow.start'){
-        totalTime.value = 0;
-        debugTime.value = '';
-        debugResult.value = newLines.data.flow?.stepStatus;
       } else {
         // do nothing
       }
@@ -726,10 +744,10 @@ defineExpose({
         </div>
         <div class="debugStatus"></div>
         <!-- 这里显示调试最终结果与耗时 -->
-        <div class="debugResult" v-if="debugResult">
-          <div class="icon" :class="`${debugResult}Icon`"></div>
-          <div class="resultText">{{ StatusInfoTitle[debugResult] }}</div>
-          <span class="time" :class="`${debugResult}Bg`" v-if="debugResult !=='running'">{{ debugTime }}</span>
+        <div class="debugStatus" v-if="debugStatus">
+          <div class="icon" :class="`${debugStatus}Icon`"></div>
+          <div class="resultText">{{ StatusInfoTitle[debugStatus] }}</div>
+          <span class="time" :class="`${debugStatus}Bg`" v-if="debugStatus !=='running'">{{ debugTime }}</span>
         </div>
       </div>
       <!-- 暂无工作流展示 -->
@@ -761,7 +779,11 @@ defineExpose({
   ></EditYamlDrawer>
 </template>
 <style lang="scss">
-.debugResult {
+// @keyframes spin {
+//   0% {transform: rotate(0deg);}
+//   100% {transform: rotate(0deg);}
+// }
+.debugStatus {
   display: flex;
   height: 32px;
   padding: 8px 0px;
@@ -782,6 +804,7 @@ defineExpose({
 
   .runningIcon, .pendingIcon {
     background: url(@/assets/images/loading.png) center center no-repeat;
+    animation: spin 2s linear infinite;
   }
   .time {
     height: 16px;
