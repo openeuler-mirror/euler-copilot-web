@@ -74,6 +74,16 @@
           <div class="noDataIcon"></div>
           <div class="desc">暂无数据</div>
         </div>
+        <el-pagination
+        v-if="totalCount >= 16"
+        v-model:current-page="currentPage"
+        v-model:page-size="currentPageSize"
+        :page-sizes="pagination.pageSizes"
+        :layout="pagination.layout"
+        :total="totalCount"
+        popper-class="appPagination"
+        @change="handleChangePage"
+      />
       </div>
     </div>
     <el-drawer
@@ -178,6 +188,7 @@ const handleClose = () => {
   getServiceJson.value = '';
   getServiceYaml.value = '';
   drawer.value = false;
+  handleParmasQueryapiList();
 };
 
 const handleParmasQueryapiList = (params?: any) => {

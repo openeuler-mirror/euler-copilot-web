@@ -81,7 +81,7 @@ const uploadDone = ref(false);
 const editable = ref(false);
 // 上传前检查
 const beforeUpload = async (file: ElFile) => {
-  const isYaml = file.type === 'application/x-yaml' || file.type === 'text/yaml'; // 也可能遇到 text/yaml 类型
+  const isYaml = file.type === 'application/x-yaml' || file.type === 'text/yaml' || file.name.indexOf('.yaml') > -1 || file.name.indexOf('.yml') > -1; // 也可能遇到 text/yaml 类型
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isYaml) {
     ElMessage({
@@ -298,7 +298,9 @@ watch(
     outline: none;
   }
 }
-
+::v-deep(.el-upload.is-drag) {
+  display: block !important;
+}
 .drawerFooter {
   position: absolute;
   bottom: 12px;
@@ -308,7 +310,7 @@ watch(
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  width: 400px;
+  width: 100%;
   height: 200px;
   display: flex;
   align-items: center;
