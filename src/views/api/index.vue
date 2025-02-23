@@ -35,7 +35,7 @@
         </div>
       </div>
       <div class="apiCenterCardContainer">
-        <div class="apiCenterCardBox">
+        <div class="apiCenterCardBox" v-if="apiList?.length">
           <div v-for="apiItem in apiList" class="apiCenterCardSingle">
             <div class="apiCenterCardTop" @click="openSidebar('get', apiItem.serviceId)">
               <div class="apiCenterCardIcon">
@@ -68,6 +68,11 @@
               </div>
             </div>
           </div>
+        </div>
+        
+        <div class="appCenterNoData" v-else>
+          <div class="noDataIcon"></div>
+          <div class="desc">暂无数据</div>
         </div>
       </div>
     </div>

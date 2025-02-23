@@ -9,8 +9,10 @@ import { api } from 'src/apis';
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const route = useRoute();
-const props = withDefaults(defineProps(), {});
-const emits = defineEmits(['getFlowList']);
+const props = withDefaults(defineProps<{
+  handleValidateContent: Function,
+}>(), {});
+const emits = defineEmits(['getFlowList', 'getPublishStatus']);
 
 const createAppForm = ref({
   icon: '',
@@ -19,8 +21,10 @@ const createAppForm = ref({
   links: [],
   recommendedQuestions: [],
   dialogRounds: 3,
-  permissionType: 'private',
-  selectedPeople: [],
+  permission: {
+    visibility: 'private',
+    authorizedUsers: [],
+  },
 });
 const flowDataList = ref([]);
 const searchName = ref('');
@@ -38,14 +42,14 @@ const permissionTypeList = [
     value: 'protected',
   },
 ];
-const permissionList = ref(['zjq', 'zhouweitong', 'wst', 'shihy', 'ouyangnana', 'testname1', 'testname2']);
-const curPersonList = ref([...permissionList.value]);
+const permissionList = ref([]);
+const curPersonList = ref([]);
+const publishStatus = ref(false);
 // 这里后面需要换为变量-以便于中英文切换
 const createAppRole = ref({
   name: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
   description: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
   dialogRounds: [{ required: true, message: '对话轮次不能为空', trigger: 'change' }],
-  descripermissionTypeption: [{ required: true, message: '权限不能为空', trigger: 'change' }],
 });
 const createAppFormRef = ref();
 const modeOptions = reactive([
@@ -71,18 +75,29 @@ const delRecommendItem = idx => {
   createAppForm.value.recommendedQuestions.splice(idx, 1);
 };
 const searchPerson = () => {
-  curPersonList.value = permissionList.value.filter(item => item.toLowerCase().includes(searchName.value));
+  curPersonList.value = permissionList.value.filter(item => item?.userName?.toLowerCase()?.includes(searchName.value));
 };
-
 const handleAvatarSuccess = (res, file) => {
   createAppForm.value.icon = URL.createObjectURL(file.raw);
 };
+
+watch(
+  () => publishStatus.value,
+  () => {
+    if (publishStatus.value) {
+      emits('getPublishStatus', publishStatus.value);
+    }
+  },
+  { deep: true, immediate: true },
+);
+
 
 const httpRequest = res => {
   res.onSuccess();
 };
 
 onMounted(() => {
+  // 判断是否编辑--是否需要查询回显数据
   if (route.query?.appId) {
     api
       .querySingleAppData({
@@ -98,28 +113,46 @@ onMounted(() => {
             links: appInfo.links.map(item => item.url),
             recommendedQuestions: appInfo.recommendedQuestions,
             dialogRounds: appInfo.dialogRounds,
-            permission: { visibility: appInfo.permission.visibility },
-            permissionType: appInfo.permission.visibility,
+            permission: {
+              visibility: appInfo.permission.visibility,
+              authorizedUsers: appInfo.permission.authorizedUsers,
+            },
           };
+          publishStatus.value = appInfo.published;
           flowDataList.value = appInfo.workflows;
           emits('getFlowList', flowDataList.value);
         }
       });
   }
+  // 获取当前权限配置-部分人可见的部分人列表数据
+  api.getPartAppConfgUser().then(res => {
+    if (res[1]?.result) {
+      permissionList.value = res[1]?.result?.userInfoList;
+      curPersonList.value = res[1]?.result?.userInfoList;
+    }
+  });
 });
 
 watch(
   () => createAppForm.value,
   async () => {
     if (createAppFormRef.value && props.handleValidateContent) {
-      let formBalidate = await createAppFormRef.value.validate();
-      if (formBalidate) {
-        props.handleValidateContent(!formBalidate);
-      }
+      const formBalidate = await validateForm();
+      props.handleValidateContent(!formBalidate);
     }
   },
   { deep: true, immediate: true },
 );
+
+// 获取界面配置的校验结果
+const validateForm = async () => {
+  try {
+    const resulst = await createAppFormRef.value.validate();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 defineExpose({
   createAppForm,
@@ -183,7 +216,13 @@ defineExpose({
             <span class="linkText">最多添加5个链接</span>
           </div>
           <div class="linkArea" v-for="(item, index) in createAppForm.links">
-            <el-input class="w320" maxlength="200" v-model="createAppForm.links[index]" placeholder="请输入" clearable></el-input>
+            <el-input
+              class="w320"
+              maxlength="200"
+              v-model="createAppForm.links[index]"
+              placeholder="请输入"
+              clearable
+            ></el-input>
             <el-icon class="delIcon" @click="delConnectItem(index)">
               <IconDelete />
             </el-icon>
@@ -224,7 +263,7 @@ defineExpose({
         </template>
         <el-form-item label="请选择对话轮次" prop="dialogRounds">
           <div class="multiSessionItem">
-            <el-input-number v-model="createAppForm.dialogRounds" :step="1" :min="1" :max="10"></el-input-number>
+            <el-input-number v-model="createAppForm.dialogRounds" :step="1" :value-on-clear="3" :min="1" :max="10"></el-input-number>
             <span class="sessionUnit">(1 ~ 10)</span>
           </div>
         </el-form-item>
@@ -236,15 +275,15 @@ defineExpose({
             <IconCaretRight />
           </el-icon>
         </template>
-        <el-form-item label="权限" prop="permissionType" class="permissionItem">
+        <el-form-item label="权限" prop="permission" class="permissionItem">
           <div class="permissionSelect">
-            <el-radio-group v-model="createAppForm.permissionType">
+            <el-radio-group v-model="createAppForm.permission.visibility">
               <el-radio v-for="(item, index) in permissionTypeList" :key="index" :value="item.value">
                 {{ item.label }}
               </el-radio>
             </el-radio-group>
           </div>
-          <div class="partPermissionPerson" v-if="createAppForm.permissionType === 'protected'">
+          <div class="partPermissionPerson" v-if="createAppForm.permission.visibility === 'protected'">
             <el-input
               ref="inputRef"
               v-model="searchName"
@@ -255,10 +294,10 @@ defineExpose({
               :prefix-icon="IconSearch"
             ></el-input>
             <div class="personList">
-              <el-checkbox-group v-model="createAppForm.selectedPeople">
-                <el-checkbox v-for="(item, index) in curPersonList" :key="index" :label="item">
+              <el-checkbox-group v-model="createAppForm.permission.authorizedUsers">
+                <el-checkbox v-for="(item, index) in curPersonList" :key="index" :value="item?.userSub">
                   <span class="circle"></span>
-                  {{ item }}
+                  {{ item?.userName }}
                 </el-checkbox>
               </el-checkbox-group>
             </div>

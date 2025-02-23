@@ -58,6 +58,14 @@ export const changeSingleAppCollect = (params: { id: string,favorited:boolean })
   return put(`/api/app/${params.id}`, {favorited:params.favorited});
 };
 
+/**
+ * 获取
+ * @param params
+ * @returns
+ */
+export const getPartAppConfgUser = (): Promise<[any, FcResponse<unknown> | undefined]> => {
+  return get("/api/user");
+};
 
 
 export const appCenterApi = {
@@ -66,5 +74,6 @@ export const appCenterApi = {
   querySingleAppData,
   deleteSingleAppData,
   releaseSingleAppData,
-  changeSingleAppCollect
-};
+  changeSingleAppCollect,
+  getPartAppConfgUser,
+}

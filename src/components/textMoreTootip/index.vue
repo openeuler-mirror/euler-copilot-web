@@ -7,6 +7,8 @@
     @mouseleave="mouseleave"
   >
     <el-tooltip
+      :disabled="isShowHover"
+      :enterable="false"
       class="box-item"
       effect="dark"
       :content="value"
@@ -81,7 +83,7 @@ export default {
         getComputedStyle(this.text).lineHeight.replace("px", "") - 0 || 20;
       let height = getComputedStyle(this.text).height.replace("px", "") - 0;
       if (height > lineHeight * val) {
-        this.isShowHover = true;
+        this.isShowHover = false;
         this.textStyle = {
           height: `${lineHeight * val}px`,
           overflow: "hidden",
@@ -92,7 +94,7 @@ export default {
           cursor: "pointer",
         };
       } else {
-        this.isShowHover = false;
+        this.isShowHover = true;
         this.textStyle = {
           cursor: "text",
         };
@@ -154,6 +156,7 @@ export default {
 .vue-text {
   word-break: break-all;
   word-wrap: break-word;
+  user-select: none;
 }
 .hover-wrap.active {
   z-index: 1999;

@@ -61,6 +61,19 @@
         border-radius: 4px;
         cursor: pointer;
         color: var(--o-text-color-primary);
+        gap: 8px;
+        .el-icon, svg {
+          width: 16px;
+          height: 16px;
+        }
+        .warningRemind svg path{
+          &:first-child {
+            fill :#ebaf00;
+          }
+          &:last-child {
+            fill: #fff
+          }
+        }
       }
     }
   }
@@ -345,6 +358,10 @@
   .errorBg {
     background-color: #fbdede;
     color: #e32020;
+  }
+  .debugSuccess {
+    background-color: var(--o-color-success) !important;
+    color: var(--o-bg-color-base) !important;
   }
 }
 
