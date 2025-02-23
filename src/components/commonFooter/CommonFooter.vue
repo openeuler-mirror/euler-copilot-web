@@ -47,7 +47,7 @@ const readAgreement = async () => {
         </span>
       </template>
     </el-dialog>
-    <span>v0.9.1-内测版</span>
+    <span>v0.9.2-内测版</span>
   </div>
 </template>
 

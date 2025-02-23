@@ -246,6 +246,15 @@ fn emit_message<R: Runtime>(app: &AppHandle<R>, message: &str) {
 
 fn get_base_headers() -> header::HeaderMap {
     let mut headers = header::HeaderMap::new();
+    let base_url = get_base_url();
+    let host = base_url
+        .strip_prefix("http://")
+        .or_else(|| base_url.strip_prefix("https://"))
+        .unwrap()
+        .strip_suffix("/")
+        .unwrap()
+        .to_string();
+    headers.insert(header::HOST, host.parse().unwrap());
     headers.insert(
         header::CONTENT_TYPE,
         "application/json; charset=UTF-8".parse().unwrap(),
