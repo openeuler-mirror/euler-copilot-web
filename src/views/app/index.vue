@@ -35,7 +35,7 @@
         </div>
       </div>
       <div class="appCenterCardContainer">
-        <div class="appCenterCardBox" v-if="appList.length">
+        <div class="appCenterCardBox" v-if="appList?.length">
           <div
             v-for="(appItem, index) in appList"
             :key="index"
@@ -45,7 +45,7 @@
             <div class="appCenterCardTop">
               <div class="appCenterCardIcon">
                 <el-icon class="menu-icon">
-                  <img class="create-button__icon" src="@/assets/svgs/robot_icon.svg" />
+                  <img class="create-button__icon" :src="getImgBg(appItem)" />
                 </el-icon>
               </div>
               <div class="appCenterCardContent">
@@ -74,11 +74,14 @@
             </div>
             <div class="unPublishSymbol" v-if="!appItem.published && appType === 'createdByMe'">
               <div class="coverIcon"></div>
-              <div class="textDesc">未发布</div>
+              <div class="textDesc">{{ publishStatus }}</div>
             </div>
           </div>
         </div>
-        <div class="appCenterNoData" v-else></div>
+        <div class="appCenterNoData" v-else>
+          <div class="noDataIcon"></div>
+          <div class="desc">暂无数据</div>
+        </div>
       </div>
       <el-pagination
         v-if="totalCount >= 16"
@@ -103,6 +106,8 @@ import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
+import RobotIcon from '../../assets/svgs/robot_icon.svg'
+const publishStatus = ref('未发布');
 const router = useRouter();
 const appType = ref('my');
 const appSearchType = ref('all');
@@ -115,12 +120,15 @@ const pagination = ref({
 const currentPage = ref(1);
 const totalCount = ref(0);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
-
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
   currentPageSize.value = pageSize;
   handleParmasQueryAppList();
 };
+
+const getImgBg = (appItem) => {
+  return appItem.icon ||  RobotIcon;
+}
 
 const handleCreateApp = () => {
   api
