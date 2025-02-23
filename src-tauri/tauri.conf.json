@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "openEuler Copilot System Desktop",
+    "productName": "EulerCopilot Desktop",
     "version": "0.9.1-alpha"
   },
   "tauri": {
@@ -72,8 +72,8 @@
       "publisher": "openEuler",
       "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.",
       "category": "Productivity",
-      "shortDescription": "openEuler Copilot System Desktop Client",
-      "longDescription": "openEuler Copilot System Desktop Client"
+      "shortDescription": "EulerCopilot Desktop Client",
+      "longDescription": "EulerCopilot Desktop Client"
     },
     "macOSPrivateApi": true
   }

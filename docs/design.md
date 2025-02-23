@@ -1,4 +1,4 @@
-# openEuler Copilot System 桌面客户端
+# EulerCopilot 桌面客户端
 
 ## 整体架构
 

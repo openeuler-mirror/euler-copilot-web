@@ -1,9 +1,9 @@
 [Desktop Entry]
 Categories=Application;Development;Network;System;
-Comment=openEuler Copilot System Desktop Client
-Comment[zh]=openEuler Copilot System 桌面客户端
-Comment[zh_CN]=openEuler Copilot System 桌面客户端
-Comment[zh_CN.UTF-8]=openEuler Copilot System 桌面客户端
+Comment=EulerCopilot Desktop Client
+Comment[zh]=EulerCopilot 桌面客户端
+Comment[zh_CN]=EulerCopilot 桌面客户端
+Comment[zh_CN.UTF-8]=EulerCopilot 桌面客户端
 Exec={{{exec}}}
 Icon={{{icon}}}
 Name=Copilot
