@@ -24,10 +24,12 @@ export const useAccountStore = defineStore('account', () => {
     username: string;
     revsionNumber: string | null;
     organization: string;
+    user_sub: string;
   }>({
     username: '',
     revsionNumber: null,
     organization: '',
+    user_sub:'', // 用户唯一标识
   });
 
   /**
@@ -93,8 +95,9 @@ export const useAccountStore = defineStore('account', () => {
   const getUserInfo = async (): Promise<boolean> => {
     const [_, res] = await api.authorizeUser();
     if (!_ && res) {
-      const { organization, username, revision_number } = res.result;
+      const { organization, username, revision_number, user_sub } = res.result;
       userinfo.username = username;
+      userinfo.user_sub = user_sub;
       userinfo.organization = organization;
       userinfo.revsionNumber = revision_number;
       return true;

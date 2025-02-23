@@ -5,15 +5,14 @@ import * as jsYaml from 'js-yaml';
 import { IconUpload, IconVisible, IconDelete } from '@computing/opendesign-icons';
 import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
 import { Codemirror } from 'vue-codemirror';
-import { onMounted } from 'vue';
 import { api } from 'src/apis';
 import { IconChevronDown } from '@computing/opendesign-icons';
 
-const handleCreateapi = (data: any) => {
+const handleCreateapi = () => {
   api
     .createOrUpdateApi({
-      serviceId: '',
-      data,
+      serviceId: props.serviceId||'',
+      data:yamlToJsonContent.value,
     })
     .then(res => {
       getServiceJson.value = res[1].result.apis;
@@ -59,17 +58,30 @@ const handleClose = () => {
   emits('closeDrawer');
 };
 
-const uploadtype = ref(props.type);
+const handleEditClose = () => {
+  //清空数据
+  // getServiceYaml.value = '';
+  // yamlToJsonContent.value = '';
+  // getServiceJson.value = '';
+  emits('closeDrawer');
+};
 
+const handleEdit = () => {
+  //edit数据
+  editable.value = true;
+};
+
+const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
 const yamlToJsonContent = ref('');
 const getServiceJson = ref('');
 const imageUrl = ref('');
 const progressVal = ref(0);
 const uploadDone = ref(false);
+const editable = ref(false);
 // 上传前检查
 const beforeUpload = async (file: ElFile) => {
-  const isYaml = file.type === 'application/x-yaml' || file.type === 'text/yaml'; // 也可能遇到 text/yaml 类型
+  const isYaml = file.type === 'application/x-yaml' || file.type === 'text/yaml' || file.name.indexOf('.yaml') > -1 || file.name.indexOf('.yml') > -1; // 也可能遇到 text/yaml 类型
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isYaml) {
     ElMessage({
@@ -85,7 +97,6 @@ const beforeUpload = async (file: ElFile) => {
     });
     return false;
   }
-
   try {
     const reader = new FileReader();
     reader.onload = async event => {
@@ -146,18 +157,37 @@ const doPreview = (e: Event) => {
   e.stopPropagation();
 };
 
+const getServiceYamlFun = async (id: string) => {
+  await api.querySingleApiData({serviceId:id,edit:true}).then((res) => {
+      if(res) {
+        getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
+      }
+  })
+}
+const handleChange = (payload) => {
+  yamlToJsonContent.value = jsYaml.load(payload);
+  setTimeout(() => {
+    payload.view.scrollDOM.scrollTop = 0;
+  }, 100);
+};
 watch(
   () => props,
   () => {
     getServiceJson.value = props.getServiceJson;
     getServiceYaml.value = props.getServiceYaml;
     if (props.type === 'edit' && props) {
-      console.log('edit');
-      // getServiceYamlFun(props.serviceId);
+      getServiceYamlFun(props.serviceId);
     }
   },
   { immediate: true, deep: true },
 );
+
+watch(
+  () => getServiceYaml,
+  () => {
+    yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
+  }
+)
 </script>
 <template>
   <el-upload
@@ -209,8 +239,9 @@ watch(
       :indent-with-tab="true"
       :tab-size="2"
       :extensions="extensions"
-      :disabled="disabled"
+      :disabled="!editable"
       @ready="handleReady"
+      @change="handleChange"
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
@@ -239,8 +270,8 @@ watch(
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'edit'">
     <el-button @click="handleClose">取消</el-button>
-    <el-button @click="handleClose">编辑</el-button>
-    <el-button type="primary" @click="handleCreateapi(yamlToJsonContent)">解析</el-button>
+    <el-button @click="handleEdit">编辑</el-button>
+    <el-button type="primary" @click="handleCreateapi()">解析</el-button>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'get'">
     <el-button @click="handleClose">取消</el-button>
@@ -267,7 +298,9 @@ watch(
     outline: none;
   }
 }
-
+::v-deep(.el-upload.is-drag) {
+  display: block !important;
+}
 .drawerFooter {
   position: absolute;
   bottom: 12px;
@@ -277,7 +310,7 @@ watch(
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  width: 400px;
+  width: 100%;
   height: 200px;
   display: flex;
   align-items: center;
