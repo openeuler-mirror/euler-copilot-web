@@ -8,22 +8,17 @@ import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
-import { UploadTypeName, UploadStatus, UploadType } from 'src/components/uploadFile/type';
+import { UploadTypeName, UploadStatus } from 'src/components/uploadFile/type';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
-import { FitAddon } from 'xterm-addon-fit';
-import { AttachAddon } from 'xterm-addon-attach';
-import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
 const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
-const {session,app} = storeToRefs(useSessionStore());
 
 export interface DialogueSession {
-  modeOptions: any;
   isCreateApp: any;
   createAppForm: any;
 }
@@ -37,7 +32,6 @@ enum SupportMap {
 // const dialogueRef = ref();
 const { pausedStream} = useSessionStore();
 const themeStore = useChangeThemeStore();
-const modeOptions = ref(props.modeOptions);
 const isCreateApp = ref(props?.isCreateApp);
 const questions = [
   {
@@ -179,7 +173,6 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   if (!currentSelectedSession.value) {
     await generateSession();
   }
-  console.log("user_selected_app",user_selected_app.value);
   if (user_selected_flow) {
     await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, user_selected_flow, undefined);
   } else {
@@ -265,118 +258,6 @@ const handleReport = async (qaRecordId: string, reason: string) => {
   if (!_ && res) {
     successMsg(i18n.global.t('feedback.feedbackSuccesful'));
   }
-};
-
-const changeProblem = () => {
-  groupid.value++;
-};
-
-const selectQuestion = event => {
-  dialogueInput.value = event.target.innerText;
-};
-
-const getMode = async () => {
-  if (modeOptions.value.length === 1) {
-    const [_, res] = await api.getRecognitionMode();
-    if (!_ && res) {
-      res.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.plugin_name,
-          disabled: false,
-        };
-        opt ? modeOptions.value.push(opt) : '';
-      });
-    }
-  } else {
-    return;
-  }
-};
-
-const setOptionDisabled = () => {
-  if (selectMode.value.length === 0) {
-    modeOptions.value.map(item => {
-      item.disabled = false;
-      return item;
-    });
-  } else {
-    const isAuto = selectMode.value.some(item => item === 'auto');
-    let first = true;
-    modeOptions.value.map(item => {
-      if (!first) {
-        item.disabled = isAuto ? true : false;
-      } else {
-        item.disabled = isAuto ? false : true;
-      }
-      first = false;
-      return item;
-    });
-  }
-};
-
-let socket = ref(null);
-const terminal = ref(null);
-const fitAddon = new FitAddon();
-
-let term = ref(null);
-let termLoading = ref(false);
-let isTermShow = ref(false);
-const activePane = ref('shell');
-
-const fnChangeShellBox = isShow => {
-  if (isShow) {
-    if (!socket.value) {
-      termLoading.value = true;
-      createWs();
-    }
-  } else {
-    // 关闭连接
-    if (socket.value) {
-      socket.value.close();
-      socket.value = null;
-    }
-    if (term.value) {
-      term.value.dispose();
-    }
-  }
-};
-
-// 创建WebSocket
-const createWs = () => {
-  socket.value = new WebSocket('ws://10.24.107.18:8002/shell/ws/1/213');
-  socket.value.onopen = () => {
-    termLoading.value = false;
-    // socket.value.send(JSON.stringify({
-    //   ctrl: 'resize',
-    //   data: {
-    //     width: 500,
-    //   }
-    // }));
-  };
-  socket.value.onclose = () => {
-    // console.log('close');
-  };
-  socket.value.onerror = e => {
-    term.value.write(`\x1b[31m${e}\x1b[m\r\n`);
-  };
-  initTerm();
-};
-
-const initTerm = () => {
-  term.value = new Terminal({
-    fontSize: 14,
-    cursorBlink: true,
-    row: 32,
-  });
-  const attachAddon = new AttachAddon(socket.value);
-  term.value.open(terminal.value);
-  fitAddon.activate(term.value); // 自适应尺寸
-  attachAddon.activate(term.value);
-
-  nextTick(() => {
-    fitAddon.fit();
-  });
-  term.value.focus();
 };
 
 // 上传按钮对象
@@ -710,7 +591,6 @@ watch(
 );
 
 watch(selectMode, (newValue, oldValue) => {
-  setOptionDisabled();
   user_selected_app.value = [];
   let first = true;
   if (selectMode.value.length !== 0) {
@@ -762,11 +642,6 @@ watch(selectMode, (newValue, oldValue) => {
     }
   });
 });
-
-watch(isTermShow, (newValue, oldValue) => {
-  fnChangeShellBox(newValue);
-});
-
 /**
  * 暂停和重新生成问答
  */

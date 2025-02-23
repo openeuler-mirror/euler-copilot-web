@@ -62,7 +62,7 @@
             </div>
             <div class="apiCenterCardBottom">
               <div class="apiCenterCardUser">@{{ apiItem.author }}</div>
-              <div class="apiCenterCardOps">
+              <div class="apiCenterCardOps" v-if="userinfo.user_sub === apiItem.author">
                 <el-button text @click="openSidebar('edit', apiItem.serviceId)">编辑</el-button>
                 <el-button text @click="handleDelapi(apiItem)">删除</el-button>
               </div>
@@ -86,7 +86,7 @@
         <Upload type="get" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceJson="getServiceJson" />
       </div>
       <div v-if="actions === 'edit'">
-        <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
+        <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceYaml="getServiceYaml"/>
       </div>
     </el-drawer>
   </div>
@@ -102,6 +102,9 @@ import { ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
 import Upload from '@/components/Upload/index.vue';
 import { successMsg } from 'src/components/Message';
+import { useAccountStore } from 'src/store';
+import { storeToRefs } from 'pinia';
+import * as jsYaml from 'js-yaml';
 
 const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 const drawer = ref(false);
@@ -115,6 +118,7 @@ const selectedServiceId = ref('');
 const getServiceJson = ref('');
 const getServiceYaml = ref('');
 const apiSearchValue = ref();
+const { userinfo } = storeToRefs(useAccountStore());
 const pagination = ref({
   pageSizes: [16, 32, 64],
   layout: 'total,sizes,prev,pager,next,jumper',
@@ -129,30 +133,23 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
   handleParmasQueryapiList();
 };
 
+const getServiceYamlFun = async (id: string) => {
+  await api.querySingleApiData({serviceId:id,edit:true}).then((res) => {
+      if(res) {
+        getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
+      }
+  })
+}
+
 const getServiceJsonFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id }).then(res => {
     if (res) {
       getServiceJson.value = res[1]?.result.apis;
-    } else {
-      console.log(res);
     }
   });
 };
 
-// const getServiceYamlFun = async (id: string) => {
-//   await api.querySingleApiData({serviceId:id,edit:true}).then((res) => {
-//       if(res) {
-//         console.log(res[1]?.result.data);
-//         // getServiceYaml.value = res[1]?.result.data;
-//         console.log(getServiceYaml.value);
-//       } else {
-//       console.log(res);
-//     }
-//   })
-// }
-
 const openSidebar = (action: string, id: string) => {
-  console.log(id);
   drawer.value = true;
   actions.value = action;
   if (action === 'upload') {
@@ -162,6 +159,7 @@ const openSidebar = (action: string, id: string) => {
     // 展示编辑的框架
     actionName.value = '编辑语义接口';
     selectedServiceId.value = id;
+    getServiceYamlFun(id);
   } else if (action === 'get') {
     // 展示查看的框架
     actionName.value = '查看语义接口';
@@ -171,6 +169,9 @@ const openSidebar = (action: string, id: string) => {
 };
 
 const handleClose = () => {
+  actions.value = '';
+  getServiceJson.value = '';
+  getServiceYaml.value = '';
   drawer.value = false;
 };
 
