@@ -92,13 +92,13 @@ const updateNodeYaml = () => {
   let transResult;
   try {
     transResult = yaml.load(yamlExpress.value[0].yamlCode);
-  } catch(error) {
+    // 调用接口并更新
+    emits('saveNode', transResult, props.nodeYamlId);
+    closeDrawer();
+  } catch (error) {
     ElMessage.error('请检查格式是否正确');
   }
-  // 调用接口并更新
-  emits('saveNode', transResult, props.nodeYamlId);
-  closeDrawer();
-}
+};
 </script>
 
 <style lang="scss">

@@ -42,7 +42,7 @@ const apiServiceList = ref([]);
 const allApiServiceList = ref([]);
 const yamlContent = ref();
 const nodeYamlId = ref();
-const emits = defineEmits(['validateConnect']);
+const emits = defineEmits(['validateConnect', 'updateFlowsDebug']);
 const route = useRoute();
 const workFlowList = ref([]);
 const props = defineProps(['flowList']);
@@ -80,7 +80,7 @@ const { onDragOver, onDrop, onDragLeave, onDragStart } = useDragAndDrop();
 // 这里是初始化的开始结束的节点
 const initNodes = ref([
   {
-    id: 'node1',
+    id: 'start',
     type: 'start',
     data: {
       name: '开始',
@@ -92,7 +92,7 @@ const initNodes = ref([
     position: { x: 100, y: 160 },
   },
   {
-    id: 'node2',
+    id: 'end',
     type: 'end',
     data: {
       name: '结束',
@@ -276,7 +276,6 @@ const handleDebugDialogOps = (visible) => {
   })
   // 调试弹窗关闭时---需要将边状态清空
   getEdges.value.forEach(edge => {
-    console.log(edge, 'ecge')
     // 更新节点的起源与终点
     updateEdgeData(edge.id, {targetStatus: 'default'})
     updateEdgeData(edge.id, {sourceStatus: 'default'})
@@ -340,6 +339,8 @@ const queryFlow = (deal: string) => {
               choiceFlowId(workFlowList.value[0]);
             }
           }
+          // 更新当前publish状态
+          emits('updateFlowsDebug');
         }
       });
   }
@@ -395,6 +396,8 @@ const redrageFlow = (nodesList, edgesList) => {
         name: node.name,
         description: node.description,
         parameters: node.parameters,
+        nodeMetaDataId: node.nodeMetaDataId,
+        serviceId: node.serviceId,
       },
       position: node.position,
       deletable: true,
@@ -441,6 +444,7 @@ $bus.on('getNodesStatue', lines => {
         totalTime.value = 0;
         debugTime.value = '';
         debugStatus.value = newLines.data.flow?.stepStatus;
+        updateNodeFunc('start', 'success', '')
       }
       
       // 这里判断是否有调试状态的值，无值不处理
@@ -452,13 +456,17 @@ $bus.on('getNodesStatue', lines => {
           // output-节点运行结束时，获取节点运行的耗时
           let constTime = '';
           if (newLines.data.event === 'step.output') {
-            totalTime.value += newLines.data?.time_cost;
-            constTime = `${newLines.data?.time_cost?.toFixed(3)}s`
+            totalTime.value += newLines.data?.metadata?.time_cost;
+            constTime = `${newLines.data?.metadata?.time_cost?.toFixed(3)}s`
           }
+          console.log(newLines.data, 'step---id', newLines.data.flow?.stepStatus, '---', constTime)
           updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
       } else if (newLines?.data?.event === 'flow.stop') {
         debugStatus.value = newLines.data.flow?.stepStatus;
+
         debugTime.value = `${totalTime.value.toFixed(3)}s`
+        // 最后更新-调用一下接口
+        emits('updateFlowsDebug')
       } else {
         // do nothing
       }
@@ -503,6 +511,7 @@ const saveFlow = (updateNodeParameter?) => {
       position: item.position,
       apiId: item.data.nodeMetaDataId,
       serviceId: item.data.serviceId,
+      nodeMetaDataId: item.data.nodeMetaDataId,
       nodeId: item.id,
       ...item.data,
     };
@@ -548,7 +557,6 @@ const saveFlow = (updateNodeParameter?) => {
       }
     });
   }
-  // return;
   // 更新最新的节点与边的数据
   api
     .createOrUpdateFlowTopology(
@@ -779,10 +787,6 @@ defineExpose({
   ></EditYamlDrawer>
 </template>
 <style lang="scss">
-// @keyframes spin {
-//   0% {transform: rotate(0deg);}
-//   100% {transform: rotate(0deg);}
-// }
 .debugStatus {
   display: flex;
   height: 32px;

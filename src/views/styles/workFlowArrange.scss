@@ -90,6 +90,7 @@
   .apiCenterBox {
     height: 100%;
     display: flex;
+    min-width: 264px;
     flex-direction: column;
     .apiCenterTitle {
       color: var(--o-text-color-primary);
