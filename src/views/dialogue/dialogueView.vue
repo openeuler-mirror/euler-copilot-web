@@ -182,9 +182,6 @@ onMounted(() => {
   if (localStorage.getItem('theme')) {
     document.body.setAttribute('theme', localStorage.getItem('theme') || 'light');
   }
-  api.getKnowledgeList().then(res => {
-    ruleForm.value = res;
-  });
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }

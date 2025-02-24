@@ -11,23 +11,6 @@ import { get, post } from 'src/apis/server';
 import type { FcResponse } from 'src/apis/server';
 
 /**
- * 验证用户信息
- * @returns
- */
-export const getKnowledgeList = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-        }>
-      | undefined
-    )
-  ]
-> => {
-  return get('/api/knowledge');
-};
-
-/**
  * USER登录
  * @returns
  */
@@ -45,10 +28,7 @@ export const updateKnowledgeList = (params: {
   > => {
     return post('/api/knowledge', params);
   };
-  
-
 
 export const knowledgeApi = {
-    getKnowledgeList,
     updateKnowledgeList,
 };

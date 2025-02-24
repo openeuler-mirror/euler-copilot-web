@@ -267,6 +267,11 @@ const searchApiList = () => {
 };
 
 const handleDebugDialogOps = (visible) => {
+  
+  // 这里将对应的保存
+  if (visible) {
+    saveFlow();
+  }
   debugDialogVisible.value = visible;
   // 调试弹窗关闭时---结果清空
   debugStatus.value = '';
@@ -459,11 +464,9 @@ $bus.on('getNodesStatue', lines => {
             totalTime.value += newLines.data?.metadata?.time_cost;
             constTime = `${newLines.data?.metadata?.time_cost?.toFixed(3)}s`
           }
-          console.log(newLines.data, 'step---id', newLines.data.flow?.stepStatus, '---', constTime)
           updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
       } else if (newLines?.data?.event === 'flow.stop') {
         debugStatus.value = newLines.data.flow?.stepStatus;
-
         debugTime.value = `${totalTime.value.toFixed(3)}s`
         // 最后更新-调用一下接口
         emits('updateFlowsDebug')

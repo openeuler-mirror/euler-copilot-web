@@ -56,8 +56,8 @@ const updateFlowsDebug = () => {
       })
       .then(res => {
         if (res?.[1]?.result) {
-          flowList.value = res?.[1]?.result?.workflows || [];
-          judgeAppFlowsDebug();
+          const flowDataList = res?.[1]?.result?.workflows || [];
+          judgeAppFlowsDebug(flowDataList);
         }
       })
 }
@@ -65,15 +65,14 @@ const updateFlowsDebug = () => {
 // 获取工作流列表
 const getFlowList = flowDataList => {
   flowList.value = flowDataList;
-  judgeAppFlowsDebug()
+  judgeAppFlowsDebug(flowDataList)
 };
 
-const judgeAppFlowsDebug = () => {
+const judgeAppFlowsDebug = (flowDataList) => {
   // 判断应用下的所有工作流当前是否debug通过
-  const flowsDebug = flowList.value.every(item => item?.debug);
+  const flowsDebug = flowDataList.every(item => item?.debug);
   // 初始化时，获取发布的校验结果---必须有工作流且所有工作流必须debug通过
-  publishValidate.value = flowList.value?.length > 0 && flowsDebug;
-
+  publishValidate.value = flowDataList?.length > 0 && flowsDebug;
 }
 
 // 保存按钮
