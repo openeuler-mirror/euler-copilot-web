@@ -581,16 +581,6 @@ onMounted(() => {
   inputRef.value.focus();
 });
 
-watch(
-  () => props,
-  () => {
-    modeOptions.value = props.modeOptions;
-  },
-  {
-    deep: true,
-  },
-);
-
 watch(selectMode, (newValue, oldValue) => {
   user_selected_app.value = [];
   let first = true;
