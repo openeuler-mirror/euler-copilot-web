@@ -315,7 +315,7 @@ export const useSessionStore = defineStore('conversation', () => {
                 target.data.output = message.content
                 target.status = message.flow?.stepStatus;
                 // 工作流添加每阶段的时间耗时
-                target['costTime'] = message.time_cost;
+                target['costTime'] = message.metadata?.time_cost;
                 if(message.flow.step_status === "error"){
                   conversationItem.flowdata.status = message.flow?.stepStatus;
                 }

@@ -5,7 +5,7 @@
     <el-collapse-item v-for="(item, index) in resultInfo.infoList" :key="index" :name="item.id">
       <template #title>
         <span class="icon" :class="`${resultInfo.status}Icon`"></span>
-        <span>{{ item.title }}</span>
+        <span>{{ resultInfo.title }}</span>
         <!-- 这里接口返回的需要限制最大位数 -->
         <span class="time" :class="`${resultInfo.status}Bg`" v-if="resultInfo.time">{{ resultInfo.time }}</span>
         <span class="flexRight">展开结果</span>
@@ -51,10 +51,10 @@ const nodeResult = ref();
 const resultInfo = ref({
   time: '3.1s',
   status: '', // 成功/失败/运行中三种状态
+  title: '运行成功',
   infoList: [
     {
       id: '1',
-      title: '运行成功',
       desc: [
         // 定义的假数据，后期由接口获取
         {
@@ -75,7 +75,7 @@ watch(
   () => {
     resultInfo.value.status = props.status;
     // 目前props.status只有success、error、running三种
-    resultInfo.value.infoList[0].title = StatusInfoTitle[props.status];
+    resultInfo.value.title = StatusInfoTitle[props.status];
     if (props?.inputAndOutput) {
 
       resultInfo.value.time = props.inputAndOutput.input_parameters.timeout ?? 0;
