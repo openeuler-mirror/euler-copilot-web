@@ -138,7 +138,7 @@ watch(
   async () => {
     if (createAppFormRef.value && props.handleValidateContent) {
       const formBalidate = await validateForm();
-      props.handleValidateContent(!formBalidate);
+      props.handleValidateContent(formBalidate);
     }
   },
   { deep: true, immediate: true },

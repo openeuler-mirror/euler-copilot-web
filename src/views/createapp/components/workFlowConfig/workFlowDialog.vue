@@ -92,13 +92,14 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
               nodes: [
                 {
                   apiId: 'startId',
+                  nodeMetaDataId: 'start',
+                  serviceId: 'start',
                   name: '开始',
-                  serviceId: 'startService',
                   type: 'start',
                   description: 'startNode',
                   editable: false,
                   enable: true,
-                  nodeId: 'node1',
+                  nodeId: 'start',
                   position: {
                     x: 100,
                     y: 160,
@@ -106,13 +107,14 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
                 },
                 {
                   apiId: 'endId',
+                  nodeMetaDataId: 'end',
+                  serviceId: 'end',
                   name: '结束',
-                  serviceId: 'endService',
                   type: 'end',
                   description: 'endNode',
                   editable: false,
                   enable: true,
-                  nodeId: 'node2',
+                  nodeId: 'end',
                   position: {
                     x: 600,
                     y: 160,
