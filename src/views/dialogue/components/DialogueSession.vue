@@ -633,6 +633,9 @@ watch(selectMode, (newValue, oldValue) => {
     }
   });
 });
+const selectQuestion = (val: any) => {
+  dialogueInput.value = val;
+}
 /**
  * 暂停和重新生成问答
  */
@@ -676,7 +679,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
           @clearSuggestion="clearSuggestion(index)"
         />
         <div v-if="conversationList.length === 0">
-          <InitalPanel />
+          <InitalPanel @selectQuestion="selectQuestion" />
         </div>
       </div>
       <div class="dialogue-interPreview-main" v-else>

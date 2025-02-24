@@ -69,31 +69,23 @@
             </div>
           </div>
         </div>
-        
         <div class="appCenterNoData" v-else>
           <div class="noDataIcon"></div>
           <div class="desc">暂无数据</div>
         </div>
-        <el-pagination
-        v-if="totalCount >= 16"
-        v-model:current-page="currentPage"
-        v-model:page-size="currentPageSize"
-        :page-sizes="pagination.pageSizes"
-        :layout="pagination.layout"
-        :total="totalCount"
-        popper-class="appPagination"
-        @change="handleChangePage"
-      />
       </div>
     </div>
     <el-drawer
       class="el-drawer"
       v-model="drawer"
       :title="actionName"
+      show-close="false"
+      header-class="drawerHeader"
       destory-on-close="true"
       :direction="direction"
       :before-close="handleClose"
     >
+    <div class="drawerContent">
       <div v-if="actions === 'upload'">
         <Upload type="upload" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
       </div>
@@ -103,8 +95,20 @@
       <div v-if="actions === 'edit'">
         <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceYaml="getServiceYaml"/>
       </div>
+    </div>
     </el-drawer>
   </div>
+  <el-pagination
+        class="pagination" 
+        v-if="totalCount >= 16" 
+        v-model:current-page="currentPage"
+        v-model:page-size="currentPageSize"
+        :page-sizes="pagination.pageSizes"
+        :layout="pagination.layout"
+        :total="totalCount"
+        popper-class="appPagination"
+        @change="handleChangePage"
+      />
 </template>
 <script setup lang="ts">
 import { IconCaretDown, IconSearch, IconFavorite, IconUnfavorite } from '@computing/opendesign-icons';
@@ -121,7 +125,7 @@ import { useAccountStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 import * as jsYaml from 'js-yaml';
 
-const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
 const drawer = ref(false);
 const direction = ref('rtl');
 const actionName = ref('');
@@ -283,9 +287,29 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
+.pagination{
+  display: flex !important;
+  justify-self: center !important;
+}
+.drawerHeader{
+  color: pink;
+  margin-bottom: 0px !important;
+}
+.drawerContent{
+  overflow-y: auto;
+  height: calc(100% - 32px);
+}
 .el-drawer {
   margin: 0px;
   padding: 0px;
+  background-color: pink !important;
+  &::v-deep(.el-drawer__header) {
+    margin-bottom: 0px !important;
+  }
+  .el-drawer__header{
+    color: pink;
+    margin-bottom: 0px !important;
+  }
 }
 .apiCenterCardSingle {
   position: relative;
@@ -325,5 +349,31 @@ onMounted(() => {
 img {
   width: 100%;
   max-width: 430px;
+}
+.el-drawer__header {
+    padding: 24px 24px 16px;
+    margin-bottom: 0px;
+    .drawerHeader {
+      width: 100%;
+      height: 24px;
+      line-height: 24px;
+      color: var(--o-text-color-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .el-drawer__body {
+    padding: 0px 24px 16px;
+    .drawerBody {
+      height: 100%;
+      textarea {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+:deep(.el-drawer__header){
+  margin-bottom: 0px !important;
 }
 </style>

@@ -2,11 +2,11 @@
 import { ElMessage } from 'element-plus';
 import { ref, watch } from 'vue';
 import * as jsYaml from 'js-yaml';
-import { IconUpload, IconVisible, IconDelete } from '@computing/opendesign-icons';
+import { IconUpload, IconVisible, IconDelete, IconCaretRight } from '@computing/opendesign-icons';
 import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
 import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
-import { IconChevronDown } from '@computing/opendesign-icons';
+import { successMsg } from 'src/components/Message';
 
 const handleCreateapi = () => {
   api
@@ -68,8 +68,14 @@ const handleEditClose = () => {
 
 const handleEdit = () => {
   //edit数据
+  successMsg('可编辑');
   editable.value = true;
 };
+const data = [
+  {path:'212121',description:"23213123"},
+  {path:'ndie',description:"23213123"},
+  {path:'nidanide1',description:"23213123"},
+]
 
 const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
@@ -251,14 +257,20 @@ watch(
         <template #title>
           <span>{{ item.name }}</span>
           <!-- 这里接口返回的需要限制最大位数 -->
-          <el-icon class="el-collapse-item__arrow">
-            <IconChevronDown></IconChevronDown>
+          <el-icon class="el-collapse-item__arrow" >
+            <IconCaretRight></IconCaretRight>
           </el-icon>
         </template>
         <div class="o-collapse-content">
           <div class="itemTitle">
-            <div class="subName">{{ item.path }}</div>
-            <div class="subName">{{ item.description }}</div>
+            <div class="subName">
+              <span>接口路径</span>
+              <span>{{ item.path }}</span>
+            </div>
+            <div class="subName">
+              <span>接口描述</span>
+              <span>{{ item.description }}</span>
+            </div>
           </div>
         </div>
       </el-collapse-item>
@@ -385,5 +397,27 @@ watch(
   left: 8px;
   right: 8px;
   bottom: 8px;
+}
+
+.json-container {
+  :deep(.el-collapse-item__header){
+    background-color: var(--el-collapse-header-bg) !important;
+    height: 32px;
+    border-bottom: 1px solid var(--el-collapse-border-color) !important;
+  }
+  :deep(.el-collapse-item__content){
+    background-color: var(--el-collapse-content-bg) !important;
+    margin: 0px;
+    border-bottom: 1px solid var(--el-collapse-border-color) !important;
+  }
+}
+
+.o-collapse-content{
+  .subName{
+    span:first-child{
+      margin-right: 16px;
+      color:var(--o-font-size-subtitle);
+    }
+  }
 }
 </style>

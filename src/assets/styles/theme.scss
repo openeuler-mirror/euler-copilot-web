@@ -25,6 +25,7 @@ body[theme='dark'] {
   --o-think-border:#8d98aa;
   --o-think-header-bg:#2a2f37;
   --o-think-header-text:#e4e8ee;
+  --el-drawer-bg-color:#000000;
 }
 
 body[theme='light'] {
@@ -54,4 +55,6 @@ body[theme='light'] {
   --o-think-header-text:#8d98aa;
   --flow-branch-node-error-node-cover-color: #edb3b3;
   --flow-branch-node-success-node-cover-color: #b3dbb8;
+  --el-collapse-header-bg: rgb(244,246,250);
+  --el-collapse-content-bg: rgb(244,246,250,0.5);
 }

@@ -7,10 +7,10 @@ import router from 'src/router';
 const themeStore = useChangeThemeStore();
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
+import { emit } from 'process';
 
 const route = useRoute();
-const appName = ref()
-
+const appName = ref();
 const questions = [
   {
     groupId: 0,
@@ -44,6 +44,11 @@ const questions = [
   },
 ];
 
+const emit = defineEmits(['selectQuestion']);
+
+const selectQuestions = (event) => {
+  emit('selectQuestion', event.target.innerText);
+}
 const routerToAppCenter = () => {
   router.push('/app');
 };
@@ -95,7 +100,7 @@ onMounted(() => {
           <ul class="question-list">
             <li class="question-item" v-for="item in questions" :key="item.id">
               <span class="question-number" :class="{ blue: item.id <= 3 }">{{ item.id }}</span>
-              {{ $t('question.' + item.question) }}
+              <span @click="selectQuestions">{{ $t('question.' + item.question) }}</span>
             </li>
           </ul>
         </div>
@@ -165,12 +170,12 @@ onMounted(() => {
   margin-top: 16px;
   li {
     margin-bottom: 16px;
-    span {
-      margin-right: 3px;
-    }
     .blue {
       color: #5ab3ff;
     }
+  }
+  .question-number{
+    margin-right: 8px;
   }
 }
 
