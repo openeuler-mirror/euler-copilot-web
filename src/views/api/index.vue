@@ -14,6 +14,7 @@
           </template>
         </el-input>
         <el-button type="primary" class="createapi" @click="openSidebar('upload', '')">上传</el-button>
+        <el-button type="primary" class="createapi" @click="openSidebar('get', '')">get</el-button>
       </div>
       <div class="apiCenterType">
         <div class="apiCenterBtn" :class="{ apiCenterBtnActive: apiType === 'my' }" @click="handleSearchapiList('my')">
@@ -90,10 +91,13 @@
       class="el-drawer"
       v-model="drawer"
       :title="actionName"
+      show-close="false"
+      header-class="drawerHeader"
       destory-on-close="true"
       :direction="direction"
       :before-close="handleClose"
     >
+    <div class="drawerContent">
       <div v-if="actions === 'upload'">
         <Upload type="upload" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
       </div>
@@ -103,6 +107,7 @@
       <div v-if="actions === 'edit'">
         <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceYaml="getServiceYaml"/>
       </div>
+    </div>
     </el-drawer>
   </div>
 </template>
@@ -283,9 +288,25 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
+.drawerHeader{
+  color: pink;
+  margin-bottom: 0px !important;
+}
+.drawerContent{
+  overflow-y: auto;
+  height: calc(100% - 32px);
+}
 .el-drawer {
   margin: 0px;
   padding: 0px;
+  background-color: pink !important;
+  &::v-deep(.el-drawer__header) {
+    margin-bottom: 0px !important;
+  }
+  .el-drawer__header{
+    color: pink;
+    margin-bottom: 0px !important;
+  }
 }
 .apiCenterCardSingle {
   position: relative;
@@ -325,5 +346,31 @@ onMounted(() => {
 img {
   width: 100%;
   max-width: 430px;
+}
+.el-drawer__header {
+    padding: 24px 24px 16px;
+    margin-bottom: 0px;
+    .drawerHeader {
+      width: 100%;
+      height: 24px;
+      line-height: 24px;
+      color: var(--o-text-color-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .el-drawer__body {
+    padding: 0px 24px 16px;
+    .drawerBody {
+      height: 100%;
+      textarea {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+:deep(.el-drawer__header){
+  margin-bottom: 0px !important;
 }
 </style>
