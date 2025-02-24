@@ -69,7 +69,6 @@
             </div>
           </div>
         </div>
-        
         <div class="appCenterNoData" v-else>
           <div class="noDataIcon"></div>
           <div class="desc">暂无数据</div>
@@ -77,7 +76,6 @@
       </div>
     </div>
     <el-drawer
-      v-if="totalCount >= 16"
       class="el-drawer"
       v-model="drawer"
       :title="actionName"
