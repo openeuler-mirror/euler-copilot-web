@@ -1,73 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue';
-import { api } from 'src/apis';
-import { useRouter, useRoute } from 'vue-router';
-import { useHistorySessionStore, useAccountStore, useChangeThemeStore, useSessionStore } from 'src/store';
-import { storeToRefs } from 'pinia';
-import { useI18n } from 'vue-i18n';
+import { onMounted, ref } from 'vue';
+import { useAccountStore } from 'src/store';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
 import DialogueAside from './components/DialogueAside.vue';
 import DialogueSession from './components/DialogueSession.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
-const { user_selected_app } = storeToRefs(useHistorySessionStore());
-const route = useRoute();
-const router = useRouter();
-const { t } = useI18n();
 
-const { theme } = storeToRefs(useChangeThemeStore());
-const { userinfo } = storeToRefs(useAccountStore());
-const { getUserInfo, updateAgreement } = useAccountStore();
-const { getHistorySession } = useHistorySessionStore();
-const { app, appList } = storeToRefs(useSessionStore());
-const modeOptions = reactive([
-  {
-    label: t('main.Automatic'),
-    value: 'auto',
-    disabled: false,
-  },
-]);
-
-const setApps = async () => {
-  const [_, res] = await api.getRecognitionMode();
-  if (!_ && res) {
-    res.result.app.forEach(item => {
-      const opt = {
-        label: item.name,
-        value: item.id,
-        disabled: false,
-      };
-      modeOptions.push(opt);
-    });
-  }
-};
-
-const type = import.meta.env.VITE_USER_TYPE;
-const initCopilot = async (): Promise<void> => {
-  if (localStorage.getItem('theme')) {
-    theme.value = localStorage.getItem('theme') || 'light';
-  } else {
-    localStorage.setItem('theme', 'light');
-  }
-  const currRoute = router.currentRoute;
-  if (currRoute.value.query.appId) {
-    app.value = {
-      appId: String(currRoute.value.query.appId),
-      name: String(currRoute.value.query.name),
-    };
-  }
-  userinfo.value.organization = type;
-  if ( ['/copilot','/'].includes(currRoute.value?.path)) {
-    const isLogin = await getUserInfo();
-    if (isLogin) {
-      // await api.getRecognitionMode();
-      await api.stopGeneration();
-      await getHistorySession();
-      // setApps();
-  }
-    return;
-  } 
-};
+const { updateAgreement } = useAccountStore();
 
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
@@ -112,21 +52,12 @@ onMounted(async() => {
   });
 });
 
-watch(
-  () => route.path,
-  () => {
-    initCopilot();
-  },
-  {
-    immediate: true,
-  },
-);
 </script>
 <template>
   <div class="copilot-container" :class="qiankunWindow.__POWERED_BY_QIANKUN__ ? 'micro-copilot-container' : ''">
     <div class="copilot-container-main">
       <DialogueAside />
-      <DialogueSession :modeOptions="modeOptions" />
+      <DialogueSession/>
     </div>
   </div>
 

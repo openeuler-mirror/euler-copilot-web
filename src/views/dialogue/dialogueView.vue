@@ -13,7 +13,7 @@ import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
 import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
 import WitchainDIcon from '@/assets/images/witchainD.png';
@@ -23,6 +23,12 @@ import AppIcon from '@/assets/images/routerApp.png';
 import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import tools from '../tools/index.vue';
+const route = useRoute();
+
+const { userinfo } = storeToRefs(useAccountStore());
+const { getUserInfo } = useAccountStore();
+const { getHistorySession } = useHistorySessionStore();
+const { app } = storeToRefs(useSessionStore());
 const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
@@ -42,6 +48,7 @@ const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
+const type = import.meta.env.VITE_USER_TYPE;
 const routerList = [
   { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
   { name: '语义中心', path: '/api' , src:ApiIcon , selectedSrc:ApiIconSelected ,routerName: 'api' },
@@ -185,6 +192,7 @@ onMounted(() => {
   const iframe = document.getElementById('my-iframe');
   console.log('iframe',`${window.location.origin}/witchaind`);
   iframe.src = `${window.location.origin}/witchaind`;
+  initCopilot();
   // iframe.src = `http://localhost:3002`;
 });
 
@@ -210,6 +218,29 @@ const addNewSession = async (routerName: string) => {
     await createNewSession();
   }
 };
+
+const initCopilot = async (): Promise<void> => {
+  if (localStorage.getItem('theme')) {
+    theme.value = localStorage.getItem('theme') || 'light';
+  } else {
+    localStorage.setItem('theme', 'light');
+  }
+  const currRoute = router.currentRoute;
+  if (currRoute.value.query.appId) {
+    app.value = {
+      appId: String(currRoute.value.query.appId),
+      name: String(currRoute.value.query.name),
+    };
+  }
+  userinfo.value.organization = type;
+    const isLogin = await getUserInfo();
+    if (isLogin) {
+      await api.stopGeneration();
+      await getHistorySession();
+  }
+    return;
+};
+
 </script>
 
 <template>
