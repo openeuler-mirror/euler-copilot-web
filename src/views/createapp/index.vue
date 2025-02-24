@@ -42,7 +42,6 @@ const handlePulishApp = () => {
 
 const handleValidateContent = valid => {
   appFormValidate.value = valid;
-  // console.log(appFormValidate.value, 'value')
 };
 
 // 获取工作流组件中的节点连接状态校验

@@ -397,12 +397,6 @@ const selectQuestion = (item:Suggest) => {
   
 };
 
-// const selectQuestion = (item:object) => {
-//   let question = item.question;
-//   let user_selected_flow = item.flow;
-//   emits('handleSendMessage',question,user_selected_flow);
-// };
-
 const popperSize = () => {
   if(language.value == "EN"){
     size.width = 418;
