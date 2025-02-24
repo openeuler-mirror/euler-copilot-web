@@ -14,7 +14,6 @@
           </template>
         </el-input>
         <el-button type="primary" class="createapi" @click="openSidebar('upload', '')">上传</el-button>
-        <el-button type="primary" class="createapi" @click="openSidebar('get', '')">get</el-button>
       </div>
       <div class="apiCenterType">
         <div class="apiCenterBtn" :class="{ apiCenterBtnActive: apiType === 'my' }" @click="handleSearchapiList('my')">
@@ -75,19 +74,10 @@
           <div class="noDataIcon"></div>
           <div class="desc">暂无数据</div>
         </div>
-        <el-pagination
-        v-if="totalCount >= 16"
-        v-model:current-page="currentPage"
-        v-model:page-size="currentPageSize"
-        :page-sizes="pagination.pageSizes"
-        :layout="pagination.layout"
-        :total="totalCount"
-        popper-class="appPagination"
-        @change="handleChangePage"
-      />
       </div>
     </div>
     <el-drawer
+      v-if="totalCount >= 16"
       class="el-drawer"
       v-model="drawer"
       :title="actionName"
@@ -110,6 +100,17 @@
     </div>
     </el-drawer>
   </div>
+  <el-pagination
+        class="pagination" 
+        v-if="totalCount >= 16" 
+        v-model:current-page="currentPage"
+        v-model:page-size="currentPageSize"
+        :page-sizes="pagination.pageSizes"
+        :layout="pagination.layout"
+        :total="totalCount"
+        popper-class="appPagination"
+        @change="handleChangePage"
+      />
 </template>
 <script setup lang="ts">
 import { IconCaretDown, IconSearch, IconFavorite, IconUnfavorite } from '@computing/opendesign-icons';
@@ -126,7 +127,7 @@ import { useAccountStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 import * as jsYaml from 'js-yaml';
 
-const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
 const drawer = ref(false);
 const direction = ref('rtl');
 const actionName = ref('');
@@ -288,6 +289,10 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
+.pagination{
+  display: flex !important;
+  justify-self: center !important;
+}
 .drawerHeader{
   color: pink;
   margin-bottom: 0px !important;
