@@ -42,6 +42,7 @@ const permissionTypeList = [
     value: 'protected',
   },
 ];
+const base64Image: any = ref('');
 const permissionList = ref([]);
 const curPersonList = ref([]);
 const publishStatus = ref(false);
@@ -78,8 +79,21 @@ const searchPerson = () => {
   curPersonList.value = permissionList.value.filter(item => item?.userName?.toLowerCase()?.includes(searchName.value));
 };
 const handleAvatarSuccess = (res, file) => {
-  createAppForm.value.icon = URL.createObjectURL(file.raw);
+  convertToBase64(file.raw);
 };
+
+// 转为base64-仅限小图标，后续请改为上传图片接口
+const convertToBase64 = file => {
+  const reader = new FileReader();
+  reader.onload = e => {
+    base64Image.value = e.target?.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+watch(() => base64Image.value, () => {
+  createAppForm.value.icon = base64Image.value;
+})
 
 watch(
   () => publishStatus.value,
