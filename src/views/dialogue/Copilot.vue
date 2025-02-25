@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useAccountStore } from 'src/store';
+import { onMounted, ref, watch } from 'vue';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
 import DialogueAside from './components/DialogueAside.vue';
 import DialogueSession from './components/DialogueSession.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
+import { storeToRefs } from 'pinia';
+import { useRouter, useRoute } from 'vue-router';
+import { useSessionStore, useAccountStore } from 'src/store';
 
+const router = useRouter();
 const { updateAgreement } = useAccountStore();
-
+const { app } = storeToRefs(useSessionStore());
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
 
@@ -51,6 +54,7 @@ onMounted(async() => {
     left: 0,
   });
 });
+
 
 </script>
 <template>
