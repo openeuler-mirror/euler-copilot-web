@@ -186,6 +186,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     if (!_ && res) {
       currentSelectedSession.value = res.result.conversationId;
       await getHistorySession();
+      return res.result.conversationId
     }
   };
 

@@ -29,7 +29,7 @@ const props = defineProps<{
   // 下拉文件列表
   fileList: Array<any>;
   // dropdown 挂载位置
-  dropPostion: DropPostion;
+  dropPostion: DropPostion | undefined;
   // 是否可见
   isFileVisible: boolean;
 }>();

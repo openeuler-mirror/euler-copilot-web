@@ -24,7 +24,9 @@ export interface DialogueSession {
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
-
+// const props = withDefaults(defineProps<{
+//     createAppForm: any,
+// }>(), {});
 enum SupportMap {
   support = 1,
   against = 0,
@@ -33,6 +35,7 @@ enum SupportMap {
 const { pausedStream} = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
+// const isCreateApp = ref(true);
 const questions = [
   {
     groupId: 0,
@@ -577,9 +580,13 @@ const clearSuggestion = (index: number): void => {
 onMounted(() => {
   // 全局数据初始化
   // getMode();
+  // isCreateApp.value = props.isCreateApp;
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
+
+watch(() => props.createAppForm, () => {
+}, {deep: true, immediate: true})
 
 watch(selectMode, (newValue, oldValue) => {
   user_selected_app.value = [];

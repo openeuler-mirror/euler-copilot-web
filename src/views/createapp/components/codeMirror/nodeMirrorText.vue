@@ -22,7 +22,7 @@
             @click="handleCopy(subItem.code)"
           ></div>
         </div>
-        <MirrorText ref="textarea" :yamlCode="yaml.dump(subItem.code)" :disabled="true"></MirrorText>
+        <MirrorText ref="textarea" :class="{'outputMirror': idx === 1}" :yamlCode="yaml.dump(subItem.code)" :disabled="true"></MirrorText>
       </div>
     </el-collapse-item>
   </el-collapse>

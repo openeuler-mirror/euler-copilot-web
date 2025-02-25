@@ -243,22 +243,48 @@ function ensureAppAtFirstPosition() {
 
 onMounted(async() => {
   //获取 top5 list 
-  const [_, res] = await api.getTopFiveApp(5);
-  if(_ && res){
+  // const [_, res] = await api.getTopFiveApp(5);
+  // if (res?.result) {
+  //   appList.value = res.result.applications;
+  //   apps.value = res.result.applications;
+  // }
+  // // if(_ && res){
+  // //   appList.value = res.result.applications;
+  // //   apps.value = res.result.applications;
+  // // }
+  // // else {
+  // //   appList.value = apps.value;
+  // // }
+  // if(app.value.appId){
+  //   selectedAppId.value = app.value.appId;
+  // }
+});
+
+const getAppsValue = async () => {
+//获取 top5 list 
+const [_, res] = await api.getTopFiveApp(5);
+  if (res?.result) {
     appList.value = res.result.applications;
+    apps.value = res.result.applications;
   }
-  else {
-    appList.value = apps.value;
-  }
+  // if(_ && res){
+  //   appList.value = res.result.applications;
+  //   apps.value = res.result.applications;
+  // }
+  // else {
+  //   appList.value = apps.value;
+  // }
   if(app.value.appId){
     selectedAppId.value = app.value.appId;
   }
-});
+  
+  ensureAppAtFirstPosition();
+}
 
 watch(
   () => app,
   () => {
-    ensureAppAtFirstPosition();
+    getAppsValue();
   },
   {
     immediate: true,

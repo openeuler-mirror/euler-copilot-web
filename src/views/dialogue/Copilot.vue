@@ -9,7 +9,10 @@ import { storeToRefs } from 'pinia';
 import { useRouter, useRoute } from 'vue-router';
 import { useSessionStore, useAccountStore } from 'src/store';
 
+import { api } from 'src/apis';
+
 const router = useRouter();
+const route = useRoute();
 const { updateAgreement } = useAccountStore();
 const { app } = storeToRefs(useSessionStore());
 const dialogVisible = ref(false);
@@ -20,6 +23,18 @@ const agreement = ref<string>('');
 const tip = ref<string>('');
 // 协议版本
 const agreementVersion = ref<string>(ARGEEMENT_VERSION);
+const createAppForm = ref({
+  icon: '',
+  name: '',
+  description: '',
+  links: [],
+  recommendedQuestions: [],
+  dialogRounds: 3,
+  permission: {
+    visibility: 'private',
+    authorizedUsers: [],
+  },
+});
 /**
  * 读取协议
  */
@@ -27,6 +42,38 @@ const readAgreement = async () => {
   const response = await import('src/conf/agreement.md?raw');
   agreement.value = marked.parse(response.default) as string;
 };
+
+watch(
+  () => router,
+  () => {
+  const currRoute = router.currentRoute;
+  if (currRoute.value.query.appId) {
+    // 判断是否编辑--是否需要查询回显数据
+    api
+      .querySingleAppData({
+        id: route.query?.appId as string,
+      })
+      .then(res => {
+        const appInfo = res?.[1]?.result;
+        if (appInfo) {
+          createAppForm.value = {
+            icon: appInfo?.icon,
+            name: appInfo?.name,
+            description: appInfo?.description,
+            links: appInfo?.links?.map(item => item.url),
+            recommendedQuestions: appInfo?.recommendedQuestions,
+            dialogRounds: appInfo?.dialogRounds,
+            permission: {
+              visibility: appInfo?.permission?.visibility,
+              authorizedUsers: appInfo?.permission?.authorizedUsers,
+            },
+          };
+        }
+      });
+    }
+  },
+  { deep: true, immediate: true },
+);
 
 /**
  * 处理服务协议是否显示
@@ -61,7 +108,7 @@ onMounted(async() => {
   <div class="copilot-container" :class="qiankunWindow.__POWERED_BY_QIANKUN__ ? 'micro-copilot-container' : ''">
     <div class="copilot-container-main">
       <DialogueAside />
-      <DialogueSession/>
+      <DialogueSession :createAppForm="createAppForm"/>
     </div>
   </div>
 
