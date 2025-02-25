@@ -6,6 +6,8 @@ import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computi
 import DialogueSession from '../../dialogue/components/DialogueSession.vue';
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
+import { ElMessage } from 'element-plus';
+import { fa } from 'element-plus/es/locale';
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const route = useRoute();
@@ -51,6 +53,7 @@ const createAppRole = ref({
   name: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
   description: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
   dialogRounds: [{ required: true, message: '对话轮次不能为空', trigger: 'change' }],
+  // links: [{required: true, message: '应用名称不能为空', trigger: 'blur'}]
 });
 const createAppFormRef = ref();
 const modeOptions = reactive([
@@ -147,6 +150,26 @@ onMounted(() => {
   });
 });
 
+// 正则校验url
+const checkUrl = (url) => {
+  // const pattern = new RegExp(
+  //   '^(https?:\\/\\/)?' + // protocol
+  //     '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+  //     '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+  //     '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+  //     '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+  //     '(\\#[-a-z\\d_]*)?$', // fragment locator
+  //   'i'
+  // );
+  // const result = pattern.test(url);
+  // if (!result) {
+  //   ElMessage.warning('请填写正确的链接地址');
+  // }
+
+  // return result;
+  // 单独校验links字段
+}
+
 watch(
   () => createAppForm.value,
   async () => {
@@ -162,6 +185,16 @@ watch(
 const validateForm = async () => {
   try {
     const resulst = await createAppFormRef.value.validate();
+    // 判断links是否每项都符合格式
+    // let flag = true;
+    // createAppForm.value.links.forEach(item => {
+    //   if (!checkUrl(item)) {
+    //     flag = false;
+    //   }
+    // })
+    // if (!flag) {
+    //   ElMessage.warning('请填写正确的链接地址');
+    // }
     return true;
   } catch (error) {
     return false;
@@ -236,6 +269,7 @@ defineExpose({
               v-model="createAppForm.links[index]"
               placeholder="请输入"
               clearable
+              @blur="checkUrl(createAppForm.links[index])"
             ></el-input>
             <el-icon class="delIcon" @click="delConnectItem(index)">
               <IconDelete />
@@ -323,6 +357,7 @@ defineExpose({
   <div class="createAppContainerMainBox">
     <div class="previewTitle">界面预览</div>
     <div class="createAppContainerMainRight">
+      <!-- 明天问下这里为什么写死一个true传参,---预览页面输入框禁用 -->
       <DialogueSession :modeOptions="modeOptions" isCreateApp="true" :createAppForm="createAppForm" />
     </div>
   </div>

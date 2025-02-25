@@ -1,6 +1,6 @@
 <template>
   <div class="interPreviewBox">
-    <div v-if="interPreviewInfo.name.length" class="preTop">
+    <div v-if="interPreviewInfo?.name?.length" class="preTop">
       <div class="preTopContent">
         <img src="@/assets/images/preTitleIcon.png" class="preTitleIcon" />
         <div class="preMainAppName">
@@ -80,8 +80,9 @@ watch(
   () => props.createAppForm,
   (newValue, oldValue) => {
     interPreviewInfo.value = props.createAppForm;
-    connnectLinkList.value = props.createAppForm.links.filter(item => item.length);
-    recommendQuestionList.value = props.createAppForm.recommendedQuestions.filter(item => item.length);
+    console.log(props.createAppForm, 'props.createAppForm')
+    connnectLinkList.value = props.createAppForm?.links?.filter(item => item.length);
+    recommendQuestionList.value = props.createAppForm?.recommendedQuestions?.filter(item => item.length);
   },
   {
     immediate: true,

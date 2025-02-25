@@ -199,7 +199,7 @@ const handleJumperAppCenter = () => {
       >
       <el-button :disabled="true">预览</el-button>
       <el-tooltip :disabled="publishValidate" content="需要当前应用中所有工作流调试成功才能发布应用" placement="top">
-        <!-- 需要多一层，不然影响当前 -->
+        <!-- 需要多一层，不然影响当前 :disabled="!publishValidate"-->
         <div>
           <el-button type="primary" :disabled="!publishValidate" @click="handlePulishApp()">发布</el-button>
         </div>

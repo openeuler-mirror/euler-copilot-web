@@ -37,7 +37,7 @@ const iconRef = ref<HTMLInputElement | null>();
 
 const dropdownPosition = ref();
 
-const hoverFiles = ref();
+const hoverFiles = ref([]);
 
 const isFileVisible = ref<boolean>(false);
 

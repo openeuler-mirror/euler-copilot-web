@@ -211,7 +211,7 @@ watch(
 );
 
 const addNewSession = async (routerName: string) => {
-  if (router.currentRoute.value.name === routerName) {
+  if (routerName === 'dialogue') {
     await createNewSession();
   }
 };
@@ -247,7 +247,7 @@ watch(
       appId: String(currRoute.value.query.appId),
       name: String(currRoute.value.query.name),
     };
-  }
+    }
   },
   { deep: true, immediate: true },
 );

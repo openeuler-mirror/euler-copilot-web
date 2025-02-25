@@ -81,6 +81,7 @@ const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
 const yamlToJsonContent = ref('');
 const getServiceJson = ref('');
+const activeServiceName = ref('');
 const imageUrl = ref('');
 const progressVal = ref(0);
 const uploadDone = ref(false);
@@ -181,6 +182,10 @@ watch(
   () => {
     getServiceJson.value = props.getServiceJson;
     getServiceYaml.value = props.getServiceYaml;
+    console.log(props, 'props---result')
+    if (getServiceJson.value?.length) {
+      activeServiceName.value = getServiceJson.value?.[0]?.name;
+    }
     if (props.type === 'edit' && props) {
       getServiceYamlFun(props.serviceId);
     }
@@ -251,7 +256,7 @@ watch(
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
-    <el-collapse v-model="getServiceJson" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
+    <el-collapse v-model="activeServiceName" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
       <!-- 这里直接展示输入和输出 -->
       <el-collapse-item v-for="(item, index) in getServiceJson" :key="index" :name="item.name">
         <template #title>

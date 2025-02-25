@@ -66,7 +66,7 @@ import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { onBeforeRouteLeave } from 'vue-router';
 // 对话列表
-const { sendQuestion } = useSessionStore();
+const { sendQuestion, stopDebug } = useSessionStore();
 const testFlag = ref(true);
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
@@ -74,6 +74,7 @@ const { generateSession, generateSessionDebug } = useHistorySessionStore();
 const { historySession, currentSelectedSession, isSelectedAll, selectedSessionIds } = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
+const tmpConversationId = ref('');
 const props = defineProps({
   flowId: {
     default: '',
@@ -111,8 +112,10 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
   dialogueInput.value = '';
-  if (!currentSelectedSession.value) {
-    await generateSessionDebug({ debug: true });
+  // console.log(!currentSelectedSession.value, 'currentSelectedSession')
+  if (!tmpConversationId.value) {
+    const res = await generateSessionDebug({ debug: true });
+    tmpConversationId.value = res || 1;
   }
   await sendQuestion(groupId, question, [props.appId], undefined, undefined, props.flowId, undefined, true);
 };
@@ -138,6 +141,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 const handleCloseDebugDialog = () => {
   testFlag.value = false
+  stopDebug();
   delChat();
   props.handleDebugDialogOps(false);
 };

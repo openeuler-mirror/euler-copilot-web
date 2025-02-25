@@ -26,7 +26,7 @@ import { storeToRefs } from 'pinia';
 import { Application } from 'src/apis/paths/type';
 import $bus from 'src/bus/index'
 const STREAM_URL = '/api/chat';
-const newStreamUrl = 'api/mock/chat';
+const newStreamUrl = 'api/chat';
 let controller = new AbortController();
 export var txt2imgPath = ref("");
 export var echartsObj = ref({});
@@ -147,10 +147,14 @@ export const useSessionStore = defineStore('conversation', () => {
             keepalive: true,
             headers: headers,
             body: JSON.stringify({
+              app: {
+                params: {},
+                appId:params.user_selected_app[0],
+                flowId: params.user_selected_flow,
+              },
               question: params.question,
-              appId:params.user_selected_app[0],
               conversationId: params.conversationId,
-              flowId: params.user_selected_flow,
+              debug: true,
             }),
           });
 
@@ -229,11 +233,12 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         }
         const { done, value } = await reader.read();
+        console.log(value, 'value')
         const decodedValue = decoder.decode(value, { stream: true });
         const isLegal = judgeMessage(answerIndex, decodedValue);
         if (!isLegal) {
           isEnd = false;
-          break;
+          break; 
         }
 
         if (done) {
@@ -246,8 +251,19 @@ export const useSessionStore = defineStore('conversation', () => {
           isAnswerGenerating.value = false;
           break;
         }
+        // 这里删除了\n\n
         const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
+        // 这里删除'data: {'代替，再加上---测试使用
+        // const lines2 = decodedValue.split('data: {');
+        // const line3 = lines2.map(item => {
+        //   item = 'data: {' + item;
+        // })
+        console.log(decodedValue, '---finally')
+        // return;
         lines.forEach((line) => {
+          // const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
+          // 这里json解析
+          console.log(line, 'lines=-------------------')   
           const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
           if( 'metadata' in message){
             if(conversationItem.metadata?.time<message.metadata.time){
@@ -256,7 +272,7 @@ export const useSessionStore = defineStore('conversation', () => {
           }
           if('event' in message){
             if(message["event"] === "text.add"){
-              conversationItem.message[conversationItem.currentInd] += message.content.text;
+              conversationItem.message[conversationItem.currentInd] += message.content;
               scrollBottom();
               // conversationItem.message[conversationItem.currentInd] += message.content.text;
             }
@@ -370,6 +386,7 @@ export const useSessionStore = defineStore('conversation', () => {
         }
       }
     } catch (err: any) {
+      // console.log(err, 'errr')
       isPaused.value = true;
       isAnswerGenerating.value = false;
       (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
@@ -691,6 +708,13 @@ export const useSessionStore = defineStore('conversation', () => {
     // ind.message.items[index].is_like = isSupport;
   };
 
+  /**
+   * 暂停流式返回
+   */
+  const stopDebug = async (): Promise<void> => {
+    await api.stopGeneration();
+  };
+
   const cancel = () => {
     controller.abort();
   };
@@ -703,6 +727,7 @@ export const useSessionStore = defineStore('conversation', () => {
     appList,
     sendQuestion,
     pausedStream,
+    stopDebug,
     prePage,
     nextPage,
     reGenerateAnswer,
