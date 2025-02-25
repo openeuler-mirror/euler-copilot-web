@@ -238,6 +238,20 @@ const initCopilot = async (): Promise<void> => {
     return;
 };
 
+watch(
+  () => router,
+  () => {
+  const currRoute = router.currentRoute;
+  if (currRoute.value.query.appId) {
+    app.value = {
+      appId: String(currRoute.value.query.appId),
+      name: String(currRoute.value.query.name),
+    };
+  }
+  },
+  { deep: true, immediate: true },
+);
+
 </script>
 
 <template>
