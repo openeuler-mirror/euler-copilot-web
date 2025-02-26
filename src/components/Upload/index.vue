@@ -6,7 +6,7 @@ import { IconUpload, IconVisible, IconDelete, IconCaretRight } from '@computing/
 import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
 import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
-import { successMsg } from 'src/components/Message';
+import { errorMsg, successMsg } from 'src/components/Message';
 
 const handleCreateapi = () => {
   api
@@ -17,7 +17,10 @@ const handleCreateapi = () => {
     .then(res => {
       getServiceJson.value = res[1].result.apis;
       uploadtype.value = 'get';
-    });
+    }).catch(err=>{
+      errorMsg('解析失败');
+    })
+    ;
 };
 
 const props = defineProps({
