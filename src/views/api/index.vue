@@ -125,7 +125,7 @@ import { useAccountStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 import * as jsYaml from 'js-yaml';
 
-const apiList = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+const apiList = ref();
 const drawer = ref(false);
 const direction = ref('rtl');
 const actionName = ref('');
