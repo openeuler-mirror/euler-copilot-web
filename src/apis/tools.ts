@@ -176,10 +176,6 @@ export const handleStatusError = async (
       handleAuthorize(status);
       return;
     }
-    if (originalRequest.url === '/api/app/recent') {
-      handleAuthorize(status);
-      return;
-    }
     //引入新的cookie后，会根据用户的请求重置token有效期，先删除重发逻辑，后期修改
     // const suc = await refreshToken(originalRequest);
     // if(!suc){
