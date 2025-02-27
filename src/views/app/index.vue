@@ -145,6 +145,7 @@ const handleCreateApp = () => {
 
 const routerToDetail = appItem => {
   if (!appItem.published) {
+    //未发布应用不允许跳转
     return;
   }
   //获取appItem.id & appItem.name
