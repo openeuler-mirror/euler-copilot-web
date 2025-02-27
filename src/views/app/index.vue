@@ -67,7 +67,7 @@
             </div>
             <div class="appCenterCardBottom">
               <div class="appCenterCardUser">@{{ appItem.author }}</div>
-              <div class="appCenterCardOps">
+              <div class="appCenterCardOps" v-if="appItem.author === userinfo.user_sub">
                 <el-button text @click="handleEditApp($event, appItem)">编辑</el-button>
                 <el-button text @click="handleDelApp($event, appItem)">删除</el-button>
               </div>
@@ -107,6 +107,8 @@ import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
 import RobotIcon from '../../assets/svgs/robot_icon.svg'
+import { storeToRefs } from 'pinia';
+import { useAccountStore } from 'src/store';
 const publishStatus = ref('未发布');
 const router = useRouter();
 const appType = ref('my');
@@ -117,6 +119,7 @@ const pagination = ref({
   pageSizes: [16, 32, 64],
   layout: 'total,sizes,prev,pager,next,jumper',
 });
+const { userinfo } = storeToRefs(useAccountStore());
 const currentPage = ref(1);
 const totalCount = ref(0);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
