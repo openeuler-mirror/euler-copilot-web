@@ -734,7 +734,7 @@ watch(() => isCreateApp, (val) => {
         <div v-if="conversationList.length === 0 && app.selectedAppId === ''">
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
-        <div class="dialogue-interPreview-main" v-else >
+        <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.selectedAppId !== ''" >
         <InterPreview :createAppForm="Form" />
         </div>
       </div>
