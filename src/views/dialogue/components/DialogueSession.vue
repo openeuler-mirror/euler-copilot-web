@@ -738,7 +738,7 @@ watch(
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
         <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.selectedAppId !== ''">
-          <InterPreview :createAppForm="Form" />
+          <InterPreview :createAppForm="Form" @selectQuestion="selectQuestion" />
         </div>
       </div>
       <div class="createApp-demo"></div>
@@ -1177,5 +1177,9 @@ button[disabled]:hover {
 
 .copilot-footer {
   margin-top: 16px;
+}
+
+.dialogue-interPreview-main{
+  width: 100%;
 }
 </style>
