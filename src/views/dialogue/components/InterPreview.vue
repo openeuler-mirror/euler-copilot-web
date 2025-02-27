@@ -37,7 +37,7 @@
               <div v-for="(connect, index) in connnectLinkList" >
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
-                  <el-link class="connectBoxContent" type="primary" :href="connect">
+                  <el-link class="connectBoxContent" type="primary" :href="connect" target="_blank">
                     <TextMoreTootip :value="connect" :row="1" />
                   </el-link>
                 </div>
