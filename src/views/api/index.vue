@@ -90,7 +90,7 @@
         <Upload type="upload" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
       </div>
       <div v-if="actions === 'get'">
-        <Upload type="get" @closeDrawer="handleClose"  :getServiceJson="getServiceJson" />
+        <Upload type="get" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceJson="getServiceJson" />
       </div>
       <div v-if="actions === 'edit'">
         <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceYaml="getServiceYaml"/>

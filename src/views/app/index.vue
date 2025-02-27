@@ -145,8 +145,7 @@ const handleCreateApp = () => {
 
 const routerToDetail = appItem => {
   if (!appItem.published) {
-    //调试时注释
-    // return;
+    return;
   }
   //获取appItem.id & appItem.name
   router.push(`/copilot?appId=${appItem.appId}&name=${appItem.name}`);

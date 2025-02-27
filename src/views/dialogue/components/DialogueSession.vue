@@ -24,18 +24,18 @@ export interface DialogueSession {
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
-
+// const props = withDefaults(defineProps<{
+//     createAppForm: any,
+// }>(), {});
 enum SupportMap {
   support = 1,
   against = 0,
 }
-const Form = ref(props.createAppForm);
-const AppForm = ref(props.createAppForm);
+// const dialogueRef = ref();
 const { pausedStream} = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
 // const isCreateApp = ref(true);
-const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
     groupId: 0,
@@ -292,8 +292,6 @@ const isAllowToSend = computed(() => {
   });
   return defaultStatus;
 });
-
-
 
 // 会话切换时
 watch(currentSelectedSession, async newVal => {
@@ -580,11 +578,15 @@ const clearSuggestion = (index: number): void => {
 };
 
 onMounted(() => {
-  // 数据初始化
-  AppForm.value = props.createAppForm;
+  // 全局数据初始化
+  // getMode();
+  // isCreateApp.value = props.isCreateApp;
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
+
+watch(() => props.createAppForm, () => {
+}, {deep: true, immediate: true})
 
 watch(selectMode, (newValue, oldValue) => {
   user_selected_app.value = [];
@@ -648,51 +650,6 @@ const handlePauseAndReGenerate = (cid?: number) => {
   // 停止生成handlePauseAndReGenerate
   pausedStream(cid);
 };
-
-const getappMode = (appId: string) => {
-  api
-      .querySingleAppData({
-        id: appId as string,
-      })
-      .then(res => {
-        const appInfo = res?.[1]?.result;
-        if (appInfo) {
-          Form.value = {
-            icon: appInfo?.icon,
-            name: appInfo?.name,
-            description: appInfo?.description,
-            links: appInfo?.links?.map(item => item.url),
-            recommendedQuestions: appInfo?.recommendedQuestions,
-            dialogRounds: appInfo?.dialogRounds,
-            permission: {
-              visibility: appInfo?.permission?.visibility,
-              authorizedUsers: appInfo?.permission?.authorizedUsers,
-            },
-          };
-        }
-      });
-  };
-
-watch(() => user_selected_app, (val) => {
-  if(user_selected_app.value[0] && !isCreateApp.value){
-    getappMode(user_selected_app.value[0]);
-  }
-  if(!isCreateApp.value){
-    Form.value = props.createAppForm;
-  }
-},{
-  immediate: true,
-  deep: true
-})
-
-watch(() => isCreateApp, (val) => {
-  if(isCreateApp.value === true){
-    AppForm.value = props.createAppForm;
-  }
-},{
-  immediate: true,
-  deep: true
-})
 </script>
 
 <template>
@@ -728,12 +685,12 @@ watch(() => isCreateApp, (val) => {
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0 && app.selectedAppId === '' || !app.selectedAppId">
+        <div v-if="conversationList.length === 0">
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
-        <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.selectedAppId !== ''" >
-        <InterPreview :createAppForm="Form" />
-        </div>
+      </div>
+      <div class="dialogue-interPreview-main" v-else>
+        <InterPreview :createAppForm="props.createAppForm" />
       </div>
       <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">

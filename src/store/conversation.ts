@@ -233,6 +233,7 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         }
         const { done, value } = await reader.read();
+        console.log(value, 'value')
         const decodedValue = decoder.decode(value, { stream: true });
         const isLegal = judgeMessage(answerIndex, decodedValue);
         if (!isLegal) {

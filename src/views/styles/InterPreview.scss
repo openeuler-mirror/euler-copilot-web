@@ -3,7 +3,6 @@
   display: flex;
   margin-top: 32px;
   .interPreviewBox {
-    margin-top: 0px !important;
     display: flex;
     width: 100%;
     gap: 32px;
@@ -12,6 +11,7 @@
       width: 100%;
       display: flex;
       justify-content: center;
+
       .preTopContent {
         display: flex;
         align-items: center;

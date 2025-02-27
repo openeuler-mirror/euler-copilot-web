@@ -21,7 +21,6 @@ import i18n from 'src/i18n';
 import appIcon from '@/assets/images/app.png'
 import { IconChevronUp } from '@computing/opendesign-icons';
 import { onMounted } from 'vue';
-import { appendFile } from 'fs';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
 interface HistorySession {
@@ -218,16 +217,12 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-const selectApp = (id) => {
+const selectApp = id => {
   if(selectedAppId.value === id) {
     selectedAppId.value = "";
-    user_selected_app.value = [''];
-    app.value.selectedAppId = '';
   }else{
     selectedAppId.value = id;
     user_selected_app.value =[id];
-    // app.value.appId = id;
-    app.value.selectedAppId = id;
   }
 };
 function ensureAppAtFirstPosition() {
@@ -246,6 +241,24 @@ function ensureAppAtFirstPosition() {
   user_selected_app.value = [app.value.appId];
 }
 
+onMounted(async() => {
+  //获取 top5 list 
+  // const [_, res] = await api.getTopFiveApp(5);
+  // if (res?.result) {
+  //   appList.value = res.result.applications;
+  //   apps.value = res.result.applications;
+  // }
+  // // if(_ && res){
+  // //   appList.value = res.result.applications;
+  // //   apps.value = res.result.applications;
+  // // }
+  // // else {
+  // //   appList.value = apps.value;
+  // // }
+  // if(app.value.appId){
+  //   selectedAppId.value = app.value.appId;
+  // }
+});
 
 const getAppsValue = async () => {
 //获取 top5 list 
@@ -263,8 +276,8 @@ const [_, res] = await api.getTopFiveApp(5);
   // }
   if(app.value.appId){
     selectedAppId.value = app.value.appId;
-    app.value.selectedAppId = app.value.appId;
   }
+  
   ensureAppAtFirstPosition();
 }
 
@@ -277,7 +290,6 @@ watch(
     immediate: true,
   },
 );
-
 </script>
 
 <template>
@@ -299,12 +311,12 @@ watch(
           <transition name="collapse">
             <ul v-if="!isCollapsed" class="app-list">
               <li
-                v-for="apps in displayedApps"
-                :key="apps.appId"
-                @click="selectApp(apps.appId)"
-                :class="{ selected: selectedAppId === apps.appId }"
+                v-for="app in displayedApps"
+                :key="app.id"
+                @click="selectApp(app.appId)"
+                :class="{ selected: selectedAppId === app.appId }"
               >
-                <span>{{ apps.name }}</span>
+                <span>{{ app.name }}</span>
               </li>
             </ul>
           </transition>

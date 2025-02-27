@@ -8,7 +8,6 @@ import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { fa } from 'element-plus/es/locale';
-import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const route = useRoute();
@@ -359,8 +358,7 @@ defineExpose({
     <div class="previewTitle">界面预览</div>
     <div class="createAppContainerMainRight">
       <!-- 明天问下这里为什么写死一个true传参,---预览页面输入框禁用 -->
-      <!-- <DialogueSession :modeOptions="modeOptions" isCreateApp="true" :createAppForm="createAppForm" /> -->
-      <AppInitalPreview :createAppForm="createAppForm" />
+      <DialogueSession :modeOptions="modeOptions" isCreateApp="true" :createAppForm="createAppForm" />
     </div>
   </div>
 </template>
