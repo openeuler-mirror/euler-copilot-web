@@ -43,37 +43,37 @@ const readAgreement = async () => {
   agreement.value = marked.parse(response.default) as string;
 };
 
-watch(
-  () => router,
-  () => {
-  const currRoute = router.currentRoute;
-  if (currRoute.value.query.appId) {
-    // 判断是否编辑--是否需要查询回显数据
-    api
-      .querySingleAppData({
-        id: route.query?.appId as string,
-      })
-      .then(res => {
-        const appInfo = res?.[1]?.result;
-        if (appInfo) {
-          createAppForm.value = {
-            icon: appInfo?.icon,
-            name: appInfo?.name,
-            description: appInfo?.description,
-            links: appInfo?.links?.map(item => item.url),
-            recommendedQuestions: appInfo?.recommendedQuestions,
-            dialogRounds: appInfo?.dialogRounds,
-            permission: {
-              visibility: appInfo?.permission?.visibility,
-              authorizedUsers: appInfo?.permission?.authorizedUsers,
-            },
-          };
-        }
-      });
-    }
-  },
-  { deep: true, immediate: true },
-);
+// watch(
+//   () => router,
+//   () => {
+//   const currRoute = router.currentRoute;
+//   if (currRoute.value.query.appId) {
+//     // 判断是否编辑--是否需要查询回显数据
+//     api
+//       .querySingleAppData({
+//         id: route.query?.appId as string,
+//       })
+//       .then(res => {
+//         const appInfo = res?.[1]?.result;
+//         if (appInfo) {
+//           createAppForm.value = {
+//             icon: appInfo?.icon,
+//             name: appInfo?.name,
+//             description: appInfo?.description,
+//             links: appInfo?.links?.map(item => item.url),
+//             recommendedQuestions: appInfo?.recommendedQuestions,
+//             dialogRounds: appInfo?.dialogRounds,
+//             permission: {
+//               visibility: appInfo?.permission?.visibility,
+//               authorizedUsers: appInfo?.permission?.authorizedUsers,
+//             },
+//           };
+//         }
+//       });
+//     }
+//   },
+//   { deep: true, immediate: true },
+// );
 
 /**
  * 处理服务协议是否显示

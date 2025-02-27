@@ -15,6 +15,8 @@ import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
+import { toRefs } from 'vue';
+import { watchEffect } from 'vue';
 const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
 
@@ -24,18 +26,18 @@ export interface DialogueSession {
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
-// const props = withDefaults(defineProps<{
-//     createAppForm: any,
-// }>(), {});
+
 enum SupportMap {
   support = 1,
   against = 0,
 }
-// const dialogueRef = ref();
+const Form = ref(props.createAppForm);
+const AppForm = ref(props.createAppForm);
 const { pausedStream} = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
 // const isCreateApp = ref(true);
+const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
     groupId: 0,
@@ -150,6 +152,7 @@ const tagNum = ref(3);
 
 let filterQuestions = computed(() => questions.filter(item => item.groupId === groupid.value % 6));
 
+const selectedApp = ref(false);
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
@@ -292,6 +295,8 @@ const isAllowToSend = computed(() => {
   });
   return defaultStatus;
 });
+
+
 
 // 会话切换时
 watch(currentSelectedSession, async newVal => {
@@ -578,15 +583,15 @@ const clearSuggestion = (index: number): void => {
 };
 
 onMounted(() => {
-  // 全局数据初始化
-  // getMode();
-  // isCreateApp.value = props.isCreateApp;
+  console.log('onMounted',props.createAppForm);
+  // 数据初始化
+  AppForm.value = props.createAppForm;
+  if(app.value.appId) {
+    selectedApp.value = true;
+  }
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
-
-watch(() => props.createAppForm, () => {
-}, {deep: true, immediate: true})
 
 watch(selectMode, (newValue, oldValue) => {
   user_selected_app.value = [];
@@ -650,6 +655,51 @@ const handlePauseAndReGenerate = (cid?: number) => {
   // 停止生成handlePauseAndReGenerate
   pausedStream(cid);
 };
+
+const getappMode = (appId: string) => {
+  api
+      .querySingleAppData({
+        id: appId as string,
+      })
+      .then(res => {
+        const appInfo = res?.[1]?.result;
+        if (appInfo) {
+          Form.value = {
+            icon: appInfo?.icon,
+            name: appInfo?.name,
+            description: appInfo?.description,
+            links: appInfo?.links?.map(item => item.url),
+            recommendedQuestions: appInfo?.recommendedQuestions,
+            dialogRounds: appInfo?.dialogRounds,
+            permission: {
+              visibility: appInfo?.permission?.visibility,
+              authorizedUsers: appInfo?.permission?.authorizedUsers,
+            },
+          };
+        }
+      });
+  };
+
+watch(() => user_selected_app, (val) => {
+  if(user_selected_app.value[0] && !isCreateApp.value){
+    getappMode(user_selected_app.value[0]);
+  }
+  if(!isCreateApp.value){
+    Form.value = props.createAppForm;
+  }
+},{
+  immediate: true,
+  deep: true
+})
+
+watch(() => isCreateApp, (val) => {
+  if(isCreateApp.value === true){
+    AppForm.value = props.createAppForm;
+  }
+},{
+  immediate: true,
+  deep: true
+})
 </script>
 
 <template>
@@ -685,12 +735,12 @@ const handlePauseAndReGenerate = (cid?: number) => {
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0">
+        <div v-if="conversationList.length === 0 && app.appId === ''">
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
-      </div>
-      <div class="dialogue-interPreview-main" v-else>
-        <InterPreview :createAppForm="props.createAppForm" />
+        <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.appId" >
+        <InterPreview :createAppForm="Form" />
+        </div>
       </div>
       <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">
