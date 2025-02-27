@@ -1,12 +1,10 @@
 <template>
   <InterPreview :create-app-form="createAppForm" />
   <div class="sendbox-wrapper">
-    <!-- 输入框 -->
     <div class="dialogue-conversation-bottom-sendbox">
       <div class="dialogue-conversation-bottom-sendbox__textarea">
         <textarea ref="inputRef" maxlength="2000" :placeholder="$t('main.ask_me_anything')" />
       </div>
-      <!-- 上传 -->
       <div class="dialogue-conversation-bottom-sendbox__upload">
         <el-tooltip placement="top" :content="$t('upload.upload_tip_text')" effect="light">
           <div class="upload-wrapper">
@@ -16,13 +14,10 @@
           </div>
         </el-tooltip>
       </div>
-      <!-- 发送问题 -->
       <div class="dialogue-conversation-bottom-sendbox__icon">
-        <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
         <img src="@/assets/images/send_disable.png" alt="" />
       </div>
     </div>
-    <!-- 上传问价列表 -->
   </div>
 </template>
 <script setup lang="ts">

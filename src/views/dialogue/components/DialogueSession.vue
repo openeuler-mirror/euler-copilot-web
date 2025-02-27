@@ -755,27 +755,6 @@ watch(
             {{ $t('feedback.stop') }}
           </div>
         </div>
-        <!-- 识别方式 -->
-        <!-- <div class="recognitionMode" v-if="!isCreateApp">
-          <el-select
-            class="mode-select"
-            v-model="selectMode"
-            multiple
-            collapse-tags
-            filterable
-            allow-create
-            default-first-option
-            :placeholder="$t('main.query_interpretation')"
-          >
-            <el-option
-              v-for="item in modeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              :disabled="item.disabled"
-            />
-          </el-select>
-        </div> -->
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
           <div class="dialogue-conversation-bottom-sendbox">
