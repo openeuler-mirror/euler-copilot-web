@@ -112,7 +112,6 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
   dialogueInput.value = '';
-  // console.log(!currentSelectedSession.value, 'currentSelectedSession')
   if (!tmpConversationId.value) {
     const res = await generateSessionDebug({ debug: true });
     tmpConversationId.value = res || 1;

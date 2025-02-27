@@ -152,7 +152,6 @@ const tagNum = ref(3);
 
 let filterQuestions = computed(() => questions.filter(item => item.groupId === groupid.value % 6));
 
-const selectedApp = ref(false);
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
@@ -586,9 +585,6 @@ onMounted(() => {
   console.log('onMounted',props.createAppForm);
   // 数据初始化
   AppForm.value = props.createAppForm;
-  if(app.value.appId) {
-    selectedApp.value = true;
-  }
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
@@ -735,10 +731,10 @@ watch(() => isCreateApp, (val) => {
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0 && app.appId === ''">
+        <div v-if="conversationList.length === 0 && app.selectedAppId === ''">
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
-        <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.appId" >
+        <div class="dialogue-interPreview-main" v-else >
         <InterPreview :createAppForm="Form" />
         </div>
       </div>
