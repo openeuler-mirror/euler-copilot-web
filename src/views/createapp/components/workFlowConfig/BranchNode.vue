@@ -20,6 +20,10 @@ const props = defineProps({
     type: Object,
     required: false,
   },
+  disabled: {
+    type: Boolean,
+    required: false,
+  }
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
@@ -33,20 +37,38 @@ const curStatus = ref('');
 // 当前节点运行耗时
 const costTime = ref('');
 
+// 定义传给mirror展示输入输出的存储量
+const inputAndOutput = ref({
+  input_parameters: {},
+  output_parameters: {},
+});
+
 watch(
   () => props.data,
   () => {
     const isInclude = statusList.value.includes(props.data?.status);
+    // 设置节点的状态-默认以及成功、失败、运行中
     if (!isInclude) {
       curStatus.value = 'default';
     } else {
       curStatus.value = props.data?.status;
     }
+    // 节点调试消耗时间【目前只有调试接口返回的节点step.output才有值，其余状态为''不显示】
     costTime.value = props.data?.constTime || '';
+    // 这里是分支节点独有的，需要根据接口拖拽节点里的choices决定有几个handle节点
     if (props.data?.parameters?.input_parameters?.choices) {
       branchIdList.value = props.data?.parameters?.input_parameters?.choices.map(
         item => item?.branchId,
       );
+    }
+    // 默认的输入赋值
+    inputAndOutput.value.input_parameters = props.data?.parameters?.input_parameters || {};
+    // 判断是否有调试的输出，有调试的输出，需要将其显示/否则显示默认的输出
+    if (props.data?.content) {
+      // 将paramaters里的output换为接口返回的output_parameters
+      inputAndOutput.value.output_parameters = props.data.content;
+    } else {
+      inputAndOutput.value.output_parameters = props.data?.parameters?.output_parameters || {};
     }
   },
   { deep: true, immediate: true },
@@ -72,8 +94,8 @@ const editYaml = (nodeName, yamlCode) => {
       <div class="title" v-if="props.data.name">
         <div class="iconStyle"></div>
         <div class="label">{{ props.data.name }}</div>
-        <div class="moreTip">
-          <el-popover placement="right" trigger="hover" popper-class="nodeDealPopper">
+        <div class="moreTip" :class="{'notAllow': props.disabled}">
+          <el-popover :disabled="props.disabled" placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
             <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parameters)">编辑</el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
@@ -99,7 +121,7 @@ const editYaml = (nodeName, yamlCode) => {
       v-if="curStatus !== 'default'"
       :status="curStatus"
       :costTime="costTime"
-      :inputAndOutput="props.data?.parameters"
+      :inputAndOutput="inputAndOutput"
       style="display: block"
     ></NodeMirrorText>
   </div>

@@ -15,7 +15,7 @@ const handleCreateapi = () => {
       data:yamlToJsonContent.value,
     })
     .then(res => {
-      getServiceJson.value = res[1].result.apis;
+      getServiceJson.value = res[1]?.result?.apis;
       uploadtype.value = 'get';
     });
 };
@@ -81,7 +81,7 @@ const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
 const yamlToJsonContent = ref('');
 const getServiceJson = ref('');
-const activeServiceName = ref('');
+const activeServiceNameList = ref([]);
 const imageUrl = ref('');
 const progressVal = ref(0);
 const uploadDone = ref(false);
@@ -184,7 +184,7 @@ watch(
     getServiceYaml.value = props.getServiceYaml;
     console.log(props, 'props---result')
     if (getServiceJson.value?.length) {
-      activeServiceName.value = getServiceJson.value?.[0]?.name;
+      activeServiceNameList.value = [getServiceJson.value?.[0]?.name];
     }
     if (props.type === 'edit' && props) {
       getServiceYamlFun(props.serviceId);
@@ -256,13 +256,13 @@ watch(
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
-    <el-collapse v-model="activeServiceName" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
+    <el-collapse v-model="activeServiceNameList" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
       <!-- 这里直接展示输入和输出 -->
       <el-collapse-item v-for="(item, index) in getServiceJson" :key="index" :name="item.name">
         <template #title>
           <span>{{ item.name }}</span>
           <!-- 这里接口返回的需要限制最大位数 -->
-          <el-icon class="el-collapse-item__arrow" >
+          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeServiceNameList.includes(item.name) }">
             <IconCaretRight></IconCaretRight>
           </el-icon>
         </template>

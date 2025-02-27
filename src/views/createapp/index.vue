@@ -116,18 +116,6 @@ const getPublishStatus = (status) => {
     publishStatus.value = '已发布'
   }
 }
-watch(
-  () => router,
-  () => {
-    if (!route.query?.appId) {
-      router.push('/app');
-    }
-  },
-  {
-    deep: true,
-    immediate: true,
-  },
-);
 
 const handleJumperAppCenter = () => {
   router.push('/app');

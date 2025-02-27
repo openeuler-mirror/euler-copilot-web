@@ -56,7 +56,7 @@
 </template>
 <script setup lang="ts">
 import '../../styles/workFlowDebug.scss';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { IconX } from '@computing/opendesign-icons';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import type { ConversationItem, RobotConversationItem } from 'src/views/dialogue/types';
@@ -71,7 +71,8 @@ const testFlag = ref(true);
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 const { generateSession, generateSessionDebug } = useHistorySessionStore();
-const { historySession, currentSelectedSession, isSelectedAll, selectedSessionIds } = storeToRefs(useHistorySessionStore());
+const { historySession, currentSelectedSession, isSelectedAll, selectedSessionIds } =
+  storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
 const tmpConversationId = ref('');
@@ -103,6 +104,14 @@ const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
   return undefined;
 };
 
+onMounted(() => {
+  // 删除成功
+  conversationList.value = [];
+  selectedSessionIds.value = [];
+  currentSelectedSession.value = '';
+  historySession.value = [];
+});
+
 /**
  * 发送消息
  */
@@ -117,6 +126,8 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
     const res = await generateSessionDebug({ debug: true });
     tmpConversationId.value = res || 1;
   }
+
+  props.handleDebugDialogOps!();
   await sendQuestion(groupId, question, [props.appId], undefined, undefined, props.flowId, undefined, true);
 };
 
@@ -140,10 +151,10 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 const handleCloseDebugDialog = () => {
-  testFlag.value = false
+  testFlag.value = false;
   stopDebug();
   delChat();
-  props.handleDebugDialogOps(false);
+  props.handleDebugDialogOps!(false);
 };
 
 // 关闭或者跳转前需要将会话删除
@@ -162,10 +173,10 @@ const delChat = async () => {
       historySession.value = [];
     }
   }
-}
+};
 
-onBeforeRouteLeave((to, from ,next) => {
+onBeforeRouteLeave((to, from, next) => {
   handleCloseDebugDialog();
   next();
-})
+});
 </script>
