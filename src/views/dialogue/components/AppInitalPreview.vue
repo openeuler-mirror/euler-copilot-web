@@ -6,11 +6,11 @@
         <textarea ref="inputRef" maxlength="2000" :placeholder="$t('main.ask_me_anything')" />
       </div>
       <div class="dialogue-conversation-bottom-sendbox__upload">
-        <div class="upload-wrapper">
-          <input ref="uploadButton" type="file" multiple src="@/assets/svgs/upload_light.svg" />
-          <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" />
-          <img v-else src="@/assets/svgs/upload_dark.svg" />
-        </div>
+          <div class="upload-wrapper">
+            <input ref="uploadButton" type="file" multiple src="@/assets/svgs/upload_light.svg" />
+            <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" />
+            <img v-else src="@/assets/svgs/upload_dark.svg" />
+          </div>
       </div>
       <div class="dialogue-conversation-bottom-sendbox__icon">
         <img src="@/assets/images/send_disable.png" alt="" />
@@ -20,7 +20,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import InterPreview from './InterPreview.vue';
+import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
 import { useChangeThemeStore } from 'src/store';
 const themeStore = useChangeThemeStore();
 interface InterPreProps {

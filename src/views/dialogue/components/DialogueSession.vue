@@ -2,8 +2,8 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
-import InitalPanel from './InitalPanel.vue';
-import InterPreview from './InterPreview.vue';
+import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
+import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
