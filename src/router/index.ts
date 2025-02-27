@@ -22,7 +22,7 @@ const router = createRouter({
     },
     {
       path: '/login',
-      name: 'dialogue-login',
+      name: 'login',
       component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
         import('src/views/dialogue/Copilot.vue'),
     },
