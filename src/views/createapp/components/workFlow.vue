@@ -272,7 +272,9 @@ const handleDebugDialogOps = (visible) => {
   if (visible) {
     saveFlow();
   }
-  debugDialogVisible.value = visible;
+  if (typeof visible === 'boolean') {
+    debugDialogVisible.value = visible;
+  }
   // 调试弹窗关闭时---结果清空
   debugStatus.value = '';
   // 调试弹窗关闭时---节点状态清空
@@ -463,8 +465,11 @@ $bus.on('getNodesStatue', lines => {
           if (newLines.data.event === 'step.output') {
             totalTime.value += newLines.data?.metadata?.time_cost;
             constTime = `${newLines.data?.metadata?.time_cost?.toFixed(3)}s`
+            // 此处获取output的数据，并将此数据传给节点显示
+            updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, newLines.data?.content);
+          } else {
+            updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
           }
-          updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
       } else if (newLines?.data?.event === 'flow.stop') {
         emits('updateFlowsDebug')
         debugStatus.value = newLines.data.flow?.stepStatus;
@@ -477,15 +482,14 @@ $bus.on('getNodesStatue', lines => {
   } catch (error) {
     ElMessage.error('请检查格式是否正确');
   }
-
   // 修改节点时，需要将对应节点的边也进行修改
 });
 
 // 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
-const updateNodeFunc = (id, status, constTime) => {
+const updateNodeFunc = (id, status, constTime, content?) => {
   // 获取到当前的nodeId,更新状态
   const node = findNode(id);
-  const data = node?.data;
+  const data = content ? {...node?.data, content} : node?.data;
   // 更新当前节点的状态，以及运行时间
   updateNode(id, { data: { ...data, status, constTime } });
   // 遍历获取以当前节点为起源节点的边和为目的节点的边
@@ -670,12 +674,12 @@ defineExpose({
         <CustomControl :handleChangeZoom="handleChangeZoom" :flowZoom="flowZoom" :layoutGraph="layoutGraph" />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
-          <CustomNode v-bind="customNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></CustomNode>
+          <CustomNode v-bind="customNodeProps" :disabled="debugDialogVisible" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></CustomNode>
         </template>
 
         <!-- 自定义分支节点 -->
         <template #node-branch="branchNodeProps">
-          <BranchNode v-bind="branchNodeProps" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></BranchNode>
+          <BranchNode v-bind="branchNodeProps" :disabled="debugDialogVisible" @delNode="delNode" @editYamlDrawer="editYamlDrawer"></BranchNode>
         </template>
 
         <template #node-start="nodeStartProps">
@@ -722,7 +726,7 @@ defineExpose({
       <div class="workFlowOps" v-if="workFlowList.length">
         <!-- 工作流画布左上方选择工作流以及调试按钮等区域 -->
         <div class="workFlowSelect">
-          <el-select v-model="workFlowItemName" placeholder="请选择" :suffix-icon="IconCaretDown">
+          <el-select :disabled="debugDialogVisible" v-model="workFlowItemName" placeholder="请选择" :suffix-icon="IconCaretDown">
             <el-option
               class="workFlowOption"
               v-for="(item, index) in workFlowList"

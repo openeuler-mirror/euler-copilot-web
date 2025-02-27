@@ -233,7 +233,6 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         }
         const { done, value } = await reader.read();
-        console.log(value, 'value')
         const decodedValue = decoder.decode(value, { stream: true });
         const isLegal = judgeMessage(answerIndex, decodedValue);
         if (!isLegal) {
@@ -258,12 +257,10 @@ export const useSessionStore = defineStore('conversation', () => {
         // const line3 = lines2.map(item => {
         //   item = 'data: {' + item;
         // })
-        console.log(decodedValue, '---finally')
         // return;
         lines.forEach((line) => {
           // const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
           // 这里json解析
-          console.log(line, 'lines=-------------------')   
           const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
           if( 'metadata' in message){
             if(conversationItem.metadata?.time<message.metadata.time){
@@ -297,7 +294,7 @@ export const useSessionStore = defineStore('conversation', () => {
               //事件流开始--后续验证对话无下拉连接后则完全替换
               let flow = message.flow;
               conversationItem.flowdata = {
-                id: flow?.stepName||"",
+                id: flow?.stepName + flow?.stepId || "",
                 title: i18n.global.t('flow.flow_start'),
                 // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
                 progress: flow?.stepProgress || "",
@@ -313,7 +310,7 @@ export const useSessionStore = defineStore('conversation', () => {
               //   target.data.input = message
               // }
                 conversationItem.flowdata?.data[0].push({
-                  id:message.flow?.stepName,
+                  id:message.flow?.stepName + message.flow?.stepId,
                   title:message.flow?.stepName,
                   status:message.flow?.stepStatus,
                   data:{
@@ -326,7 +323,7 @@ export const useSessionStore = defineStore('conversation', () => {
                 }
             }
             else if(message["event"] === "step.output") {
-              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow.stepName);
+              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow?.stepName + message.flow?.stepId);
               if (target) {
                 target.data.output = message.content
                 target.status = message.flow?.stepStatus;
@@ -386,7 +383,6 @@ export const useSessionStore = defineStore('conversation', () => {
         }
       }
     } catch (err: any) {
-      // console.log(err, 'errr')
       isPaused.value = true;
       isAnswerGenerating.value = false;
       (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;

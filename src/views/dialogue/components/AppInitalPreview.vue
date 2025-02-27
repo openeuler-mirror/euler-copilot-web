@@ -6,13 +6,11 @@
         <textarea ref="inputRef" maxlength="2000" :placeholder="$t('main.ask_me_anything')" />
       </div>
       <div class="dialogue-conversation-bottom-sendbox__upload">
-        <el-tooltip placement="top" :content="$t('upload.upload_tip_text')" effect="light">
-          <div class="upload-wrapper">
-            <input ref="uploadButton" type="file" multiple src="@/assets/svgs/upload_light.svg" />
-            <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" />
-            <img v-else src="@/assets/svgs/upload_dark.svg" />
-          </div>
-        </el-tooltip>
+        <div class="upload-wrapper">
+          <input ref="uploadButton" type="file" multiple src="@/assets/svgs/upload_light.svg" />
+          <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" />
+          <img v-else src="@/assets/svgs/upload_dark.svg" />
+        </div>
       </div>
       <div class="dialogue-conversation-bottom-sendbox__icon">
         <img src="@/assets/images/send_disable.png" alt="" />
@@ -48,7 +46,7 @@ watch(
   border-radius: 8px;
   bottom: 0px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin: 12px;
+  margin: 12px 104px;
 }
 
 .dialogue-conversation-bottom-sendbox {
@@ -139,10 +137,6 @@ watch(
         left: 0;
         top: 0;
         background-color: transparent;
-      }
-
-      img:hover {
-        filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg) brightness(100%) contrast(103%);
       }
     }
   }
