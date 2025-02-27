@@ -1,20 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
 import DialogueAside from './components/DialogueAside.vue';
 import DialogueSession from './components/DialogueSession.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
-import { storeToRefs } from 'pinia';
-import { useRouter, useRoute } from 'vue-router';
-import { useSessionStore, useAccountStore } from 'src/store';
+import { useAccountStore } from 'src/store';
 
-import { api } from 'src/apis';
-
-const router = useRouter();
-const route = useRoute();
 const { updateAgreement } = useAccountStore();
-const { app } = storeToRefs(useSessionStore());
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
 
@@ -42,38 +35,6 @@ const readAgreement = async () => {
   const response = await import('src/conf/agreement.md?raw');
   agreement.value = marked.parse(response.default) as string;
 };
-
-watch(
-  () => router,
-  () => {
-  const currRoute = router.currentRoute;
-  if (currRoute.value.query.appId) {
-    // 判断是否编辑--是否需要查询回显数据
-    api
-      .querySingleAppData({
-        id: route.query?.appId as string,
-      })
-      .then(res => {
-        const appInfo = res?.[1]?.result;
-        if (appInfo) {
-          createAppForm.value = {
-            icon: appInfo?.icon,
-            name: appInfo?.name,
-            description: appInfo?.description,
-            links: appInfo?.links?.map(item => item.url),
-            recommendedQuestions: appInfo?.recommendedQuestions,
-            dialogRounds: appInfo?.dialogRounds,
-            permission: {
-              visibility: appInfo?.permission?.visibility,
-              authorizedUsers: appInfo?.permission?.authorizedUsers,
-            },
-          };
-        }
-      });
-    }
-  },
-  { deep: true, immediate: true },
-);
 
 /**
  * 处理服务协议是否显示

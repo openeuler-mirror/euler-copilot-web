@@ -123,6 +123,7 @@ onMounted(() => {
 
 .copyIcon {
   width: 16px;
+  cursor: pointer;
 }
 .lightCopy {
   background: url(@/assets/svgs/light_copy.svg) center center no-repeat;

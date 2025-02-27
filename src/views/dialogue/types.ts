@@ -80,6 +80,7 @@ export interface FlowDataType {
 export interface AppShowType {
   appId: string,
   name:string,
+  selectedAppId?:boolean,
 }
 
 
