@@ -466,10 +466,10 @@ $bus.on('getNodesStatue', lines => {
           }
           updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
       } else if (newLines?.data?.event === 'flow.stop') {
+        emits('updateFlowsDebug')
         debugStatus.value = newLines.data.flow?.stepStatus;
         debugTime.value = `${totalTime.value.toFixed(3)}s`
         // 最后更新-调用一下接口
-        emits('updateFlowsDebug')
       } else {
         // do nothing
       }

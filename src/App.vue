@@ -10,5 +10,3 @@ import DialogueView from 'src/views/dialogue/dialogueView.vue';
     <DialogueView />
   </div>
 </template>
-
-<style></style>
