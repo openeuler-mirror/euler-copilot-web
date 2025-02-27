@@ -63,6 +63,10 @@ server.interceptors.response.use(
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
+    //防止初始化时出现太多报错
+    if(error.config?.url === '/api/app/recent') {
+      return 
+    }
     ElMessage({
       showClose: true,
       message: error?.response?.data?.message || error.message,

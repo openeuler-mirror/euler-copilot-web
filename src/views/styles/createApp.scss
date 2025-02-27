@@ -112,6 +112,8 @@
   }
 
   .createAppContainerMainRight {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: calc(100% - 32px);
     background-image: var(--o-bg-image);
