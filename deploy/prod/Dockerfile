@@ -42,7 +42,7 @@ RUN sed -i 's/umask 002/umask 027/g' /etc/bashrc && \
     find /var/log/nginx -type f -exec chmod 400 {} +
 
 RUN yum remove -y gdb-gdbserver && \
-    sh -c "find /usr /etc \( -name *yum* -o -name *dnf* -o -name *vi* -o -name *sqlite* -o -name *python* \) -exec rm -rf {} + || true" && \
+    sh -c "find /usr /etc \( -name *yum* -o -name *dnf* -o -name *sqlite* -o -name *python* \) -exec rm -rf {} + || true" && \
     sh -c "find /usr /etc \( -name ps -o -name top \) -exec rm -rf {} + || true"
 
 EXPOSE 8080
