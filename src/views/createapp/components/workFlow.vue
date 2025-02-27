@@ -236,6 +236,10 @@ const dropFunc = e => {
     ElMessage.warning('请先创建/编辑工作流');
     return;
   }
+  // 如果调试弹窗打开，不可拖拽
+  if (debugDialogVisible.value) {
+    return;
+  }
   onDrop(e);
   // 添加节点时-判断节点是否都连接
   nodeAndLineConnection();
