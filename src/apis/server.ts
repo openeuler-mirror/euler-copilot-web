@@ -63,6 +63,9 @@ server.interceptors.response.use(
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
+    if(error.config?.url==="/api/app/recent"){
+      return;
+    }
     ElMessage({
       showClose: true,
       message: error?.response?.data?.message || error.message,
