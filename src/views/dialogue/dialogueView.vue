@@ -49,11 +49,44 @@ const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
 const type = import.meta.env.VITE_USER_TYPE;
-const routerList = [
-  { name: '对话', path: '/' , src:CopilotIcon , selectedSrc:CopilotIconSelected ,routerName: 'dialogue' },
-  { name: '语义中心', path: '/api' , src:ApiIcon , selectedSrc:ApiIconSelected ,routerName: 'api' },
-  { name: '应用中心', path: '/app' , src:AppIcon , selectedSrc:AppIconSelected ,routerName: 'app' },
-  { name: '知识库', path: '/witchainD' , src:WitchainDIcon , selectedSrc:WitchainDIconSelected ,routerName: 'witchainD' },
+const routerList: Array<{
+  name: string;
+  path: string;
+  src: string;
+  selectedSrc: string;
+  routerName: string;
+  anotherName?: string | undefined;  // 路由别名，辅助匹配选中的路由图标
+}> = [
+  {
+    name: '对话',
+    path: '/',
+    src: CopilotIcon,
+    selectedSrc: CopilotIconSelected,
+    routerName: 'dialogue',
+    anotherName: 'copilot',
+  },
+  {
+    name: '语义中心',
+    path: '/api',
+    src: ApiIcon,
+    selectedSrc: ApiIconSelected,
+    routerName: 'api',
+  },
+  {
+    name: '应用中心',
+    path: '/app',
+    src: AppIcon,
+    selectedSrc: AppIconSelected,
+    routerName: 'app',
+    anotherName: 'createApp',
+  },
+  {
+    name: '知识库',
+    path: '/witchainD',
+    src: WitchainDIcon,
+    selectedSrc: WitchainDIconSelected,
+    routerName: 'witchainD',
+  },
 ];
 
 export interface ModelForm {
@@ -185,9 +218,9 @@ onMounted(() => {
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
-  console.log('onMounted',window.location.host);
+  console.log('onMounted', window.location.host);
   const iframe = document.getElementById('my-iframe');
-  console.log('iframe',`${window.location.origin}/witchaind`);
+  console.log('iframe', `${window.location.origin}/witchaind`);
   iframe.src = `${window.location.origin}/witchaind`;
   initCopilot();
   // iframe.src = `http://localhost:3002`;
@@ -230,28 +263,27 @@ const initCopilot = async (): Promise<void> => {
     };
   }
   userinfo.value.organization = type;
-    const isLogin = await getUserInfo();
-    if (isLogin) {
-      await api.stopGeneration();
-      await getHistorySession();
+  const isLogin = await getUserInfo();
+  if (isLogin) {
+    await api.stopGeneration();
+    await getHistorySession();
   }
-    return;
+  return;
 };
 
 watch(
   () => router,
   () => {
-  const currRoute = router.currentRoute;
-  if (currRoute.value.query.appId) {
-    app.value = {
-      appId: String(currRoute.value.query.appId),
-      name: String(currRoute.value.query.name),
-    };
+    const currRoute = router.currentRoute;
+    if (currRoute.value.query.appId) {
+      app.value = {
+        appId: String(currRoute.value.query.appId),
+        name: String(currRoute.value.query.name),
+      };
     }
   },
   { deep: true, immediate: true },
 );
-
 </script>
 
 <template>
@@ -311,7 +343,10 @@ watch(
           <span class="menu-icon">
             <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
               <img
-                v-if="router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1"
+                v-if="
+                  router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1 
+                  || router.currentRoute.value.name?.toString().indexOf(item.anotherName!) !== -1
+                "
                 class="create-button__icon"
                 :src="item.selectedSrc"
               />
