@@ -24,18 +24,18 @@ export interface DialogueSession {
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
-// const props = withDefaults(defineProps<{
-//     createAppForm: any,
-// }>(), {});
+
 enum SupportMap {
   support = 1,
   against = 0,
 }
-// const dialogueRef = ref();
-const { pausedStream} = useSessionStore();
+const Form = ref(props.createAppForm);
+const AppForm = ref(props.createAppForm);
+const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
 // const isCreateApp = ref(true);
+const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
     groupId: 0,
@@ -578,15 +578,11 @@ const clearSuggestion = (index: number): void => {
 };
 
 onMounted(() => {
-  // 全局数据初始化
-  // getMode();
-  // isCreateApp.value = props.isCreateApp;
+  // 数据初始化
+  AppForm.value = props.createAppForm;
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
-
-watch(() => props.createAppForm, () => {
-}, {deep: true, immediate: true})
 
 watch(selectMode, (newValue, oldValue) => {
   user_selected_app.value = [];
@@ -642,7 +638,7 @@ watch(selectMode, (newValue, oldValue) => {
 });
 const selectQuestion = (val: any) => {
   dialogueInput.value = val;
-}
+};
 /**
  * 暂停和重新生成问答
  */
@@ -650,6 +646,59 @@ const handlePauseAndReGenerate = (cid?: number) => {
   // 停止生成handlePauseAndReGenerate
   pausedStream(cid);
 };
+
+const getappMode = (appId: string) => {
+  api
+    .querySingleAppData({
+      id: appId as string,
+    })
+    .then(res => {
+      const appInfo = res?.[1]?.result;
+      if (appInfo) {
+        Form.value = {
+          icon: appInfo?.icon,
+          name: appInfo?.name,
+          description: appInfo?.description,
+          links: appInfo?.links?.map(item => item.url),
+          recommendedQuestions: appInfo?.recommendedQuestions,
+          dialogRounds: appInfo?.dialogRounds,
+          permission: {
+            visibility: appInfo?.permission?.visibility,
+            authorizedUsers: appInfo?.permission?.authorizedUsers,
+          },
+        };
+      }
+    });
+};
+
+watch(
+  () => user_selected_app,
+  val => {
+    if (user_selected_app.value[0] && !isCreateApp.value) {
+      getappMode(user_selected_app.value[0]);
+    }
+    if (!isCreateApp.value) {
+      Form.value = props.createAppForm;
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
+
+watch(
+  () => isCreateApp,
+  val => {
+    if (isCreateApp.value === true) {
+      AppForm.value = props.createAppForm;
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
 </script>
 
 <template>
@@ -685,12 +734,12 @@ const handlePauseAndReGenerate = (cid?: number) => {
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0">
+        <div v-if="conversationList.length === 0 && (app.selectedAppId === '' || !app.selectedAppId)">
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
-      </div>
-      <div class="dialogue-interPreview-main" v-else>
-        <InterPreview :createAppForm="props.createAppForm" />
+        <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.selectedAppId !== ''">
+          <InterPreview :createAppForm="Form" />
+        </div>
       </div>
       <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">
