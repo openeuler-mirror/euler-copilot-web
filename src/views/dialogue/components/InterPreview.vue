@@ -49,7 +49,7 @@
           <div class="preFooterTitle">推荐问题：</div>
           <div class="preFooterContent">
             <div v-for="ques in recommendQuestionList">
-              <div class="preFooterContentQues" v-if="ques.length">
+              <div class="preFooterContentQues" v-if="ques.length" @click="selectQuestions">
                 <TextMoreTootip :value="ques" :row="1" />
               </div>
             </div>
@@ -69,6 +69,12 @@ const props = withDefaults(defineProps<InterPreProps>(), {});
 const interPreviewInfo = ref();
 const recommendQuestionList = ref();
 const connnectLinkList = ref<any>([]);
+const emit = defineEmits(['selectQuestion']);
+
+const selectQuestions = (event) => {
+  emit('selectQuestion', event.target.innerText);
+}
+
 watch(
   () => props.createAppForm,
   (newValue, oldValue) => {
