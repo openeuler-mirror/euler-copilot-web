@@ -70,6 +70,11 @@ watch(
           };
         }
       });
+    }else{
+      app.value.appId="";
+      app.value.name="";
+      app.value.selectedAppId="";
+      return;
     }
   },
   { deep: true, immediate: true },
