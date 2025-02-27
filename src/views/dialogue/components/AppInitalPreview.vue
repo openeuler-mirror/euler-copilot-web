@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import InterPreview from './InterPreview.vue';
-import { useSessionStore, useChangeThemeStore } from 'src/store';
+import { useChangeThemeStore } from 'src/store';
 const themeStore = useChangeThemeStore();
 interface InterPreProps {
   createAppForm: any;
