@@ -64,7 +64,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import '../../styles/InterPreview.scss';
 import { ref, watch } from 'vue';
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 
