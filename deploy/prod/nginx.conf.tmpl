@@ -73,7 +73,7 @@ http {
         add_header Pragma no-cache;
         add_header Expires 0;
 
-        limit_conn limitperip 10;
+        limit_conn limitperip 50;
         
         ${SSL_SETTINGS}
 
