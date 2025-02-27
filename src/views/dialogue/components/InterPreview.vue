@@ -25,10 +25,6 @@
               </p>
               ，很高兴为你服务</div>
             </div>
-            <!-- <div class="preAppUser">
-              <div>@zhang</div>
-              <div class="contentCollect"><IconUnfavorite /></div>
-            </div> -->
           </div>
           <div class="preMainContentDes" v-if="interPreviewInfo.description.length">
             {{ interPreviewInfo.description }}
@@ -64,10 +60,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import '../../styles/InterPreview.scss';
 import { ref, watch } from 'vue';
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
-
 interface InterPreProps {
   createAppForm: any;
 }
