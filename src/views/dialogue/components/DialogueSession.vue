@@ -15,8 +15,6 @@ import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
-import { toRefs } from 'vue';
-import { watchEffect } from 'vue';
 const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
 
@@ -582,7 +580,6 @@ const clearSuggestion = (index: number): void => {
 };
 
 onMounted(() => {
-  console.log('onMounted',props.createAppForm);
   // 数据初始化
   AppForm.value = props.createAppForm;
   if (!inputRef.value) return;
@@ -731,7 +728,7 @@ watch(() => isCreateApp, (val) => {
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0 && app.selectedAppId === ''">
+        <div v-if="conversationList.length === 0 && app.selectedAppId === '' || !app.selectedAppId">
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
         <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.selectedAppId !== ''" >
