@@ -6,18 +6,22 @@ import { IconUpload, IconVisible, IconDelete, IconCaretRight } from '@computing/
 import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
 import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
-import { successMsg } from 'src/components/Message';
+import { errorMsg, successMsg } from 'src/components/Message';
 
-const handleCreateapi = () => {
-  api
-    .createOrUpdateApi({
-      serviceId: props.serviceId||'',
-      data:yamlToJsonContent.value,
-    })
-    .then(res => {
+const handleCreateapi = async () => {
+  const [_, res] = await api.createOrUpdateApi({
+    serviceId: props.serviceId || '',
+    data: yamlToJsonContent.value,
+  });
+  if (!_ && res) {
+    if (res.code === 200) {
       getServiceJson.value = res[1]?.result?.apis;
       uploadtype.value = 'get';
-    });
+      successMsg('创建成功');
+    } else {
+      errorMsg('创建失败');
+    }
+  }
 };
 
 const props = defineProps({
@@ -58,24 +62,11 @@ const handleClose = () => {
   emits('closeDrawer');
 };
 
-const handleEditClose = () => {
-  //清空数据
-  // getServiceYaml.value = '';
-  // yamlToJsonContent.value = '';
-  // getServiceJson.value = '';
-  emits('closeDrawer');
-};
-
 const handleEdit = () => {
   //edit数据
   successMsg('可编辑');
   editable.value = true;
 };
-const data = [
-  {path:'212121',description:"23213123"},
-  {path:'ndie',description:"23213123"},
-  {path:'nidanide1',description:"23213123"},
-]
 
 const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
@@ -88,7 +79,11 @@ const uploadDone = ref(false);
 const editable = ref(false);
 // 上传前检查
 const beforeUpload = async (file: ElFile) => {
-  const isYaml = file.type === 'application/x-yaml' || file.type === 'text/yaml' || file.name.indexOf('.yaml') > -1 || file.name.indexOf('.yml') > -1; // 也可能遇到 text/yaml 类型
+  const isYaml =
+    file.type === 'application/x-yaml' ||
+    file.type === 'text/yaml' ||
+    file.name.indexOf('.yaml') > -1 ||
+    file.name.indexOf('.yml') > -1; // 也可能遇到 text/yaml 类型
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isYaml) {
     ElMessage({
@@ -165,13 +160,13 @@ const doPreview = (e: Event) => {
 };
 
 const getServiceYamlFun = async (id: string) => {
-  await api.querySingleApiData({serviceId:id,edit:true}).then((res) => {
-      if(res) {
-        getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
-      }
-  })
-}
-const handleChange = (payload) => {
+  await api.querySingleApiData({ serviceId: id, edit: true }).then(res => {
+    if (res) {
+      getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
+    }
+  });
+};
+const handleChange = payload => {
   yamlToJsonContent.value = jsYaml.load(payload);
   setTimeout(() => {
     payload.view.scrollDOM.scrollTop = 0;
@@ -182,7 +177,7 @@ watch(
   () => {
     getServiceJson.value = props.getServiceJson;
     getServiceYaml.value = props.getServiceYaml;
-    console.log(props, 'props---result')
+    console.log(props, 'props---result');
     if (getServiceJson.value?.length) {
       activeServiceNameList.value = [getServiceJson.value?.[0]?.name];
     }
@@ -197,8 +192,8 @@ watch(
   () => getServiceYaml,
   () => {
     yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
-  }
-)
+  },
+);
 </script>
 <template>
   <el-upload
@@ -269,12 +264,12 @@ watch(
         <div class="o-collapse-content">
           <div class="itemTitle">
             <div class="subName">
-              <span>接口路径</span>
-              <span>{{ item.path }}</span>
+              <div>接口路径</div>
+              <div>{{ item.path }}</div>
             </div>
             <div class="subName">
-              <span>接口描述</span>
-              <span>{{ item.description }}</span>
+              <div>接口描述</div>
+              <div>{{ item.description }}</div>
             </div>
           </div>
         </div>
@@ -405,23 +400,33 @@ watch(
 }
 
 .json-container {
-  :deep(.el-collapse-item__header){
+  :deep(.el-collapse-item__header) {
     background-color: var(--el-collapse-header-bg) !important;
     height: 32px;
     border-bottom: 1px solid var(--el-collapse-border-color) !important;
   }
-  :deep(.el-collapse-item__content){
+  :deep(.el-collapse-item__content) {
     background-color: var(--el-collapse-content-bg) !important;
     margin: 0px;
     border-bottom: 1px solid var(--el-collapse-border-color) !important;
   }
 }
 
-.o-collapse-content{
-  .subName{
-    span:first-child{
-      margin-right: 16px;
-      color:var(--o-font-size-subtitle);
+.o-collapse-content {
+  padding-left: 18px;
+  .subName {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    div:first-child {
+      height: auto;
+      text-align: center;
+      min-width: 50px;
+      color: var(--o-font-size-subtitle);
+    }
+    div:last-child {
+      padding: 0px 12px;
+      word-break: break-all;
     }
   }
 }
