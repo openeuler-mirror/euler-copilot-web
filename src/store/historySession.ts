@@ -173,6 +173,12 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   const generateSession = async (): Promise<void> => {
     const [_, res] = await api.createSession();
     if (!_ && res) {
+      // 用于处理多次点击会话造成 409 的问题
+      if(res.code === 409){
+        successMsg(i18n.global.t('history.sessionLimit'));
+        await getHistorySession();
+        return;
+      }
       currentSelectedSession.value = res.result.conversationId;
       await getHistorySession();
     }
