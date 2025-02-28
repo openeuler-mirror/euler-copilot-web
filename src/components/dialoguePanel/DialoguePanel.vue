@@ -438,10 +438,14 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
   <div class="dialogue-panel" :class="{ workFlowDebugStyle: props.isWorkFlowDebug }">
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
-        {{ dayjs(createdAt * 1000).format("YYYY-MM-DD HH:mm:ss") }}
+        <div class="centerTimeStyle">
+          {{ dayjs(createdAt * 1000).format("YYYY-MM-DD HH:mm:ss") }}
+        </div>
       </div>
       <div class="dialogue-panel__user-time" v-else>
-        {{ dayjs(Date.now()).format("YYYY-MM-DD HH:mm:ss") }}
+        <div class="centerTimeStyle">
+          {{ dayjs(Date.now()).format("YYYY-MM-DD HH:mm:ss") }}
+        </div>
       </div>
       <div class="dialogue-panel__content">
         <img v-if="avatar" :src="avatar" />
@@ -1138,6 +1142,12 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
   .dialogue-panel__user-time {
     height: 20px;
     line-height: 20px;    
+    .centerTimeStyle {
+      width: 136px;
+      padding: 0 8px;
+      background-color: var(--o-time-text);
+      border-radius: 12px;
+    }   
   }
   .dialogue-panel__robot {
     gap: 16px;

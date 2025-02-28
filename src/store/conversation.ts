@@ -294,7 +294,7 @@ export const useSessionStore = defineStore('conversation', () => {
               //事件流开始--后续验证对话无下拉连接后则完全替换
               let flow = message.flow;
               conversationItem.flowdata = {
-                id: flow?.stepName + flow?.stepId || "",
+                id: flow?.stepId || "",
                 title: i18n.global.t('flow.flow_start'),
                 // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
                 progress: flow?.stepProgress || "",
@@ -310,7 +310,7 @@ export const useSessionStore = defineStore('conversation', () => {
               //   target.data.input = message
               // }
                 conversationItem.flowdata?.data[0].push({
-                  id:message.flow?.stepName + message.flow?.stepId,
+                  id:message.flow?.stepId,
                   title:message.flow?.stepName,
                   status:message.flow?.stepStatus,
                   data:{
@@ -323,12 +323,12 @@ export const useSessionStore = defineStore('conversation', () => {
                 }
             }
             else if(message["event"] === "step.output") {
-              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow?.stepName + message.flow?.stepId);
+              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow?.stepId);
               if (target) {
                 target.data.output = message.content
                 target.status = message.flow?.stepStatus;
                 // 工作流添加每阶段的时间耗时
-                target['costTime'] = message.metadata?.time_cost;
+                target['costTime'] = message.metadata?.timeCost;
                 if(message.flow.step_status === "error"){
                   conversationItem.flowdata.status = message.flow?.stepStatus;
                 }
@@ -340,7 +340,7 @@ export const useSessionStore = defineStore('conversation', () => {
               if (params.type) {
                 // 如果是工作流的调试功能-添加status/data
                 conversationItem.flowdata = {
-                  id: flow?.stepName,
+                  id: flow?.stepId,
                   title: i18n.global.t('flow.flow_end'),
                   progress: flow?.stepProgress,
                   status: message.flow?.stepStatus,
@@ -357,7 +357,7 @@ export const useSessionStore = defineStore('conversation', () => {
                   }
                 })
                 conversationItem.flowdata = {
-                  id: flow?.stepName,
+                  id: flow?.stepId,
                   title: i18n.global.t('flow.flow_end'),
                   progress: flow?.stepProgress,
                   status:"success",

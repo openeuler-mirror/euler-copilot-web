@@ -11,7 +11,7 @@ export const queryAllFlowService = (params: {
   page: number;
   pageSize: number;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get('/api/flow/service', params);
+  return get('/api/flow/service');
 };
 
 /**

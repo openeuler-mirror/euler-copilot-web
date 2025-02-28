@@ -51,4 +51,20 @@ watch(
     outline: none;
   }
 }
+.outputYaml {
+  .cm-editor {
+    border: none;
+    .cm-gutters {
+      display: none;
+    }
+    .cm-content {
+      .cm-activeLine {
+        background-color: transparent;
+      }
+      .ͼl {
+        color: var(--o-text-color-secondary);
+      }
+    }
+  }
+}
 </style>

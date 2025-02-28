@@ -11,6 +11,9 @@ import { ref } from 'vue';
 export function useLayout() {
   const {findNode} = useVueFlow();
 
+
+  
+
   const graph = ref(new dagre.graphlib.Graph());
 
   const previousDirection = ref('LR');
@@ -23,21 +26,31 @@ export function useLayout() {
     // 设置默认边标签
     dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-    const isHorizontal = direction === 'LR';
+    const isHorizontal = direction === 'TB';
 
     // 设置图布局
     dagreGraph.setGraph({rankdir: direction});
 
     previousDirection.value = direction;
+    let maxHeight = 108;
+    for (const node of nodes) {
+      // 查找到节点的信息
+      const graphNode = findNode(node.id)
+      maxHeight = maxHeight > graphNode.dimensions.height ? maxHeight : graphNode.dimensions.height;
+    }
 
     for (const node of nodes) {
       // 查找到节点的信息
       const graphNode = findNode(node.id)
+      const newNode = {
+        width: graphNode.dimensions.width + 100 || 150,
+        height: graphNode.dimensions.height + 100 || 50,
+      }
 
       // 设置节点
       dagreGraph.setNode(node.id, {
-        width: graphNode.dimensions.width || 150,
-        height: graphNode.dimensions.height || 50,
+        width: graphNode.dimensions.width + 100 || 150,
+        height: graphNode.dimensions.height + 100 || 50,
       });
     }
 
@@ -47,100 +60,33 @@ export function useLayout() {
     }
 
     // 排版
-       dagre.layout(dagreGraph);
+    dagre.layout(dagreGraph);
 
     // set nodes with updated positions
     return nodes.map(node => {
       const nodeWithPosition = dagreGraph.node(node.id);
-      let position = { x: nodeWithPosition.x, y: nodeWithPosition.y }
-      console.log(node, 'node, ', nodeWithPosition)
+      let diff = maxHeight - nodeWithPosition.height;
+      let position = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2}
+      // newY = diff
       // if(['1','2'].includes(node.id)){
         
-      // }
+      // }+
+      let newPosition = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2}
+      // 需要进行判断--是否为开始结束
+      if(node.id === 'start' || node.id === 'end') {
+        newPosition = { x: nodeWithPosition.x + 132, y: nodeWithPosition.y + diff / 2 + 26}
+      }
+      
       return {
         ...node,
         targetPosition: isHorizontal ? Position.Left : Position.Top,
         sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-        position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
+        position: newPosition, // 这里修改即可
       };
     });
   }
 
   return { graph, layout, previousDirection };
 
-
-
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // const { findNode } = useVueFlow();
-
-  // const graph = ref(new dagre.graphlib.Graph());
-
-  // function layout(nodes, edges, direction) {
-  //   // we create a new graph instance, in case some nodes/edges were removed, otherwise dagre would act as if they were still there
-  //   const dagreGraph = new dagre.graphlib.Graph();
-
-  //   graph.value = dagreGraph;
-
-  //   dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-  //   const isHorizontal = direction === 'LR';
-  //   dagreGraph.setGraph({ rankdir: direction });
-
-  //   for (const node of nodes) {
-  //     // if you need width+height of nodes for your layout, you can use the dimensions property of the internal node (`GraphNode` type)
-  //     const graphNode = findNode(node.id);
-
-  //     if (!graphNode) {
-  //       console.error(`Node with id ${node.id} not found in the graph`);
-  //       continue;
-  //     }
-  //     console.log(node, 'node', graphNode.dimensions.width)
-  //     dagreGraph.setNode(node.id, {
-  //       width: graphNode.dimensions.width || 150,
-  //       height: graphNode.dimensions.height || 50,
-  //     });
-  //   }
-
-  //   for (const edge of edges) {
-  //     dagreGraph.setEdge(edge.source, edge.target);
-  //   }
-
-  //   dagre.layout(dagreGraph);
-
-  //   // set nodes with updated positions
-  //   return nodes.map(node => {
-  //     const nodeWithPosition = dagreGraph.node(node.id);
-  //     let position = { x: nodeWithPosition.x, y: nodeWithPosition.y }
-  //     if(['1','2'].includes(node.id)){
-        
-  //     }
-  //     return {
-  //       ...node,
-  //       targetPosition: isHorizontal ? Position.Left : Position.Top,
-  //       sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-  //       position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
-  //     };
-  //   });
-  // }
-
-  // return { graph, layout };
-// }
