@@ -475,6 +475,9 @@ export const useSessionStore = defineStore('conversation', () => {
     //error没加限制
     if (msg.includes('[ERROR]')) {
       errorMsg = i18n.global.t('feedback.systemBusy');
+      const answerIndex = ind ?? conversationList.value.length - 1;
+      const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+      conversationItem.flowdata.status = 'error';
     }
     if (errorMsg&&!(conversationList.value[ind] as RobotConversationItem).message[
       (conversationList.value[ind] as RobotConversationItem).currentInd
