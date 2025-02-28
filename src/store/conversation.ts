@@ -587,6 +587,7 @@ export const useSessionStore = defineStore('conversation', () => {
   const pausedStream = async (cid?: number): Promise<void> => {
     const answerIndex = conversationList.value.findIndex((val) => val.cid === cid) !== -1 ? conversationList.value.findIndex((val) => val.cid === cid) : conversationList.value.length - 1;
     isPaused.value = true;
+    conversationList.value[answerIndex].message[0] += '暂停生成';
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
     cancel();
     await api.stopGeneration();

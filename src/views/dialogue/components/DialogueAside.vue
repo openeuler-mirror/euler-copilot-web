@@ -227,6 +227,7 @@ const selectApp = (id) => {
     // app.value.appId = id;
     app.value.selectedAppId = id;
   }
+  getHistorySession();
 };
 function ensureAppAtFirstPosition() {
   if(!app.value.appId){
