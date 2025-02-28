@@ -62,24 +62,11 @@ const handleClose = () => {
   emits('closeDrawer');
 };
 
-const handleEditClose = () => {
-  //清空数据
-  // getServiceYaml.value = '';
-  // yamlToJsonContent.value = '';
-  // getServiceJson.value = '';
-  emits('closeDrawer');
-};
-
 const handleEdit = () => {
   //edit数据
   successMsg('可编辑');
   editable.value = true;
 };
-const data = [
-  { path: '212121', description: '23213123' },
-  { path: 'ndie', description: '23213123' },
-  { path: 'nidanide1', description: '23213123' },
-];
 
 const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
