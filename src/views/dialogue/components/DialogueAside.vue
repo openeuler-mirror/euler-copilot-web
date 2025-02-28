@@ -479,6 +479,9 @@ watch(
       border: 8px;
       border-radius: 8px;
       span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         display: block;
         margin-left: 24px;
         align-items: center;

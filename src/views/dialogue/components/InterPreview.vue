@@ -37,7 +37,10 @@
               <div v-for="(connect, index) in connnectLinkList" >
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
-                  <el-link class="connectBoxContent" type="primary" :href="connect">
+                  <el-link class="connectBoxContent" v-if="!createApp" type="primary" :href="connect" target="_blank">
+                    <TextMoreTootip :value="connect" :row="1" />
+                  </el-link>
+                  <el-link class="connectBoxContent" v-else type="primary">
                     <TextMoreTootip :value="connect" :row="1" />
                   </el-link>
                 </div>
@@ -64,6 +67,7 @@ import { ref, watch } from 'vue';
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 interface InterPreProps {
   createAppForm: any;
+  createApp: boolean;
 }
 const props = withDefaults(defineProps<InterPreProps>(), {});
 const interPreviewInfo = ref();
@@ -72,6 +76,9 @@ const connnectLinkList = ref<any>([]);
 const emit = defineEmits(['selectQuestion']);
 
 const selectQuestions = (event) => {
+  if(props.createApp){
+    return;
+  }
   emit('selectQuestion', event.target.innerText);
 }
 
