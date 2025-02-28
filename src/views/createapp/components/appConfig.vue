@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
 
 import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
+import { ElMessage } from 'element-plus';
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const route = useRoute();
@@ -200,6 +201,55 @@ const validateForm = async () => {
   }
 }
 
+const beforeUpload = async (file: ElFile) => {
+  const isPic =
+    file.type === 'png' ||
+    file.type === 'jpg' ||
+    file.type === 'svg' ||
+    file.name.indexOf('.png') > -1 ||
+    file.name.indexOf('.svg') > -1 ||
+    file.name.indexOf('.jpg') > -1; 
+
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isPic) {
+    ElMessage({
+      message: 'File must be YAML format!',
+      type: 'error',
+    });
+    return false;
+  }
+  if (!isLt2M) {
+    ElMessage({
+      message: 'YAML size cannot exceed 2MB!',
+      type: 'error',
+    });
+    return false;
+  }
+  try {
+    const reader = new FileReader();
+    reader.onerror = error => {
+      ElMessage({
+        message: 'Error reading file!',
+        type: 'error',
+      });
+    };
+    // 开始读取文件内容
+    await new Promise((resolve, reject) => {
+      reader.readAsText(file);
+      reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
+      reader.onerror = error => reject(error); // 如果出错则拒绝 Promise
+    });
+    return true;
+  } catch (error) {
+    console.error('Error during file upload process:', error);
+    ElMessage({
+      message: 'An error occurred during file upload!',
+      type: 'error',
+    });
+    return false; // 同样，这行在当前的 async 函数中可能没有实际意义
+  }
+};
+
 defineExpose({
   createAppForm,
   createAppFormRef,
@@ -228,6 +278,7 @@ defineExpose({
               action="#"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
+              :before-upload="beforeUpload"
               :http-request="httpRequest"
             >
               <img v-if="createAppForm.icon.length" :src="createAppForm.icon" class="avatar" />

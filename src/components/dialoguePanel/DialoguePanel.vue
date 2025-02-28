@@ -412,8 +412,6 @@ const { sendQuestion } = useSessionStore();
 
 const chatWithParams = async () => {
   visible.value = false;
-  // handleSendMessage(undefined,undefined,user_selected_app.value);
-  // reGenerateAnswer(props.cid, user_selected_app.value,"params");
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   const question = (conversationList.value[props.cid - 1]).message;

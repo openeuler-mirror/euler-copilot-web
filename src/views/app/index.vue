@@ -254,6 +254,9 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
+.create-button__icon{
+  border-radius: 20px;
+}
 .appCenterCardSingle {
   position: relative;
   .unPublishSymbol {

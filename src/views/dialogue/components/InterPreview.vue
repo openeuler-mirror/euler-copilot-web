@@ -9,8 +9,9 @@
       </div>
     </div>
     <div class="preMain">
-      <div class="preMainImg">
+      <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
         <img :src="interPreviewInfo.icon" class="preMainAvator" v-if="interPreviewInfo.icon.length" />
+        <img src="@/assets/images/app_upload.svg" class="preMainAvator" v-else />
       </div>
       <div class="preMainContanter">
         <div

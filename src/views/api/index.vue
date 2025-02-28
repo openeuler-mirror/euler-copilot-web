@@ -287,6 +287,9 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
+.create-button__icon{
+  border-radius: 20px;
+}
 .pagination{
   display: flex !important;
   justify-self: center !important;
