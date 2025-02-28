@@ -11,7 +11,7 @@
     <div class="preMain">
       <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
         <img :src="interPreviewInfo.icon" class="preMainAvator" v-if="interPreviewInfo.icon.length" />
-        <img src="@/assets/images/app_upload.svg" class="preMainAvator" v-else />
+        <div v-else class="defaultIcon"></div>
       </div>
       <div class="preMainContanter">
         <div
@@ -143,7 +143,17 @@ watch(
           width: 100%;
           height: 100%;
           border-radius: 50%;
+          background-size: contain;
         }
+        .defaultIcon {
+            width: 100%;
+            height: 100%;
+            background: url('@/assets/images/app_upload.svg');
+            background-size: contain !important;
+            &:hover {
+              background: url('@/assets/images/app_upload_hover.svg');
+            }
+          }
       }
       .preMainContanter {
         width: calc(100% - 166px);

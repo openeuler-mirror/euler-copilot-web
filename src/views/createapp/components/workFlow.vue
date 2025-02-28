@@ -393,35 +393,37 @@ const delFlow = item => {
 
 // 下拉选择对应的工作流
 const choiceFlowId = flowItem => {
-  workFlowItemName.value = flowItem.name;
-  editFlow(flowItem);
+  if (flowItem) {
+    workFlowItemName.value = flowItem.name;
+    editFlow(flowItem);
+  }
 };
 
 // 回显工作流节点和边
 const redrageFlow = (nodesList, edgesList) => {
   const newNodeList = nodesList.map(node => {
     let newNode = {
-      id: node.nodeId,
-      type: node.type,
+      id: node.stepId,
+      type: node.callId,
       data: {
         name: node.name,
         description: node.description,
         parameters: node.parameters,
-        nodeMetaDataId: node.nodeMetaDataId,
+        nodeMetaDataId: node.nodeId,
         serviceId: node.serviceId,
       },
       position: node.position,
       deletable: true,
     };
     // 这里节点/handle的类型要根据返回的类型转换下
-    if (node.type === 'start' || node.type === 'end') {
+    if (node.callId === 'start' || node.callId === 'end') {
       newNode.data = {
         ...newNode.data,
-        target: node.type === 'start' ? 'source' : 'target',
-        nodePosition: node.type === 'start' ? 'Right' : 'Left',
+        target: node.callId === 'start' ? 'source' : 'target',
+        nodePosition: node.callId === 'start' ? 'Right' : 'Left',
       };
       newNode.deletable = false;
-    } else if (node.type === 'choice') {
+    } else if (node.callId === 'choice') {
       newNode.type = 'branch';
     } else {
       newNode.type = 'custom';
@@ -467,8 +469,8 @@ $bus.on('getNodesStatue', lines => {
           // output-节点运行结束时，获取节点运行的耗时
           let constTime = '';
           if (newLines.data.event === 'step.output') {
-            totalTime.value += newLines.data?.metadata?.time_cost;
-            constTime = `${newLines.data?.metadata?.time_cost?.toFixed(3)}s`
+            totalTime.value += newLines.data?.metadata?.timeCost;
+            constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`
             // 此处获取output的数据，并将此数据传给节点显示
             updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, newLines.data?.content);
           } else {
@@ -493,6 +495,7 @@ $bus.on('getNodesStatue', lines => {
 const updateNodeFunc = (id, status, constTime, content?) => {
   // 获取到当前的nodeId,更新状态
   const node = findNode(id);
+  // 这里node的data也需要转换下
   const data = content ? {...node?.data, content} : node?.data;
   // 更新当前节点的状态，以及运行时间
   updateNode(id, { data: { ...data, status, constTime } });
@@ -501,11 +504,11 @@ const updateNodeFunc = (id, status, constTime, content?) => {
   const changeTargetEdges = [...getEdges.value.filter(item => item.target === id)];
   // 分别遍历相应的以该节点为起源的边-并更新它们的状态为最新状态
   changeSourceEdges.forEach(item => {
-    updateEdgeData(item.id, { sourceStatus: 'success' });
+    updateEdgeData(item.id, { sourceStatus: status });
   });
   // 分别遍历相应相应的以该节点为目标的边-并更新它们的状态为最新状态
   changeTargetEdges.forEach(item => {
-    updateEdgeData(item.id, { targetStatus: 'success' });
+    updateEdgeData(item.id, { targetStatus: status });
   });
 };
 
@@ -516,15 +519,17 @@ const saveFlow = (updateNodeParameter?) => {
   }
   // 将对应的节点和边存储格式改造
   let updateNodes = getNodes.value.map(item => {
+    const {nodeMetaDataId, ...otherItem } = item.data;
     let newItem = {
       enable: true,
       editable: false,
       position: item.position,
       apiId: item.data.nodeMetaDataId,
+      callId: item.data.nodeMetaDataId,
       serviceId: item.data.serviceId,
-      nodeMetaDataId: item.data.nodeMetaDataId,
-      nodeId: item.id,
-      ...item.data,
+      nodeId: item.data.nodeMetaDataId,
+      stepId: item.id,
+      ...otherItem,
     };
     if (item.type === 'end' || item.type === 'start') {
       // 更新开始结束节点结构
@@ -532,19 +537,20 @@ const saveFlow = (updateNodeParameter?) => {
         ...newItem,
         apiId: item.type, // 这两个id个应该没有-暂时随意复制
         serviceId: item.type,
-        nodeId: item.id,
-        type: item.type,
+        nodeId: 'Empty',
+        callId: item.type,
       };
     } else if (item.type === 'branch') {
       // 这里是需要将parameters
       newItem = {
         ...newItem,
-        type: 'choice',
+        callId: 'choice',
         parameters: item.data.parameters,
       };
     }
     return newItem;
   });
+  console.log(updateNodes, 'update-nodes')
   // 更新对应的边的结构
   const updateEdges = getEdges.value.map(item => {
     let newEdge = {

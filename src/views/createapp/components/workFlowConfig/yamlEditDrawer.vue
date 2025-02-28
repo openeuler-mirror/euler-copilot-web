@@ -14,7 +14,7 @@
       <template #default>
         <div class="drawerBody">
           <el-collapse v-model="activeName" class="o-hpc-collapse yamlContent">
-            <el-collapse-item title="Consistency" :key="item.title" :name="item.title" v-for="item in yamlExpress">
+            <el-collapse-item title="Consistency" :key="item.title" :name="item.title" v-for="(item, index) in yamlExpress">
               <template #title>
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes(item.title) }">
                   <IconCaretRight />
@@ -24,6 +24,7 @@
 
               <MirrorText
                 ref="textarea"
+                :class="{'outputYaml': index !== 0}"
                 v-model:updateVal="item.yamlCode"
                 :yamlCode="item.yamlCode"
                 :disabled="item.disabled"
@@ -115,6 +116,8 @@ const updateNodeYaml = () => {
       width: 100%;
       height: 24px;
       line-height: 24px;
+      font-weight: 700;
+      font-size: 16px;
       color: var(--o-text-color-primary);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -125,6 +128,32 @@ const updateNodeYaml = () => {
     padding: 0px 24px 16px;
     .drawerBody {
       height: 100%;
+      .yamlContent {
+        .el-collapse-item__header {
+          padding: 0;
+          height: 22px;
+          line-height: 22px;
+          margin-bottom: 8px;
+          font-size: 14px;
+          display: flex;
+          gap: 4px;
+        }
+        .el-collapse-item__content {
+          margin-left: 20px;
+          .cm-editor {
+            .cm-lineNumbers {
+              .cm-gutterElement {
+                min-width: 31px;
+                padding-left:  0 0 0 9px;
+                text-align: center;
+              }
+            }
+            .cm-foldGutter {
+              padding-left: 0;
+            }
+          }
+        }
+      }
       textarea {
         width: 100%;
         height: 100%;
