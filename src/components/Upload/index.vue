@@ -15,7 +15,7 @@ const handleCreateapi = async () => {
   });
   if (!_ && res) {
     if (res.code === 200) {
-      getServiceJson.value = res[1]?.result?.apis;
+      getServiceJson.value = res?.result?.apis;
       uploadtype.value = 'get';
       successMsg('创建成功');
     } else {
@@ -162,7 +162,7 @@ const doPreview = (e: Event) => {
 const getServiceYamlFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id, edit: true }).then(res => {
     if (res) {
-      getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
+      getServiceYaml.value = jsYaml.dump(res?.result.data);
     }
   });
 };
@@ -204,7 +204,6 @@ watch(
     :show-file-list="false"
     :on-success="handleSuccess"
     :before-upload="beforeUpload"
-    :http-request="doUpload"
     :on-progress="handleProgress"
     class=""
   >
