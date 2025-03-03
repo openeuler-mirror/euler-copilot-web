@@ -92,7 +92,7 @@ onMounted(() => {
             </li>
           </ul>
           <div class="eg-btn">
-            <p @click="routerToAppCenter()">进入应用中心</p>
+            <p @click="routerToAppCenter()">{{ $t('main.try_app') }}</p>
           </div>
         </div>
         <div class="question">
@@ -263,7 +263,8 @@ onMounted(() => {
         display: block;
         align-self: center;
         position: absolute;
-        width: 120px;
+        min-width: 120px;
+        padding:0 15px;
         line-height: 32px;
         border-radius: 100px;
         height: 32px;
@@ -282,11 +283,17 @@ onMounted(() => {
     background-color: var(--o-bg-color-base);
     flex-direction: row;
     flex-wrap: wrap;
+    row-gap: 6px;
     justify-content: space-between;
     align-items: center;
     margin-top: 8px;
     li {
       cursor: text;
+      background: var(--o-bg-color-light);
+      &:hover{
+      background: var(--o-bg-color-base);
+      box-shadow: 0px 5.18px 20.72px 0px var(--o-bg-color-dark);
+      }
     }
     &-item {
       display: flex;

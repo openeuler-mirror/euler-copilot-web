@@ -293,7 +293,7 @@ watch(
           <div class="collapsible-header" @click="toggleCollapse">
             <div class="header-content">
               <img :src=appIcon />
-              <span>我的应用</span>
+              <span>{{ t('history.myApp') }}</span>
             </div>
             <!-- 标签 icon 丢失 -->
             <IconChevronUp :size="20" :width="20" :class="{ rotate: !isCollapsed }" />
@@ -435,6 +435,7 @@ watch(
   width: 17rem;
   border-radius: 8px;
   .collapsible-header {
+    border-radius: 8px;
     background-color: var(--o-think-header-bg);
     padding: 1rem;
     height: 40px;
@@ -783,6 +784,12 @@ watch(
       color: var(--o-text-color-secondary);
       margin-top: 8px;
       margin-bottom: 8px;
+    }
+
+    .history-record-list{
+      button{
+        // margin: 5px;
+      }
     }
   }
 
