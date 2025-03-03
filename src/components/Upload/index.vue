@@ -306,7 +306,7 @@ watch(
 .serviceName{
   display: block;
   font-size: 14px;
-  color: var(--o-font-size-info);
+  color: var(--o-text-color-primary);
   height: 22px;
   margin-bottom: 8px;
 }

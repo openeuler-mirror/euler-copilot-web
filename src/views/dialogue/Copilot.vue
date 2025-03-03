@@ -71,6 +71,7 @@ watch(
         }
       });
     }else{
+      // 清除 app 时机 
       app.value.appId="";
       app.value.name="";
       app.value.selectedAppId="";

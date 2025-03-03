@@ -310,7 +310,6 @@ onMounted(() => {
 .el-drawer {
   margin: 0px;
   padding: 0px;
-  background-color: pink !important;
   &::v-deep(.el-drawer__header) {
     margin-bottom: 0px !important;
   }
