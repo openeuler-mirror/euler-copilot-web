@@ -50,7 +50,12 @@ const validateConnect = valid => {
 };
 
 // 获取当前的应用中的各flowsDebug的情况
-const updateFlowsDebug = () => {
+const updateFlowsDebug = (status?) => {
+  // 如果status为false,直接置为False不再调接口
+  if (status === false) {
+    publishValidate.value = false;
+    return;
+  }
   api.querySingleAppData({
         id: route.query?.appId as string,
       })

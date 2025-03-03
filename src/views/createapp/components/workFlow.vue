@@ -299,6 +299,10 @@ const edgesChange = edges => {
     // 删除节点时-判断节点是否都连接
     nodeAndLineConnection();
   }
+  // 边增加删除时直接将工作流debug状态置为false
+  if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
+    emits('updateFlowsDebug', false)
+  }
 };
 
 const updateConnectNodeHandle = (id, handle, connectable) => {
@@ -315,6 +319,12 @@ const updateConnectNodeHandle = (id, handle, connectable) => {
 const nodesChange = nodes => {
   if (nodes?.[0]?.type === 'remove') {
     delNode(nodes[0].id);
+    // 节点增加删除时直接将工作流debug状态置为false
+    emits('updateFlowsDebug', false)
+  }
+  if (nodes?.[0]?.type === 'add') {
+    // 节点增加删除时直接将工作流debug状态置为false
+    emits('updateFlowsDebug', false)
   }
 };
 
@@ -595,7 +605,7 @@ const saveFlow = (updateNodeParameter?) => {
     )
     .then(res => {
       if (res[1]?.result) {
-        ElMessage.success('更新成功');
+        ElMessage.success('工作流更新成功');
         queryFlow('update');
       }
     });
