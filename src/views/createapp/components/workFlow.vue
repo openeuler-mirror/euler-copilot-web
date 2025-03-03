@@ -273,7 +273,7 @@ const searchApiList = () => {
 const handleDebugDialogOps = (visible) => {
   
   // 这里将对应的保存
-  if (visible) {
+  if (!debugDialogVisible.value) {
     saveFlow();
   }
   if (typeof visible === 'boolean') {
@@ -550,7 +550,6 @@ const saveFlow = (updateNodeParameter?) => {
     }
     return newItem;
   });
-  console.log(updateNodes, 'update-nodes')
   // 更新对应的边的结构
   const updateEdges = getEdges.value.map(item => {
     let newEdge = {
@@ -565,7 +564,7 @@ const saveFlow = (updateNodeParameter?) => {
   // 判断是否调用修改yaml文件，以确定是否修改对应的input_paramteters
   if (updateNodeParameter) {
     updateNodes.forEach(item => {
-      if (item.nodeId === updateNodeParameter.id) {
+      if (item.stepId === updateNodeParameter.id) {
         if (item.type === 'choice') {
           item.parameters.input_parameters.choices = updateNodeParameter.inputStream;
         } else {
