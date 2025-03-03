@@ -201,6 +201,13 @@ const validateForm = async () => {
   }
 }
 
+const handleTextareaEnter = (e: any) => {
+  if(e.keyCode==13){
+    e.returnValue = false;
+    return false;
+  }
+}
+
 const beforeUpload = async (file: ElFile) => {
   const isPic =
     file.type === 'png' ||
@@ -291,7 +298,6 @@ defineExpose({
         <el-form-item label="应用名称" prop="name">
           <el-input class="w320" maxlength="20" v-model="createAppForm.name" clearable placeholder="请输入"></el-input>
         </el-form-item>
-
         <el-form-item label="应用简介" prop="description">
           <el-input
             class="w320 h80"
@@ -300,8 +306,8 @@ defineExpose({
             place
             clearable
             type="textarea"
-            show-word-limit
             placeholder="请输入"
+            @keydown.enter="handleTextareaEnter"
           ></el-input>
         </el-form-item>
 

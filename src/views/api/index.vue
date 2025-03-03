@@ -90,10 +90,10 @@
         <Upload type="upload" @closeDrawer="handleClose" :serviceId="selectedServiceId" />
       </div>
       <div v-if="actions === 'get'">
-        <Upload type="get" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceJson="getServiceJson" />
+        <Upload type="get" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceJson="getServiceJson" :getServiceName="getServiceName" />
       </div>
       <div v-if="actions === 'edit'">
-        <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceYaml="getServiceYaml"/>
+        <Upload type="edit" @closeDrawer="handleClose" :serviceId="selectedServiceId" :getServiceYaml="getServiceYaml" :getServiceName="getServiceName"/>
       </div>
     </div>
     </el-drawer>
@@ -137,6 +137,7 @@ const selectedServiceId = ref('');
 const getServiceJson = ref('');
 const getServiceYaml = ref('');
 const apiSearchValue = ref();
+const getServiceName = ref('');
 const { userinfo } = storeToRefs(useAccountStore());
 const pagination = ref({
   pageSizes: [16, 32, 64],
@@ -155,7 +156,9 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
 const getServiceYamlFun = async (id: string) => {
   await api.querySingleApiData({serviceId:id,edit:true}).then((res) => {
       if(res) {
+        //res[1] res 取决于当前环境
         getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
+        getServiceName.value = res[1]?.result.name;
       }
   })
 }
@@ -163,7 +166,9 @@ const getServiceYamlFun = async (id: string) => {
 const getServiceJsonFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id }).then(res => {
     if (res) {
+        //res[1] res 取决于当前环境
       getServiceJson.value = res[1]?.result.apis;
+      getServiceName.value = res[1]?.result.name;
     }
   });
 };
@@ -305,7 +310,6 @@ onMounted(() => {
 .el-drawer {
   margin: 0px;
   padding: 0px;
-  background-color: pink !important;
   &::v-deep(.el-drawer__header) {
     margin-bottom: 0px !important;
   }

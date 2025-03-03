@@ -20,6 +20,7 @@ import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import appIcon from '@/assets/images/app.png'
 import { IconChevronUp } from '@computing/opendesign-icons';
+import router from 'src/router';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
 interface HistorySession {
@@ -253,13 +254,6 @@ const [_, res] = await api.getTopFiveApp(5);
     appList.value = res.result.applications;
     apps.value = res.result.applications;
   }
-  // if(_ && res){
-  //   appList.value = res.result.applications;
-  //   apps.value = res.result.applications;
-  // }
-  // else {
-  //   appList.value = apps.value;
-  // }
   if(app.value.appId){
     selectedAppId.value = app.value.appId;
     app.value.selectedAppId = app.value.appId;
@@ -275,6 +269,15 @@ watch(
   {
     immediate: true,
   },
+);
+
+watch(
+  () => router.currentRoute.value,
+  () => {
+    if(router.currentRoute.value.name === 'dialogue'){
+      getAppsValue();
+    }
+  }
 );
 
 </script>

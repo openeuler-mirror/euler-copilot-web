@@ -7,7 +7,9 @@ import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/
 import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
+import { yaml } from "@codemirror/lang-yaml"
 
+const extensions = ref([yaml()]);
 const handleCreateapi = async () => {
   const [_, res] = await api.createOrUpdateApi({
     serviceId: props.serviceId || '',
@@ -16,6 +18,7 @@ const handleCreateapi = async () => {
   if (!_ && res) {
     if (res.code === 200) {
       getServiceJson.value = res?.result?.apis;
+      getServiceName.value = res?.result?.name;
       uploadtype.value = 'get';
       successMsg('创建成功');
     } else {
@@ -49,6 +52,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  getServiceName: {
+    type: String,
+    default: '',
+  }
 });
 const emits = defineEmits<{
   (e: 'closeDrawer'): void;
@@ -59,6 +66,7 @@ const handleClose = () => {
   getServiceYaml.value = '';
   yamlToJsonContent.value = '';
   getServiceJson.value = '';
+  getServiceName.value = '';
   emits('closeDrawer');
 };
 
@@ -72,6 +80,7 @@ const uploadtype = ref(props.type);
 const getServiceYaml = ref('');
 const yamlToJsonContent = ref('');
 const getServiceJson = ref('');
+const getServiceName = ref('');
 const activeServiceNameList = ref([]);
 const imageUrl = ref('');
 const progressVal = ref(0);
@@ -163,6 +172,7 @@ const getServiceYamlFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id, edit: true }).then(res => {
     if (res) {
       getServiceYaml.value = jsYaml.dump(res?.result.data);
+      getServiceName.value = res?.result.name;
     }
   });
 };
@@ -177,7 +187,7 @@ watch(
   () => {
     getServiceJson.value = props.getServiceJson;
     getServiceYaml.value = props.getServiceYaml;
-    console.log(props, 'props---result');
+    getServiceName.value = props.getServiceName;
     if (getServiceJson.value?.length) {
       activeServiceNameList.value = [getServiceJson.value?.[0]?.name];
     }
@@ -237,6 +247,7 @@ watch(
     </div>
   </el-upload>
   <div class="code-container" v-if="uploadtype === 'edit'">
+    <span class="serviceName">{{ getServiceName }}</span>
     <Codemirror
       v-model="getServiceYaml"
       placeholder="Code goes here..."
@@ -250,6 +261,7 @@ watch(
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
+    <span class="serviceName">{{ getServiceName }}</span>
     <el-collapse v-model="activeServiceNameList" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
       <!-- 这里直接展示输入和输出 -->
       <el-collapse-item v-for="(item, index) in getServiceJson" :key="index" :name="item.name">
@@ -291,6 +303,13 @@ watch(
 </template>
 
 <style scoped>
+.serviceName{
+  display: block;
+  font-size: 14px;
+  color: var(--o-text-color-primary);
+  height: 22px;
+  margin-bottom: 8px;
+}
 .json-container {
   max-height: 80%;
   overflow-y: hidden;

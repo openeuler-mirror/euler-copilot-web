@@ -257,7 +257,7 @@ watch(
             display: flex;
             gap: 8px;
             .preFooterContentQues {
-              max-width: 150px;
+              max-width: 240px;
               border-radius: 8px;
               padding: 8px 16px;
               background-color: var(--o-bg-color-base);
