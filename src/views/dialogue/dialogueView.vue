@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { computed, effect, onMounted, ref, watchEffect } from 'vue';
+import { computed, ComputedRef, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import { useHistorySessionStore, useSessionStore, useAccountStore, useLangStore } from 'src/store';
 import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
-import Copilot from './Copilot.vue';
 import { useChangeThemeStore } from 'src/store';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
@@ -13,7 +12,7 @@ import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
 import { reactive } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
 import WitchainDIcon from '@/assets/images/witchainD.png';
@@ -23,7 +22,6 @@ import AppIcon from '@/assets/images/routerApp.png';
 import AppIconSelected from '@/assets/svgs/appIconSelected.svg';
 import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import tools from '../tools/index.vue';
-const route = useRoute();
 
 const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo } = useAccountStore();
@@ -49,45 +47,47 @@ const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
 const type = import.meta.env.VITE_USER_TYPE;
-const routerList: Array<{
+let routerList: ComputedRef<Array<{
   name: string;
   path: string;
   src: string;
   selectedSrc: string;
   routerName: string;
-  anotherName?: string | undefined;  // 路由别名，辅助匹配选中的路由图标
-}> = [
-  {
-    name: '对话',
-    path: '/',
-    src: CopilotIcon,
-    selectedSrc: CopilotIconSelected,
-    routerName: 'dialogue',
-    anotherName: 'copilot',
-  },
-  {
-    name: '语义中心',
-    path: '/api',
-    src: ApiIcon,
-    selectedSrc: ApiIconSelected,
-    routerName: 'api',
-  },
-  {
-    name: '应用中心',
-    path: '/app',
-    src: AppIcon,
-    selectedSrc: AppIconSelected,
-    routerName: 'app',
-    anotherName: 'createApp',
-  },
-  {
-    name: '知识库',
-    path: '/witchainD',
-    src: WitchainDIcon,
-    selectedSrc: WitchainDIconSelected,
-    routerName: 'witchainD',
-  },
-];
+  anotherName?: string | undefined; // 路由别名，辅助匹配选中的路由图标
+}>> = computed(() => {
+  return [
+    {
+      name: i18n.global.t('menu.dialogue'),
+      path: '/',
+      src: CopilotIcon,
+      selectedSrc: CopilotIconSelected,
+      routerName: 'dialogue',
+      anotherName: 'copilot',
+    },
+    {
+      name: i18n.global.t('menu.semantic_center'),
+      path: '/api',
+      src: ApiIcon,
+      selectedSrc: ApiIconSelected,
+      routerName: 'api',
+    },
+    {
+      name: i18n.global.t('menu.app_center'),
+      path: '/app',
+      src: AppIcon,
+      selectedSrc: AppIconSelected,
+      routerName: 'app',
+      anotherName: 'createApp',
+    },
+    {
+      name: i18n.global.t('menu.sql'),
+      path: '/witchainD',
+      src: WitchainDIcon,
+      selectedSrc: WitchainDIconSelected,
+      routerName: 'witchainD',
+    },
+  ];
+});
 
 export interface ModelForm {
   max_tokens?: number;
@@ -466,6 +466,7 @@ watch(
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin-bottom:10px ;
     cursor: pointer;
     .menu-icon {
       align-items: center;
@@ -485,6 +486,8 @@ watch(
       display: block;
       font-size: 12px;
       color: var(--o-text-color-primary);
+      text-align: center;
+      padding:0 1px;
     }
   }
 }

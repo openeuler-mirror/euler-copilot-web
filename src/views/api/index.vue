@@ -1,37 +1,37 @@
 <template>
   <div class="apiCenterBox">
     <div class="apiCenterMain">
-      <div class="apiCenterTitle">语义接口中心</div>
+      <div class="apiCenterTitle">{{$t('semantic.semantic_interface_center')}}</div>
       <div class="apiCenterSearch">
-        <el-input style="max-width: 400px" v-model="apiSearchValue" placeholder="搜索" :suffix-icon="IconSearch">
+        <el-input style="max-width: 400px" v-model="apiSearchValue" :placeholder="$t('semantic.interface_search')" :suffix-icon="IconSearch">
           <template #prepend>
             <el-select v-model="apiSearchType" style="width: 115px" :suffix-icon="IconCaretDown">
-              <el-option label="全部" value="all" />
-              <el-option label="接口名称" value="name" />
-              <el-option label="接口简介" value="description" />
-              <el-option label="用户名称" value="author" />
+              <el-option :label="$t('semantic.all_select')" value="all" />
+              <el-option :label="$t('semantic.interface_name')" value="name" />
+              <el-option :label="$t('semantic.interface_introduction')" value="description" />
+              <el-option :label="$t('semantic.username')" value="author" />
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createapi" @click="openSidebar('upload', '')">上传</el-button>
+        <el-button type="primary" class="createapi" @click="openSidebar('upload', '')">{{$t('semantic.interface_upload')}}</el-button>
       </div>
       <div class="apiCenterType">
         <div class="apiCenterBtn" :class="{ apiCenterBtnActive: apiType === 'my' }" @click="handleSearchapiList('my')">
-          全部接口
+          {{$t('semantic.all_interface')}}
         </div>
         <div
           class="apiCenterBtn"
           :class="{ apiCenterBtnActive: apiType === 'createdByMe' }"
           @click="handleSearchapiList('createdByMe')"
         >
-          我的上传
+        {{$t('semantic.my_upload')}}
         </div>
         <div
           class="apiCenterBtn"
           :class="{ apiCenterBtnActive: apiType === 'favorited' }"
           @click="handleSearchapiList('favorited')"
         >
-          我的收藏
+        {{$t('semantic.my_favorite')}}
         </div>
       </div>
       <div class="apiCenterCardContainer">
@@ -63,15 +63,15 @@
             <div class="apiCenterCardBottom">
               <div class="apiCenterCardUser">@{{ apiItem.author }}</div>
               <div class="apiCenterCardOps" v-if="userinfo.user_sub === apiItem.author">
-                <el-button text @click="openSidebar('edit', apiItem.serviceId)">编辑</el-button>
-                <el-button text @click="handleDelapi(apiItem)">删除</el-button>
+                <el-button text @click="openSidebar('edit', apiItem.serviceId)">{{$t('semantic.interface_edit')}}</el-button>
+                <el-button text @click="handleDelapi(apiItem)">{{$t('semantic.interface_delete')}}</el-button>
               </div>
             </div>
           </div>
         </div>
         <div class="appCenterNoData" v-else>
           <div class="noDataIcon"></div>
-          <div class="desc">暂无数据</div>
+          <div class="desc">{{$t('semantic.no_data')}}</div>
         </div>
       </div>
     </div>
@@ -124,6 +124,7 @@ import { successMsg } from 'src/components/Message';
 import { useAccountStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 import * as jsYaml from 'js-yaml';
+import i18n from 'src/i18n';
 
 const apiList = ref();
 const drawer = ref(false);
@@ -178,15 +179,15 @@ const openSidebar = (action: string, id: string) => {
   actions.value = action;
   if (action === 'upload') {
     // 展示上传的框架
-    actionName.value = '上传语义接口';
+    actionName.value = i18n.global.t('semantic.upload_semantic_interface');
   } else if (action === 'edit') {
     // 展示编辑的框架
-    actionName.value = '编辑语义接口';
+    actionName.value = i18n.global.t('semantic.edit_semantic_interface');
     selectedServiceId.value = id;
     getServiceYamlFun(id);
   } else if (action === 'get') {
     // 展示查看的框架
-    actionName.value = '查看语义接口';
+    actionName.value = i18n.global.t('semantic.view_semantic_interface');
     selectedServiceId.value = id;
     getServiceJsonFun(id);
   }

@@ -234,12 +234,16 @@ watch(
           <IconUpload />
         </el-icon>
         <div class="upload-tip">
-          将文件拖拽到此处 或
+          {{ $t('semantic.tip1') }}
           <div style="margin-top: 16px">
-            <el-button type="primary" size="small">选择文件</el-button>
+            <el-button type="primary" size="small">
+              {{ $t('semantic.choose_file') }}
+            </el-button>
           </div>
         </div>
-        <div class="upload-tip">格式: YAML, 大小 &lt; 2M</div>
+        <div class="upload-tip">
+          {{ $t('semantic.tip2') }}
+        </div>
       </div>
       <div v-if="progressVal && !uploadDone" class="upload-loading">
         <el-progress class="uplaod-progress" :percentage="progressVal" :stroke-width="8" />
@@ -275,11 +279,11 @@ watch(
         <div class="o-collapse-content">
           <div class="itemTitle">
             <div class="subName">
-              <div>接口路径</div>
+              <div>{{$t('semantic.interface_path')}}</div>
               <div>{{ item.path }}</div>
             </div>
             <div class="subName">
-              <div>接口描述</div>
+              <div>{{$t('semantic.interface_description')}}</div>
               <div>{{ item.description }}</div>
             </div>
           </div>
@@ -288,17 +292,17 @@ watch(
     </el-collapse>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'upload'">
-    <el-button @click="handleClose">取消</el-button>
-    <el-button type="primary" @click="handleClose">确定</el-button>
+    <el-button @click="handleClose">{{$t('semantic.cancel')}}</el-button>
+    <el-button type="primary" @click="handleClose">{{$t('semantic.submit')}}</el-button>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'edit'">
-    <el-button @click="handleClose">取消</el-button>
-    <el-button @click="handleEdit">编辑</el-button>
-    <el-button type="primary" @click="handleCreateapi()">解析</el-button>
+    <el-button @click="handleClose">{{$t('semantic.cancel')}}</el-button>
+    <el-button @click="handleEdit">{{$t('semantic.edit')}}</el-button>
+    <el-button type="primary" @click="handleCreateapi()">{{$t('semantic.analyze')}}</el-button>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'get'">
-    <el-button @click="handleClose">取消</el-button>
-    <el-button type="primary" @click="handleClose">确定</el-button>
+    <el-button @click="handleClose">{{$t('semantic.cancel')}}</el-button>
+    <el-button type="primary" @click="handleClose">{{$t('semantic.submit')}}</el-button>
   </div>
 </template>
 
