@@ -11,6 +11,7 @@ import type {
   UserDialoguePanelType,
   RobotDialoguePanelType,
 } from 'src/components/dialoguePanel/type';
+import { Metadata } from 'srcapis/paths/type';
 
 // 工具类型
 export type LinkType = 'redirect' | 'action';
@@ -49,15 +50,6 @@ export interface UserConversationItem {
   message: string;
   createdAt?: string | Date;
   params?: any;
-}
-
-// "input_tokens": 200, //prompt的token数量
-// "output_tokens": 50, //大模型生成的token数量
-// "time": 0.5 //运行时间，单位秒，最多2位小数
-export interface Metatype {
-  input_tokens: number;
-  output_tokens: number;
-  time: number;
 }
 
 export interface FlowType {
@@ -102,7 +94,7 @@ export interface RobotConversationItem {
   groupId:string|undefined;
   search_suggestions?:string[];
   echartsObj?:any,
-  metadata?:undefined | Metatype;
+  metadata?:undefined | Metadata;
   flowdata?:FlowType;
   paramsList?:any;
 }

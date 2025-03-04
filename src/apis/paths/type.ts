@@ -34,11 +34,17 @@ export interface Content {
     data: any; // 可以根据具体情况细化这个类型
 }
 
-// 定义元数据信息的接口
+/**
+ * 定义元数据信息的接口
+ * 
+ * @property {number} inputTokens - 输入的token数量，表示prompt的token数量。
+ * @property {number} outputTokens - 输出的token数量，表示大模型生成的token数量。
+ * @property {number} timeCost - 运行时间，单位为秒，最多保留两位小数。
+ */
 export interface Metadata {
-    input_tokens: number;
-    output_tokens: number;
-    time: number;
+    inputTokens: number;
+    outputTokens: number;
+    timeCost: number;
 }
 
 // 定义问答对数据结构
