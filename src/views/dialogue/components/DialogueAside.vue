@@ -260,8 +260,11 @@ const [_, res] = await api.getTopFiveApp(5);
   ensureAppAtFirstPosition();
 }
 
+/**
+ * 监听 userinfo 的变化，当 userinfo 中的 user_sub 存在时调用 getAppsValue 方法。
+ */
 watch(
-  [app, userinfo],
+  [userinfo],
   () => {
     if (userinfo.value.user_sub) {
       getAppsValue();
@@ -272,7 +275,12 @@ watch(
     deep: true,
   },
 );
-
+watch(
+  [app],
+  () => {
+      getAppsValue();
+  }
+);
 watch(
   () => router.currentRoute.value,
   () => {
