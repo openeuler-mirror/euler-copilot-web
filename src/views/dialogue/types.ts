@@ -11,7 +11,7 @@ import type {
   UserDialoguePanelType,
   RobotDialoguePanelType,
 } from 'src/components/dialoguePanel/type';
-import { Metadata } from 'srcapis/paths/type';
+import { Metadata } from 'src/apis/paths/type';
 
 // 工具类型
 export type LinkType = 'redirect' | 'action';
