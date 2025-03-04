@@ -29,6 +29,8 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
+const whiteList: Array<string | undefined> = ['/api/app/recent', '/api/auth/user'];
+
 // 创建 axios 实例
 export const server = axios.create({
   // API 请求的默认前缀
@@ -64,16 +66,15 @@ server.interceptors.response.use(
   },
   async (error: AxiosError) => {
     //防止初始化时出现太多报错
-    if(error.config?.url === '/api/app/recent') {
-      return 
+    if (!whiteList.includes(error.config?.url)) {
+      ElMessage({
+        showClose: true,
+        message: error?.response?.data?.message || error.message,
+        icon: IconError,
+        customClass: 'o-message--error',
+        duration: 3000,
+      });
     }
-    ElMessage({
-      showClose: true,
-      message: error?.response?.data?.message || error.message,
-      icon: IconError,
-      customClass: 'o-message--error',
-      duration: 3000,
-    });
     return await handleStatusError(error);
   },
 );
