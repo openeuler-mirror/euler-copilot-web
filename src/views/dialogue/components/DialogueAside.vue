@@ -12,7 +12,7 @@ import {
 } from 'element-plus';
 import { computed, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
-import { useHistorySessionStore, useSessionStore } from '@/store';
+import { useAccountStore, useHistorySessionStore, useSessionStore } from '@/store';
 import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { useI18n } from 'vue-i18n';
@@ -41,7 +41,8 @@ const { t } = useI18n();
 const { historySession, selectedSessionIds, isSelectedAll, currentSelectedSession } =
   storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
-const { getHistorySession, createNewSession } = useHistorySessionStore();
+const { getHistorySession } = useHistorySessionStore();
+const { userinfo } = storeToRefs(useAccountStore());
 const deleteType = ref(true);
 // 搜索的关键词
 const searchKey = ref<string>('');
@@ -49,8 +50,7 @@ const activeNames = ref(['today', 'week', 'month', 'other']);
 const isCollapsed = ref(false);
 const selectedAppId = ref(null);
 //
-const apps = ref([
-]);
+const apps = ref([]);
 
 const filteredHistorySessions = computed(() => {
   // filter by searchKey
@@ -246,7 +246,6 @@ function ensureAppAtFirstPosition() {
   user_selected_app.value = [app.value.appId];
 }
 
-
 const getAppsValue = async () => {
 //获取 top5 list 
 const [_, res] = await api.getTopFiveApp(5);
@@ -262,12 +261,15 @@ const [_, res] = await api.getTopFiveApp(5);
 }
 
 watch(
-  () => app,
+  [app, userinfo],
   () => {
-    getAppsValue();
+    if (userinfo.value.user_sub) {
+      getAppsValue();
+    }
   },
   {
     immediate: true,
+    deep: true,
   },
 );
 

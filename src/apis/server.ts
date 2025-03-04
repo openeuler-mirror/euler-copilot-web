@@ -29,7 +29,7 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
-const whiteList: Array<string | undefined> = ['/api/app/recent', '/api/auth/user'];
+const whiteList: Array<string | undefined> = ['/api/auth/user'];
 
 // 创建 axios 实例
 export const server = axios.create({
