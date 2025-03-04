@@ -502,7 +502,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
       <div class="dialogue-panel__robot-bottom" v-if="!$slots.default && contentAfterMark">
         <div class="action-buttons">
           <div class="pagenation" v-if="isFinish">
-            <div class="pagenation-item" v-if="props.metadata">tokens:{{ props.metadata?.input_tokens }}↑|{{ props.metadata?.output_tokens }}‌↓|{{ Number(props.metadata?.time).toFixed(2) }}</div>
+            <div class="pagenation-item" v-if="props.metadata">tokens:{{ props.metadata?.inputTokens }}↑| {{ props.metadata?.outputTokens }}‌↓| {{ Number(props.metadata?.timeCost).toFixed(2) }}</div>
               <img
                 class="pagenation-arror"
                 @click="prePageHandle(Number(cid))"

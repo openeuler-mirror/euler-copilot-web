@@ -13,7 +13,7 @@ import { api } from 'src/apis';
 
 const router = useRouter();
 const route = useRoute();
-const { updateAgreement } = useAccountStore();
+const { updateAgreement,userinfo } = useAccountStore();
 const { app } = storeToRefs(useSessionStore());
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
@@ -44,37 +44,37 @@ const readAgreement = async () => {
 };
 
 watch(
-  () => router,
+  [router,userinfo],
   () => {
-  const currRoute = router.currentRoute;
-  if (currRoute.value.query.appId) {
-    // 判断是否编辑--是否需要查询回显数据
-    api
-      .querySingleAppData({
-        id: route.query?.appId as string,
-      })
-      .then(res => {
-        const appInfo = res?.[1]?.result;
-        if (appInfo) {
-          createAppForm.value = {
-            icon: appInfo?.icon,
-            name: appInfo?.name,
-            description: appInfo?.description,
-            links: appInfo?.links?.map(item => item.url),
-            recommendedQuestions: appInfo?.recommendedQuestions,
-            dialogRounds: appInfo?.dialogRounds,
-            permission: {
-              visibility: appInfo?.permission?.visibility,
-              authorizedUsers: appInfo?.permission?.authorizedUsers,
-            },
-          };
-        }
-      });
-    }else{
-      // 清除 app 时机 
-      app.value.appId="";
-      app.value.name="";
-      app.value.selectedAppId="";
+    const currRoute = router.currentRoute;
+    if (currRoute.value.query.appId && userinfo.user_sub) {
+      // 判断是否编辑--是否需要查询回显数据
+      api
+        .querySingleAppData({
+          id: route.query?.appId as string,
+        })
+        .then(res => {
+          const appInfo = res?.[1]?.result;
+          if (appInfo) {
+            createAppForm.value = {
+              icon: appInfo?.icon,
+              name: appInfo?.name,
+              description: appInfo?.description,
+              links: appInfo?.links?.map(item => item.url),
+              recommendedQuestions: appInfo?.recommendedQuestions,
+              dialogRounds: appInfo?.dialogRounds,
+              permission: {
+                visibility: appInfo?.permission?.visibility,
+                authorizedUsers: appInfo?.permission?.authorizedUsers,
+              },
+            };
+          }
+        });
+    } else {
+      // 清除 app 时机
+      app.value.appId = '';
+      app.value.name = '';
+      app.value.selectedAppId = '';
       return;
     }
   },
@@ -101,20 +101,18 @@ const handleSubmit = async () => {
   dialogVisible.value = false;
 };
 
-onMounted(async() => {
+onMounted(async () => {
   window.scrollTo({
     top: 0,
     left: 0,
   });
 });
-
-
 </script>
 <template>
   <div class="copilot-container" :class="qiankunWindow.__POWERED_BY_QIANKUN__ ? 'micro-copilot-container' : ''">
     <div class="copilot-container-main">
       <DialogueAside />
-      <DialogueSession :createAppForm="createAppForm"/>
+      <DialogueSession :createAppForm="createAppForm" />
     </div>
   </div>
 
