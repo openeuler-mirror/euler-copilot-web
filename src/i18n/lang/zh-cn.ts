@@ -1,3 +1,5 @@
+import { appApi } from "srcapis/paths";
+
 export default {
   home: {
     name: 'EulerCopilot',
@@ -40,6 +42,29 @@ export default {
     submit:'确定',
     edit:"编辑",
     analyze:'解析',
+  },
+  app:{
+    app_center:'应用中心',
+    all_select:'全部',
+    app_name:'应用名称',
+    app_introduction:'应用简介',
+    username:'用户名称',
+    app_search:'搜索',
+    app_upload:'上传',
+    all_app:'全部应用',
+    my_upload:'我的上传',
+    my_favorite:'我的收藏',
+    app_edit:'编辑',
+    app_delete:'删除',
+    no_data:'暂无数据',
+    upload_app:'上传应用',
+    edit_app:'编辑应用',
+    view_app:'查看应用',
+    cancel:'取消',
+    submit:'确定',
+    edit:"编辑",
+    analyze:'解析',
+    unpublished:'未发布',
   },
   main: {
     describe1: '你好，我是',
@@ -215,5 +240,9 @@ export default {
     flow_end: "工作流结束",
     flow_params_error: "缺少参数",
     flow_pause: "工作流暂停",
+  },
+  pagination: {
+    prev: 'Previous',
+    next: 'Next',
   }
 }
