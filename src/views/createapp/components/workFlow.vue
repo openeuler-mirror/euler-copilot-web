@@ -34,7 +34,8 @@ const isAddWorkFlow = ref(false);
 const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
-const nodeName = ref();
+const nodeName = ref('');
+const nodeDesc = ref('');
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const isNodeAndLineConnect = ref(false);
@@ -180,9 +181,10 @@ const delNode = id => {
   }
 };
 // 编辑yaml
-const editYamlDrawer = (name, yamlCode, nodeId) => {
+const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
   yamlContent.value = yamlCode;
   nodeName.value = name;
+  nodeDesc.value = desc;
   isEditYaml.value = true;
   nodeYamlId.value = nodeId;
 };
@@ -482,9 +484,15 @@ $bus.on('getNodesStatue', lines => {
             totalTime.value += newLines.data?.metadata?.timeCost;
             constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`
             // 此处获取output的数据，并将此数据传给节点显示
-            updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, newLines.data?.content);
+            updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, {
+              params: newLines.data?.content,
+              type: 'output'
+            });
           } else {
-            updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime);
+            updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, {
+              params: newLines.data?.content,
+              type: 'input'
+            });
           }
       } else if (newLines?.data?.event === 'flow.stop') {
         emits('updateFlowsDebug')
@@ -580,6 +588,8 @@ const saveFlow = (updateNodeParameter?) => {
         } else {
           item.parameters.input_parameters = updateNodeParameter.inputStream;
         }
+        item.name = updateNodeParameter.name;
+        item.description = updateNodeParameter.description;
       }
     });
   }
@@ -607,15 +617,19 @@ const saveFlow = (updateNodeParameter?) => {
       if (res[1]?.result) {
         ElMessage.success('工作流更新成功');
         queryFlow('update');
+        const updatedCurFlow = res[1].result.flow;
+        redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
       }
     });
 };
 
-const saveNode = (yamlCode, nodeId) => {
+const saveNode = (yamlCode, nodeId, name, description) => {
   // 调用更新接口更新当前节点数据
   const updateNodeParameter = {
     id: nodeId,
     inputStream: yamlCode,
+    name,
+    description,
   };
   saveFlow(updateNodeParameter);
 };
@@ -809,6 +823,7 @@ defineExpose({
     :flowId="flowObj?.flowId"
     :yamlContent="yamlContent"
     :nodeName="nodeName"
+    :nodeDesc="nodeDesc"
     :nodeYamlId="nodeYamlId"
   ></EditYamlDrawer>
 </template>

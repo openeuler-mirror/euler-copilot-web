@@ -14,21 +14,56 @@
       <template #default>
         <div class="drawerBody">
           <el-collapse v-model="activeName" class="o-hpc-collapse yamlContent">
-            <el-collapse-item title="Consistency" :key="item.title" :name="item.title" v-for="(item, index) in yamlExpress">
+            <el-collapse-item
+              title="Consistency"
+              :key="item.title"
+              :name="item.title"
+              v-for="(item, index) in yamlExpress"
+            >
               <template #title>
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes(item.title) }">
                   <IconCaretRight />
                 </el-icon>
                 <span>{{ item.title }}</span>
               </template>
-
               <MirrorText
+                v-if="item.type"
                 ref="textarea"
-                :class="{'outputYaml': index !== 0}"
+                :class="{ outputYaml: index !== 1 }"
                 v-model:updateVal="item.yamlCode"
                 :yamlCode="item.yamlCode"
                 :disabled="item.disabled"
               ></MirrorText>
+              <div class="baseInfo" v-else>
+                <el-form
+                  ref="workFlowForm"
+                  class=""
+                  :model="yamlExpress[0]"
+                  :rules="yamlBaseInfoRule"
+                  label-position="left"
+                >
+                  <el-form-item prop="name" label="接口名称">
+                    <el-input
+                      v-model="yamlExpress[0].name"
+                      placeholder="请输入"
+                      maxlength="20"
+                      class="o-validate-input"
+                      clearable
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item prop="description" label="接口描述">
+                    <el-input
+                      type="textarea"
+                      show-word-limit
+                      maxlength="150"
+                      v-model="yamlExpress[0].description"
+                      placeholder="请输入"
+                      class="workFlowDesc o-validate-input"
+                      clearable
+                    ></el-input>
+                  </el-form-item>
+                </el-form>
+              </div>
             </el-collapse-item>
           </el-collapse>
         </div>
@@ -36,7 +71,7 @@
       <template #footer>
         <div class="drawerFooter">
           <el-button @click="closeDrawer">关闭</el-button>
-          <el-button type="primary" @click="updateNodeYaml">完成</el-button>
+          <el-button :disabled="infoDisabled" type="primary" @click="updateNodeYaml">完成</el-button>
         </div>
       </template>
     </el-drawer>
@@ -52,36 +87,63 @@ const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
 const yamlNodeName = ref();
+const infoDisabled = ref(true);
 const yamlExpress = ref([
   {
+    title: '基本信息',
+    type: '',
+    name: '',
+    description: '',
+  },
+  {
     title: '输入内容',
+    type: 'yamlEdit',
     yamlCode: '',
     disabled: false,
   },
   {
     title: '输出内容',
+    type: 'yamlEdit',
     yamlCode: '',
     disabled: true,
   },
 ]);
+const yamlBaseInfoRule = ref({
+  name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
+  description: [{ required: true, message: '请输入工作流描述', trigger: 'blur' }],
+});
 const activeName = ref([yamlExpress.value[0].title, yamlExpress.value[1].title]);
 const emits = defineEmits(['closeDrawer', 'saveNode']);
 const props = defineProps<{
   yamlContent: any;
   nodeName: string;
+  nodeDesc: string;
   appId: any;
   flowId: any;
   nodeYamlId: any;
 }>();
 
 watch(
-  () => [props.yamlContent, props.nodeName],
+  () => [props.yamlContent, props.nodeName, props.nodeDesc],
   () => {
     yamlInputCode.value = yaml.dump(props.yamlContent.input_parameters);
     yamlOutputCode.value = yaml.dump(props.yamlContent.output_parameters);
     yamlNodeName.value = props.nodeName;
-    yamlExpress.value[0].yamlCode = yaml.dump(props.yamlContent.input_parameters);
-    yamlExpress.value[1].yamlCode = yaml.dump(props.yamlContent.output_parameters);
+    yamlExpress.value[0].name = props.nodeName;
+    yamlExpress.value[0].description = props.nodeDesc;
+    yamlExpress.value[1].yamlCode = yaml.dump(props.yamlContent.input_parameters);
+    yamlExpress.value[2].yamlCode = yaml.dump(props.yamlContent.output_parameters);
+  },
+  { deep: true, immediate: true },
+);
+watch(
+  () => [yamlExpress.value[0].name, yamlExpress.value[0].description],
+  () => {
+    if (yamlExpress.value[0].name && yamlExpress.value[0].description) {
+      infoDisabled.value = false;
+    } else {
+      infoDisabled.value = true;
+    }
   },
   { deep: true, immediate: true },
 );
@@ -92,9 +154,9 @@ const closeDrawer = () => {
 const updateNodeYaml = () => {
   let transResult;
   try {
-    transResult = yaml.load(yamlExpress.value[0].yamlCode);
-    // 调用接口并更新
-    emits('saveNode', transResult, props.nodeYamlId);
+    transResult = yaml.load(yamlExpress.value[1].yamlCode);
+    // 调用接口并更新--根据id包含更新后的yamlCode, name, desc
+    emits('saveNode', transResult, props.nodeYamlId, yamlExpress.value[0].name, yamlExpress.value[0].description);
     closeDrawer();
   } catch (error) {
     ElMessage.error('请检查格式是否正确');
@@ -144,12 +206,28 @@ const updateNodeYaml = () => {
             .cm-lineNumbers {
               .cm-gutterElement {
                 min-width: 31px;
-                padding-left:  0 0 0 9px;
+                padding-left: 0 0 0 9px;
                 text-align: center;
               }
             }
             .cm-foldGutter {
               padding-left: 0;
+            }
+          }
+          .baseInfo {
+            .el-form-item {
+              display: flex;
+              gap: 24px;
+              .el-form-item__label {
+                margin-left: -8px;
+                padding-right: 0px;
+              }
+              .el-form-item__content {
+                flex: 1;
+                .el-textarea__inner {
+                  height: 56px;
+                }
+              }
             }
           }
         }
