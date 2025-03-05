@@ -712,6 +712,9 @@ export const useSessionStore = defineStore('conversation', () => {
    * 暂停流式返回
    */
   const stopDebug = async (): Promise<void> => {
+    isPaused.value = true;
+    (conversationList.value[conversationList.value.length - 1] as RobotConversationItem).isFinish = true;
+    cancel();
     await api.stopGeneration();
   };
 

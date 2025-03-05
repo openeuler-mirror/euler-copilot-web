@@ -29,6 +29,7 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
+//白名单
 const whiteList: Array<string | undefined> = ['/api/auth/user'];
 
 // 创建 axios 实例
@@ -65,16 +66,16 @@ server.interceptors.response.use(
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
-    //防止初始化时出现太多报错
-    if (!whiteList.includes(error.config?.url)) {
-      ElMessage({
-        showClose: true,
-        message: error?.response?.data?.message || error.message,
-        icon: IconError,
-        customClass: 'o-message--error',
-        duration: 3000,
-      });
-    }
+    // 取消请求的错误处理，将错误处理全部移动到实际请求catch中
+    // if (!whiteList.includes(error.config?.url)) {
+    //   ElMessage({
+    //     showClose: true,
+    //     message: error?.response?.data?.message || error.message,
+    //     icon: IconError,
+    //     customClass: 'o-message--error',
+    //     duration: 3000,
+    //   });
+    // }
     return await handleStatusError(error);
   },
 );

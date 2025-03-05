@@ -1,37 +1,37 @@
 <template>
   <div class="appCenterBox">
     <div class="appCenterMain">
-      <div class="appCenterTitle">应用中心</div>
+      <div class="appCenterTitle">{{ $t('app.app_center') }}</div>
       <div class="appCenterSearch">
-        <el-input style="max-width: 400px" v-model="appSearchValue" placeholder="搜索" :suffix-icon="IconSearch">
+        <el-input style="max-width: 400px" v-model="appSearchValue" :placeholder="$t('app.app_search')" :suffix-icon="IconSearch">
           <template #prepend>
             <el-select v-model="appSearchType" style="width: 115px" :suffix-icon="IconCaretDown">
-              <el-option label="全部" value="all" />
-              <el-option label="应用名称" value="name" />
-              <el-option label="应用简介" value="description" />
-              <el-option label="用户名称" value="author" />
+              <el-option :label="$t('app.all_select')" value="all" />
+              <el-option :label="$t('app.app_name')" value="name" />
+              <el-option :label="$t('app.app_introduction')" value="description" />
+              <el-option :label="$t('app.username')" value="author" />
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createApp" @click="handleCreateApp">创建应用</el-button>
+        <el-button type="primary" class="createApp" @click="handleCreateApp">{{$t('app.app_upload')}}</el-button>
       </div>
       <div class="appCenterType">
         <div class="appCenterBtn" :class="{ appCenterBtnActive: appType === 'my' }" @click="handleSearchAppList('my')">
-          全部应用
+          {{$t('app.all_app')}}
         </div>
         <div
           class="appCenterBtn"
           :class="{ appCenterBtnActive: appType === 'createdByMe' }"
           @click="handleSearchAppList('createdByMe')"
         >
-          我的创建
+        {{$t('app.my_upload')}}
         </div>
         <div
           class="appCenterBtn"
           :class="{ appCenterBtnActive: appType === 'favorited' }"
           @click="handleSearchAppList('favorited')"
         >
-          我的收藏
+        {{$t('app.my_favorite')}}
         </div>
       </div>
       <div class="appCenterCardContainer">
@@ -68,19 +68,19 @@
             <div class="appCenterCardBottom">
               <div class="appCenterCardUser">@{{ appItem.author }}</div>
               <div class="appCenterCardOps" v-if="appItem.author === userinfo.user_sub">
-                <el-button text @click="handleEditApp($event, appItem)">编辑</el-button>
-                <el-button text @click="handleDelApp($event, appItem)">删除</el-button>
+                <el-button text @click="handleEditApp($event, appItem)">{{$t('app.app_edit')}}</el-button>
+                <el-button text @click="handleDelApp($event, appItem)">{{$t('app.app_delete')}}</el-button>
               </div>
             </div>
             <div class="unPublishSymbol" v-if="!appItem.published && appType === 'createdByMe'">
               <div class="coverIcon"></div>
-              <div class="textDesc">{{ publishStatus }}</div>
+              <div class="textDesc">{{ $t('app.unpublished') }}</div>
             </div>
           </div>
         </div>
         <div class="appCenterNoData" v-else>
           <div class="noDataIcon"></div>
-          <div class="desc">暂无数据</div>
+          <div class="desc">{{$t('app.no_data')}}</div>
         </div>
       </div>
       <el-pagination
