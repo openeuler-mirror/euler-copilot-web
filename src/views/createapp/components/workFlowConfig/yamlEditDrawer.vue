@@ -112,7 +112,7 @@ const yamlBaseInfoRule = ref({
   name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
   description: [{ required: true, message: '请输入工作流描述', trigger: 'blur' }],
 });
-const activeName = ref([yamlExpress.value[0].title, yamlExpress.value[1].title]);
+const activeName = ref([yamlExpress.value[0].title, yamlExpress.value[1].title, yamlExpress.value[2].title]);
 const emits = defineEmits(['closeDrawer', 'saveNode']);
 const props = defineProps<{
   yamlContent: any;

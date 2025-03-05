@@ -495,7 +495,6 @@ $bus.on('getNodesStatue', lines => {
             });
           }
       } else if (newLines?.data?.event === 'flow.stop') {
-        emits('updateFlowsDebug')
         debugStatus.value = newLines.data.flow?.stepStatus;
         debugTime.value = `${totalTime.value.toFixed(3)}s`
         // 最后更新-调用一下接口
@@ -508,6 +507,12 @@ $bus.on('getNodesStatue', lines => {
   }
   // 修改节点时，需要将对应节点的边也进行修改
 });
+
+// 这里结束整个工作流对话
+$bus.on('debugChatEnd', () => {
+  // 更新发布按钮状态
+  emits('updateFlowsDebug')
+})
 
 // 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
 const updateNodeFunc = (id, status, constTime, content?) => {

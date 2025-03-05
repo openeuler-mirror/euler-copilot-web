@@ -96,10 +96,9 @@ export const useSessionStore = defineStore('conversation', () => {
     const language = localStorage.getItem('localeLang') === 'EN' ? 'en' : 'zh';
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
-    // 当前问答在整个问答记录中的索引
+    // 当前问答在整个问答记录中的索引 openouler有什么ai特性
     const answerIndex = ind ?? conversationList.value.length - 1;
     const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
-
     controller = new AbortController();
     const headers = {
       user: JSON.stringify({ userName: 'openEuler' }),
@@ -220,12 +219,12 @@ export const useSessionStore = defineStore('conversation', () => {
       }
       const reader = resp.body.getReader();
       const decoder = new TextDecoder('utf-8');
-
       let isEnd = true;
       isPaused.value = false;
       excelPath.value = '';
       echartsObj.value = {};
       txt2imgPath.value = '';
+      let workFlowId = ''; // 这里存储工作流调试对话的判断id
       while (isEnd) {
         if (isPaused.value) {
           // 手动暂停输出
@@ -244,22 +243,19 @@ export const useSessionStore = defineStore('conversation', () => {
           if (excelPath.value.length > 0) {
             conversationItem.message[conversationItem.currentInd] += `</p><p>下载地址：${excelPath.value}`;
           }
-
           conversationItem.isFinish = true;
           isEnd = false;
           isAnswerGenerating.value = false;
+
+          // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
+          if (params.type && workFlowId) {
+            $bus.emit('debugChatEnd');
+          }
           break;
         }
         // 这里删除了\n\n
         const lines = decodedValue.split('\n\n').filter((line) => line.startsWith('data: {'));
-        // 这里删除'data: {'代替，再加上---测试使用
-        // const lines2 = decodedValue.split('data: {');
-        // const line3 = lines2.map(item => {
-        //   item = 'data: {' + item;
-        // })
-        // return;
         lines.forEach((line) => {
-          // const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
           // 这里json解析
           const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
           if( 'metadata' in message){
@@ -293,6 +289,8 @@ export const useSessionStore = defineStore('conversation', () => {
             else if(message["event"] === "flow.start") {
               //事件流开始--后续验证对话无下拉连接后则完全替换
               let flow = message.flow;
+              // 这里给工作流调试的对话id赋值，用于判断
+              workFlowId = flow?.flowId;
               conversationItem.flowdata = {
                 id: flow?.stepId || "",
                 title: i18n.global.t('flow.flow_start'),
@@ -305,10 +303,6 @@ export const useSessionStore = defineStore('conversation', () => {
               }
             }
             else if(message["event"] === "step.input") {
-              // const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow.step_name);
-              // if (target) {
-              //   target.data.input = message
-              // }
                 conversationItem.flowdata?.data[0].push({
                   id:message.flow?.stepId,
                   title:message.flow?.stepName,
