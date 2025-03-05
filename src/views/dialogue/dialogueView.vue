@@ -210,7 +210,6 @@ const changeLanguagefun = (lang: 'CN' | 'EN') => {
   if (iframe?.contentWindow) {
     const data = {lang:localStorage.getItem('localeLang')};
     let target = `${window.location.origin}/witchaind`;
-    // let target = `http://localhost:3002`;  // 本地调试
     iframe.contentWindow.postMessage(data, target);
   }
 };
@@ -231,7 +230,6 @@ onMounted(() => {
   console.log('iframe', `${window.location.origin}/witchaind`);
   initCopilot();
   iframe.src = `${window.location.origin}/witchaind`;
-  // iframe.src = `http://localhost:3002`;
 
 
 });
