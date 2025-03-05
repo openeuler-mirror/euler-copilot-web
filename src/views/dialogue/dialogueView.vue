@@ -205,6 +205,14 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
 
 const changeLanguagefun = (lang: 'CN' | 'EN') => {
   changeLanguage(lang);
+  // 同步语言到iframe
+  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe')
+  if (iframe?.contentWindow) {
+    const data = {lang:localStorage.getItem('localeLang')};
+    let target = `${window.location.origin}/witchaind`;
+    // let target = `http://localhost:3002`;  // 本地调试
+    iframe.contentWindow.postMessage(data, target);
+  }
 };
 
 const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
@@ -221,9 +229,11 @@ onMounted(() => {
   console.log('onMounted', window.location.host);
   const iframe = document.getElementById('my-iframe');
   console.log('iframe', `${window.location.origin}/witchaind`);
-  iframe.src = `${window.location.origin}/witchaind`;
   initCopilot();
-  // iframe.src = `http://localhost:3002`;
+  // iframe.src = `${window.location.origin}/witchaind`;
+  iframe.src = `http://localhost:3002`;
+
+
 });
 
 watch(
