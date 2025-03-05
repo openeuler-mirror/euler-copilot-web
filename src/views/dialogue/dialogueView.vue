@@ -230,8 +230,8 @@ onMounted(() => {
   const iframe = document.getElementById('my-iframe');
   console.log('iframe', `${window.location.origin}/witchaind`);
   initCopilot();
-  // iframe.src = `${window.location.origin}/witchaind`;
-  iframe.src = `http://localhost:3002`;
+  iframe.src = `${window.location.origin}/witchaind`;
+  // iframe.src = `http://localhost:3002`;
 
 
 });
