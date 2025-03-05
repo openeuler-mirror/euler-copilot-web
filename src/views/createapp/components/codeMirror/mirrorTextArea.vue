@@ -1,12 +1,14 @@
 <template>
   <codemirror
     v-model="code"
+    class="codeMirror"
     ref="mycodemirror"
     :autofocus="true"
     :extensions="extensions"
     :indent-with-tab="true"
     :disabled="isDisabled"
     @change="handleChange"
+    @update="updateFunc"
     :tab-size="2"
   />
 </template>
@@ -35,6 +37,18 @@ watch(
   },
   { deep: true, immediate: true },
 );
+
+const updateFunc = () => {
+  const foldDoms = document.querySelectorAll('span[title="Fold line"]');
+  foldDoms.forEach(dom => {
+    dom.innerText = '';
+  });
+
+  const unFoldDoms = document.querySelectorAll('span[title="Unfold line"]');
+  unFoldDoms.forEach(dom => {
+    dom.innerText = '';
+  });
+};
 </script>
 <style lang="scss">
 .v-codemirror {
@@ -45,6 +59,25 @@ watch(
     border: 1px solid var(--o-time-text);
     .cm-gutters {
       background-color: var(--o-bash-bg);
+      span[title='Fold line'] {
+        width: 0;
+        height: 0;
+        display: block;
+        border: 4px solid transparent;
+        border-top: 4px solid #8d98aa;
+        margin-top: 8px;
+        padding: 0;
+      }
+      span[title='Unfold line'] {
+        width: 0;
+        height: 0;
+        display: block;
+        border: 4px solid transparent;
+        border-left: 4px solid #8d98aa;
+        margin-top: 6px;
+        margin-left: 4px;
+        padding: 0;
+      }
     }
   }
   .cm-focused {
