@@ -22,7 +22,7 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     required: false,
-  }
+  },
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
@@ -52,13 +52,13 @@ watch(
     }
     // 节点调试消耗时间【目前只有调试接口返回的节点step.output才有值，其余状态为''不显示】
     costTime.value = props.data?.constTime || '';
-    // 默认的输入赋值
-    inputAndOutput.value.input_parameters = props.data?.parameters?.input_parameters || {};
-    // 判断是否有调试的输出，有调试的输出，需要将其显示/否则显示默认的输出
-    if (props.data?.content) {
-      // 将paramaters里的output换为接口返回的output_parameters
-      inputAndOutput.value.output_parameters = props.data.content;
+    // 判断是否有调试的输入输出，有调试的输入输出，需要将其显示/否则显示默认的输出
+    if (props.data.content?.type === 'input') {
+      inputAndOutput.value.output_parameters = props.data.content.params;
+    } else if (props.data.content?.type === 'output') {
+      inputAndOutput.value.output_parameters = props.data.content.params;
     } else {
+      inputAndOutput.value.input_parameters = props.data?.parameters?.input_parameters || {};
       inputAndOutput.value.output_parameters = props.data?.parameters?.output_parameters || {};
     }
   },
@@ -71,8 +71,8 @@ const delNode = id => {
 };
 
 // 编辑yaml
-const editYaml = (nodeName, yamlCode) => {
-  emits('editYamlDrawer', nodeName, yamlCode, props.id);
+const editYaml = (nodeName, nodeDesc, yamlCode) => {
+  emits('editYamlDrawer', nodeName, nodeDesc, yamlCode, props.id);
 };
 </script>
 
@@ -85,10 +85,15 @@ const editYaml = (nodeName, yamlCode) => {
       <div class="title" v-if="props.data.name">
         <div class="iconStyle"></div>
         <div class="label">{{ props.data.name }}</div>
-        <div class="moreTip" :class="{'notAllow': props.disabled}">
+        <div class="moreTip" :class="{ notAllow: props.disabled }">
           <el-popover :disabled="props.disabled" placement="right" trigger="hover" popper-class="nodeDealPopper">
             <template #reference>···</template>
-            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.parameters)">编辑</el-button>
+            <el-button
+              text
+              class="dealItem"
+              @click="editYaml(props.data.name, props.data.description, props.data.parameters)"
+              >编辑</el-button
+            >
             <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
           </el-popover>
         </div>
