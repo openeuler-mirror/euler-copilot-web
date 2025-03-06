@@ -167,6 +167,7 @@ const delChat = async () => {
     const res = await api.deleteSession({ conversationList: [currentSelectedSession.value] });
     if (res[1]?.result) {
       // 删除成功
+      isAnswerGenerating.value = false;
       conversationList.value = [];
       selectedSessionIds.value = [];
       currentSelectedSession.value = '';
