@@ -516,7 +516,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
                 src="@/assets/svgs/arror_right.svg"
               />
             </div>
-          <div class="regenerate-button" v-if="needRegernerate && isFinish" @click="handlePauseAndReGenerate(Number(cid))">
+          <div class="regenerate-button" v-if="needRegernerate && isFinish && !flowdata" @click="handlePauseAndReGenerate(Number(cid))">
             <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/dark_regenerate.svg" alt="">
             <img v-else src="@/assets/svgs/light_regenerate.svg" alt="">
             <div>{{$t('feedback.regenerate')}}</div>

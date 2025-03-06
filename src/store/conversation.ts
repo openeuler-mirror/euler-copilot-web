@@ -290,8 +290,6 @@ export const useSessionStore = defineStore('conversation', () => {
             } else if (message['event'] === 'flow.start') {
               //事件流开始--后续验证对话无下拉连接后则完全替换
               let flow = message.flow;
-              // 这里给工作流调试的对话id赋值，用于判断
-              workFlowId = flow?.flowId;
               conversationItem.flowdata = {
                 id: flow?.stepId || '',
                 title: i18n.global.t('flow.flow_start'),
@@ -339,15 +337,8 @@ export const useSessionStore = defineStore('conversation', () => {
                   display: true,
                   data: conversationItem?.flowdata?.data,
                 };
-              } else if (message.content.type !== 'schema') {
-                conversationItem.flowdata?.data[0].push({
-                  id: 'end',
-                  title: 'end',
-                  status: message.flow?.stepStatus,
-                  data: {
-                    input: message.content,
-                  },
-                });
+              }else if(message.content.type !== "schema"){
+                // 删除 end 逻辑
                 conversationItem.flowdata = {
                   id: flow?.stepId,
                   title: i18n.global.t('flow.flow_end'),
@@ -689,13 +680,36 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
-          },
+            flowdata: record?.flow ? GenerateFlowData(record.flow) : undefined,
+          }
         );
         scrollBottom('auto');
       });
     }
   };
-
+  //将获取到的 flow 数据结构转换
+  const GenerateFlowData = (record: any): object => {
+    let flowData = {
+      id: record.recordId,
+      title: record.id,
+      status: "success",
+      display: true,
+      flowId: record.flowId,
+      data:[[]] as any[]
+    };
+    for (let i = 0; i < record.steps.length; i++) {
+      flowData.data[0].push({
+        id: record.steps[i].stepId,
+        title : record.steps[i].stepId,
+        status: record.steps[i].stepStatus,
+        data:{
+          input: record.steps[i].input,
+          output: record.steps[i].output,
+        }
+      });
+    }
+    return flowData;
+  }
   const comment = (cid: number, isSupport: boolean, index: number): void => {
     const ind = conversationList.value.find(item => item.cid === cid);
     // ind.message.items[index].is_like = isSupport;
