@@ -13,7 +13,7 @@
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createApp" @click="handleCreateApp">{{$t('app.app_upload')}}</el-button>
+        <el-button type="primary" class="createApp" @click="handleCreateApp">{{$t('app.app_create')}}</el-button>
       </div>
       <div class="appCenterType">
         <div class="appCenterBtn" :class="{ appCenterBtnActive: appType === 'my' }" @click="handleSearchAppList('my')">
@@ -24,7 +24,7 @@
           :class="{ appCenterBtnActive: appType === 'createdByMe' }"
           @click="handleSearchAppList('createdByMe')"
         >
-        {{$t('app.my_upload')}}
+        {{$t('app.my_created')}}
         </div>
         <div
           class="appCenterBtn"
