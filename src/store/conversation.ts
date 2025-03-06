@@ -571,6 +571,7 @@ export const useSessionStore = defineStore('conversation', () => {
         regenerateInd ?? undefined,
       );
     }
+    await getConversation(currentSelectedSession);
   };
   /**
    * 暂停流式返回
