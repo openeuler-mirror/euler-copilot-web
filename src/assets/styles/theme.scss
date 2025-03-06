@@ -27,6 +27,11 @@ body[theme='dark'] {
   --o-think-header-text:#e4e8ee;
   --el-drawer-bg-color:#000000;
   --el-bg-color:#1F2329;
+  --question-bg: linear-gradient(0deg, rgb(47, 57, 66), rgb(32, 35, 37) 33.232%, rgb(41, 43, 55) 85.699%);
+  --question-shadow: ;
+  --el-collapse-header-bg: rgb(42,47,55);
+  --el-collapse-border: rgb(62,69,81,0.5);
+  --el-collapse-content-bg: rgb(42,47,55,0.5);
 }
 
 body[theme='light'] {
@@ -57,5 +62,8 @@ body[theme='light'] {
   --flow-branch-node-error-node-cover-color: #edb3b3;
   --flow-branch-node-success-node-cover-color: #b3dbb8;
   --el-collapse-header-bg: rgb(244,246,250);
+  --el-collapse-border: rgb(223,229,239);
   --el-collapse-content-bg: rgb(244,246,250,0.5);
+  --question-bg: linear-gradient(270deg, rgb(227, 242, 255), rgb(195, 227, 255) 33.232%, rgb(197, 203, 249) 85.699%);
+  --question-shadow: rgba(221, 225, 240, 0.5);
 }
