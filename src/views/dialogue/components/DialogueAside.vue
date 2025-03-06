@@ -10,7 +10,7 @@ import {
   ElCollapseItem,
   ElTooltip,
 } from 'element-plus';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
 import { useAccountStore, useHistorySessionStore, useSessionStore } from '@/store';
 import { storeToRefs } from 'pinia';
@@ -109,6 +109,10 @@ function checkDate(date: string | Date): string {
   }
   return 'else';
 }
+
+onMounted(() => {
+  getHistorySession();
+})
 
 const deletedSessionName = ref('');
 const sessionList = ref();
