@@ -62,7 +62,7 @@
       max-height: calc(100vh - 370px);
       min-height: calc(100vh - 370px);
       min-width: 1336px;
-      overflow-y: hidden;
+      overflow-y: auto;
       .apiCenterCardBox {
         width: fit-content;
         display: flex;
