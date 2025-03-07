@@ -1,0 +1,17 @@
+<svg width="24.000000" height="24.000000" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip1685_11776">
+			<rect id="svg" width="16.000000" height="16.000000" transform="translate(4.000000 4.000000)" fill="white" fill-opacity="0"/>
+		</clipPath>
+	</defs>
+	<rect id="矩形备份 24" rx="4.000000" width="24.000000" height="24.000000" fill="#FF7600" fill-opacity="1.000000"/>
+	<rect id="矩形备份 24" x="0.500000" y="0.500000" rx="4.000000" width="23.000000" height="23.000000" stroke="#7AA5FF" stroke-opacity="0" stroke-width="1.000000"/>
+	<g clip-path="url(#clip1685_11776)">
+		<ellipse id="椭圆 121" cx="12.000000" cy="9.500000" rx="5.000000" ry="2.500000" fill="#FFFFFF" fill-opacity="1.000000"/>
+		<path id="减去顶层" d="M7.28467 11.167C7.1001 11.4277 7 11.708 7 12C7 13.3809 9.23877 14.5 12 14.5C14.7612 14.5 17 13.3809 17 12C17 11.708 16.8999 11.4277 16.7153 11.167C16.0293 12.1382 14.1772 12.834 12 12.834C9.82275 12.834 7.9707 12.1382 7.28467 11.167Z" clip-rule="evenodd" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<path id="减去顶层" d="M7.28467 13.667C7.1001 13.9277 7 14.208 7 14.5C7 15.8809 9.23877 17 12 17C14.7612 17 17 15.8809 17 14.5C17 14.208 16.8999 13.9277 16.7153 13.667C16.0293 14.6382 14.1772 15.334 12 15.334C9.82275 15.334 7.9707 14.6382 7.28467 13.667Z" clip-rule="evenodd" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+	</g>
+</svg>
