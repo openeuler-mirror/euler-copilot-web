@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus';
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import * as jsYaml from 'js-yaml';
 import { IconUpload, IconVisible, IconDelete, IconCaretRight } from '@computing/opendesign-icons';
 import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
@@ -8,7 +8,10 @@ import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { yaml } from "@codemirror/lang-yaml"
+import { oneDark } from '@codemirror/theme-one-dark';
+import { useChangeThemeStore } from 'src/store/conversation';
 
+const themeStore = useChangeThemeStore();
 const extensions = ref([yaml()]);
 const handleCreateapi = async () => {
   const [_, res] = await api.createOrUpdateApi({
@@ -204,6 +207,23 @@ watch(
     yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
   },
 );
+watch(
+  () => themeStore.theme,
+  newVal => {
+    if (themeStore.theme === 'dark') {
+      extensions.value = [yaml(), oneDark];
+    } else {
+      extensions.value = [yaml()];
+    }
+  },
+);
+onMounted(() => {
+  if (themeStore.theme === 'dark') {
+    extensions.value = [yaml(), oneDark];
+  } else {
+    extensions.value = [yaml()];
+  }
+});
 </script>
 <template>
   <el-upload
@@ -425,12 +445,14 @@ watch(
   :deep(.el-collapse-item__header) {
     background-color: var(--el-collapse-header-bg) !important;
     height: 32px;
-    border-bottom: 1px solid var(--el-collapse-border-color) !important;
+    border-bottom: 1px solid var(--el-collapse-border) !important;
+    border-bottom-color: var(--el-collapse-border) !important;
   }
   :deep(.el-collapse-item__content) {
     background-color: var(--el-collapse-content-bg) !important;
     margin: 0px;
-    border-bottom: 1px solid var(--el-collapse-border-color) !important;
+    border-bottom: 1px solid var(--el-collapse-border) !important;
+    border-bottom-color: var(--el-collapse-border) !important;
   }
 }
 

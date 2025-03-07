@@ -424,11 +424,6 @@ watch(
       <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-position="left" @validate="handleFormValidate">
         <el-form-item :label="$t('witChainD.witChainD_id')" prop="openai_api_key" class="docName">
           <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')">
-            <template #suffix>
-              <el-icon class="warning-icon" v-if="!formValidateStatus.kb_id">
-                <WarningFilled />
-              </el-icon>
-            </template>
           </el-input>
         </el-form-item>
         <el-form-item class="model-ops-btn">

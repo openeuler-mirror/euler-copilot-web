@@ -100,7 +100,7 @@ onMounted(() => {
           <ul class="question-list">
             <li class="question-item" v-for="item in questions" :key="item.id">
               <span class="question-number" :class="{ blue: item.id <= 3 }">{{ item.id }}</span>
-              <span @click="selectQuestions">{{ $t('question.' + item.question) }}</span>
+              <span class="question-des"  @click="selectQuestions">{{ $t('question.' + item.question) }}</span>
             </li>
           </ul>
         </div>
@@ -176,6 +176,10 @@ onMounted(() => {
   }
   .question-number{
     margin-right: 8px;
+    color: var(--o-text-color-secondary);
+  }
+  .question-des{
+    color: var(--o-text-color-secondary);
   }
 }
 
@@ -187,8 +191,8 @@ onMounted(() => {
     // display: block;
     width: 492px;
     height: auto;
-    box-shadow: 0px 5.18px 20.72px 0px rgba(221, 225, 240, 0.5);
-    background: linear-gradient(270deg, rgb(227, 242, 255), rgb(195, 227, 255) 33.232%, rgb(197, 203, 249) 85.699%);
+    box-shadow: 0px 5.18px 20.72px 0px var(--question-shadow);
+    background: var(--question-bg);
     // opacity: 0.5;
     border-radius: 8px;
     background-size: 100% 100%;
@@ -209,6 +213,7 @@ onMounted(() => {
       font-size: 14px;
       color: var(--o-text-color-secondary);
     }
+
   }
 }
 
