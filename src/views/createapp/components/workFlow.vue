@@ -512,6 +512,7 @@ $bus.on('getNodesStatue', lines => {
 $bus.on('debugChatEnd', () => {
   // 更新发布按钮状态
   emits('updateFlowsDebug')
+  console.log('debugChatEnd -workflow')
 })
 
 // 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
