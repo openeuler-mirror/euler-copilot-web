@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '../styles/createApp.scss';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
 import { useI18n } from 'vue-i18n';
@@ -23,7 +23,24 @@ const interfaceValid = ref('');
 const flowValid = ref('');
 const handleChangeAppType = type => {
   createAppType.value = type;
+  // 切换createAppType【tab值】时，将其保存在sessionStorage，刷新时保证不变
+  sessionStorage.setItem('createAppType', type);
 };
+
+// 初始化
+onMounted(() => {
+  // 判断是否有sessionStorage存储当前的tab页面
+  const currentAppType = sessionStorage.getItem('createAppType');
+  // 如果sessionStorage保存了新建应用中心的createAppType【tab值】，则回显
+  if (currentAppType) {
+    createAppType.value = currentAppType;
+  }
+})
+
+onUnmounted(() => {
+  // 组件销毁时，清空保存新建应用中心的createAppType【tab值】
+  sessionStorage.setItem('createAppType', '');
+})
 
 // 需要界面配置校验与工作流校验同时通过
 const handlePulishApp = () => {
