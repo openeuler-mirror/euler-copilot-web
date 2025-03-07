@@ -38,28 +38,24 @@ const router = createRouter({
       name: 'api',
       component: (): Promise<typeof import('src/views/api/index.vue')> =>
         import('src/views/api/index.vue'),
-      meta: { requiresAuth: true } // 标记需要登录的页面
     },
     {
       path: '/app',
       name: 'app',
       component: (): Promise<typeof import('src/views/app/index.vue')> =>
         import('src/views/app/index.vue'),
-      meta: { requiresAuth: true } // 标记需要登录的页面
     },
     {
       path: '/createApp',
       name: 'createApp',
       component: (): Promise<typeof import('src/views/createapp/index.vue')> =>
         import('src/views/createapp/index.vue'),
-      meta: { requiresAuth: true } // 标记需要登录的页面
     },
     {
       path: '/witchainD',
       name: 'witchainD',
       component: (): Promise<typeof import('src/views/tools/index.vue')> =>
         import('src/views/tools/index.vue'),
-      meta: { requiresAuth: true } // 标记需要登录的页面
     },
     {
       path: '/404',
@@ -72,15 +68,5 @@ const router = createRouter({
     },
   ],
 });
-
-router.beforeEach((to, from, next) => {
-  const {userinfo} = useAccountStore();
-  // 检查是否需要登录
-  if (to.meta.requiresAuth && !userinfo.user_sub) {
-    next('/'); // 未登录时跳转首页
-  } else {
-    next();
-  }
-})
 
 export default router;
