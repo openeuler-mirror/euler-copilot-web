@@ -241,11 +241,9 @@ export const useSessionStore = defineStore('conversation', () => {
           conversationItem.isFinish = true;
           isEnd = false;
           isAnswerGenerating.value = false;
-          console.log(params.type, '111111111111111', workFlowId)
           // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
-          if (params.type && workFlowId) {
+          if (params.type) {
             $bus.emit('debugChatEnd');
-            console.log('123-conversation')
           }
           break;
         }
