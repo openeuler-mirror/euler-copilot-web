@@ -81,7 +81,7 @@ export const getNodeClass = (node) => {
   // 默认类名
   let defaultClass = 'systemNode';
   iconTypeList.forEach(item => {
-    if (item.value === node?.nodeId) {
+    if (item.value === node?.callId) {
       defaultClass = item.class;
     }
   })
@@ -93,7 +93,7 @@ export const getSrcIcon = (node) => {
   // 默认的图标
   let defaultIcon = nodeTypeToIcon.TASK_CHOICE;
   iconTypeList.forEach(item => {
-    if (item.value === node?.nodeId) {
+    if (item.value === node?.callId) {
       defaultIcon = item.icon;
     }
   })
