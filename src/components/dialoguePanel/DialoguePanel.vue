@@ -464,8 +464,8 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
     <div class="dialogue-panel__robot" v-else>
       <div class="dialogue-panel__robot-content">
         <!-- 这里是flowData -->
+      <DialogueFlow v-if="flowdata" :isWorkFlowDebug="props.isWorkFlowDebug"  :flowdata="props.flowdata"/>
       <DialogueThought :content=thoughtContent v-if="thoughtContent" />
-      <DialogueFlow v-if="flowdata" :isWorkFlowDebug="props.isWorkFlowDebug"  :flowdata="props.flowdata"/> 
       <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
       <a v-if="props.paramsList" @click="visible = true">补充参数</a>
