@@ -105,29 +105,27 @@ watch(
 
 .controlChange {
   width: 120px;
-  height: 177px;
+  height: 194px;
   border: unset !important;
   border-radius: 8px !important;
   box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.1) !important;
   background: var(--o-bg-color-base) !important;
   margin-left: -34px;
   margin-bottom: 6px;
+  .el-scrollbar__wrap {
+    border-radius: 8px;
+  }
   .el-dropdown-menu__item {
-    height: 16px;
+    height: 24px;
     padding-left: 16px !important;
     min-height: unset !important;
     font-size: 12px;
-    line-height: 16px;
+    line-height: 24px;
     color: var(--o-text-color-secondary);
   }
 
   .reduce {
     margin-top: 4px;
-  }
-  .reduce,
-  .amplify,
-  .scaleOther {
-    margin-bottom: 8px;
   }
 
   .scaleTwice {
