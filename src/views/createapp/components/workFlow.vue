@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip, ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow, Panel, Position } from '@vue-flow/core';
@@ -20,7 +20,7 @@ import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
 import { BranchSourceIdType, StatusInfoTitle } from './types';
 import { useRoute } from 'vue-router';
-import { nodeTypeToIcon, iconTypeList, getSrcIcon } from './types';
+import { nodeTypeToIcon, iconTypeList, getSrcIcon, DefaultViewPortZoom } from './types';
 import yaml from 'js-yaml';
 import $bus from 'src/bus/index';
 
@@ -110,12 +110,20 @@ const initNodes = ref([
 const edges = ref([]);
 
 const handleChangeZoom = zoomValue => {
+  const viewPortX = Number(sessionStorage.getItem('workflowViewPortX')) || 0;
+  const viewPortY = Number(sessionStorage.getItem('workflowViewPortY')) || 20;
   setViewport({
     zoom: zoomValue,
-    x: 0,
-    y: 0,
+    x: viewPortX,
+    y: viewPortY,
   });
 };
+
+// 监听viewPort变化
+const viewportChangeEndFunc = (e) => {
+  sessionStorage.setItem('workflowViewPortX', e.x);
+  sessionStorage.setItem('workflowViewPortY', e.y);
+}
 
 watch(
   props,
@@ -196,11 +204,16 @@ const closeDrawer = () => {
 
 const handleZommOnScroll = () => {
   const zoomObj = getViewport();
-  flowZoom.value = Number(zoomObj.zoom.toFixed(1));
+  flowZoom.value = Number(zoomObj.zoom.toFixed(2));
 };
 
 async function layoutGraph(direction) {
   nodes.value = layout(getNodes.value, getEdges.value, direction);
+  setViewport({
+    zoom: DefaultViewPortZoom,
+    x: 0,
+    y: 20,
+  });
 }
 
 const nodeAndLineConnection = () => {
@@ -260,7 +273,16 @@ onMounted(() => {
       activeName.value = [res[1]?.result.services[0]?.serviceId];
       activeNames.value = [res[1]?.result.services[0]?.serviceId];
     });
-});
+    handleChangeZoom(DefaultViewPortZoom);
+})
+
+
+
+onUnmounted(() => {
+  // 组件销毁时，清空sessionStorage的veiwport位置
+  sessionStorage.setItem('workflowViewPortX', '');
+  sessionStorage.setItem('workflowViewPortY', '');
+})
 
 // 过滤工作流接口返回的可拖拽节点
 const searchApiList = () => {
@@ -699,7 +721,7 @@ defineExpose({
       <VueFlow
         :nodes="nodes"
         :edges="edges"
-        :default-viewport="{ zoom: 0.8 }"
+        :default-viewport="{ zoom: DefaultViewPortZoom }"
         :min-zoom="0.5"
         :max-zoom="4"
         class="my-diagram-class"
@@ -708,6 +730,7 @@ defineExpose({
         @edges-change="edgesChange"
         @nodes-change="nodesChange"
         @paneScroll="handleZommOnScroll"
+        @viewportChangeEnd="viewportChangeEndFunc"
       >
         <Background pattern-color="#aaa" :gap="8" />
         <MiniMap :width="220" mask-color="#f4f6fa" :mask-stroke-width="250" />

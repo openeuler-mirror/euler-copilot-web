@@ -38,16 +38,17 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { IconChevronDown, IconChevronUp, IconSearch } from '@computing/opendesign-icons';
+import { DefaultViewPortZoom } from './types';
 interface ControlProps {
   handleChangeZoom: any;
   flowZoom: number;
   layoutGraph: any;
 }
 const props = withDefaults(defineProps<ControlProps>(), {});
-const zommChangeValue = ref(1);
+const zommChangeValue = ref(DefaultViewPortZoom);
 const dropDownVisible = ref(false);
 const handleSacl = zoomValue => {
-  zommChangeValue.value = Number(zoomValue.toFixed(0));
+  zommChangeValue.value = Number(zoomValue.toFixed(2));
   props.handleChangeZoom(zoomValue);
 };
 const handleVisibleChange = visible => {
