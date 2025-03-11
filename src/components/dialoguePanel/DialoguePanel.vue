@@ -1007,6 +1007,7 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_app
 
           &-arror {
             margin: 0;
+            cursor: pointer;
           }
 
           .pagenation-cur {

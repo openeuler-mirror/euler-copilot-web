@@ -47,14 +47,16 @@ const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
 const type = import.meta.env.VITE_USER_TYPE;
-let routerList: ComputedRef<Array<{
-  name: string;
-  path: string;
-  src: string;
-  selectedSrc: string;
-  routerName: string;
-  anotherName?: string | undefined; // 路由别名，辅助匹配选中的路由图标
-}>> = computed(() => {
+let routerList: ComputedRef<
+  Array<{
+    name: string;
+    path: string;
+    src: string;
+    selectedSrc: string;
+    routerName: string;
+    anotherName?: string | undefined; // 路由别名，辅助匹配选中的路由图标
+  }>
+> = computed(() => {
   return [
     {
       name: i18n.global.t('menu.dialogue'),
@@ -206,9 +208,9 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
 const changeLanguagefun = (lang: 'CN' | 'EN') => {
   changeLanguage(lang);
   // 同步语言到iframe
-  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe')
+  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
   if (iframe?.contentWindow) {
-    const data = {lang:localStorage.getItem('localeLang')};
+    const data = { lang: localStorage.getItem('localeLang') };
     let target = `${window.location.origin}/witchaind`;
     iframe.contentWindow.postMessage(data, target);
   }
@@ -226,12 +228,7 @@ onMounted(() => {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
   console.log('onMounted', window.location.host);
-  const iframe = document.getElementById('my-iframe');
-  console.log('iframe', `${window.location.origin}/witchaind`);
   initCopilot();
-  iframe.src = `${window.location.origin}/witchaind`;
-
-
 });
 
 watch(
@@ -288,6 +285,14 @@ watch(
         appId: String(currRoute.value.query.appId),
         name: String(currRoute.value.query.name),
       };
+    }
+
+    // 监听路由变化给iframe.src赋值
+    if (currRoute.value.path === '/witchainD') {
+      const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
+      if(iframe){
+        iframe.src = `${window.location.origin}/witchaind`;
+      }   
     }
   },
   { deep: true, immediate: true },
@@ -352,8 +357,8 @@ watch(
             <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
               <img
                 v-if="
-                  router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1 
-                  || router.currentRoute.value.name?.toString().indexOf(item.anotherName!) !== -1
+                  router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1 ||
+                  router.currentRoute.value.name?.toString().indexOf(item.anotherName!) !== -1
                 "
                 class="create-button__icon"
                 :src="item.selectedSrc"
@@ -469,7 +474,7 @@ watch(
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom:10px ;
+    margin-bottom: 10px;
     cursor: pointer;
     .menu-icon {
       align-items: center;
@@ -490,7 +495,7 @@ watch(
       font-size: 12px;
       color: var(--o-text-color-primary);
       text-align: center;
-      padding:0 1px;
+      padding: 0 1px;
     }
   }
 }
