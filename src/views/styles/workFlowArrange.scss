@@ -139,19 +139,32 @@
   .workFlowContainerRight {
     flex: 1;
     min-width: 1292px;
-    background-color: var(--o-bg-color-base);
+    background-color: var(--flow-canvas-bg);
     border-radius: 8px;
   }
 
   .stancesItem {
     width: 264px;
-    height: 32px;
-    line-height: 32px;
+    height: 40px;
+    line-height: 40px;
     background-color: var(--o-bash-bg);
     color: var(--o-text-color-primary);
     margin-bottom: 8px;
     padding-left: 16px;
     border-radius: 4px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    .nodeIcon {
+      width: 24px;
+      height: 24px;
+      background: gray;
+      border-radius: 4px;
+    }
+    .stancesName {
+      flex: 1;
+      text-align: left;
+    }
   }
   .workFlowContainerRight {
     position: relative;
@@ -162,9 +175,10 @@
       display: flex;
       gap: 8px;
       .workFlowSelect {
-        display: block;
+      display: block;
         width: 144px;
         height: 32px;
+        background-color: var(--o-bg-color-base);
         .el-select {
           width: 144px;
           height: 32px;
@@ -255,13 +269,15 @@
 
 .workFlowOption {
   display: flex;
+  align-items: center;
   .flowName {
     flex: 1;
   }
   .dealIcon {
     display: inline-block;
     width: 16px;
-    line-height: 32px;
+    line-height: 20px;
+    height: 16px;
     flex: right;
   }
 }
@@ -269,19 +285,21 @@
 .vue-flow__node {
   min-width: 200px;
   padding: 0px;
-  margin-top: -4px;
+  margin-top: 0px;
   .customNodeStyle {
-    width: 328px;
+    width: 320px;
     height: fit-content;
     border-radius: 4px;
-    border: 4px solid transparent;
+    background: var(--el-bg-color);
+    border: 2px solid transparent;
     position: relative;
+    border-radius: 10px;
+    background-clip: padding-box;
     .nodeBox {
-      min-height: 78px;
-      padding: 16px 18px;
+      min-height: 80px;
+      padding: 16px;
       display: flex;
-      background-color: var(--o-bg-color-base);
-      box-shadow: var(--flow-nodeBox-shadow);
+      background: var(--flow-system-bg);
       flex-direction: column;
       gap: 8px;
       border-radius: 8px;
@@ -290,6 +308,7 @@
         height: 24px;
         font-size: 16px;
         color: var(--o-text-color-primary);
+        border: 2px solid transparent;
         gap: 8px;
         .iconStyle {
           width: 24px;
@@ -321,314 +340,105 @@
         font-size: 12px;
       }
     }
+    .nodeBox.otherNode {
+      background: var(--flow-other-node-bg);
+    }
+    .nodeBox.aposNode {
+      background: var(--flow-apos-apollo-bg);
+    }
     .vue-flow__handle-right {
       top: 50%;
-      right: 0px;
-      width: 16px;
-      height: 16px;
+      right: 0;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: var(--o-bg-color-base);
+      background: var(--el-bg-color);
       display: flex;
-      align-items: center;
       justify-content: center;
       border: none;
       z-index: 2;
+      align-items: center;
       &::after {
+        display: block;
         content: '';
-        width: 12px;
-        height: 12px;
-        border: 4px solid rgb(223, 229, 239);
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background: rgb(141, 152, 170);
       }
     }
     .vue-flow__handle-left {
       top: 50%;
-      left: 0px;
-      width: 16px;
-      height: 16px;
+      left: 0;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: var(--o-bg-color-base);
+      background: var(--el-bg-color);
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       border: none;
       z-index: 2;
       &::after {
+        display: block;
         content: '';
-        width: 12px;
-        height: 12px;
-        border: 4px solid rgb(223, 229, 239);
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background: rgb(141, 152, 170);
       }
     }
-    .outHandleRing {
-      position: absolute;
-      display: block;
-      width: 24px;
-      height: 24px;
-      background: #fff;
-      border-radius: 50%;
-      top: 50%;
-      z-index: -1;
+    // 选中样式
+    .select {
+      border: 2px solid #6395fd;
     }
-    .outRingLeft {
-      display: none;
-      left: -12px;
-      margin-top: -12px;
-    }
-    .outRingRight {
-      display: none;
-      right: -12px;
-      margin-top: -12px;
-    }
-    .delOverShadow {
-      width: 8px;
-      height: 40px;
-      position: absolute;
-      background-color: transparent;
-      top: calc(50% - 20px);
-      z-index: 1;
-    }
-    .leftBox {
-      left: -12px;
-    }
-
-    .leftNodeBox {
-      width: 4px;
-      left: -4px;
-    }
-    .rightBox {
-      right: -12px;
-    }
+    // 悬浮样式
     &:hover {
-      border: 4px solid rgba(99, 149, 253, 0.3);
-      box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-      .customNodeStyle {
-        width: 328px;
-      }
-      .vue-flow__handle-left {
-        width: 24px;
-        height: 24px;
-        left: -12px;
-        margin-top: -12px;
-        transform: rotate(-45deg);
-        border: 4px solid rgba(99, 149, 253, 0.3);
-        border-right: 4px solid transparent;
-        border-bottom: 4px solid transparent;
+      border: 2px solid #6395fd;
+      .vue-flow__handle {
+        width: 12px;
+        height: 12px;
         &::after {
-          border: 4px solid rgba(99, 149, 253, 0.3);
-          background: rgba(99, 149, 253);
-          background-clip: content-box;
+          width: 10px;
+          height: 10px;
+          background: #6395fd;
         }
+      }
+      // 下面这两个样式是因为悬浮时，设计图的边框有2px，需要平移1px以保持居中
+      .vue-flow__handle-left {
+        left: -1px;
       }
       .vue-flow__handle-right {
-        width: 24px;
-        height: 24px;
-        right: -12px;
-        margin-top: -12px;
-        transform: rotate(45deg);
-        border: 4px solid rgba(99, 149, 253, 0.3);
-        border-left: 4px solid transparent;
-        border-bottom: 4px solid transparent;
-        &::after {
-          border: 4px solid rgba(99, 149, 253, 0.3);
-          background: rgba(99, 149, 253);
-          background-clip: content-box;
-        }
-      }
-      .outRingLeft {
-        display: block;
-        box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-        background-clip: content-box;
-      }
-      .outRingRight {
-        display: block;
-        box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-        background-clip: content-box;
-      }
-      .leftBox {
-        background-color: var(--flow-node-default-over-color);
-      }
-      .leftNodeBox {
-        background-color: var(--flow-node-boder-default-over);
-      }
-      .rightBox {
-        background-color: var(--flow-node-default-over-color);
+        right: -1px;
       }
     }
   }
-
   .customNodeStyle.success {
-    border: 4px solid rgba(36, 171, 54, 0.3);
+    border: 2px solid #24ab36;
     .vue-flow__handle-left {
-      transform: rotate(-45deg);
-      width: 24px;
-      height: 24px;
-      left: -12px;
-      margin-top: -12px;
-      border: 4px solid rgba(36, 171, 54, 0.3);
-      border-right: 4px solid transparent;
-      border-bottom: 4px solid transparent;
       &::after {
-        border: 4px solid rgba(36, 171, 54, 0.3);
-        background: rgb(36, 171, 54);
-        background-clip: content-box;
+        background: #24ab36;
       }
     }
     .vue-flow__handle-right {
-      width: 24px;
-      height: 24px;
-      right: -12px;
-      margin-top: -12px;
-      transform: rotate(45deg);
-      border: 4px solid rgba(36, 171, 54, 0.3);
-      border-left: 4px solid transparent;
-      border-bottom: 4px solid transparent;
       &::after {
-        border: 4px solid rgba(36, 171, 54, 0.3);
-        background: rgb(36, 171, 54);
-        background-clip: content-box;
-      }
-    }
-    &:hover {
-      box-shadow: 0px 0px 0px 8px rgba(36, 171, 54, 0.1);
-      .outRingLeft {
-        box-shadow: 0px 0px 0px 8px rgba(36, 171, 54, 0.1);
-      }
-      .outRingRight {
-        box-shadow: 0px 0px 0px 8px rgba(36, 171, 54, 0.1);
-      }
-      .leftNodeBox {
-        background-color: var(--flow-branch-node-success-node-cover-color);
-      }
-      .leftBox {
-        background-color: var(--flow-node-success-over-color);
-      }
-      .rightBox {
-        background-color: var(--flow-node-success-over-color);
+        background: #24ab36;
       }
     }
   }
-
   .customNodeStyle.error {
-    border: 4px solid rgba(227, 32, 32, 0.3);
+    border: 2px solid #e32020;
     .vue-flow__handle-left {
-      transform: rotate(-45deg);
-      width: 24px;
-      height: 24px;
-      left: -12px;
-      margin-top: -12px;
-      border: 4px solid rgba(227, 32, 32, 0.3);
-      border-right: 4px solid transparent;
-      border-bottom: 4px solid transparent;
       &::after {
-        border: 4px solid rgba(227, 32, 32, 0.3);
-        background: rgb(227, 32, 32);
-        background-clip: content-box;
+        background: #e32020;
       }
     }
     .vue-flow__handle-right {
-      width: 24px;
-      height: 24px;
-      right: -12px;
-      margin-top: -12px;
-      transform: rotate(45deg);
-      border: 4px solid rgba(227, 32, 32, 0.3);
-      border-left: 4px solid transparent;
-      border-bottom: 4px solid transparent;
       &::after {
-        border: 4px solid rgba(227, 32, 32, 0.3);
-        background: rgb(227, 32, 32);
-        background-clip: content-box;
-      }
-    }
-    .leftBox {
-      background-color: transparent;
-    }
-    .rightBox {
-      background-color: transparent;
-    }
-    &:hover {
-      box-shadow: 0px 0px 0px 8px rgba(227, 32, 32, 0.1);
-      .outRingLeft {
-        box-shadow: 0px 0px 0px 8px rgba(227, 32, 32, 0.1);
-      }
-      .outRingRight {
-        box-shadow: 0px 0px 0px 8px rgba(227, 32, 32, 0.1);
-        display: none;
-      }
-      .leftNodeBox {
-        background-color: var(--flow-branch-node-error-node-cover-color);
-      }
-      .leftBox {
-        background-color: var(--flow-node-error-over-color);
-      }
-      .rightBox {
-        background-color: var(--flow-node-error-over-color);
+        background: #e32020;
       }
     }
   }
-
-  .customNodeStyle.running {
-    border: 4px solid rgba(99, 149, 253, 0.3);
-    box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-    .vue-flow__handle-left {
-      transform: rotate(-45deg);
-      width: 24px;
-      height: 24px;
-      left: -12px;
-      margin-top: -12px;
-      border: 4px solid rgba(99, 149, 253, 0.3);
-      border-right: 4px solid transparent;
-      border-bottom: 4px solid transparent;
-      &::after {
-        border: 4px solid rgba(99, 149, 253, 0.3);
-        background: rgba(99, 149, 253);
-        background-clip: content-box;
-      }
-    }
-    .vue-flow__handle-right {
-      width: 24px;
-      height: 24px;
-      right: -12px;
-      margin-top: -12px;
-      transform: rotate(45deg);
-      border: 4px solid rgba(99, 149, 253, 0.3);
-      border-left: 4px solid transparent;
-      border-bottom: 4px solid transparent;
-      &::after {
-        border: 4px solid rgba(99, 149, 253, 0.3);
-        background: rgba(99, 149, 253);
-        background-clip: content-box;
-      }
-    }
-    .leftBox {
-      background-color: transparent;
-    }
-    .rightBox {
-      background-color: transparent;
-    }
-    &:hover {
-      box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-      .outRingLeft {
-        box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-      }
-      .outRingRight {
-        box-shadow: 0px 0px 0px 8px rgba(99, 149, 253, 0.1);
-      }
-      .leftBox {
-        background-color: var(--flow-node-default-over-color);
-      }
-      .rightBox {
-        background-color: var(--flow-node-default-over-color);
-      }
-    }
-  }
-}
-.vue-flow__node:has(.default) {
-  margin-top: 0px;
 }
 .nodeDealPopper {
   width: 64px !important;

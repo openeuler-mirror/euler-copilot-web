@@ -2,6 +2,7 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch } from 'vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
+import { nodeTypeToIcon, getSrcIcon, getNodeClass } from '../types';
 const props = defineProps({
   id: {
     type: String,
@@ -79,11 +80,9 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
 <template>
   <div class="customNodeStyle" :class="curStatus">
     <Handle type="target" :position="Position.Left"></Handle>
-    <div class="outHandleRing outRingLeft"></div>
-    <div class="delOverShadow leftBox"></div>
-    <div class="nodeBox">
+    <div class="nodeBox" :class="getNodeClass(props.data)">
       <div class="title" v-if="props.data.name">
-        <div class="iconStyle"></div>
+        <img class="iconStyle" :src="getSrcIcon(props.data)" />
         <div class="label">{{ props.data.name }}</div>
         <div class="moreTip" :class="{ notAllow: props.disabled }">
           <el-popover :disabled="props.disabled" placement="right" trigger="hover" popper-class="nodeDealPopper">
@@ -99,13 +98,8 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
-      <div v-if="props.data.type === 'choice'">
-        <div></div>
-      </div>
     </div>
     <Handle type="source" :position="Position.Right" :connectable="props.data?.isConnectSource"></Handle>
-    <div class="delOverShadow rightBox"></div>
-    <div class="outHandleRing outRingRight"></div>
     <!-- 调试时出现-暂时隐藏 -->
     <NodeMirrorText
       v-if="curStatus !== 'default'"

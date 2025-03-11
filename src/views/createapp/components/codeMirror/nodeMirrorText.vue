@@ -144,6 +144,7 @@ const handleCopy = code => {
 
     .runningIcon {
       background: url(@/assets/images/loading.png) center center no-repeat;
+      animation: spin 2s linear infinite;
     }
     .time {
       height: 16px;
