@@ -9,10 +9,7 @@ import { ref } from 'vue';
  * @see https://github.com/dagrejs/dagre/wiki
  */
 export function useLayout() {
-  const {findNode} = useVueFlow();
-
-
-  
+  const { findNode } = useVueFlow();
 
   const graph = ref(new dagre.graphlib.Graph());
 
@@ -29,23 +26,23 @@ export function useLayout() {
     const isHorizontal = direction === 'TB';
 
     // 设置图布局
-    dagreGraph.setGraph({rankdir: direction});
+    dagreGraph.setGraph({ rankdir: direction });
 
     previousDirection.value = direction;
     let maxHeight = 108;
     for (const node of nodes) {
       // 查找到节点的信息
-      const graphNode = findNode(node.id)
+      const graphNode = findNode(node.id);
       maxHeight = maxHeight > graphNode.dimensions.height ? maxHeight : graphNode.dimensions.height;
     }
 
     for (const node of nodes) {
       // 查找到节点的信息
-      const graphNode = findNode(node.id)
+      const graphNode = findNode(node.id);
       const newNode = {
         width: graphNode.dimensions.width + 100 || 150,
         height: graphNode.dimensions.height + 100 || 50,
-      }
+      };
 
       // 设置节点
       dagreGraph.setNode(node.id, {
@@ -66,17 +63,13 @@ export function useLayout() {
     return nodes.map(node => {
       const nodeWithPosition = dagreGraph.node(node.id);
       let diff = maxHeight - nodeWithPosition.height;
-      let position = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2}
-      // newY = diff
-      // if(['1','2'].includes(node.id)){
-        
-      // }+
-      let newPosition = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2}
+      let position = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2 };
+      let newPosition = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2 };
       // 需要进行判断--是否为开始结束
-      if(node.id === 'start' || node.id === 'end') {
-        newPosition = { x: nodeWithPosition.x + 132, y: nodeWithPosition.y + diff / 2 + 26}
+      if (node.id === 'start' || node.id === 'end') {
+        newPosition = { x: nodeWithPosition.x + 112, y: nodeWithPosition.y + diff / 2 };
       }
-      
+
       return {
         ...node,
         targetPosition: isHorizontal ? Position.Left : Position.Top,
@@ -87,6 +80,4 @@ export function useLayout() {
   }
 
   return { graph, layout, previousDirection };
-
-  }
-
+}

@@ -13,9 +13,18 @@ body[theme='dark'] {
   --o-bash-bg: #2a2f37;
   --o-flow-code-bg: rgb(42,47,55);
   --o-flow-code-border: rgb(62,69,81);
+  --flow-canvas-bg: rgb(24, 27, 32);
   --flow-instance-hover-color: #1F2329;
   --flow-instance-shadow: 0 4px 16px 0 rgba(253, 254, 255, 0.1);
   --flow-nodeBox-shadow: 0 8px 16px 0 rgba(253, 254, 255, 0.1);
+  // 工作流节点背景色
+  --flow-bg-color: #343a43;
+  // 工作流开始节点结束背景渐变色
+  --flow-startEnd-bg: linear-gradient(rgba(132, 149, 253, 0.3), rgba(104, 113, 129, 0.15), rgba(52, 58, 67, 0));
+  --flow-system-bg: linear-gradient(rgba(113, 225, 229, 0.3), rgba(97, 119, 121, 0.15), rgba(52, 58, 67, 0));
+  --flow-apos-apollo-bg: linear-gradient(rgba(137, 212, 255, 0.3), rgba(103, 111, 130, 0.15), rgba(52, 58, 67, 0));
+  --flow-euler-copilot-tune-bg: linear-gradient(rgba(156, 237, 203, 0.3), rgba(101, 125, 110, 0.15), rgba(52, 58, 67, 0));
+  --flow-other-node-bg: linear-gradient(rgba(252, 154, 186, 0.3), rgba(117, 99, 110, 0.15), rgba(52, 58, 67, 0));
   --flow-node-default-over-color: #25303E;
   --flow-node-boder-default-over: #314265;
   --flow-node-success-over-color: #1F312A;
@@ -28,7 +37,6 @@ body[theme='dark'] {
   --el-drawer-bg-color:#000000;
   --el-bg-color:#1F2329;
   --question-bg: linear-gradient(0deg, rgb(47, 57, 66), rgb(32, 35, 37) 33.232%, rgb(41, 43, 55) 85.699%);
-  --question-shadow: ;
   --el-collapse-header-bg: rgb(42,47,55);
   --el-collapse-border: rgb(62,69,81,0.5);
   --el-collapse-content-bg: rgb(42,47,55,0.5);
@@ -49,10 +57,18 @@ body[theme='light'] {
   --o-bash-bg: #f4f6fa;
   --o-flow-code-bg: rgb(244,256,258);
   --o-flow-code-border: rgb(223,229,239);
+  --flow-canvas-bg: rgba(235, 239, 246);
   --flow-instance-hover-color: #FDFEFF;
   --flow-instance-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
   --flow-nodeBox-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
-  --flow-node-default-over-color: #edf2fd;
+  // 工作流节点背景色
+  --flow-bg-color: #fff;
+  // 工作流开始节点结束背景渐变色
+  --flow-startEnd-bg: linear-gradient(rgba(133, 148, 253, 0.3), rgba(210, 231, 252, 0.15), rgba(255, 255, 255, 0));
+  --flow-system-bg: linear-gradient(rgba(156, 237, 203, 0.3), rgba(240, 253, 244, 0.15), rgba(255, 255, 255, 0));
+  --flow-apos-apollo-bg: linear-gradient(rgba(137, 212, 255, 0.3), rgba(230, 237, 255, 0.15), rgba(255, 255, 255, 0));
+  --flow-euler-copilot-tune-bg: linear-gradient(rgba(156, 237, 203, 0.3), rgba(240, 253, 248, 0.15), rgba(255, 255, 255, 0));
+  --flow-other-node-bg: linear-gradient(rgba(252, 154, 186, 0.3), rgba(253, 240, 248, 0.15), rgba(255, 255, 255, 0));
   --flow-node-boder-default-over: #c7d6f5;
   --flow-node-success-over-color: #e6f6e9;
   --flow-node-error-over-color: #f8e7e7;

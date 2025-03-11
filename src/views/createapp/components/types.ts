@@ -43,6 +43,7 @@ export const StatusInfoTitle = {
   pending: '运行中',
 };
 
+// 这里是对应的图标
 export const nodeTypeToIcon = {
   // 系统相关图标
   KENOWLEDGE_BASE,
@@ -65,6 +66,38 @@ export const nodeTypeToIcon = {
   USER_CODE,
   USER_DATABASE_CLASS,
   USER_DOCUMENT_CLASS,
+}
+
+// 这里是对应的图标
+export const iconTypeList = [
+  {name: 'HTTP请求', value: 'API', icon: API, class: 'otherNode'},
+  {name: '大模型', value: 'LLM', icon: LLM, class: 'systemNode'},
+  {name: '知识库', value: 'RAG', icon: KENOWLEDGE_BASE, class: 'systemNode'},
+  {name: '问题推荐', value: 'Suggestion', icon: get_CVE_DETAIL, class: 'aposNode'},
+];
+
+// 根据类型获取类名
+export const getNodeClass = (node) => {
+  // 默认类名
+  let defaultClass = 'systemNode';
+  iconTypeList.forEach(item => {
+    if (item.value === node?.nodeId) {
+      defaultClass = item.class;
+    }
+  })
+  return defaultClass;
+}
+
+// 获取节点图标
+export const getSrcIcon = (node) => {
+  // 默认的图标
+  let defaultIcon = nodeTypeToIcon.TASK_CHOICE;
+  iconTypeList.forEach(item => {
+    if (item.value === node?.nodeId) {
+      defaultIcon = item.icon;
+    }
+  })
+  return defaultIcon;
 }
 
 export interface LinkItem {
