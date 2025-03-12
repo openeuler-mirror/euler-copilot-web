@@ -317,6 +317,23 @@
       .notRequired {
         .el-form-item__label {
           padding-left: 8px;
+          &::before {
+            display: none;
+          }
+        }
+        .el-form-item__content {
+          .validUrl {
+            .el-input__wrapper {
+              background-color: var(--o-input-bg-color);
+              box-shadow: 0 0 0 1px inset var(--o-input-border-color);
+              &:hover {
+                box-shadow: var(--o-input-border_hover);
+              }
+              &:focus {
+                box-shadow: var(--o-input-border_focus);
+              }
+            }
+          }
         }
       }
     }
