@@ -39,12 +39,11 @@ const nodeName = ref('');
 const nodeDesc = ref('');
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
-const isNodeAndLineConnect = ref(false);
 const apiServiceList = ref([]);
 const allApiServiceList = ref([]);
 const yamlContent = ref();
 const nodeYamlId = ref();
-const emits = defineEmits(['validateConnect', 'updateFlowsDebug']);
+const emits = defineEmits(['updateFlowsDebug']);
 const route = useRoute();
 const workFlowList = ref([]);
 const props = defineProps(['flowList']);
@@ -75,6 +74,8 @@ const {
   getViewport,
   setNodes,
   setEdges,
+  removeSelectedNodes,
+  getSelectedNodes,
 } = useVueFlow();
 const { layout } = useLayout();
 
@@ -146,10 +147,6 @@ onConnect(e => {
   // 获取当前状态
   const sourceStatus = sourceItem?.data?.status || 'default';
   const targetStatus = targetItem?.data?.status || 'default';
-  // 更新source源节点handle连接状态
-  if (sourceItem?.id) {
-    updateConnectNodeHandle(sourceItem.id, e.sourceHandle, false);
-  }
   addEdges({
     ...e,
     data: {
@@ -158,8 +155,6 @@ onConnect(e => {
     },
     type: 'normal',
   });
-  // 添加边连接时-判断节点是否都连接
-  nodeAndLineConnection();
 });
 const handleChange = activeList => {
   activeNames.value = activeName.value;
@@ -179,14 +174,7 @@ const handleClose = () => {
 const delNode = id => {
   if (id) {
     const node = findNode(id);
-    // 获取以该节点为target的相连的其他节点
-    const connectEdges = getEdges.value.filter(edge => edge.target === id);
-    connectEdges.forEach(item => {
-      updateConnectNodeHandle(item.source, item.sourceHandle, true);
-    });
     node ? removeNodes(node) : '';
-    // 删除节点时-判断节点是否都连接
-    nodeAndLineConnection();
   }
 };
 // 编辑yaml
@@ -216,36 +204,6 @@ async function layoutGraph(direction) {
   });
 }
 
-const nodeAndLineConnection = () => {
-  // 获取当前所有节点和边
-  const curNodes = [...getNodes.value];
-  const curEdges = [...getEdges.value];
-  // 判断开始节点是否连接
-  let isNodeConnect = true;
-  const len = curNodes.length;
-  // 遍历每个节点
-  for (let i = 0; i < len; i++) {
-    if (curNodes[i].type === 'start') {
-      // 判断开始节点是否连接
-      isNodeConnect = curEdges.some(item => item.sourceNode?.type === 'start');
-    } else if (curNodes[i].type === 'end') {
-      // 判断结束节点是否连接
-      isNodeConnect = curEdges.some(item => item.targetNode?.type === 'end');
-    } else {
-      // 判断普通节点是否有连接-普通节点开始和结束都需要进行判断
-      const isStartCustomNodeConnect = curEdges.some(item => item.sourceNode?.id === curNodes[i].id);
-      const isEndCustomNodeConnect = curEdges.some(item => item.targetNode?.id === curNodes[i].id);
-      isNodeConnect = isStartCustomNodeConnect && isEndCustomNodeConnect;
-    }
-    if (!isNodeConnect) {
-      break;
-    }
-  }
-  // 是否所有节点都已连接
-  isNodeAndLineConnect.value = isNodeConnect;
-  emits('validateConnect', isNodeAndLineConnect.value);
-};
-
 // 拖拽添加
 const dropFunc = e => {
   if (!flowObj.value?.flowId) {
@@ -257,8 +215,6 @@ const dropFunc = e => {
     return;
   }
   onDrop(e);
-  // 添加节点时-判断节点是否都连接
-  nodeAndLineConnection();
 };
 
 onMounted(() => {
@@ -318,29 +274,17 @@ const handleDebugDialogOps = visible => {
 };
 
 const edgesChange = edges => {
-  if (edges?.[0]?.type === 'remove' && edges[0]?.source) {
-    updateConnectNodeHandle(edges[0].source, edges[0]?.sourceHandle, true);
-    // 删除节点时-判断节点是否都连接
-    nodeAndLineConnection();
-  }
   // 边增加删除时直接将工作流debug状态置为false
   if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
     emits('updateFlowsDebug', false);
   }
 };
 
-const updateConnectNodeHandle = (id, handle, connectable) => {
-  const node = findNode(id);
-  let handleType = 'isConnectSource';
-  // 默认为单节点
-  if (handle) {
-    // 说明是分支节点
-    handleType = handle === BranchSourceIdType.SOURCEA ? 'isConnectSourceA' : 'isConnectSourceB';
-  }
-  updateNode(id, { data: { ...node?.data, [handleType]: connectable } });
-};
-
 const nodesChange = nodes => {
+  // 判断如果选中的节点数目大于1，则删除首个
+  if (getSelectedNodes.value.length > 1) {
+    removeSelectedNodes([getSelectedNodes.value[0]])
+  }
   if (nodes?.[0]?.type === 'remove') {
     delNode(nodes[0].id);
     // 节点增加删除时直接将工作流debug状态置为false
