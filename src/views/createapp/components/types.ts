@@ -35,6 +35,7 @@ export enum BranchSourceIdType {
   SOURCEB = "source_b",
 }
 
+// 这里配置的是各节点运行状态
 export const StatusInfoTitle = {
   default: '',
   success: '运行成功',
@@ -42,6 +43,9 @@ export const StatusInfoTitle = {
   running: '运行中',
   pending: '运行中',
 };
+
+// 这里配置工作流画布默认的viewPort缩放级别
+export const DefaultViewPortZoom = 0.8;
 
 // 这里是对应的图标
 export const nodeTypeToIcon = {
