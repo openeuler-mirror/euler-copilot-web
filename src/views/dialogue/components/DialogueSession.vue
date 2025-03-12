@@ -427,7 +427,7 @@ const getPollingProcess = sessionId => {
   let currentCount = 0;
   const maxErrorCount = 200;
   const process = async () => {
-    const pollingExistUploadList = existUploadMap.get(sessionId);
+    const pollingExistUploadList = existUploadMap.get(sessionId) || [];
     const pollingUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
       ? uploadFilesView.value
       : uploadViewsMap.get(sessionId);
@@ -443,7 +443,7 @@ const getPollingProcess = sessionId => {
           pollingExistUploadList.push(item);
         });
       // 更新上传的可见列表
-      pollingUploadFilesView.forEach(item => {
+      pollingUploadFilesView?.forEach(item => {
         if (item.status !== UploadStatus.UPLOADFAIL) {
           const foundDocument = documents.find(document => document.name === item.name);
           if (foundDocument) {
