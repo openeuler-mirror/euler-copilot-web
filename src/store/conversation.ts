@@ -262,9 +262,7 @@ export const useSessionStore = defineStore('conversation', () => {
           // 这里json解析
           const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
           if ('metadata' in message) {
-            if (conversationItem.metadata?.time < message.metadata.time) {
-              conversationItem.metadata = message.metadata;
-            }
+            conversationItem.metadata = message.metadata;
           }
           if ('event' in message) {
             if (message['event'] === 'text.add') {
