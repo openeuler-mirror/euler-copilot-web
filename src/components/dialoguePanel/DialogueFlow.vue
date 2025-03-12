@@ -1,14 +1,9 @@
 <script setup lang="ts">
-import { OutputFileType } from 'typescript';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
-import { input, output } from './data';
 import { StatusInfoTitle } from '@/views/createapp/components/types';
-// import { IconCaretRight } from '@computing/opendesign2';
+import { useChangeThemeStore } from 'src/store';
 
-// const props = defineProps({
-//   flowdata:any,
-// })
 const props = withDefaults(
   defineProps<{
     flowdata: any;
@@ -41,11 +36,22 @@ watch(
       // 将每阶段节点耗时累加
       props.flowdata?.data[0].forEach(item => {
         totalTime.value += item.costTime || 0;
-      })
+      });
     }
   },
   { deep: true, immediate: true },
 );
+
+const themeStore = useChangeThemeStore();
+
+// 计算动态背景样式
+const dynamicBackground = computed(() => {
+  if (themeStore.theme === 'light') {
+    return 'linear-gradient(127.95deg, rgba(109, 117, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%)';
+  } else {
+    return 'linear-gradient(127.95deg, rgb(39, 39, 76) -1.967%, rgba(28, 57, 81, 0.929) 98.202%)';
+  }
+});
 </script>
 
 <template>
@@ -58,7 +64,7 @@ watch(
     }"
   >
     <section>
-      <el-collapse v-model="activeNames" class="o-hpc-collapse">
+      <el-collapse v-model="activeNames" class="o-hpc-collapse" :style="{ '--dynamic-bg': dynamicBackground }">
         <el-collapse-item v-for="item in contents" class="title" :key="item.id" :name="item.id">
           <template #title>
             <div class="loading">
@@ -82,8 +88,14 @@ watch(
               />
               <div v-if="!props.isWorkFlowDebug" class="loading-text">{{ props.flowdata.title }}</div>
               <div v-else class="loading-text">
-                <div class="textTitle">{{StatusInfoTitle[props.flowdata.status]}}</div>
-                <div v-if="props.flowdata.status === 'success' || props.flowdata.status === 'error'" :class="`${props.flowdata.status}Bg`" class="totalTime">{{ totalTime?.toFixed(3) }}s</div>
+                <div class="textTitle">{{ StatusInfoTitle[props.flowdata.status] }}</div>
+                <div
+                  v-if="props.flowdata.status === 'success' || props.flowdata.status === 'error'"
+                  :class="`${props.flowdata.status}Bg`"
+                  class="totalTime"
+                >
+                  {{ totalTime?.toFixed(3) }}s
+                </div>
               </div>
             </div>
             <div class="loading-progress">{{ props.flowdata.progress }}</div>
@@ -147,6 +159,7 @@ watch(
 </template>
 
 <style lang="scss">
+
 .el-collapse-item__content {
   margin: 0px 16px 16px 16px;
 }
@@ -155,7 +168,7 @@ watch(
   margin-bottom: 0px;
 }
 .demo-collapse.border-blue .title .el-collapse-item__header:first-child {
-  background: linear-gradient(127.95deg, rgba(109, 117, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%);
+  background: var(--dynamic-bg);
   border-radius: 0px !important;
 }
 .demo-collapse.border-red .title .el-collapse-item__header:first-child {
@@ -171,12 +184,15 @@ watch(
   margin-left: 0px;
   margin-right: 8px;
 }
+.el-collapse-item__wrap {
+  background-color: var(--o-bg-color-light2);
+}
+.o-collapse-content:hover{
+  background-color: var(--o-bg-color-light);
+}
 .normal {
+  border-bottom: 1px dashed var(--o-border-color-lighter) !important;
   .el-collapse-item__header {
-    background-color: rgb(253, 254, 255) !important;
-    border-bottom: 1px dashed transparent !important;
-    background: rgb(253, 254, 255) !important;
-    border-bottom: 1px dotted;
     padding-left: 8px;
     height: 40px;
     line-height: 40px;
@@ -184,16 +200,17 @@ watch(
     color: #303133;
     cursor: pointer;
   }
+  .el-collapse-item__header::after {
+    background-color: var(--o-bg-color-light2) !important;
+  }
 }
 .title {
-  // background: linear-gradient(127.95deg, rgba(109, 117, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%) !important;
   .el-collapse-item__header {
-    border-bottom: 1px solid #e4e7ed;
     padding-left: 8px;
     height: 40px;
     line-height: 40px;
     font-size: 14px;
-    color: #303133;
+    color: var(--o-text-color-primary);
     cursor: pointer;
     position: relative;
   }
@@ -212,9 +229,7 @@ watch(
 .loading-progress {
   margin-right: 8px;
 }
-.normal {
-  // background-color: pink !important;
-}
+
 .border-red {
   border: 1px solid red;
 }
@@ -226,7 +241,6 @@ watch(
 .border-blue {
   border: 1px solid rgba(109, 117, 250, 0.2);
 }
-
 .demo-collapse {
   /* position: absolute; */
   margin-bottom: 24px;
@@ -234,7 +248,7 @@ watch(
   width: 100%;
   height: auto;
   border-radius: 0px 0px 4px 4px;
-  background-color: rgb(253, 254, 255);
+  border: 1px solid var(--o-border-color-base);
 
   :deep(.el-collapse-item__wragop) {
     // border-bottom: 5px;
