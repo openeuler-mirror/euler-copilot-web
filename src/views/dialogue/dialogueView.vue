@@ -229,6 +229,14 @@ onMounted(() => {
   }
   console.log('onMounted', window.location.host);
   initCopilot();
+  const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
+  if (iframe) {
+    if(window.location.origin === 'http://localhost:3000'){
+      iframe.src = `http://localhost:3002`;
+    }else{
+      iframe.src = `${window.location.origin}/witchaind`;
+    }
+  }
 });
 
 watch(
@@ -285,14 +293,6 @@ watch(
         appId: String(currRoute.value.query.appId),
         name: String(currRoute.value.query.name),
       };
-    }
-
-    // 监听路由变化给iframe.src赋值
-    if (currRoute.value.path === '/witchainD') {
-      const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
-      if(iframe){
-        iframe.src = `${window.location.origin}/witchaind`;
-      }   
     }
   },
   { deep: true, immediate: true },
@@ -428,8 +428,7 @@ watch(
     >
       <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-position="left" @validate="handleFormValidate">
         <el-form-item :label="$t('witChainD.witChainD_id')" prop="openai_api_key" class="docName">
-          <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')">
-          </el-input>
+          <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')"> </el-input>
         </el-form-item>
         <el-form-item class="model-ops-btn">
           <el-button
