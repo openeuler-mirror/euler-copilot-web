@@ -272,6 +272,9 @@ export const useSessionStore = defineStore('conversation', () => {
             } else if (message['event'] === 'heartbeat') {
               // conversationItem.files = [...conversationItem.files, message.content];
               // 不处理
+            } else if (message['event'] === 'graph') {
+              //echarts处理 待验证
+              conversationItem.echartsObj = message.content.option;
             } else if (message['event'] == 'ducument.add') {
               conversationItem.message[conversationItem.currentInd] += message.content;
               conversationItem.files = [...conversationItem.files, message.content];
@@ -344,9 +347,6 @@ export const useSessionStore = defineStore('conversation', () => {
                   display: true,
                   data: conversationItem.flowdata.data,
                 };
-                if (message.content.type === 'chart') {
-                  conversationItem.echartsObj = message.content.data;
-                }
               } else {
                 conversationItem.paramsList = message.content.data;
                 conversationItem.flowdata.title = i18n.global.t('flow.flow_params_error');
