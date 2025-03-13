@@ -33,16 +33,13 @@ export function useLayout() {
     for (const node of nodes) {
       // 查找到节点的信息
       const graphNode = findNode(node.id);
+      // 获取到所有节点中最高的高度，之后可计算每个节点与最高高度差设置y，使得节点的中心点都在同一水平线上
       maxHeight = maxHeight > graphNode.dimensions.height ? maxHeight : graphNode.dimensions.height;
     }
 
     for (const node of nodes) {
       // 查找到节点的信息
       const graphNode = findNode(node.id);
-      const newNode = {
-        width: graphNode.dimensions.width + 100 || 150,
-        height: graphNode.dimensions.height + 100 || 50,
-      };
 
       // 设置节点
       dagreGraph.setNode(node.id, {
@@ -64,17 +61,16 @@ export function useLayout() {
       const nodeWithPosition = dagreGraph.node(node.id);
       let diff = maxHeight - nodeWithPosition.height;
       let position = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2 };
-      let newPosition = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2 };
       // 需要进行判断--是否为开始结束
       if (node.id === 'start' || node.id === 'end') {
-        newPosition = { x: nodeWithPosition.x + 112, y: nodeWithPosition.y + diff / 2 };
+        position = { x: nodeWithPosition.x + 112, y: nodeWithPosition.y + diff / 2 };
       }
 
       return {
         ...node,
         targetPosition: isHorizontal ? Position.Left : Position.Top,
         sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-        position: newPosition, // 这里修改即可
+        position: position, // 这里修改即可
       };
     });
   }

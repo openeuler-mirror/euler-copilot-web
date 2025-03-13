@@ -217,6 +217,18 @@ watch(
     }
   },
 );
+
+const updateFunc = () => {
+  const foldDoms = document.querySelectorAll('span[title="Fold line"]');
+  foldDoms.forEach(dom => {
+    dom.innerText = '';
+  });
+
+  const unFoldDoms = document.querySelectorAll('span[title="Unfold line"]');
+  unFoldDoms.forEach(dom => {
+    dom.innerText = '';
+  });
+};
 onMounted(() => {
   if (themeStore.theme === 'dark') {
     extensions.value = [yaml(), oneDark];
@@ -281,6 +293,7 @@ onMounted(() => {
       :extensions="extensions"
       :disabled="!editable"
       @ready="handleReady"
+      @update="updateFunc"
       @change="handleChange"
     />
   </div>
@@ -326,7 +339,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .serviceName{
   display: block;
   font-size: 14px;
@@ -341,11 +354,30 @@ onMounted(() => {
 .v-codemirror {
   height: 100%;
   width: 100%;
-  .cm-editor {
+  ::v-deep(.cm-editor) {
     height: 100%;
     border: 1px solid var(--o-time-text);
     .cm-gutters {
       background-color: var(--o-bash-bg);
+      span[title='Fold line'] {
+        width: 0;
+        height: 0;
+        display: block;
+        border: 4px solid transparent;
+        border-top: 4px solid #8d98aa;
+        margin-top: 8px;
+        padding: 0;
+      }
+      span[title='Unfold line'] {
+        width: 0;
+        height: 0;
+        display: block;
+        border: 4px solid transparent;
+        border-left: 4px solid #8d98aa;
+        margin-top: 6px;
+        margin-left: 4px;
+        padding: 0;
+      }
     }
   }
   .cm-focused {

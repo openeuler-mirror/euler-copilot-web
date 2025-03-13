@@ -50,11 +50,11 @@ const updateFunc = () => {
   });
 };
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .v-codemirror {
   height: 100%;
   width: 100%;
-  .cm-editor {
+  ::v-deep(.cm-editor) {
     height: 100%;
     border: 1px solid var(--o-time-text);
     .cm-gutters {

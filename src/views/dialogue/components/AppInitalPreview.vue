@@ -17,11 +17,15 @@
       </div>
     </div>
   </div>
+  <footer class="copilot-footer">
+    <CommonFooter />
+  </footer>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
 import { useChangeThemeStore } from 'src/store';
+import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 const themeStore = useChangeThemeStore();
 interface InterPreProps {
   createAppForm: any;
@@ -76,6 +80,10 @@ watch(
     right: 48px;
     bottom: 40px;
     border-radius: 2px;
+  }
+
+  .dialogue-conversation-bottom-sendbox__upload {
+    cursor: default;
   }
 
   &__textarea {

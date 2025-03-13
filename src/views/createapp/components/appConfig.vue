@@ -8,8 +8,10 @@ import { api } from 'src/apis';
 import CustomLoading from '../../customLoading/index.vue';
 import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
 import { ElMessage } from 'element-plus';
+import { useChangeThemeStore } from 'src/store';
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
+const themeStore = useChangeThemeStore();
 const route = useRoute();
 const props = withDefaults(defineProps<{
   handleValidateContent: Function,
@@ -425,7 +427,7 @@ defineExpose({
   </el-form>
   <div class="createAppContainerMainBox">
     <div class="previewTitle">界面预览</div>
-    <div class="createAppContainerMainRight">
+    <div class="createAppContainerMainRight" :class="themeStore.theme">
       <AppInitalPreview :createAppForm="createAppForm" />
     </div>
   </div>

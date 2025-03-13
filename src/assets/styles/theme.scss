@@ -19,6 +19,7 @@ body[theme='dark'] {
   --flow-nodeBox-shadow: 0 8px 16px 0 rgba(253, 254, 255, 0.1);
   // 工作流节点背景色
   --flow-bg-color: #343a43;
+  --o-bash-box-shadow:  0 4px 16px 0 rgba(255, 255, 255, 0.1);
   // 工作流开始节点结束背景渐变色
   --flow-startEnd-bg: linear-gradient(rgba(132, 149, 253, 0.3), rgba(104, 113, 129, 0.15), rgba(52, 58, 67, 0));
   --flow-system-bg: linear-gradient(rgba(113, 225, 229, 0.3), rgba(97, 119, 121, 0.15), rgba(52, 58, 67, 0));
@@ -62,7 +63,8 @@ body[theme='light'] {
   --flow-instance-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
   --flow-nodeBox-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
   // 工作流节点背景色
-  --flow-bg-color: #fff;
+  --flow-bg-color: #fdfeff;
+  --o-bash-box-shadow:  0 4px 16px 0 rgba(42, 47, 55, 0.1);
   // 工作流开始节点结束背景渐变色
   --flow-startEnd-bg: linear-gradient(rgba(133, 148, 253, 0.3), rgba(210, 231, 252, 0.15), rgba(255, 255, 255, 0));
   --flow-system-bg: linear-gradient(rgba(156, 237, 203, 0.3), rgba(240, 253, 244, 0.15), rgba(255, 255, 255, 0));
