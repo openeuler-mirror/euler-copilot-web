@@ -5,7 +5,7 @@ const { t } = useI18n();
 import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computing/opendesign-icons';
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
-
+import CustomLoading from '../../customLoading/index.vue';
 import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
 import { ElMessage } from 'element-plus';
 const activeName = ref([1, 2, 3]);
@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<{
   handleValidateContent: Function,
 }>(), {});
 const emits = defineEmits(['getFlowList', 'getPublishStatus']);
-
+const loading = ref(false);
 const createAppForm = ref({
   icon: '',
   name: '',
@@ -134,6 +134,7 @@ const httpRequest = res => {
 onMounted(() => {
   // 判断是否编辑--是否需要查询回显数据
   if (route.query?.appId) {
+    loading.value = true;
     api
       .querySingleAppData({
         id: route.query?.appId as string,
@@ -157,6 +158,7 @@ onMounted(() => {
           flowDataList.value = appInfo.workflows;
           emits('getFlowList', flowDataList.value);
         }
+        loading.value = false;
       });
   }
   // 获取当前权限配置-部分人可见的部分人列表数据
@@ -267,6 +269,7 @@ defineExpose({
 });
 </script>
 <template>
+  <CustomLoading :loading="loading"></CustomLoading>
   <el-form
     :model="createAppForm"
     ref="createAppFormRef"

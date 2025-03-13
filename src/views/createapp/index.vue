@@ -3,6 +3,7 @@ import '../styles/createApp.scss';
 import { onMounted, onUnmounted, ref } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
+import CustomLoading from '../customLoading/index.vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 import { useRouter, useRoute } from 'vue-router';
@@ -18,6 +19,7 @@ const createAppType = ref('appConfig');
 const appConfigRef = ref();
 const workFlowRef = ref();
 const flowList = ref([]);
+const loading = ref(false);
 const handleChangeAppType = type => {
   createAppType.value = type;
   // 切换createAppType【tab值】时，将其保存在sessionStorage，刷新时保证不变
@@ -41,6 +43,7 @@ onUnmounted(() => {
 
 // 需要界面配置校验与工作流校验同时通过
 const handlePulishApp = () => {
+  loading.value = true;
   // 发布接口
   api
     .releaseSingleAppData({
@@ -50,6 +53,7 @@ const handlePulishApp = () => {
       if (res[1]?.result) {
         ElMessage.success('发布成功');
         router.push(`/app`);
+        loading.value = false;
       }
     });
 };
@@ -92,6 +96,7 @@ const judgeAppFlowsDebug = (flowDataList) => {
 // 保存按钮
 const saveConfigOrFlow = () => {
   if (createAppType.value === 'appConfig') {
+    loading.value = true;
     let appFormValue = appConfigRef.value.createAppForm;
     if (appFormValue) {
       api
@@ -117,6 +122,7 @@ const saveConfigOrFlow = () => {
               duration: 2000,
             });
           }
+          loading.value = false;
         });
     }
   } else {
@@ -137,6 +143,7 @@ const handleJumperAppCenter = () => {
 </script>
 <template>
   <div class="createAppContainer">
+    <CustomLoading :loading="loading"></CustomLoading>
     <div class="createAppContainerTop">
       <div class="createAppContainerMenu">
         <div class="createAppContainerMenuLeft">

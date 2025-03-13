@@ -1,6 +1,7 @@
 <template>
   <div class="appCenterBox">
     <div class="appCenterMain">
+      <CustomLoading :loading="loading"></CustomLoading>
       <div class="appCenterTitle">{{ $t('app.app_center') }}</div>
       <div class="appCenterSearch">
         <el-input style="max-width: 400px" v-model="appSearchValue" :placeholder="$t('app.app_search')" :suffix-icon="IconSearch">
@@ -109,6 +110,7 @@ import { IconAlarm } from '@computing/opendesign-icons';
 import RobotIcon from '../../assets/svgs/robot_icon.svg'
 import { storeToRefs } from 'pinia';
 import { useAccountStore } from 'src/store';
+import CustomLoading from '../customLoading/index.vue';
 const publishStatus = ref('未发布');
 const router = useRouter();
 const appType = ref('my');
@@ -122,6 +124,7 @@ const pagination = ref({
 const { userinfo } = storeToRefs(useAccountStore());
 const currentPage = ref(1);
 const totalCount = ref(0);
+const loading = ref(false);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
@@ -169,6 +172,7 @@ const handleParmasQueryAppList = (params?: any) => {
 };
 
 const handleQueryAppList = (payload?: any) => {
+  loading.value = true;
   api
     .queryAppList({
       page: currentPage.value,
@@ -179,6 +183,7 @@ const handleQueryAppList = (payload?: any) => {
       appList.value = res[1]?.result.applications;
       currentPage.value = res[1]?.result.currentPage;
       totalCount.value = res[1]?.result.totalApps;
+      loading.value = false;
     });
 };
 
