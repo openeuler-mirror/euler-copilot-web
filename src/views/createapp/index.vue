@@ -3,6 +3,7 @@ import '../styles/createApp.scss';
 import { onMounted, onUnmounted, ref } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
+import CustomLoading from '../customLoading/index.vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 import { useRouter, useRoute } from 'vue-router';
@@ -18,9 +19,7 @@ const createAppType = ref('appConfig');
 const appConfigRef = ref();
 const workFlowRef = ref();
 const flowList = ref([]);
-// 后续的判断校验图标
-const interfaceValid = ref('');
-const flowValid = ref('');
+const loading = ref(false);
 const handleChangeAppType = type => {
   createAppType.value = type;
   // 切换createAppType【tab值】时，将其保存在sessionStorage，刷新时保证不变
@@ -44,6 +43,7 @@ onUnmounted(() => {
 
 // 需要界面配置校验与工作流校验同时通过
 const handlePulishApp = () => {
+  loading.value = true;
   // 发布接口
   api
     .releaseSingleAppData({
@@ -53,17 +53,13 @@ const handlePulishApp = () => {
       if (res[1]?.result) {
         ElMessage.success('发布成功');
         router.push(`/app`);
+        loading.value = false;
       }
     });
 };
 
 const handleValidateContent = valid => {
   appFormValidate.value = valid;
-};
-
-// 获取工作流组件中的节点连接状态校验
-const validateConnect = valid => {
-  // publishValidate.value = !valid;
 };
 
 // 获取当前的应用中的各flowsDebug的情况
@@ -100,6 +96,7 @@ const judgeAppFlowsDebug = (flowDataList) => {
 // 保存按钮
 const saveConfigOrFlow = () => {
   if (createAppType.value === 'appConfig') {
+    loading.value = true;
     let appFormValue = appConfigRef.value.createAppForm;
     if (appFormValue) {
       api
@@ -125,6 +122,7 @@ const saveConfigOrFlow = () => {
               duration: 2000,
             });
           }
+          loading.value = false;
         });
     }
   } else {
@@ -145,6 +143,7 @@ const handleJumperAppCenter = () => {
 </script>
 <template>
   <div class="createAppContainer">
+    <CustomLoading :loading="loading"></CustomLoading>
     <div class="createAppContainerTop">
       <div class="createAppContainerMenu">
         <div class="createAppContainerMenuLeft">
@@ -196,7 +195,6 @@ const handleJumperAppCenter = () => {
     </div>
     <div class="createWorkFlowContainerMain" v-show="createAppType !== 'appConfig'">
       <WorkFlow
-        @validateConnect="validateConnect"
         @updateFlowsDebug="updateFlowsDebug"
         :flowList="flowList"
         ref="workFlowRef"
@@ -209,7 +207,7 @@ const handleJumperAppCenter = () => {
       >
       <el-button :disabled="true">预览</el-button>
       <el-tooltip :disabled="publishValidate" content="需要当前应用中所有工作流调试成功才能发布应用" placement="top">
-        <!-- 需要多一层，不然影响当前 :disabled="!publishValidate"-->
+        <!-- 需要多一层，不然影响当前el-tooltip显示content -->
         <div>
           <el-button type="primary" :disabled="!publishValidate" @click="handlePulishApp()">发布</el-button>
         </div>

@@ -5,7 +5,7 @@ const { t } = useI18n();
 import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computing/opendesign-icons';
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
-
+import CustomLoading from '../../customLoading/index.vue';
 import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
 import { ElMessage } from 'element-plus';
 const activeName = ref([1, 2, 3]);
@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<{
   handleValidateContent: Function,
 }>(), {});
 const emits = defineEmits(['getFlowList', 'getPublishStatus']);
-
+const loading = ref(false);
 const createAppForm = ref({
   icon: '',
   name: '',
@@ -48,12 +48,30 @@ const base64Image: any = ref('');
 const permissionList = ref([]);
 const curPersonList = ref([]);
 const publishStatus = ref(false);
+
+// 这里校验url是否符合规范
+const checkLinks = (rule, value, callback) => {
+  // 这里校验各个url链接
+  let result = true;
+  createAppForm.value.links.forEach(item => {
+    if (!checkUrl(item)) {
+      result = false;
+    }
+  })
+  console.log('这里的校验')
+  if (!result) {
+    callback(new Error('填写的url不合法'))
+  } else {
+    callback();
+  }
+}
+
 // 这里后面需要换为变量-以便于中英文切换
 const createAppRole = ref({
   name: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
   description: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
   dialogRounds: [{ required: true, message: '对话轮次不能为空', trigger: 'change' }],
-  // links: [{required: true, message: '应用名称不能为空', trigger: 'blur'}]
+  links: [{required: true, message: '请填写合法的url', validator: checkLinks, trigger: 'blur'}]
 });
 const createAppFormRef = ref();
 const modeOptions = reactive([
@@ -116,6 +134,7 @@ const httpRequest = res => {
 onMounted(() => {
   // 判断是否编辑--是否需要查询回显数据
   if (route.query?.appId) {
+    loading.value = true;
     api
       .querySingleAppData({
         id: route.query?.appId as string,
@@ -139,6 +158,7 @@ onMounted(() => {
           flowDataList.value = appInfo.workflows;
           emits('getFlowList', flowDataList.value);
         }
+        loading.value = false;
       });
   }
   // 获取当前权限配置-部分人可见的部分人列表数据
@@ -149,25 +169,21 @@ onMounted(() => {
     }
   });
 });
-
 // 正则校验url
 const checkUrl = (url) => {
-  // const pattern = new RegExp(
-  //   '^(https?:\\/\\/)?' + // protocol
-  //     '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-  //     '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-  //     '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-  //     '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-  //     '(\\#[-a-z\\d_]*)?$', // fragment locator
-  //   'i'
-  // );
-  // const result = pattern.test(url);
-  // if (!result) {
-  //   ElMessage.warning('请填写正确的链接地址');
-  // }
-
-  // return result;
-  // 单独校验links字段
+  // 这里判断下
+  if (url) {
+    try {
+      new URL(url);
+      // 这里设置校验成功
+      return true;
+    } catch (e) {
+      // 设置校验失败
+      return false;
+    }
+  } else {
+    return false;
+  }
 }
 
 watch(
@@ -185,16 +201,6 @@ watch(
 const validateForm = async () => {
   try {
     const resulst = await createAppFormRef.value.validate();
-    // 判断links是否每项都符合格式
-    // let flag = true;
-    // createAppForm.value.links.forEach(item => {
-    //   if (!checkUrl(item)) {
-    //     flag = false;
-    //   }
-    // })
-    // if (!flag) {
-    //   ElMessage.warning('请填写正确的链接地址');
-    // }
     return true;
   } catch (error) {
     return false;
@@ -215,7 +221,7 @@ const beforeUpload = async (file: ElFile) => {
     file.type === 'svg' ||
     file.name.indexOf('.png') > -1 ||
     file.name.indexOf('.svg') > -1 ||
-    file.name.indexOf('.jpg') > -1; 
+    file.name.indexOf('.jpg') > -1;
 
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isPic) {
@@ -263,6 +269,7 @@ defineExpose({
 });
 </script>
 <template>
+  <CustomLoading :loading="loading"></CustomLoading>
   <el-form
     :model="createAppForm"
     ref="createAppFormRef"
@@ -310,8 +317,8 @@ defineExpose({
             @keydown.enter="handleTextareaEnter"
           ></el-input>
         </el-form-item>
-
-        <el-form-item label="相关链接" prop="connectList" class="notRequired">
+        <!-- 这里notRequired样式,在局部的通过校验时，控制局部的样式为正常。links为空时通过校验 -->
+        <el-form-item label="相关链接" prop="links" class="notRequired">
           <div class="linkLine">
             <el-button :icon="IconPlusCircle" @click="addLink" :disabled="createAppForm.links.length > 4">
               添加链接
@@ -322,10 +329,10 @@ defineExpose({
             <el-input
               class="w320"
               maxlength="200"
+              :class="{ 'validUrl' : checkUrl(createAppForm.links[index])}"
               v-model="createAppForm.links[index]"
               placeholder="请输入"
               clearable
-              @blur="checkUrl(createAppForm.links[index])"
             ></el-input>
             <el-icon class="delIcon" @click="delConnectItem(index)">
               <IconDelete />
@@ -367,7 +374,13 @@ defineExpose({
         </template>
         <el-form-item label="请选择对话轮次" prop="dialogRounds">
           <div class="multiSessionItem">
-            <el-input-number v-model="createAppForm.dialogRounds" :step="1" :value-on-clear="3" :min="1" :max="10"></el-input-number>
+            <el-input-number
+              v-model="createAppForm.dialogRounds"
+              :step="1"
+              :value-on-clear="3"
+              :min="1"
+              :max="10"
+            ></el-input-number>
             <span class="sessionUnit">(1 ~ 10)</span>
           </div>
         </el-form-item>

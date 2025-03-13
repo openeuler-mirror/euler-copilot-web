@@ -30,7 +30,7 @@ export interface IAnyObj {
 export type Fn = (data: FcResponse<any>) => unknown;
 
 //白名单
-const whiteList: Array<string | undefined> = ['/api/auth/user'];
+const whiteList: Array<string | undefined> = ['/api/auth/user','/api/conversation','/api/stop','api/app/recent',];
 
 // 创建 axios 实例
 export const server = axios.create({
@@ -67,15 +67,15 @@ server.interceptors.response.use(
   },
   async (error: AxiosError) => {
     // 取消请求的错误处理，将错误处理全部移动到实际请求catch中
-    // if (!whiteList.includes(error.config?.url)) {
-    //   ElMessage({
-    //     showClose: true,
-    //     message: error?.response?.data?.message || error.message,
-    //     icon: IconError,
-    //     customClass: 'o-message--error',
-    //     duration: 3000,
-    //   });
-    // }
+    if (!whiteList.includes(error.config?.url)) {
+      ElMessage({
+        showClose: true,
+        message: error?.response?.data?.message || error.message,
+        icon: IconError,
+        customClass: 'o-message--error',
+        duration: 3000,
+      });
+    }
     return await handleStatusError(error);
   },
 );

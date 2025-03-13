@@ -23,6 +23,7 @@ import { useRoute } from 'vue-router';
 import { nodeTypeToIcon, iconTypeList, getSrcIcon, DefaultViewPortZoom } from './types';
 import yaml from 'js-yaml';
 import $bus from 'src/bus/index';
+import CustomLoading from '../../customLoading/index.vue'
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -39,12 +40,11 @@ const nodeName = ref('');
 const nodeDesc = ref('');
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
-const isNodeAndLineConnect = ref(false);
 const apiServiceList = ref([]);
 const allApiServiceList = ref([]);
 const yamlContent = ref();
 const nodeYamlId = ref();
-const emits = defineEmits(['validateConnect', 'updateFlowsDebug']);
+const emits = defineEmits(['updateFlowsDebug']);
 const route = useRoute();
 const workFlowList = ref([]);
 const props = defineProps(['flowList']);
@@ -53,6 +53,8 @@ const nodes = ref([]);
 const debugStatus = ref('');
 const debugTime = ref('');
 const totalTime = ref(0);
+const loading = ref(false);
+const apiLoading = ref(false);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -75,6 +77,8 @@ const {
   getViewport,
   setNodes,
   setEdges,
+  removeSelectedNodes,
+  getSelectedNodes,
 } = useVueFlow();
 const { layout } = useLayout();
 
@@ -146,10 +150,6 @@ onConnect(e => {
   // 获取当前状态
   const sourceStatus = sourceItem?.data?.status || 'default';
   const targetStatus = targetItem?.data?.status || 'default';
-  // 更新source源节点handle连接状态
-  if (sourceItem?.id) {
-    updateConnectNodeHandle(sourceItem.id, e.sourceHandle, false);
-  }
   addEdges({
     ...e,
     data: {
@@ -158,8 +158,6 @@ onConnect(e => {
     },
     type: 'normal',
   });
-  // 添加边连接时-判断节点是否都连接
-  nodeAndLineConnection();
 });
 const handleChange = activeList => {
   activeNames.value = activeName.value;
@@ -179,14 +177,7 @@ const handleClose = () => {
 const delNode = id => {
   if (id) {
     const node = findNode(id);
-    // 获取以该节点为target的相连的其他节点
-    const connectEdges = getEdges.value.filter(edge => edge.target === id);
-    connectEdges.forEach(item => {
-      updateConnectNodeHandle(item.source, item.sourceHandle, true);
-    });
     node ? removeNodes(node) : '';
-    // 删除节点时-判断节点是否都连接
-    nodeAndLineConnection();
   }
 };
 // 编辑yaml
@@ -216,36 +207,6 @@ async function layoutGraph(direction) {
   });
 }
 
-const nodeAndLineConnection = () => {
-  // 获取当前所有节点和边
-  const curNodes = [...getNodes.value];
-  const curEdges = [...getEdges.value];
-  // 判断开始节点是否连接
-  let isNodeConnect = true;
-  const len = curNodes.length;
-  // 遍历每个节点
-  for (let i = 0; i < len; i++) {
-    if (curNodes[i].type === 'start') {
-      // 判断开始节点是否连接
-      isNodeConnect = curEdges.some(item => item.sourceNode?.type === 'start');
-    } else if (curNodes[i].type === 'end') {
-      // 判断结束节点是否连接
-      isNodeConnect = curEdges.some(item => item.targetNode?.type === 'end');
-    } else {
-      // 判断普通节点是否有连接-普通节点开始和结束都需要进行判断
-      const isStartCustomNodeConnect = curEdges.some(item => item.sourceNode?.id === curNodes[i].id);
-      const isEndCustomNodeConnect = curEdges.some(item => item.targetNode?.id === curNodes[i].id);
-      isNodeConnect = isStartCustomNodeConnect && isEndCustomNodeConnect;
-    }
-    if (!isNodeConnect) {
-      break;
-    }
-  }
-  // 是否所有节点都已连接
-  isNodeAndLineConnect.value = isNodeConnect;
-  emits('validateConnect', isNodeAndLineConnect.value);
-};
-
 // 拖拽添加
 const dropFunc = e => {
   if (!flowObj.value?.flowId) {
@@ -257,11 +218,10 @@ const dropFunc = e => {
     return;
   }
   onDrop(e);
-  // 添加节点时-判断节点是否都连接
-  nodeAndLineConnection();
 };
 
 onMounted(() => {
+  apiLoading.value = true;
   api
     .queryAllFlowService({
       page: 1,
@@ -272,6 +232,7 @@ onMounted(() => {
       allApiServiceList.value = res[1]?.result.services;
       activeName.value = [res[1]?.result.services[0]?.serviceId];
       activeNames.value = [res[1]?.result.services[0]?.serviceId];
+      apiLoading.value = false;
     });
     handleChangeZoom(DefaultViewPortZoom);
 })
@@ -318,37 +279,25 @@ const handleDebugDialogOps = visible => {
 };
 
 const edgesChange = edges => {
-  if (edges?.[0]?.type === 'remove' && edges[0]?.source) {
-    updateConnectNodeHandle(edges[0].source, edges[0]?.sourceHandle, true);
-    // 删除节点时-判断节点是否都连接
-    nodeAndLineConnection();
-  }
   // 边增加删除时直接将工作流debug状态置为false
   if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
     emits('updateFlowsDebug', false);
   }
 };
 
-const updateConnectNodeHandle = (id, handle, connectable) => {
-  const node = findNode(id);
-  let handleType = 'isConnectSource';
-  // 默认为单节点
-  if (handle) {
-    // 说明是分支节点
-    handleType = handle === BranchSourceIdType.SOURCEA ? 'isConnectSourceA' : 'isConnectSourceB';
-  }
-  updateNode(id, { data: { ...node?.data, [handleType]: connectable } });
-};
-
 const nodesChange = nodes => {
+  // 判断如果选中的节点数目大于1，则删除首个
+  if (getSelectedNodes.value.length > 1) {
+    removeSelectedNodes([getSelectedNodes.value[0]])
+  }
   if (nodes?.[0]?.type === 'remove') {
     delNode(nodes[0].id);
     // 节点增加删除时直接将工作流debug状态置为false
-    emits('updateFlowsDebug', false)
+    emits('updateFlowsDebug', false);
   }
   if (nodes?.[0]?.type === 'add') {
     // 节点增加删除时直接将工作流debug状态置为false
-    emits('updateFlowsDebug', false)
+    emits('updateFlowsDebug', false);
   }
 };
 
@@ -367,6 +316,7 @@ const getCreatedFlow = createdFlowObj => {
 
 const queryFlow = (deal: string) => {
   // 查询当前应用下的flowIdList
+  loading.value = true;
   if (route.query?.appId) {
     api
       .querySingleAppData({
@@ -387,11 +337,13 @@ const queryFlow = (deal: string) => {
           // 更新当前publish状态
           emits('updateFlowsDebug');
         }
+        loading.value = false;
       });
   }
 };
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
 const editFlow = item => {
+  loading.value = true;
   api
     .querySingleFlowTopology({
       appId: route.query?.appId,
@@ -402,6 +354,7 @@ const editFlow = item => {
         flowObj.value = res[1].result.flow;
         redrageFlow(flowObj.value.nodes, flowObj.value.edges);
       }
+      loading.value = false;
     });
 };
 
@@ -411,6 +364,7 @@ const delFlow = item => {
   if (workFlowItemName.value === item.name) {
     workFlowItemName.value = '';
   }
+  loading.value = true;
   api
     .delFlowTopology({
       appId: route.query?.appId,
@@ -421,6 +375,7 @@ const delFlow = item => {
         ElMessage.success('删除工作流成功');
         // 并且需要更新工作流下拉框--默认选中第一项
         queryFlow('del');
+        loading.value = false;
       }
     });
 };
@@ -492,7 +447,7 @@ $bus.on('getNodesStatue', lines => {
         totalTime.value = 0;
         debugTime.value = '';
         debugStatus.value = newLines.data.flow?.stepStatus;
-        updateNodeFunc('start', 'success', '')
+        updateNodeFunc('start', 'success', '');
       }
 
       // 这里判断是否有调试状态的值，无值不处理
@@ -537,7 +492,7 @@ $bus.on('debugChatEnd', () => {
   emits('updateFlowsDebug');
 })
 
-// 更新节点状态--这里是测试第一个成功节点改变状态的方法【同时边也随之改变】
+// 更新节点状态--调试到对应节点id，根据id设置节点与边状态
 const updateNodeFunc = (id, status, constTime, content?) => {
   // 获取到当前的nodeId,更新状态
   const node = findNode(id);
@@ -559,6 +514,7 @@ const updateNodeFunc = (id, status, constTime, content?) => {
 };
 
 const saveFlow = (updateNodeParameter?) => {
+  loading.value = true;
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
     return;
@@ -648,6 +604,7 @@ const saveFlow = (updateNodeParameter?) => {
         const updatedCurFlow = res[1].result.flow;
         redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
       }
+      loading.value = false;
     });
 };
 
@@ -675,6 +632,7 @@ defineExpose({
 
       <transition name="transition-fade">
         <div class="copilot-aside nodes" v-if="isCopilotAsideVisible">
+          <CustomLoading :loading="apiLoading"></CustomLoading>
           <div class="apiCenterBox">
             <div class="apiCenterTitle">语义接口中心</div>
             <div class="apiCenterSearch">
@@ -718,6 +676,7 @@ defineExpose({
     </aside>
     <div class="workFlowContainerRight">
       <!-- vue-flow画布节点等区域 -->
+      <CustomLoading :loading="loading"></CustomLoading>
       <VueFlow
         :nodes="nodes"
         :edges="edges"
@@ -856,6 +815,7 @@ defineExpose({
       v-if="isAddWorkFlow"
       :editData="editData"
       :dialogType="dialogType"
+      :workFlowList="workFlowList"
       @handleClose="handleClose"
       @createFlowId="getCreatedFlow"
     ></WorkFlowDialog>
