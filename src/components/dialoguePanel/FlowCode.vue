@@ -158,7 +158,7 @@ h2 {
   display: flex;
   position: relative;
   justify-content: space-between;
-  background-color: var(--o-flow-code-bg);
+  background-color: var(--o-bg-color-light2) !important;
   border: var(--o-flow-code-border) 1px solid;
   border-radius: 4px 4px 0px 0px;
   margin-top: 12px;

@@ -157,6 +157,7 @@ export default {
   word-break: break-all;
   word-wrap: break-word;
   user-select: none;
+  color: var(--o-text-color-primary);
 }
 .hover-wrap.active {
   z-index: 1999;
