@@ -159,7 +159,6 @@ const dynamicBackground = computed(() => {
 </template>
 
 <style lang="scss">
-
 .el-collapse-item__content {
   margin: 0px 16px 16px 16px;
 }
@@ -184,10 +183,8 @@ const dynamicBackground = computed(() => {
   margin-left: 0px;
   margin-right: 8px;
 }
-.el-collapse-item__wrap {
-  background-color: var(--o-bg-color-light2);
-}
-.o-collapse-content:hover{
+
+.o-collapse-content:hover {
   background-color: var(--o-bg-color-light);
 }
 .normal {
@@ -205,6 +202,9 @@ const dynamicBackground = computed(() => {
   }
 }
 .title {
+  .el-collapse-item__wrap {
+      background-color: var(--o-bg-color-light2);
+    }
   .el-collapse-item__header {
     padding-left: 8px;
     height: 40px;
