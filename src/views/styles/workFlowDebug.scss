@@ -72,6 +72,9 @@
       .sendIcon {
         width: 48px;
         height: 32px;
+        .ableSend {
+          cursor: pointer;
+        }
         img {
           width: 32px;
         }

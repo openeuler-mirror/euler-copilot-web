@@ -123,6 +123,10 @@
       margin-bottom: 12px;
     }
   }
+  .createAppContainerMainRight.dark {
+    background: var(--o-bg-image) center center no-repeat;
+    background-size: cover;
+  }
 
   .createAppContainerMainLeft {
     width: 536px;

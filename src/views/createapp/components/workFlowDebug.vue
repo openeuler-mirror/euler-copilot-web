@@ -45,7 +45,7 @@
         <!-- 发送问题 -->
         <div class="sendIcon">
           <img v-if="isAnswerGenerating || dialogueInput.length <= 0" src="@/assets/images/send_disable.png" alt="" />
-          <div v-else @click="handleSendMessage(undefined, dialogueInput)">
+          <div v-else @click="handleSendMessage(undefined, dialogueInput)" class="ableSend">
             <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
             <img v-else src="@/assets/images/light_send.png" alt="" />
           </div>
