@@ -53,7 +53,7 @@ server.interceptors.request.use(
 // response interceptor
 server.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
-    if (response.status !== 200) {
+    if (response.status !== 200 && response.status !== 401 && response.status !== 403) {
       ElMessage({
         showClose: true,
         message: response.statusText,

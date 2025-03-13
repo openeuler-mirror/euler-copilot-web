@@ -109,8 +109,9 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
 import RobotIcon from '../../assets/svgs/robot_icon.svg'
 import { storeToRefs } from 'pinia';
-import { useAccountStore } from 'src/store';
+import { useAccountStore, useHistorySessionStore } from 'src/store';
 import CustomLoading from '../customLoading/index.vue';
+const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const publishStatus = ref('未发布');
 const router = useRouter();
 const appType = ref('my');
@@ -156,6 +157,8 @@ const routerToDetail = appItem => {
   }
   //获取appItem.id & appItem.name
   router.push(`/copilot?appId=${appItem.appId}&name=${appItem.name}`);
+  //保证跳转后一定是一条选中的新会话
+  currentSelectedSession.value = '';
 };
 
 const handleParmasQueryAppList = (params?: any) => {
