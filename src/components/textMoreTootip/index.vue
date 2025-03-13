@@ -80,7 +80,7 @@ export default {
     },
     getStyle(val) {
       let lineHeight =
-        getComputedStyle(this.text).lineHeight.replace("px", "") - 0 || 20;
+        getComputedStyle(this.text).lineHeight.replace("px", "") - 0 || 18;
       let height = getComputedStyle(this.text).height.replace("px", "") - 0;
       if (height > lineHeight * val) {
         this.isShowHover = false;
