@@ -793,9 +793,9 @@ watch(
                 src="@/assets/images/send_disable.png"
                 alt=""
               />
-              <div v-else @click="handleSendMessage(undefined, dialogueInput)">
-                <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
-                <img v-else src="@/assets/images/light_send.png" alt="" />
+              <div v-else>
+                <img v-if="themeStore.theme === 'dark'" @click="handleSendMessage(undefined, dialogueInput)" src="@/assets/images/dark_send.png" alt="" />
+                <img v-else @click="handleSendMessage(undefined, dialogueInput)" src="@/assets/images/light_send.png" alt="" />
               </div>
             </div>
           </div>
