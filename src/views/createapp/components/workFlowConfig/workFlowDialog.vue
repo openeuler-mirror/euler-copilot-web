@@ -52,6 +52,9 @@ const props = defineProps({
   editData: {
     type: Object,
   },
+  workFlowList: {
+    type: Array,
+  }
 });
 const emits = defineEmits(['handleClose', 'createFlowId']);
 const workFlowForm = ref();
@@ -70,6 +73,19 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
   // 校验必填项是否填写
   formEl?.validate(valid => {
     if (valid) {
+      // 判断是否有重复的工作流名称
+      let isMultNameFlag = false;
+      props.workFlowList?.forEach(flowItem => {
+        if (flowItem?.name === workFlowData.value.name) {
+          isMultNameFlag = true;
+        }
+      })
+      // 如果与已有名称重复，则提示
+      if (isMultNameFlag) {
+        ElMessage.warning('当前应用下已有该工作流名称，请修改名称');
+        return;
+      }
+
       // 创建工作流
       const appId = route.query?.appId;
       // 创建使用生成的flowId
