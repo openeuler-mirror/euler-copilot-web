@@ -1,4 +1,5 @@
 <template>
+  <CustomLoading :loading="loading"></CustomLoading>
   <div class="apiCenterBox">
     <div class="apiCenterMain">
       <div class="apiCenterTitle">{{$t('semantic.semantic_interface_center')}}</div>
@@ -125,6 +126,7 @@ import { useAccountStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 import * as jsYaml from 'js-yaml';
 import i18n from 'src/i18n';
+import CustomLoading from '../customLoading/index.vue';
 
 const apiList = ref();
 const drawer = ref(false);
@@ -147,6 +149,7 @@ const pagination = ref({
 const currentPage = ref(1);
 const totalCount = ref(0);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
+const loading = ref(false);
 
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
@@ -215,6 +218,7 @@ const handleParmasQueryapiList = (params?: any) => {
 };
 
 const handleQueryApiList = (payload?: any) => {
+  loading.value = true;
   api
     .queryApiList({
       page: currentPage.value,
@@ -225,6 +229,7 @@ const handleQueryApiList = (payload?: any) => {
       apiList.value = res[1]?.result.services;
       currentPage.value = res[1]?.result.currentPage;
       totalCount.value = res[1]?.result.totalCount;
+      loading.value = false;
     });
 };
 

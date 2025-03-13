@@ -10,10 +10,13 @@ import { errorMsg, successMsg } from 'src/components/Message';
 import { yaml } from "@codemirror/lang-yaml"
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useChangeThemeStore } from 'src/store/conversation';
+import CustomLoading from 'src/views/customLoading/index.vue';
 
+const loading = ref(false);
 const themeStore = useChangeThemeStore();
 const extensions = ref([yaml()]);
 const handleCreateapi = async () => {
+  loading.value = true;
   const [_, res] = await api.createOrUpdateApi({
     serviceId: props.serviceId || '',
     data: yamlToJsonContent.value,
@@ -27,6 +30,7 @@ const handleCreateapi = async () => {
     } else {
       errorMsg('创建失败');
     }
+      loading.value = false;
   }
 };
 
@@ -238,6 +242,7 @@ onMounted(() => {
 });
 </script>
 <template>
+  <CustomLoading :loading="loading"></CustomLoading>
   <el-upload
     v-if="uploadtype === 'upload'"
     action=""
