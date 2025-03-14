@@ -84,7 +84,6 @@
     margin-top: 16px;
     padding: 24px 24px 24px 16px;
     display: flex;
-    gap: 24px;
     flex: 1;
     max-height: calc(100% - 112px);
     background-color: var(--o-bg-color-base);
@@ -119,6 +118,7 @@
     height: calc(100% - 32px);
     background-image: var(--o-bg-image);
     background-position: -520px -200px;
+    overflow: auto;
     .copilot-footer {
       margin-bottom: 12px;
     }
@@ -129,7 +129,7 @@
   }
 
   .createAppContainerMainLeft {
-    width: 536px;
+    width: 560px;
     height: 100%;
     margin-top: 0px;
     --o-owndefine-del-hover: #7aa5ff;
@@ -269,15 +269,48 @@
         .partPermissionPerson {
           width: 420px;
           height: 252px;
-          padding: 16px 0px 0px 16px;
+          padding: 16px 0px 0px;
           margin-top: 8px;
-          background-color: var(--o-bash-bg);
+          display: flex;
+          gap: 4px;
+          .permissionChoice {
+            background-color: var(--o-bash-bg);
+            width: 208px;
+            padding: 16px 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-radius: 4px;
+            .perimissionChoiceTitle {
+              height: 16px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              > div {
+                height: 16px;
+                line-height: 16px;
+              }
+              .choiceNum {
+                padding: 0 4px;
+                min-width: 28px;
+                background-color: var(--o-time-text);
+                border-radius: 8px;
+                text-align: center;
+              }
+        
+            }
+            .permissionInputSearch {
+              width: 176px;
+            }
+          }
+          .addUserBtn {
+            width: 104px;
+          }
           .personList {
             max-height: 204px;
             overflow: auto;
             padding-bottom: 12px;
             .el-checkbox-group {
-              margin-top: 16px;
               display: flex;
               flex-direction: column;
               gap: 16px;
@@ -285,6 +318,13 @@
                 height: 16px;
                 display: flex;
                 align-items: center;
+                .el-checkbox__input {
+                  display: flex;
+                  width: 16px;
+                  height: 16px;
+                  align-items: center;
+                  justify-content: center;
+                }
                 .el-checkbox__label {
                   display: flex;
                   align-items: center;

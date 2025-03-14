@@ -89,3 +89,13 @@ body[theme='light'] {
   --applist-hover:#f3f4f6;
   --flow-running-bg:linear-gradient(127.95deg, rgba(109, 117, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%);
 }
+
+body {
+  // 这里替换下拉框的选中颜色，无论亮暗都是一致
+  .el-select-dropdown__item.is-hovering {
+    background-color: #7aa5ff !important;
+  }
+  .el-select-dropdown__item.is-selected {
+    background-color: #6395fd !important;
+  }
+}

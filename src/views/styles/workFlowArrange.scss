@@ -278,6 +278,7 @@
 .workFlowOption {
   display: flex;
   align-items: center;
+  gap: 4px;
   .flowName {
     flex: 1;
   }
@@ -287,6 +288,20 @@
     line-height: 20px;
     height: 16px;
     flex: right;
+  }
+  .editIcon {
+    background: url('@/assets/svgs/light_editor.svg');
+  }
+  .delIcon {
+    background: url('@/assets/svgs/light_delete.svg');
+  }
+}
+.workFlowOption.is-selected, .workFlowOption.is-hovering {
+  .editIcon {
+    background: url('@/assets/svgs/dark_editor_active.svg');
+  }
+  .delIcon {
+    background: url('@/assets/svgs/dark_delete_active.svg');
   }
 }
 // 各节点的状态样式提取

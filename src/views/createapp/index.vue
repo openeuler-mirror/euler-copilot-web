@@ -223,13 +223,13 @@ const handleJumperAppCenter = () => {
 }
 
 ::-webkit-scrollbar {
-  width: 3px !important;
-  height: 3px !important;
+  width: 4px !important;
+  height: 4px !important;
 }
 
 /* 滚动条的滑块 */
 ::-webkit-scrollbar-thumb {
   background-color: #c3cedf;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 </style>
