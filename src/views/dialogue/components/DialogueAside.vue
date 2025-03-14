@@ -497,6 +497,7 @@ watch(
       align-items: center;
       border: 8px;
       border-radius: 8px;
+      margin:1px 0;
       span {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -509,7 +510,7 @@ watch(
           white-space: nowrap;
       }
       &:hover {
-        background-color: #f3f4f6;
+        background-color: var(--applist-hover);
       }
 
       &.selected {

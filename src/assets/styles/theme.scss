@@ -41,6 +41,8 @@ body[theme='dark'] {
   --el-collapse-header-bg: rgb(42,47,55);
   --el-collapse-border: rgb(62,69,81,0.5);
   --el-collapse-content-bg: rgb(42,47,55,0.5);
+  --applist-hover:#313741;
+  --flow-running-bg:linear-gradient(127.95deg, rgb(39, 39, 76) -1.967%, rgba(28, 57, 81, 0.929) 98.202%);
 }
 
 body[theme='light'] {
@@ -84,4 +86,6 @@ body[theme='light'] {
   --el-collapse-content-bg: rgb(244,246,250,0.5);
   --question-bg: linear-gradient(270deg, rgb(227, 242, 255), rgb(195, 227, 255) 33.232%, rgb(197, 203, 249) 85.699%);
   --question-shadow: rgba(221, 225, 240, 0.5);
+  --applist-hover:#f3f4f6;
+  --flow-running-bg:linear-gradient(127.95deg, rgba(109, 117, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%);
 }
