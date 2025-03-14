@@ -403,22 +403,42 @@ defineExpose({
             </el-radio-group>
           </div>
           <div class="partPermissionPerson" v-if="createAppForm.permission.visibility === 'protected'">
-            <el-input
-              ref="inputRef"
-              v-model="searchName"
-              class="o-style-search w320"
-              placeholder="搜索用户"
-              @input="searchPerson"
-              clearable
-              :prefix-icon="IconSearch"
-            ></el-input>
-            <div class="personList">
-              <el-checkbox-group v-model="createAppForm.permission.authorizedUsers">
-                <el-checkbox v-for="(item, index) in curPersonList" :key="index" :value="item?.userSub">
-                  <span class="circle"></span>
-                  {{ item?.userName }}
-                </el-checkbox>
-              </el-checkbox-group>
+            <div class="permissionChoice">
+              <div class="perimissionChoiceTitle">
+                <div>可选</div>
+                <div class="choiceNum">{{curPersonList.length}}</div>
+              </div>
+              <el-input
+                ref="inputRef"
+                v-model="searchName"
+                class="o-style-search permissionInputSearch"
+                placeholder="搜索用户"
+                @input="searchPerson"
+                clearable
+                :prefix-icon="IconSearch"
+              ></el-input>
+              <div class="personList">
+                <el-checkbox-group v-model="createAppForm.permission.authorizedUsers">
+                  <el-checkbox v-for="(item, index) in curPersonList" :key="index" :value="item?.userSub">
+                    <span class="circle"></span>
+                    {{ item?.userName }}
+                  </el-checkbox>
+                </el-checkbox-group>
+              </div>
+            </div>
+            <div class="permissionChoice">
+              <div class="perimissionChoiceTitle">
+                <div>已选</div>
+                <div class="choiceNum">{{ createAppForm.permission.authorizedUsers.length }}</div>
+              </div>
+              <div class="personList">
+                <el-checkbox-group v-model="createAppForm.permission.authorizedUsers">
+                  <el-checkbox v-for="(item, index) in createAppForm.permission.authorizedUsers" :key="index" :value="item">
+                    <span class="circle"></span>
+                    {{ item }}
+                  </el-checkbox>
+                </el-checkbox-group>
+              </div>
             </div>
           </div>
         </el-form-item>

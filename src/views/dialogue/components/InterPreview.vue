@@ -11,7 +11,7 @@
     <div class="preMain">
       <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
         <img :src="interPreviewInfo.icon" class="preMainAvator" v-if="interPreviewInfo.icon.length" />
-        <div v-else class="defaultIcon"></div>
+        <div v-else class="defaultIconNoCamera"></div>
       </div>
       <div class="preMainContanter">
         <div
@@ -100,7 +100,7 @@ watch(
 .interPreviewBox {
     display: flex;
     flex: auto;
-    margin-top: 12px;
+    margin-top: 32px;
     width: 100%;
     gap: 32px;
     flex-direction: column;
@@ -123,6 +123,7 @@ watch(
         }
         .preMainAppName {
           font-size: 16px;
+          margin-right: 8px;
           line-height: 24px;
           color: var(--o-text-color-primary);
           font-weight: 700;
@@ -145,13 +146,13 @@ watch(
           border-radius: 50%;
           background-size: contain;
         }
-        .defaultIcon {
+        .defaultIconNoCamera {
             width: 100%;
             height: 100%;
-            background: url('@/assets/images/app_upload.svg');
+            background: url('@/assets/images/dark_user.png');
             background-size: contain !important;
             &:hover {
-              background: url('@/assets/images/app_upload_hover.svg');
+              background: url('@/assets/images/light_user.png');
             }
           }
       }
@@ -164,6 +165,7 @@ watch(
           width: 100%;
           padding: 24px;
           background-color: var(--o-bg-color-base);
+          border-radius: 0px 8px 8px;
           .preMainContentTitle {
             display: flex;
             flex-direction: column;
@@ -171,6 +173,7 @@ watch(
             border-bottom: 1px solid var(--o-time-text);
             .greetDes {
               display: flex;
+              margin-bottom: 8px;
               .greetDesContent {
                 font-size: 24px;
                 font-weight: 700;
@@ -200,11 +203,15 @@ watch(
               color: var(--o-text-color-primary);
               font-size: 16px;
               line-height: 24px;
+              padding-bottom: 8px;
             }
-            .linkBadge {
+            ::v-deep(.linkBadge) {
               .el-badge__content {
-                right: calc(-10px + var(--el-badge-size) / 2);
+                right: -4px;
                 top: 4px;
+                width: 16px;
+                height: 16px;
+                background-color: #e32020 !important;
               }
             }
 
@@ -234,10 +241,13 @@ watch(
                 }
                 .connectBoxContent {
                   display: block;
-                  color: #6395fd;
                   font-size: 14px;
+                  padding-right: 8px;
                   cursor: pointer;
                   font-weight: 400;
+                  .vue-text {
+                    color: #6395fd;
+                  }
                 }
               }
             }
@@ -262,6 +272,9 @@ watch(
               border-radius: 8px;
               padding: 8px 16px;
               background-color: var(--o-bg-color-base);
+              .vue-text {
+                color: #4e5865;
+              }
             }
           }
         }

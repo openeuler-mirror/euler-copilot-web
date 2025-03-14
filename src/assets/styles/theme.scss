@@ -85,3 +85,13 @@ body[theme='light'] {
   --question-bg: linear-gradient(270deg, rgb(227, 242, 255), rgb(195, 227, 255) 33.232%, rgb(197, 203, 249) 85.699%);
   --question-shadow: rgba(221, 225, 240, 0.5);
 }
+
+body {
+  // 这里替换下拉框的选中颜色，无论亮暗都是一致
+  .el-select-dropdown__item.is-hovering {
+    background-color: #7aa5ff !important;
+  }
+  .el-select-dropdown__item.is-selected {
+    background-color: #6395fd !important;
+  }
+}
