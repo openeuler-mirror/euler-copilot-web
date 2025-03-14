@@ -206,7 +206,7 @@ watch(
 );
 
 watch(
-  () => getServiceYaml,
+  getServiceYaml,
   () => {
     yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
   },
