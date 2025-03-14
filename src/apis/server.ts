@@ -29,9 +29,6 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
-//白名单
-const whiteList: Array<string | undefined> = ['/api/auth/user','/api/conversation','/api/stop','api/app/recent',];
-
 // 创建 axios 实例
 export const server = axios.create({
   // API 请求的默认前缀
@@ -53,7 +50,7 @@ server.interceptors.request.use(
 // response interceptor
 server.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
-    if (response.status !== 200 && response.status !== 401 && response.status !== 403) {
+    if (response.status !== 200) {
       ElMessage({
         showClose: true,
         message: response.statusText,
@@ -66,8 +63,7 @@ server.interceptors.response.use(
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
-    // 取消请求的错误处理，将错误处理全部移动到实际请求catch中
-    if (!whiteList.includes(error.config?.url)) {
+    if (error.status !== 401 && error.status !== 403) {
       ElMessage({
         showClose: true,
         message: error?.response?.data?.message || error.message,

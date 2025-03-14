@@ -793,7 +793,7 @@ watch(
                 src="@/assets/images/send_disable.png"
                 alt=""
               />
-              <div v-else>
+              <div v-else class='send-message-btn'>
                 <img v-if="themeStore.theme === 'dark'" @click="handleSendMessage(undefined, dialogueInput)" src="@/assets/images/dark_send.png" alt="" />
                 <img v-else @click="handleSendMessage(undefined, dialogueInput)" src="@/assets/images/light_send.png" alt="" />
               </div>
@@ -928,6 +928,15 @@ button[disabled]:hover {
       border-radius: 8px;
       bottom: 0px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      .dialogue-conversation-bottom-sendbox__icon{
+        &>img{
+          cursor:not-allowed;
+        }
+        &>.send-message-btn>img{
+          cursor: pointer;
+        }
+
+      }
     }
 
     &__upload-list {

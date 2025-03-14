@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
 import { StatusInfoTitle } from '@/views/createapp/components/types';
-import { useChangeThemeStore } from 'src/store';
 
 const props = withDefaults(
   defineProps<{
@@ -22,12 +21,7 @@ if (props.flowdata) {
 const activeNames = ref([contents.value[0].id]);
 
 const secondCollapseActiveName = ref<number[]>([]);
-const handleChange = (val: number[]) => {
-  activeNames.value = val;
-};
-const handleSecondChange = (val: number[]) => {
-  secondCollapseActiveName.value = val;
-};
+
 watch(
   () => props,
   () => {
@@ -42,16 +36,6 @@ watch(
   { deep: true, immediate: true },
 );
 
-const themeStore = useChangeThemeStore();
-
-// 计算动态背景样式
-const dynamicBackground = computed(() => {
-  if (themeStore.theme === 'light') {
-    return 'linear-gradient(127.95deg, rgba(109, 117, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%)';
-  } else {
-    return 'linear-gradient(127.95deg, rgb(39, 39, 76) -1.967%, rgba(28, 57, 81, 0.929) 98.202%)';
-  }
-});
 </script>
 
 <template>
@@ -64,7 +48,7 @@ const dynamicBackground = computed(() => {
     }"
   >
     <section>
-      <el-collapse v-model="activeNames" class="o-hpc-collapse" :style="{ '--dynamic-bg': dynamicBackground }">
+      <el-collapse v-model="activeNames" class="o-hpc-collapse">
         <el-collapse-item v-for="item in contents" class="title" :key="item.id" :name="item.id">
           <template #title>
             <div class="loading">
@@ -167,7 +151,7 @@ const dynamicBackground = computed(() => {
   margin-bottom: 0px;
 }
 .demo-collapse.border-blue .title .el-collapse-item__header:first-child {
-  background: var(--dynamic-bg);
+  background: var(--flow-running-bg);
   border-radius: 0px !important;
 }
 .demo-collapse.border-red .title .el-collapse-item__header:first-child {
