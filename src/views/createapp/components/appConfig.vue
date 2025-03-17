@@ -217,25 +217,10 @@ const handleTextareaEnter = (e: any) => {
 }
 
 const beforeUpload = async (file: ElFile) => {
-  const isPic =
-    file.type === 'png' ||
-    file.type === 'jpg' ||
-    file.type === 'svg' ||
-    file.name.indexOf('.png') > -1 ||
-    file.name.indexOf('.svg') > -1 ||
-    file.name.indexOf('.jpg') > -1;
-
   const isLt2M = file.size / 1024 / 1024 < 2;
-  if (!isPic) {
-    ElMessage({
-      message: 'File must be YAML format!',
-      type: 'error',
-    });
-    return false;
-  }
   if (!isLt2M) {
     ElMessage({
-      message: 'YAML size cannot exceed 2MB!',
+      message: 'Image size cannot exceed 2MB!',
       type: 'error',
     });
     return false;
@@ -296,6 +281,7 @@ defineExpose({
               :on-success="handleAvatarSuccess"
               :before-upload="beforeUpload"
               :http-request="httpRequest"
+              :accept="'image/*'"
             >
               <img v-if="createAppForm.icon.length" :src="createAppForm.icon" class="avatar" />
               <div v-else class="defaultIcon"></div>
