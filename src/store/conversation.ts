@@ -459,7 +459,7 @@ export const useSessionStore = defineStore('conversation', () => {
     user_selected_flow?: string,
     params?: any,
   ): Promise<void> => {
-    console.log('sendQuestion',params);
+    console.log('sendQuestion',params,user_selected_plugins,user_selected_flow);
     const groupId = group_id?group_id:"";
     const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
     if (conversationList.value.length === 0) {
