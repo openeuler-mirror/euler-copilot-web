@@ -383,6 +383,7 @@ const zoom_out = () => {
 }
 
 const selectQuestion = (item:Suggest) => {
+  console.log('selectQuestion',item);
   let question = item.question;
   let user_selected_flow = item.flow_id;
   if(user_selected_flow){
@@ -456,8 +457,8 @@ const handleSendMessage = async (question, user_selected_flow, user_selected_plu
     <!-- AI回答 -->
     <div class="dialogue-panel__robot" v-else>
       <div class="dialogue-panel__robot-content">
-      <DialogueThought :content=thoughtContent v-if="thoughtContent" />
       <DialogueFlow v-if="flowdata"  :flowdata="props.flowdata"/> 
+      <DialogueThought :content=thoughtContent v-if="thoughtContent" />
       <div v-if="contentAfterMark" id="markdown-preview">
         <div v-html="contentAfterMark"></div>
       <a v-if="props.paramsList" @click="visible = true">补充参数</a>

@@ -88,6 +88,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number
   ): Promise<void> => {
+    console.log('getStream', params);
     const language = localStorage.getItem('localeLang') === 'EN' ? 'en' : 'zh';
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversation_id = currentSelectedSession;
@@ -246,6 +247,7 @@ export const useSessionStore = defineStore('conversation', () => {
               conversationItem.files = [...conversationItem.files, message.content];
           }
             else if(message["event"] === "suggest") {
+                console.log('get suggest',message.content);
                 conversationItem.search_suggestions?conversationItem.search_suggestions.push(Object(message.content)):conversationItem.search_suggestions = [Object(message.content)]
               }
             else if(message["event"] === "init") {
@@ -457,6 +459,7 @@ export const useSessionStore = defineStore('conversation', () => {
     user_selected_flow?: string,
     params?: any,
   ): Promise<void> => {
+    console.log('sendQuestion',params,params.user_selected_plugins,params.user_selected_flow);
     const groupId = group_id?group_id:"";
     const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
     if (conversationList.value.length === 0) {

@@ -154,6 +154,7 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
  * 发送消息
  */
 const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string[]) => {
+  console.log('发送消息的参数', groupId, question, user_selected_flow);
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
   const len = conversationList.value.length;
   if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
@@ -168,7 +169,8 @@ const handleSendMessage = async (groupId:string|undefined,question: string, user
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(groupId,question, undefined, undefined, undefined, user_selected_flow,undefined);
+    // plugins
+    await sendQuestion(groupId,question, user_selected_plugins.value, undefined, undefined, user_selected_flow,undefined);
   } else {
     await sendQuestion(groupId,question, user_selected_plugins.value, undefined, undefined, undefined,undefined);
   }
