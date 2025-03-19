@@ -160,7 +160,8 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string[]) => {
+const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string) => {
+  console.log('发送消息', groupId, question, user_selected_flow);
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
@@ -176,7 +177,8 @@ const handleSendMessage = async (groupId:string|undefined,question: string, user
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(groupId,question, undefined, undefined, undefined, user_selected_flow,undefined);
+    //也传一下 plugins.value
+    await sendQuestion(groupId,question, user_selected_plugins.value||undefined, undefined, undefined, user_selected_flow,undefined);
   } else {
     await sendQuestion(groupId,question, user_selected_plugins.value, undefined, undefined, undefined,undefined);
   }

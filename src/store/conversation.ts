@@ -88,6 +88,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number
   ): Promise<void> => {
+    console.log('getStream', params,params.user_selected_plugins,params.user_selected_flow);
     const language = localStorage.getItem('localeLang') === 'EN' ? 'en' : 'zh';
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversation_id = currentSelectedSession;
