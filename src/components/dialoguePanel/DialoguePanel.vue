@@ -383,6 +383,7 @@ const zoom_out = () => {
 }
 
 const selectQuestion = (item:Suggest) => {
+  console.log('selectQuestion',item);
   let question = item.question;
   let user_selected_flow = item.flow_id;
   if(user_selected_flow){
