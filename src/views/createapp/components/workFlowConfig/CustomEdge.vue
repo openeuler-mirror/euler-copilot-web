@@ -136,7 +136,6 @@ watch(
   },
 );
 const path = computed(() => getBezierPath(props)[0]);
-console.log(path, 'current-path');
 const transform = computed(() => getArrowTransform(props));
 function getArrowTransform(props) {
   const { targetPosition } = props;

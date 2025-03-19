@@ -60,7 +60,6 @@ const checkLinks = (rule, value, callback) => {
       result = false;
     }
   })
-  console.log('这里的校验')
   if (!result) {
     callback(new Error('填写的url不合法'))
   } else {

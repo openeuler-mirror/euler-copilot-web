@@ -83,33 +83,6 @@ const {
 const { layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, onDragStart } = useDragAndDrop();
-// 这里是初始化的开始结束的节点
-const initNodes = ref([
-  {
-    id: 'start',
-    type: 'start',
-    data: {
-      name: '开始',
-      description: '',
-      nodePosition: 'Right',
-      target: 'source',
-    },
-    deletable: false,
-    position: { x: 100, y: 160 },
-  },
-  {
-    id: 'end',
-    type: 'end',
-    data: {
-      name: '结束',
-      description: '',
-      nodePosition: 'Left',
-      target: 'target',
-    },
-    deletable: false,
-    position: { x: 600, y: 160 },
-  },
-]);
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
 
@@ -135,7 +108,6 @@ watch(
     // 获取当前工作流
     workFlowList.value = [...props.flowList];
     if (workFlowList.value.length) {
-      nodes.value = initNodes.value;
       // 默认选中第一个
       choiceFlowId(workFlowList.value?.[0]);
     }
@@ -627,7 +599,7 @@ defineExpose({
   <div class="workFlowContainer" @drop="dropFunc">
     <aside class="aside-wrapper" ref="copilotAside">
       <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
-        <div class="trapezoid" @click="hanleAsideVisible" />
+        <div class="trapezoid" :class="{isExpandIcon: isCopilotAsideVisible}" @click="hanleAsideVisible" />
       </ElTooltip>
 
       <transition name="transition-fade">
@@ -714,6 +686,7 @@ defineExpose({
           ></BranchNode>
         </template>
 
+        <!-- 开始结束节点 -->
         <template #node-start="nodeStartProps">
           <CustomSaENode v-bind="nodeStartProps"></CustomSaENode>
         </template>
@@ -787,10 +760,7 @@ defineExpose({
             </template>
           </el-select>
         </div>
-        <div class="debugBtn" @click="handleDebugDialogOps(true)">
-          <img src="@/assets/images/debugBtnDis.png" v-if="debugDialogVisible" />
-          <img src="@/assets/images/debugBtn.png" v-else />
-        </div>
+        <div class="debugBtn" :class="{isDebugDis: debugDialogVisible}" @click="handleDebugDialogOps(true)"></div>
         <div class="debugStatus"></div>
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
