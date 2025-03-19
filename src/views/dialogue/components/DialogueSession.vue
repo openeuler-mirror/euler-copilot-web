@@ -604,6 +604,7 @@ watch(selectMode, (newValue, oldValue) => {
     const plugin = {
       plugin_name: selectMode.value,
     };
+    console.log('plugin', user_selected_plugins.value);
     user_selected_plugins.value.push(plugin.plugin_name);
   }
 });
