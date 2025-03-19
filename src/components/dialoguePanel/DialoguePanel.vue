@@ -372,12 +372,12 @@ const zoom_out = () => {
 const selectQuestion = (item:Suggest) => {
   let question = item.question;
   let user_selected_flow = item.flow_id;
+  console.log(item);
   if(user_selected_flow){
     emits('handleSendMessage',undefined,question,user_selected_flow);
   }else{
     emits('handleSendMessage',undefined,question);
   }
-  
 };
 
 // const selectQuestion = (item:object) => {
