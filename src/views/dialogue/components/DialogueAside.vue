@@ -299,7 +299,7 @@ watch(
 <template>
   <aside class="aside-wrapper" ref="copilotAside">
     <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
-      <div class="trapezoid" @click="hanleAsideVisible" />
+      <div class="trapezoid" :class="{isExpandIcon: isCopilotAsideVisible}" @click="hanleAsideVisible" />
     </ElTooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
@@ -580,32 +580,23 @@ watch(
   height: 100%;
 
   .trapezoid {
-    width: 56px;
-    height: 15px;
-    z-index: 1;
-    background-color: var(--o-bg-color-base);
+    width: 16px;
+    height: 56px;
+    z-index: 11;
     position: absolute;
-    left: calc(100% - 28px);
+    left: 100%;
     top: 50%;
-    border-top-left-radius: 20px 30px;
-    border-top-right-radius: 20px 30px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    transform: perspective(100px) rotateX(50deg);
-    transform-origin: bottom;
-    overflow: hidden;
-    transform: rotate(90deg);
+    background: var(--expand-fold-default);
     cursor: pointer;
-    &::after {
-      content: '';
-      position: absolute;
-      left: 25%;
-      top: 45%;
-      width: 30px;
-      height: 3px;
-      border-radius: 20px;
-      background-color: #5cafff;
+    &:hover {
+      background: var(--expand-fold-hover);
     }
+    &:active {
+      background: var(--expand-fold-active);
+    }
+  }
+  .trapezoid.isExpandIcon {
+    left: calc(100% - 8px);
   }
 }
 
