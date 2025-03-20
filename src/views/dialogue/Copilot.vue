@@ -13,7 +13,7 @@ import { api } from 'src/apis';
 
 const router = useRouter();
 const route = useRoute();
-const { updateAgreement,userinfo } = useAccountStore();
+const { updateAgreement, userinfo } = useAccountStore();
 const { app } = storeToRefs(useSessionStore());
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
@@ -44,7 +44,7 @@ const readAgreement = async () => {
 };
 
 watch(
-  [router,userinfo],
+  [router, userinfo],
   () => {
     const currRoute = router.currentRoute;
     if (currRoute.value.query.appId && userinfo.user_sub) {
@@ -53,14 +53,14 @@ watch(
         .querySingleAppData({
           id: route.query?.appId as string,
         })
-        .then(res => {
+        .then((res) => {
           const appInfo = res?.[1]?.result;
           if (appInfo) {
             createAppForm.value = {
               icon: appInfo?.icon,
               name: appInfo?.name,
               description: appInfo?.description,
-              links: appInfo?.links?.map(item => item.url),
+              links: appInfo?.links?.map((item) => item.url),
               recommendedQuestions: appInfo?.recommendedQuestions,
               dialogRounds: appInfo?.dialogRounds,
               permission: {
@@ -109,7 +109,12 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <div class="copilot-container" :class="qiankunWindow.__POWERED_BY_QIANKUN__ ? 'micro-copilot-container' : ''">
+  <div
+    class="copilot-container"
+    :class="
+      qiankunWindow.__POWERED_BY_QIANKUN__ ? 'micro-copilot-container' : ''
+    "
+  >
     <div class="copilot-container-main">
       <DialogueAside />
       <DialogueSession :createAppForm="createAppForm" />

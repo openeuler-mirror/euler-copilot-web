@@ -10,7 +10,12 @@
 import axios from 'axios';
 import { IconError } from '@computing/opendesign-icons';
 import { handleChangeRequestHeader, handleStatusError } from './tools';
-import type { AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosHeaders } from 'axios';
+import type {
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  AxiosError,
+  AxiosHeaders,
+} from 'axios';
 import { ElMessage } from 'element-plus';
 
 export interface FcResponse<T> {
@@ -39,10 +44,12 @@ export const server = axios.create({
 server.interceptors.request.use(
   (
     config: InternalAxiosRequestConfig<any>,
-  ): InternalAxiosRequestConfig<any> | Promise<InternalAxiosRequestConfig<any>> => {
+  ):
+    | InternalAxiosRequestConfig<any>
+    | Promise<InternalAxiosRequestConfig<any>> => {
     return handleChangeRequestHeader(config);
   },
-  error => {
+  (error) => {
     return Promise.reject(error);
   },
 );
@@ -82,7 +89,10 @@ server.interceptors.response.use(
  * @param params
  * @constructor
  */
-export const get = async <T>(url: string, params: IAnyObj = {}): Promise<[IError, FcResponse<T> | undefined]> => {
+export const get = async <T>(
+  url: string,
+  params: IAnyObj = {},
+): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.get(url, { params: params });
     return [null, result.data as FcResponse<T>];
@@ -105,7 +115,10 @@ export const post = async <T>(
   headers: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
-    const result = await server.post(url, data, { params: params, headers: headers as AxiosHeaders });
+    const result = await server.post(url, data, {
+      params: params,
+      headers: headers as AxiosHeaders,
+    });
     return [null, result.data as FcResponse<T>];
   } catch (error) {
     return [error as IError, undefined];

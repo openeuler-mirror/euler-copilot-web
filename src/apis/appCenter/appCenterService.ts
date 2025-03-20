@@ -7,7 +7,9 @@ import { QueryAppListParamsType, CreateOrUpdateAppParamsType } from './type';
  * @param params
  * @returns
  */
-export const queryAppList = (params: QueryAppListParamsType): Promise<[any, FcResponse<unknown> | undefined]> => {
+export const queryAppList = (
+  params: QueryAppListParamsType,
+): Promise<[any, FcResponse<unknown> | undefined]> => {
   return get('/api/app', params);
 };
 
@@ -27,7 +29,9 @@ export const createOrUpdateApp = (
  * @param params
  * @returns
  */
-export const querySingleAppData = (params: { id: string }): Promise<[any, FcResponse<unknown> | undefined]> => {
+export const querySingleAppData = (params: {
+  id: string;
+}): Promise<[any, FcResponse<unknown> | undefined]> => {
   return get(`/api/app/${params.id}`);
 };
 
@@ -36,7 +40,9 @@ export const querySingleAppData = (params: { id: string }): Promise<[any, FcResp
  * @param params
  * @returns
  */
-export const deleteSingleAppData = (params: { id: string }): Promise<[any, FcResponse<unknown> | undefined]> => {
+export const deleteSingleAppData = (params: {
+  id: string;
+}): Promise<[any, FcResponse<unknown> | undefined]> => {
   return del(`/api/app/${params.id}`, params);
 };
 
@@ -45,7 +51,9 @@ export const deleteSingleAppData = (params: { id: string }): Promise<[any, FcRes
  * @param params
  * @returns
  */
-export const releaseSingleAppData = (params: { id: string }): Promise<[any, FcResponse<unknown> | undefined]> => {
+export const releaseSingleAppData = (params: {
+  id: string;
+}): Promise<[any, FcResponse<unknown> | undefined]> => {
   return post(`/api/app/${params.id}`, params);
 };
 
@@ -54,8 +62,11 @@ export const releaseSingleAppData = (params: { id: string }): Promise<[any, FcRe
  * @param params
  * @returns
  */
-export const changeSingleAppCollect = (params: { id: string,favorited:boolean }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return put(`/api/app/${params.id}`, {favorited:params.favorited});
+export const changeSingleAppCollect = (params: {
+  id: string;
+  favorited: boolean;
+}): Promise<[any, FcResponse<unknown> | undefined]> => {
+  return put(`/api/app/${params.id}`, { favorited: params.favorited });
 };
 
 /**
@@ -63,10 +74,11 @@ export const changeSingleAppCollect = (params: { id: string,favorited:boolean })
  * @param params
  * @returns
  */
-export const getPartAppConfgUser = (): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get("/api/user");
+export const getPartAppConfgUser = (): Promise<
+  [any, FcResponse<unknown> | undefined]
+> => {
+  return get('/api/user');
 };
-
 
 export const appCenterApi = {
   queryAppList,
@@ -76,4 +88,4 @@ export const appCenterApi = {
   releaseSingleAppData,
   changeSingleAppCollect,
   getPartAppConfgUser,
-}
+};

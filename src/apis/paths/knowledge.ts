@@ -15,20 +15,11 @@ import type { FcResponse } from 'src/apis/server';
  * @returns
  */
 export const updateKnowledgeList = (params: {
-    kb_id: string;
-  }): Promise<
-    [
-      any,
-      (
-        | FcResponse<{
-          }>
-        | undefined
-      )
-    ]
-  > => {
-    return post('/api/knowledge', params);
-  };
+  kb_id: string;
+}): Promise<[any, FcResponse<{}> | undefined]> => {
+  return post('/api/knowledge', params);
+};
 
 export const knowledgeApi = {
-    updateKnowledgeList,
+  updateKnowledgeList,
 };

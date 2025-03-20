@@ -7,7 +7,15 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { accountApi, sessionApi, externalApi, apiKeyApi, knowledgeApi, appApi, apiApi } from './paths';
+import {
+  accountApi,
+  sessionApi,
+  externalApi,
+  apiKeyApi,
+  knowledgeApi,
+  appApi,
+  apiApi,
+} from './paths';
 import { workFlowApi } from './workFlow';
 import { appCenterApi } from './appCenter';
 

@@ -6,27 +6,27 @@ The OpenAtom Foundation ("Foundation", "we", "our", or "us") understands the imp
 
 If you only browse the general content of the openEuler community website ("this website"), we usually do not require you to provide personal data. However, we will collect your personal data in the following cases:
 
-+ **a. Account Service.** When you register an openEuler community account or use our services, we will collect information you provide, such as your phone number and email address.
-+ **b. Forum Service.** When you enable device location and use our location-based services, we will collect information about your location, including:
-    + Your geolocation information collected through GPS, Wi-Fi, or similar technologies when you use our services through a mobile device with location functionality enabled;
-    + You can stop the collection of your geolocation information by disabling the location function.
-+ **Log Information**: We use cookies, identifiers, and similar technologies to collect information about how you interact with our services, including **data about your device, browsing activities, and clicks**. This information is stored in log files and helps us provide personalized experience and maintain security. You can manage or disable these technologies in your browser settings.
+- **a. Account Service.** When you register an openEuler community account or use our services, we will collect information you provide, such as your phone number and email address.
+- **b. Forum Service.** When you enable device location and use our location-based services, we will collect information about your location, including:
+  - Your geolocation information collected through GPS, Wi-Fi, or similar technologies when you use our services through a mobile device with location functionality enabled;
+  - You can stop the collection of your geolocation information by disabling the location function.
+- **Log Information**: We use cookies, identifiers, and similar technologies to collect information about how you interact with our services, including **data about your device, browsing activities, and clicks**. This information is stored in log files and helps us provide personalized experience and maintain security. You can manage or disable these technologies in your browser settings.
 
 ## 2\. How We Use Cookies and Similar Technologies
 
 **2.1 How and How Long We Store Information**
 
-+ To ensure our website works properly, we may at times place cookies on your computer or mobile device. A cookie is a small data file placed on your computer or mobile device that facilitates your access to a website. The content of a cookie can be retrieved or read only by the server that creates the cookie. We use cookies and similar technologies for understanding how you interact with our websites, helping you efficiently browse pages, storing and honoring your preferences, and improving your browsing experience.
-+ Generally, we will only store your personal data for as long as it is necessary to fulfill the purposes described in this Statement or as required by law.
+- To ensure our website works properly, we may at times place cookies on your computer or mobile device. A cookie is a small data file placed on your computer or mobile device that facilitates your access to a website. The content of a cookie can be retrieved or read only by the server that creates the cookie. We use cookies and similar technologies for understanding how you interact with our websites, helping you efficiently browse pages, storing and honoring your preferences, and improving your browsing experience.
+- Generally, we will only store your personal data for as long as it is necessary to fulfill the purposes described in this Statement or as required by law.
 
 **2.2 Types of Cookies**
 
-+ Strictly Necessary Cookies: When you use the website, cookies ensure that your visit to the website is as smooth and secure as possible.
-+ Statistical Analysis Cookies: We collect information about your use of the service, including your single or multiple visits. These cookies help us understand how the service is performing and being used. We use statistical analysis plugins provided by Baidu.
+- Strictly Necessary Cookies: When you use the website, cookies ensure that your visit to the website is as smooth and secure as possible.
+- Statistical Analysis Cookies: We collect information about your use of the service, including your single or multiple visits. These cookies help us understand how the service is performing and being used. We use statistical analysis plugins provided by Baidu.
 
 **2.3 Notice of Product or Service Discontinuation**
 
-+ In the event that our products or services are discontinued, we will notify you by push notification, announcement, or other means and delete or anonymize your personal data within a reasonable time, unless otherwise provided by laws and regulations.
+- In the event that our products or services are discontinued, we will notify you by push notification, announcement, or other means and delete or anonymize your personal data within a reasonable time, unless otherwise provided by laws and regulations.
 
 ## 3\. How We Share Your Personal Data
 
@@ -36,10 +36,10 @@ Sharing refers to the process by which we provide personal data to a third party
 
 We may use the information we collect in the process of providing you with services for the following purposes:
 
-+ We will retain your personal data for as long as is necessary to fulfill the purposes described in this Statement, unless a longer retention period is required by laws or requested by you.
-+ In general, we will store or retain your personal data for the retention period from the date we obtain it when you use our community services, in accordance with applicable legal requirements or the terms of the service agreement. If your personal data is beyond the retention period and we are not legally required to continue processing your specific personal data, we will delete or anonymize your personal data in accordance with applicable legal requirements.
-+ For example, the IP address, access timestamp, access source, accessed pages, access status, accessed resource size, OS, system language, browser type, browser language, browser version, and server type and version information collected for service optimization will be automatically deleted after 10 days.
-+ For example, when the community no longer displays you as a member of an openEuler User Group, we will delete your personal data (avatar, name, email address, company/school, position, personal profile) within one month.
+- We will retain your personal data for as long as is necessary to fulfill the purposes described in this Statement, unless a longer retention period is required by laws or requested by you.
+- In general, we will store or retain your personal data for the retention period from the date we obtain it when you use our community services, in accordance with applicable legal requirements or the terms of the service agreement. If your personal data is beyond the retention period and we are not legally required to continue processing your specific personal data, we will delete or anonymize your personal data in accordance with applicable legal requirements.
+- For example, the IP address, access timestamp, access source, accessed pages, access status, accessed resource size, OS, system language, browser type, browser language, browser version, and server type and version information collected for service optimization will be automatically deleted after 10 days.
+- For example, when the community no longer displays you as a member of an openEuler User Group, we will delete your personal data (avatar, name, email address, company/school, position, personal profile) within one month.
 
 ## 5\. How We Protect Your Personal Data
 
@@ -51,33 +51,33 @@ In a word, we are committed to protecting your personal data. Nevertheless, no s
 
 In accordance with applicable laws and regulations, you may have the following rights regarding your personal data:
 
-+ Access the personal data we hold about you and obtain copies thereof;
-+ Request us to update or correct your personal data;
-+ Request us to erase your personal data;
-+ Object to our processing of your personal data;
-+ Restrict our processing of your personal data;
-+ Lodge a complaint with the competent data protection authority.
+- Access the personal data we hold about you and obtain copies thereof;
+- Request us to update or correct your personal data;
+- Request us to erase your personal data;
+- Object to our processing of your personal data;
+- Restrict our processing of your personal data;
+- Lodge a complaint with the competent data protection authority.
 
-+ **Location Information**: When you enable device location and use our location-based services, we will collect information about your location, including:
-    + Your geolocation information collected through GPS, Wi-Fi, or similar technologies when you use our services through a mobile device with location functionality enabled;
-    + You can stop the collection of your geolocation information by disabling the location function.
-+ **Log Information**: We use cookies, identifiers, and similar technologies to collect information about how you interact with our services, including **data about your device, browsing activities, and clicks**. This information is stored in log files and helps us provide personalized experience and maintain security. You can manage or disable these technologies in your browser settings.
+- **Location Information**: When you enable device location and use our location-based services, we will collect information about your location, including:
+  - Your geolocation information collected through GPS, Wi-Fi, or similar technologies when you use our services through a mobile device with location functionality enabled;
+  - You can stop the collection of your geolocation information by disabling the location function.
+- **Log Information**: We use cookies, identifiers, and similar technologies to collect information about how you interact with our services, including **data about your device, browsing activities, and clicks**. This information is stored in log files and helps us provide personalized experience and maintain security. You can manage or disable these technologies in your browser settings.
 
 ## 2\. Information Storage
 
 **2.1 How and How Long We Store Information**
 
-+ We store your information in a secure manner, including local storage (such as data caching using an application), databases, and server logs.
-+ Generally, we will only store your personal data for as long as it is necessary to fulfill the purposes described in this Statement or as required by law.
+- We store your information in a secure manner, including local storage (such as data caching using an application), databases, and server logs.
+- Generally, we will only store your personal data for as long as it is necessary to fulfill the purposes described in this Statement or as required by law.
 
 **2.2 Where We Store Information**
 
-+ We will ensure that users' personal data collected in China is stored in China in accordance with laws and regulations.
-+ We do not currently transfer or store your personal data outside of China. If we need to transfer or store your personal data outside of China in the future, we will inform you of the purpose of the cross-border transfer or storage, the recipient, the security measures, and the security risks, and obtain your consent.
+- We will ensure that users' personal data collected in China is stored in China in accordance with laws and regulations.
+- We do not currently transfer or store your personal data outside of China. If we need to transfer or store your personal data outside of China in the future, we will inform you of the purpose of the cross-border transfer or storage, the recipient, the security measures, and the security risks, and obtain your consent.
 
 **2.3 Notice of Product or Service Discontinuation**
 
-+ In the event that our products or services are discontinued, we will notify you by push notification, announcement, or other means and delete or anonymize your personal data within a reasonable time, unless otherwise provided by laws and regulations.
+- In the event that our products or services are discontinued, we will notify you by push notification, announcement, or other means and delete or anonymize your personal data within a reasonable time, unless otherwise provided by laws and regulations.
 
 ## 3\. Information Security
 
@@ -87,14 +87,14 @@ We use a variety of security technologies and procedures to prevent the loss, mi
 
 We may use the information we collect in the process of providing you with services for the following purposes:
 
-+ To provide you with services;
-+ For identity verification, customer service, security protection, fraud monitoring, archiving, and backup purposes in connection with our provision of services to ensure the security of the products and services we provide to you;
-+ To help us design new services and improve our existing services;
-+ To allow us to better understand how you access and use our Services so that we can respond to your personalized needs in a targeted manner, such as language settings, location settings, personalized help services and instructions, or otherwise respond to you and other users;
-+ To provide you with more relevant advertising instead of generic advertising;
-+ To evaluate and improve the effectiveness of our in-service advertising and other promotional and marketing activities;
-+ For software authentication or software upgrade management; and
-+ To enable you to participate in surveys about our products and services.
+- To provide you with services;
+- For identity verification, customer service, security protection, fraud monitoring, archiving, and backup purposes in connection with our provision of services to ensure the security of the products and services we provide to you;
+- To help us design new services and improve our existing services;
+- To allow us to better understand how you access and use our Services so that we can respond to your personalized needs in a targeted manner, such as language settings, location settings, personalized help services and instructions, or otherwise respond to you and other users;
+- To provide you with more relevant advertising instead of generic advertising;
+- To evaluate and improve the effectiveness of our in-service advertising and other promotional and marketing activities;
+- For software authentication or software upgrade management; and
+- To enable you to participate in surveys about our products and services.
 
 ## 5\. Information Sharing
 
@@ -110,12 +110,12 @@ As our service continues to develop, we may engage in mergers, acquisitions, ass
 
 In addition, according to relevant laws, regulations, and national standards, we may share, transfer, or publicly disclose the following personal data without your prior consent:
 
-+ Information that is directly related to national security or national defense;
-+ Information that is directly related to public safety, public health, or major public interests;
-+ Information that is directly related to criminal investigation, prosecution, trial, and judgment execution;
-+ Information for the purpose of safeguarding major legitimate rights and interests, such as life and property of personal data subjects or others, when obtaining the consent is not feasible;
-+ Information that is disclosed by the personal data subject to the public; and
-+ Information that is legally disclosed to the public, such as legitimate news reports and government information disclosure channels.
+- Information that is directly related to national security or national defense;
+- Information that is directly related to public safety, public health, or major public interests;
+- Information that is directly related to criminal investigation, prosecution, trial, and judgment execution;
+- Information for the purpose of safeguarding major legitimate rights and interests, such as life and property of personal data subjects or others, when obtaining the consent is not feasible;
+- Information that is disclosed by the personal data subject to the public; and
+- Information that is legally disclosed to the public, such as legitimate news reports and government information disclosure channels.
 
 ## 6\. Your Rights
 

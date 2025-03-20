@@ -21,7 +21,10 @@
               v-for="(item, index) in yamlExpress"
             >
               <template #title>
-                <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes(item.title) }">
+                <el-icon
+                  class="el-collapse-item__arrow"
+                  :class="{ 'is-active': activeName.includes(item.title) }"
+                >
                   <IconCaretRight />
                 </el-icon>
                 <span>{{ item.title }}</span>
@@ -71,7 +74,13 @@
       <template #footer>
         <div class="drawerFooter">
           <el-button @click="closeDrawer">关闭</el-button>
-          <el-button :disabled="infoDisabled" type="primary" @click="updateNodeYaml">完成</el-button>
+          <el-button
+            :disabled="infoDisabled"
+            type="primary"
+            @click="updateNodeYaml"
+          >
+            完成
+          </el-button>
         </div>
       </template>
     </el-drawer>
@@ -110,9 +119,15 @@ const yamlExpress = ref([
 ]);
 const yamlBaseInfoRule = ref({
   name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入工作流描述', trigger: 'blur' }],
+  description: [
+    { required: true, message: '请输入工作流描述', trigger: 'blur' },
+  ],
 });
-const activeName = ref([yamlExpress.value[0].title, yamlExpress.value[1].title, yamlExpress.value[2].title]);
+const activeName = ref([
+  yamlExpress.value[0].title,
+  yamlExpress.value[1].title,
+  yamlExpress.value[2].title,
+]);
 const emits = defineEmits(['closeDrawer', 'saveNode']);
 const props = defineProps<{
   yamlContent: any;
@@ -131,8 +146,12 @@ watch(
     yamlNodeName.value = props.nodeName;
     yamlExpress.value[0].name = props.nodeName;
     yamlExpress.value[0].description = props.nodeDesc;
-    yamlExpress.value[1].yamlCode = yaml.dump(props.yamlContent.input_parameters);
-    yamlExpress.value[2].yamlCode = yaml.dump(props.yamlContent.output_parameters);
+    yamlExpress.value[1].yamlCode = yaml.dump(
+      props.yamlContent.input_parameters,
+    );
+    yamlExpress.value[2].yamlCode = yaml.dump(
+      props.yamlContent.output_parameters,
+    );
   },
   { deep: true, immediate: true },
 );
@@ -156,7 +175,13 @@ const updateNodeYaml = () => {
   try {
     transResult = yaml.load(yamlExpress.value[1].yamlCode);
     // 调用接口并更新--根据id包含更新后的yamlCode, name, desc
-    emits('saveNode', transResult, props.nodeYamlId, yamlExpress.value[0].name, yamlExpress.value[0].description);
+    emits(
+      'saveNode',
+      transResult,
+      props.nodeYamlId,
+      yamlExpress.value[0].name,
+      yamlExpress.value[0].description,
+    );
     closeDrawer();
   } catch (error) {
     ElMessage.error('请检查格式是否正确');

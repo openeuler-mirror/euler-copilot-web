@@ -1,30 +1,29 @@
-  
-<script lang="ts"  setup>
+<script lang="ts" setup>
 import { ref, onMounted, withDefaults, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
 import { useHistorySessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 const { params } = storeToRefs(useHistorySessionStore());
 
-  const visible = ref(true);
-  const props = withDefaults(
+const visible = ref(true);
+const props = withDefaults(
   defineProps<{
     code: any; // 添加jsonData属性
     title: string;
     type: string;
-  }>(),{}
-); 
+  }>(),
+  {},
+);
 const descriptions = ref({});
 
-const schema = ref(props.code)||{};
+const schema = ref(props.code) || {};
 const inputCode = ref();
-if(props.type !== 'code'){
-if(typeof props.code === 'string'){
-  inputCode.value = JSON.parse(props.code)||{};
-
-}else{
-  inputCode.value = props.code||{};
-}
+if (props.type !== 'code') {
+  if (typeof props.code === 'string') {
+    inputCode.value = JSON.parse(props.code) || {};
+  } else {
+    inputCode.value = props.code || {};
+  }
 }
 function generateJsonObjectFromSchema(code) {
   // 创建一个空对象来存储最终的 JSON 对象
@@ -34,10 +33,10 @@ function generateJsonObjectFromSchema(code) {
   for (const key in schema.properties) {
     if (schema.properties.hasOwnProperty(key)) {
       const propertySchema = schema.properties[key];
-      const str = key + ":" + propertySchema["description"]
-      descriptions.value[key] = propertySchema["description"].toString();
+      const str = key + ':' + propertySchema['description'];
+      descriptions.value[key] = propertySchema['description'].toString();
       // 如果属性是一个对象，并且包含 required 字段
-      if (propertySchema["type"] === 'object') {
+      if (propertySchema['type'] === 'object') {
         jsonObject[key] = {};
         // 遍历该对象的 properties
         for (const subKey in propertySchema.properties) {
@@ -48,7 +47,10 @@ function generateJsonObjectFromSchema(code) {
             let value;
             if (subPropertySchema.default !== undefined) {
               value = subPropertySchema.default;
-            } else if (subPropertySchema.enum && subPropertySchema.enum.length > 0) {
+            } else if (
+              subPropertySchema.enum &&
+              subPropertySchema.enum.length > 0
+            ) {
               // 如果没有默认值，但有一个枚举，我们可以选择枚举的第一个值作为默认值（这只是一个选择，可能不适合所有情况）
               value = subPropertySchema.enum[0];
             } else {
@@ -65,13 +67,16 @@ function generateJsonObjectFromSchema(code) {
             }
           }
         }
-      }else{ 
+      } else {
         const subPropertySchema = propertySchema;
         // 检查是否有默认值，并使用它，否则使用空值或根据类型推断一个值
         let value;
         if (subPropertySchema.default !== undefined) {
           value = subPropertySchema.default;
-        } else if (subPropertySchema.enum && subPropertySchema.enum.length > 0) {
+        } else if (
+          subPropertySchema.enum &&
+          subPropertySchema.enum.length > 0
+        ) {
           // 如果没有默认值，但有一个枚举，我们可以选择枚举的第一个值作为默认值（这只是一个选择，可能不适合所有情况）
           value = subPropertySchema.enum[0];
         } else {
@@ -79,8 +84,8 @@ function generateJsonObjectFromSchema(code) {
           value = subPropertySchema.type === 'string' ? '' : null;
         }
         // 如果该属性是 required 的，我们确保它在对象中
-          jsonObject[key] = value;
-        }
+        jsonObject[key] = value;
+      }
     }
   }
 
@@ -93,36 +98,44 @@ function generateJsonObjectFromSchema(code) {
 const jsonObject = ref(generateJsonObjectFromSchema(schema.value));
 params.value = jsonObject.value;
 
-watch(() => jsonObject, (newSchema) => {
-  params.value = jsonObject.value;
-})
+watch(
+  () => jsonObject,
+  (newSchema) => {
+    params.value = jsonObject.value;
+  },
+);
 
-watch(() => params, (newSchema) => {
-  params.value = jsonObject.value;
-})
-
+watch(
+  () => params,
+  (newSchema) => {
+    params.value = jsonObject.value;
+  },
+);
 </script>
 <template>
   <div class="json-form-container">
     <ul v-if="props.type === 'code'">
       <li v-for="(value, key) of descriptions" :key="key">
-        <span>{{key}}:</span>
-        <span>{{value}}</span>
+        <span>{{ key }}:</span>
+        <span>{{ value }}</span>
       </li>
     </ul>
-      <FlowCode :code="jsonObject" title="参数代码" :disabled="false" v-if="props.type === 'code'"/>
-      <FlowCode :code="inputCode" title="params" :disabled="true" v-else/>
-    </div>
-  </template>
-  
-  <style scoped>
+    <FlowCode
+      :code="jsonObject"
+      title="参数代码"
+      :disabled="false"
+      v-if="props.type === 'code'"
+    />
+    <FlowCode :code="inputCode" title="params" :disabled="true" v-else />
+  </div>
+</template>
 
-  .json-form-container {
-    width: 100%;
-    height: 100%;
-    /* padding: 10px; */
-    box-sizing: border-box;
-    overflow-y: auto;
-  }
-
-  </style>
+<style scoped>
+.json-form-container {
+  width: 100%;
+  height: 100%;
+  /* padding: 10px; */
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+</style>

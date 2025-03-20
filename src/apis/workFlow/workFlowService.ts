@@ -1,7 +1,10 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
 import { post, get, del, put } from 'src/apis/server';
 import type { FcResponse } from 'src/apis/server';
-import { CreateOrUpdateFlowParamsType, CreateOrUpdataFlowBodyType } from './type';
+import {
+  CreateOrUpdateFlowParamsType,
+  CreateOrUpdataFlowBodyType,
+} from './type';
 /**
  * 获取所有服务
  * @param params

@@ -59,15 +59,17 @@ watch(
     } else if (props.data.content?.type === 'output') {
       inputAndOutput.value.output_parameters = props.data.content.params;
     } else {
-      inputAndOutput.value.input_parameters = props.data?.parameters?.input_parameters || {};
-      inputAndOutput.value.output_parameters = props.data?.parameters?.output_parameters || {};
+      inputAndOutput.value.input_parameters =
+        props.data?.parameters?.input_parameters || {};
+      inputAndOutput.value.output_parameters =
+        props.data?.parameters?.output_parameters || {};
     }
   },
   { deep: true, immediate: true },
 );
 
 // 删除节点
-const delNode = id => {
+const delNode = (id) => {
   emits('delNode', id);
 };
 
@@ -85,21 +87,41 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
         <img class="iconStyle" :src="getSrcIcon(props.data)" />
         <div class="label">{{ props.data.name }}</div>
         <div class="moreTip" :class="{ notAllow: props.disabled }">
-          <el-popover :disabled="props.disabled" placement="right" trigger="hover" popper-class="nodeDealPopper">
+          <el-popover
+            :disabled="props.disabled"
+            placement="right"
+            trigger="hover"
+            popper-class="nodeDealPopper"
+          >
             <template #reference>···</template>
             <el-button
               text
               class="dealItem"
-              @click="editYaml(props.data.name, props.data.description, props.data.parameters)"
-              >编辑</el-button
+              @click="
+                editYaml(
+                  props.data.name,
+                  props.data.description,
+                  props.data.parameters,
+                )
+              "
             >
-            <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
+              编辑
+            </el-button>
+            <el-button text class="dealItem" @click="delNode(props.id)">
+              删除
+            </el-button>
           </el-popover>
         </div>
       </div>
-      <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
+      <div class="desc" v-if="props.data.description">
+        {{ props.data.description }}
+      </div>
     </div>
-    <Handle type="source" :position="Position.Right" :connectable="props.data?.isConnectSource"></Handle>
+    <Handle
+      type="source"
+      :position="Position.Right"
+      :connectable="props.data?.isConnectSource"
+    ></Handle>
     <!-- 调试时出现-暂时隐藏 -->
     <NodeMirrorText
       v-if="curStatus !== 'default'"

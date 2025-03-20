@@ -40,12 +40,12 @@ watch(
 
 const updateFunc = () => {
   const foldDoms = document.querySelectorAll('span[title="Fold line"]');
-  foldDoms.forEach(dom => {
+  foldDoms.forEach((dom) => {
     dom.innerText = '';
   });
 
   const unFoldDoms = document.querySelectorAll('span[title="Unfold line"]');
-  unFoldDoms.forEach(dom => {
+  unFoldDoms.forEach((dom) => {
     dom.innerText = '';
   });
 };

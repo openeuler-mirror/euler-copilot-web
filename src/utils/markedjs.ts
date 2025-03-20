@@ -29,7 +29,8 @@ marked.setOptions({
   breaks: false, // 支持Github换行符，必须打开gfm选项
   pedantic: false, // 只解析符合Markdwon定义的，不修正Markdown的错误
   // 高亮的语法规范
-  highlight: (code: string, lang: string) => hljs.highlight(code, { language: lang }).value,
+  highlight: (code: string, lang: string) =>
+    hljs.highlight(code, { language: lang }).value,
 });
 
 // #endregion
@@ -41,7 +42,10 @@ marked.setOptions({
  * @param language 语言
  * @returns
  */
-export const renderCode = (code: string, language: string | undefined): string => {
+export const renderCode = (
+  code: string,
+  language: string | undefined,
+): string => {
   const id = `pre-${Date.now()}-${randomInt()}`;
   return `<pre><div class="code-toolbar"><span>${language}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${language}">${code}</code></pre>`;
 };

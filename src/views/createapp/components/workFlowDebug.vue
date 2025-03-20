@@ -44,9 +44,21 @@
         </div>
         <!-- 发送问题 -->
         <div class="sendIcon">
-          <img v-if="isAnswerGenerating || dialogueInput.length <= 0" src="@/assets/images/send_disable.png" alt="" />
-          <div v-else @click="handleSendMessage(undefined, dialogueInput)" class="ableSend">
-            <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
+          <img
+            v-if="isAnswerGenerating || dialogueInput.length <= 0"
+            src="@/assets/images/send_disable.png"
+            alt=""
+          />
+          <div
+            v-else
+            @click="handleSendMessage(undefined, dialogueInput)"
+            class="ableSend"
+          >
+            <img
+              v-if="themeStore.theme === 'dark'"
+              src="@/assets/images/dark_send.png"
+              alt=""
+            />
             <img v-else src="@/assets/images/light_send.png" alt="" />
           </div>
         </div>
@@ -59,7 +71,10 @@ import '../../styles/workFlowDebug.scss';
 import { onMounted, ref } from 'vue';
 import { IconX } from '@computing/opendesign-icons';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
-import type { ConversationItem, RobotConversationItem } from 'src/views/dialogue/types';
+import type {
+  ConversationItem,
+  RobotConversationItem,
+} from 'src/views/dialogue/types';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { storeToRefs } from 'pinia';
@@ -71,8 +86,12 @@ const testFlag = ref(true);
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 const { generateSession, generateSessionDebug } = useHistorySessionStore();
-const { historySession, currentSelectedSession, isSelectedAll, selectedSessionIds } =
-  storeToRefs(useHistorySessionStore());
+const {
+  historySession,
+  currentSelectedSession,
+  isSelectedAll,
+  selectedSessionIds,
+} = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
 const tmpConversationId = ref('');
@@ -115,11 +134,19 @@ onMounted(() => {
 /**
  * 发送消息
  */
-const handleSendMessage = async (groupId: string | undefined, question: string, user_selected_flow?: string[]) => {
+const handleSendMessage = async (
+  groupId: string | undefined,
+  question: string,
+  user_selected_flow?: string[],
+) => {
   if (isAnswerGenerating.value) return;
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
-  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
+  if (
+    len > 0 &&
+    !(conversationList.value[len - 1] as RobotConversationItem).isFinish
+  )
+    return;
   dialogueInput.value = '';
   // console.log(!currentSelectedSession.value, 'currentSelectedSession')
   if (!tmpConversationId.value) {
@@ -128,7 +155,16 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
   }
 
   props.handleDebugDialogOps!();
-  await sendQuestion(groupId, question, [props.appId], undefined, undefined, props.flowId, undefined, true);
+  await sendQuestion(
+    groupId,
+    question,
+    [props.appId],
+    undefined,
+    undefined,
+    props.flowId,
+    undefined,
+    true,
+  );
 };
 
 const clearSuggestion = (index: number): void => {
@@ -164,7 +200,9 @@ const delChat = async () => {
     return;
   } else {
     // 调用接口，删除当前对话
-    const res = await api.deleteSession({ conversationList: [currentSelectedSession.value] });
+    const res = await api.deleteSession({
+      conversationList: [currentSelectedSession.value],
+    });
     if (res[1]?.result) {
       // 删除成功
       isAnswerGenerating.value = false;

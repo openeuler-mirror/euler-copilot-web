@@ -39,7 +39,9 @@ const handleChainClick = (tool: ChainItem) => {
     <h4 class="dialog-tool__title">热点搭配方案</h4>
     <ul class="hot-list">
       <template v-for="hot in HOT_SPOT_TRACKING" :key="hot.key">
-        <li class="hot-list__item" @click="handleToolClick(hot)">{{ hot.label }}</li>
+        <li class="hot-list__item" @click="handleToolClick(hot)">
+          {{ hot.label }}
+        </li>
       </template>
     </ul>
     <h4 class="dialog-tool__title">友情链接</h4>
@@ -47,7 +49,7 @@ const handleChainClick = (tool: ChainItem) => {
       <template v-for="chain in FRIENDS_CHAIN" :key="chain.key">
         <li class="chain-list__item" @click="handleChainClick(chain)">
           <img class="chain-list__img" :src="chain.icon" />
-          <span class="chain-list__item"> {{ chain.label }}</span>
+          <span class="chain-list__item">{{ chain.label }}</span>
         </li>
       </template>
     </ul>
@@ -185,7 +187,11 @@ const handleChainClick = (tool: ChainItem) => {
 
       &:hover {
         background-color: transparent;
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.2),
+          rgba(90, 179, 255, 0.2)
+        );
         border: 1px solid #7aa5ff;
       }
     }

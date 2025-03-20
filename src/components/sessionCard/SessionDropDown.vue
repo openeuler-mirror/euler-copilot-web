@@ -1,7 +1,13 @@
 <template>
   <teleport to="body">
     <transition name="drop">
-      <div class="document-list" ref="documents" v-show="isVisible" @mouseover="handleHover" @mouseleave="handleLeave">
+      <div
+        class="document-list"
+        ref="documents"
+        v-show="isVisible"
+        @mouseover="handleHover"
+        @mouseleave="handleLeave"
+      >
         <div class="document-wrapper" ref="documentsWrapper">
           <upload-card
             class="document"
@@ -55,7 +61,7 @@ watch(
   (newVal: DropPostion) => {
     documents.value.style.left = `${newVal.x + offset.x}px`;
     documents.value.style.top = `${newVal.y + offset.y}px`;
-  }
+  },
 );
 
 watch(
@@ -66,7 +72,7 @@ watch(
       return;
     }
     isVisible.value = newVal;
-  }
+  },
 );
 
 const scrollTop = () => {
