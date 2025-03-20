@@ -44,7 +44,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     await getConversation(currentSelectedSession.value).then(() => {
       const a = document.getElementsByClassName('draw');
       for (let i of a) {
-        i.style.display = 'none';
+        (i as HTMLElement).style.display = 'none';
       }
     });
   };

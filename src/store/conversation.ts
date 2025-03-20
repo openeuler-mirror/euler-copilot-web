@@ -12,6 +12,7 @@ import { ref, nextTick } from 'vue';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import {
   AppShowType,
+  FlowDataType,
   MessageArray,
   type ConversationItem,
   type RobotConversationItem,
@@ -61,10 +62,12 @@ export const useSessionStore = defineStore('conversation', () => {
       }
       //完成所有渲染再执行
       setTimeout(() => {
-        dialogueRef.value.scrollTo({
-          top: dialogueRef.value.scrollHeight,
-          behavior: action,
-        });
+        if (dialogueRef.value) {
+          dialogueRef.value.scrollTo({
+            top: dialogueRef.value.scrollHeight,
+            behavior: action,
+          });
+        }
       }, 0);
     });
   };
@@ -74,7 +77,10 @@ export const useSessionStore = defineStore('conversation', () => {
   const isPaused = ref(false);
   // 会话列表
   const conversationList = ref<ConversationItem[]>([]);
-  const app = ref<AppShowType>({});
+  const app = ref<AppShowType>({
+    appId: '',
+    name: ''
+  });
   const appList = ref<Application[]>();
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
@@ -227,7 +233,6 @@ export const useSessionStore = defineStore('conversation', () => {
       excelPath.value = '';
       echartsObj.value = {};
       txt2imgPath.value = '';
-      let workFlowId = ''; // 这里存储工作流调试对话的判断id
       let addItem = '';
       while (isEnd) {
         if (isPaused.value) {
@@ -293,21 +298,20 @@ export const useSessionStore = defineStore('conversation', () => {
                 message.content,
               ];
             } else if (message['event'] === 'suggest') {
-              conversationItem.search_suggestions
-                ? conversationItem.search_suggestions.push(
-                    Object(message.content),
-                  )
-                : (conversationItem.search_suggestions = [
-                    Object(message.content),
-                  ]);
-            } else if (message['event'] === 'init') {
+              if (conversationItem.search_suggestions) {
+                conversationItem.search_suggestions.push(Object(message.content));
+              } else {
+                conversationItem.search_suggestions = [Object(message.content)];
+              }
+            }
+             else if (message['event'] === 'init') {
               //初始化获取 metadata
               conversationItem.metadata = message.metadata;
               conversationItem.createdAt = message.content.created_at;
               conversationItem.groupId = message.groupId;
             } else if (message['event'] === 'flow.start') {
               //事件流开始--后续验证对话无下拉连接后则完全替换
-              let flow = message.flow;
+              const flow = message.flow;
               conversationItem.flowdata = {
                 id: flow?.stepId || '',
                 title: i18n.global.t('flow.flow_start'),
@@ -340,13 +344,13 @@ export const useSessionStore = defineStore('conversation', () => {
                 target.status = message.flow?.stepStatus;
                 // 工作流添加每阶段的时间耗时
                 target['costTime'] = message.metadata?.timeCost;
-                if (message.flow.step_status === 'error') {
+                if (message.flow.step_status === 'error' && conversationItem.flowdata) {
                   conversationItem.flowdata.status = message.flow?.stepStatus;
                 }
               }
             } else if (message['event'] === 'flow.stop') {
               //时间流结束
-              let flow = message.content.flow;
+              const flow = message.content.flow;
               if (params.type) {
                 // 如果是工作流的调试功能-添加status/data
                 conversationItem.flowdata = {
@@ -357,7 +361,7 @@ export const useSessionStore = defineStore('conversation', () => {
                   display: true,
                   data: conversationItem?.flowdata?.data,
                 };
-              } else if (message.content.type !== 'schema') {
+              } else if (message.content.type !== 'schema' && conversationItem.flowdata) {
                 // 删除 end 逻辑
                 conversationItem.flowdata = {
                   id: flow?.stepId,
@@ -369,11 +373,13 @@ export const useSessionStore = defineStore('conversation', () => {
                 };
               } else {
                 conversationItem.paramsList = message.content.data;
-                conversationItem.flowdata.title = i18n.global.t(
-                  'flow.flow_params_error',
-                );
-                conversationItem.flowdata.status = 'error';
-                conversationItem.paramsList = message.content.data;
+                if(conversationItem.flowdata){
+                  conversationItem.flowdata.title = i18n.global.t(
+                    'flow.flow_params_error',
+                  );
+                  conversationItem.flowdata.status = 'error';
+                  conversationItem.paramsList = message.content.data;
+                }
               }
             }
           }
@@ -492,7 +498,9 @@ export const useSessionStore = defineStore('conversation', () => {
       const conversationItem = conversationList.value[
         answerIndex
       ] as RobotConversationItem;
-      conversationItem.flowdata.status = 'error';
+      if(conversationItem.flowdata){
+        conversationItem.flowdata.status = 'error';
+      }
     }
     if (
       errorMsg &&
@@ -530,7 +538,7 @@ export const useSessionStore = defineStore('conversation', () => {
       useHistorySessionStore();
     if (conversationList.value.length === 0) {
       // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
-      const res = await updateSessionTitle({
+      await updateSessionTitle({
         conversationId: currentSelectedSession,
         title: question.slice(0, 20),
       });
@@ -617,7 +625,7 @@ export const useSessionStore = defineStore('conversation', () => {
         ? conversationList.value.findIndex((val) => val.cid === cid)
         : conversationList.value.length - 1;
     isPaused.value = true;
-    conversationList.value[answerIndex].message[0] += '暂停生成';
+    (conversationList.value[answerIndex] as RobotConversationItem).message[0] += '暂停生成';
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
       true;
     cancel();
@@ -641,7 +649,7 @@ export const useSessionStore = defineStore('conversation', () => {
     const recordId = (
       conversationList.value[answerInd] as RobotConversationItem
     ).recordId;
-    let groupId = undefined;
+    let groupId: string | undefined;
     if (type && type === 'params') {
       groupId = undefined;
     } else {
@@ -675,8 +683,6 @@ export const useSessionStore = defineStore('conversation', () => {
     }
     (conversationList.value[answerInd] as RobotConversationItem).currentInd -=
       1;
-    const index = (conversationList.value[answerInd] as RobotConversationItem)
-      .currentInd;
   };
   /**
    * 下一条
@@ -695,8 +701,6 @@ export const useSessionStore = defineStore('conversation', () => {
     }
     (conversationList.value[answerInd] as RobotConversationItem).currentInd +=
       1;
-    const index = (conversationList.value[answerInd] as RobotConversationItem)
-      .currentInd;
   };
   // #endregion
 
@@ -759,7 +763,7 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
-            flowdata: record?.flow ? GenerateFlowData(record.flow) : undefined,
+            flowdata: record?.flow ? GenerateFlowData(record.flow) as { id: number; title: string; status: string; data: any; display: boolean; progress: string; flowId?: string } : undefined,
           },
         );
         scrollBottom('auto');
@@ -768,7 +772,7 @@ export const useSessionStore = defineStore('conversation', () => {
   };
   //将获取到的 flow 数据结构转换
   const GenerateFlowData = (record: any): object => {
-    let flowData = {
+    const flowData = {
       id: record.recordId,
       title: record.id,
       status: 'success',
@@ -787,8 +791,9 @@ export const useSessionStore = defineStore('conversation', () => {
         },
       });
     }
-    return flowData;
+    return flowData as FlowDataType;
   };
+
   const comment = (cid: number, isSupport: boolean, index: number): void => {
     const ind = conversationList.value.find((item) => item.cid === cid);
     // ind.message.items[index].is_like = isSupport;
@@ -824,7 +829,8 @@ export const useSessionStore = defineStore('conversation', () => {
       } else {
         return false;
       }
-    } catch (e) {
+    } catch (err) {
+      console.error('An error occurred:', err);
       return false;
     }
   };

@@ -64,8 +64,10 @@ export interface FlowType {
 
 export interface FlowDataType {
   id: string;
-  stauts: string;
-  // title: '',
+  status: string;
+  title?: string;
+  display?: boolean;
+  flowId?: string;
   data: any | undefined;
 }
 
@@ -94,7 +96,7 @@ export interface RobotConversationItem {
   search_suggestions?: string[];
   echartsObj?: any;
   metadata?: undefined | Metadata;
-  flowdata?: FlowType;
+  flowdata?: FlowType | undefined;
   paramsList?: any;
 }
 
@@ -136,11 +138,12 @@ export class MessageArray {
   }
 
   getIslikeList(): number[] {
-    return this.items.map((item) => item.is_like);
+    //类型断言，将undefined转换为0。
+    return this.items.map((item) => item.is_like ?? 0);
   }
 
   getisLikeByIndex(index: number): number {
-    return this.items.map((item) => item.is_like)[index];
+    return this.items.map((item) => item.is_like ?? 0)[index];
   }
 
   changeisLikeByCidAndIndex(

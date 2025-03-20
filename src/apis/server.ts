@@ -73,7 +73,7 @@ server.interceptors.response.use(
     if (error.status !== 401 && error.status !== 403) {
       ElMessage({
         showClose: true,
-        message: error?.response?.data?.message || error.message,
+        message: (error as any)?.response?.data?.message as string || error.message,
         icon: IconError,
         customClass: 'o-message--error',
         duration: 3000,

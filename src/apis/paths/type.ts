@@ -56,6 +56,8 @@ export interface ConversationRecord {
   flow: Flow;
   content: Content;
   metadata: Metadata;
+  is_like?: boolean;
+  created_at: string;
 }
 
 // 定义对话内问答列表数据结构
