@@ -40,7 +40,9 @@ const features = {
 
 function getCookie(name: string) {
   let matches = document.cookie.match(
-    new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\/+^])/g, '\\$1') + '=([^;]*)'),
+    new RegExp(
+      '(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\/+^])/g, '\\$1') + '=([^;]*)',
+    ),
   );
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
@@ -99,7 +101,9 @@ export const useSessionStore = defineStore('conversation', () => {
     params.conversationId = currentSelectedSession;
     // 当前问答在整个问答记录中的索引 openouler有什么ai特性
     const answerIndex = ind ?? conversationList.value.length - 1;
-    const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+    const conversationItem = conversationList.value[
+      answerIndex
+    ] as RobotConversationItem;
     controller = new AbortController();
     const headers = {
       user: JSON.stringify({ userName: 'openEuler' }),
@@ -236,7 +240,8 @@ export const useSessionStore = defineStore('conversation', () => {
 
         if (done) {
           if (excelPath.value.length > 0) {
-            conversationItem.message[conversationItem.currentInd] += `</p><p>下载地址：${excelPath.value}`;
+            conversationItem.message[conversationItem.currentInd] +=
+              `</p><p>下载地址：${excelPath.value}`;
           }
           conversationItem.isFinish = true;
           isEnd = false;
@@ -248,7 +253,9 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         }
         // 这里删除了\n\n
-        const lines = decodedValue.split('\n\n').filter(line => line.startsWith('data: {'));
+        const lines = decodedValue
+          .split('\n\n')
+          .filter((line) => line.startsWith('data: {'));
         // 获取最后一个
         const lastLine = lines[lines.length - 1] || {};
         if (!judgeJson(lastLine.toString())) {
@@ -258,9 +265,11 @@ export const useSessionStore = defineStore('conversation', () => {
           addItem = '';
         }
         // pa
-        lines.forEach(line => {
+        lines.forEach((line) => {
           // 这里json解析
-          const message = Object(JSON.parse(line.replace(/^data:\s*/, '').trim()));
+          const message = Object(
+            JSON.parse(line.replace(/^data:\s*/, '').trim()),
+          );
           if ('metadata' in message) {
             conversationItem.metadata = message.metadata;
           }
@@ -268,7 +277,8 @@ export const useSessionStore = defineStore('conversation', () => {
             if (message['event'] === 'text.add') {
               // conversationItem.message[conversationItem.currentInd] += message.content;
               scrollBottom();
-              conversationItem.message[conversationItem.currentInd] += message.content.text;
+              conversationItem.message[conversationItem.currentInd] +=
+                message.content.text;
             } else if (message['event'] === 'heartbeat') {
               // conversationItem.files = [...conversationItem.files, message.content];
               // 不处理
@@ -276,12 +286,20 @@ export const useSessionStore = defineStore('conversation', () => {
               //echarts处理 待验证
               conversationItem.echartsObj = message.content.option;
             } else if (message['event'] == 'ducument.add') {
-              conversationItem.message[conversationItem.currentInd] += message.content;
-              conversationItem.files = [...conversationItem.files, message.content];
+              conversationItem.message[conversationItem.currentInd] +=
+                message.content;
+              conversationItem.files = [
+                ...conversationItem.files,
+                message.content,
+              ];
             } else if (message['event'] === 'suggest') {
               conversationItem.search_suggestions
-                ? conversationItem.search_suggestions.push(Object(message.content))
-                : (conversationItem.search_suggestions = [Object(message.content)]);
+                ? conversationItem.search_suggestions.push(
+                    Object(message.content),
+                  )
+                : (conversationItem.search_suggestions = [
+                    Object(message.content),
+                  ]);
             } else if (message['event'] === 'init') {
               //初始化获取 metadata
               conversationItem.metadata = message.metadata;
@@ -314,7 +332,9 @@ export const useSessionStore = defineStore('conversation', () => {
                 conversationItem.flowdata.status = message.flow?.stepStatus;
               }
             } else if (message['event'] === 'step.output') {
-              const target = conversationItem.flowdata?.data[0].find(item => item.id === message.flow?.stepId);
+              const target = conversationItem.flowdata?.data[0].find(
+                (item) => item.id === message.flow?.stepId,
+              );
               if (target) {
                 target.data.output = message.content;
                 target.status = message.flow?.stepStatus;
@@ -337,7 +357,7 @@ export const useSessionStore = defineStore('conversation', () => {
                   display: true,
                   data: conversationItem?.flowdata?.data,
                 };
-              }else if(message.content.type !== "schema"){
+              } else if (message.content.type !== 'schema') {
                 // 删除 end 逻辑
                 conversationItem.flowdata = {
                   id: flow?.stepId,
@@ -349,7 +369,9 @@ export const useSessionStore = defineStore('conversation', () => {
                 };
               } else {
                 conversationItem.paramsList = message.content.data;
-                conversationItem.flowdata.title = i18n.global.t('flow.flow_params_error');
+                conversationItem.flowdata.title = i18n.global.t(
+                  'flow.flow_params_error',
+                );
                 conversationItem.flowdata.status = 'error';
                 conversationItem.paramsList = message.content.data;
               }
@@ -364,13 +386,18 @@ export const useSessionStore = defineStore('conversation', () => {
     } catch (err: any) {
       isPaused.value = true;
       isAnswerGenerating.value = false;
-      (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+      (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
+        true;
       if (err.name === 'AbortError') {
         successMsg(i18n.global.t('feedback.stopSuccessful'));
-        (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+        (
+          conversationList.value[answerIndex] as RobotConversationItem
+        ).isFinish = true;
       } else {
         (conversationList.value[answerIndex] as RobotConversationItem).message[
-          (conversationList.value[answerIndex] as RobotConversationItem).currentInd
+          (
+            conversationList.value[answerIndex] as RobotConversationItem
+          ).currentInd
         ] += i18n.global.t('feedback.systemBusy');
       }
     }
@@ -379,7 +406,9 @@ export const useSessionStore = defineStore('conversation', () => {
   /**
    * 解析图表格式的文本
    */
-  const extractAttributesFromMarker = (str: string): { title: string; link: string } | null => {
+  const extractAttributesFromMarker = (
+    str: string,
+  ): { title: string; link: string } | null => {
     const regex = /<<<[^>]*title="([^"]+)"[^>]*link="([^"]+)"[^>]*>>>/;
 
     const match = str.match(regex);
@@ -419,21 +448,29 @@ export const useSessionStore = defineStore('conversation', () => {
     if (qiankunWindow.__POWERED_BY_QIANKUN__) {
       const url = await store.getAuthUrl('login');
       if (url) {
-        const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__ ? `${url}&redirect_index=${location.href}` : url;
+        const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
+          ? `${url}&redirect_index=${location.href}`
+          : url;
         if (redirectUrl) window.location.href = redirectUrl;
       }
     } else {
-      ElMessageBox.confirm(i18n.global.t('Login.unauthorized'), i18n.global.t('history.confirmation_message1'), {
-        confirmButtonText: i18n.global.t('Login.login'),
-        showClose: false,
-        showCancelButton: false,
-        autofocus: false,
-        closeOnClickModal: false,
-        closeOnPressEscape: false,
-      }).then(async () => {
+      ElMessageBox.confirm(
+        i18n.global.t('Login.unauthorized'),
+        i18n.global.t('history.confirmation_message1'),
+        {
+          confirmButtonText: i18n.global.t('Login.login'),
+          showClose: false,
+          showCancelButton: false,
+          autofocus: false,
+          closeOnClickModal: false,
+          closeOnPressEscape: false,
+        },
+      ).then(async () => {
         const url = await store.getAuthUrl('login');
         if (url) {
-          const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__ ? `${url}&redirect_index=${location.href}` : url;
+          const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
+            ? `${url}&redirect_index=${location.href}`
+            : url;
           if (redirectUrl) window.location.href = redirectUrl;
         }
       });
@@ -452,7 +489,9 @@ export const useSessionStore = defineStore('conversation', () => {
     if (msg.includes('[ERROR]')) {
       errorMsg = i18n.global.t('feedback.systemBusy');
       const answerIndex = ind ?? conversationList.value.length - 1;
-      const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
+      const conversationItem = conversationList.value[
+        answerIndex
+      ] as RobotConversationItem;
       conversationItem.flowdata.status = 'error';
     }
     if (
@@ -487,16 +526,25 @@ export const useSessionStore = defineStore('conversation', () => {
     params?: any,
     type?: any,
   ): Promise<void> => {
-    const { updateSessionTitle, currentSelectedSession } = useHistorySessionStore();
+    const { updateSessionTitle, currentSelectedSession } =
+      useHistorySessionStore();
     if (conversationList.value.length === 0) {
       // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
-      const res = await updateSessionTitle({ conversationId: currentSelectedSession, title: question.slice(0, 20) });
+      const res = await updateSessionTitle({
+        conversationId: currentSelectedSession,
+        title: question.slice(0, 20),
+      });
     }
     if (regenerateInd) {
       // 重新生成，指定某个回答，修改默认索引
-      (conversationList.value[regenerateInd] as RobotConversationItem).message.push(''); //123
-      (conversationList.value[regenerateInd] as RobotConversationItem).currentInd =
-        (conversationList.value[regenerateInd] as RobotConversationItem).message.length - 1; //123
+      (
+        conversationList.value[regenerateInd] as RobotConversationItem
+      ).message.push(''); //123
+      (
+        conversationList.value[regenerateInd] as RobotConversationItem
+      ).currentInd =
+        (conversationList.value[regenerateInd] as RobotConversationItem).message
+          .length - 1; //123
     } else {
       // 初次生成 ，创建一个问题和一个回答
       const ind = conversationList.value.length - 1;
@@ -565,12 +613,13 @@ export const useSessionStore = defineStore('conversation', () => {
    */
   const pausedStream = async (cid?: number): Promise<void> => {
     const answerIndex =
-      conversationList.value.findIndex(val => val.cid === cid) !== -1
-        ? conversationList.value.findIndex(val => val.cid === cid)
+      conversationList.value.findIndex((val) => val.cid === cid) !== -1
+        ? conversationList.value.findIndex((val) => val.cid === cid)
         : conversationList.value.length - 1;
     isPaused.value = true;
     conversationList.value[answerIndex].message[0] += '暂停生成';
-    (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+    (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
+      true;
     cancel();
     await api.stopGeneration();
   };
@@ -578,19 +627,31 @@ export const useSessionStore = defineStore('conversation', () => {
    * 重新生成回答
    * @param cid
    */
-  const reGenerateAnswer = (cid: number, user_selected_app: any[], type?: string): void => {
-    const answerInd = conversationList.value.findIndex(val => val.cid === cid);
-    const question = (conversationList.value[answerInd - 1] as UserConversationItem).message;
-    const recordId = (conversationList.value[answerInd] as RobotConversationItem).recordId;
+  const reGenerateAnswer = (
+    cid: number,
+    user_selected_app: any[],
+    type?: string,
+  ): void => {
+    const answerInd = conversationList.value.findIndex(
+      (val) => val.cid === cid,
+    );
+    const question = (
+      conversationList.value[answerInd - 1] as UserConversationItem
+    ).message;
+    const recordId = (
+      conversationList.value[answerInd] as RobotConversationItem
+    ).recordId;
     let groupId = undefined;
     if (type && type === 'params') {
       groupId = undefined;
     } else {
-      groupId = (conversationList.value[answerInd] as RobotConversationItem).groupId
+      groupId = (conversationList.value[answerInd] as RobotConversationItem)
+        .groupId
         ? (conversationList.value[answerInd] as RobotConversationItem).groupId
         : '';
     }
-    (conversationList.value[answerInd] as RobotConversationItem).isFinish = false;
+    (conversationList.value[answerInd] as RobotConversationItem).isFinish =
+      false;
     if (!question) {
       return;
     }
@@ -603,19 +664,28 @@ export const useSessionStore = defineStore('conversation', () => {
    * @param cid
    */
   const prePage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex(val => val.cid === cid);
-    if ((conversationList.value[answerInd] as RobotConversationItem).currentInd === 0) {
+    const answerInd = conversationList.value.findIndex(
+      (val) => val.cid === cid,
+    );
+    if (
+      (conversationList.value[answerInd] as RobotConversationItem)
+        .currentInd === 0
+    ) {
       return;
     }
-    (conversationList.value[answerInd] as RobotConversationItem).currentInd -= 1;
-    const index = (conversationList.value[answerInd] as RobotConversationItem).currentInd;
+    (conversationList.value[answerInd] as RobotConversationItem).currentInd -=
+      1;
+    const index = (conversationList.value[answerInd] as RobotConversationItem)
+      .currentInd;
   };
   /**
    * 下一条
    * @param cid
    */
   const nextPage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex(val => val.cid === cid);
+    const answerInd = conversationList.value.findIndex(
+      (val) => val.cid === cid,
+    );
 
     if (
       conversationList.value[answerInd].message.length - 1 ===
@@ -623,8 +693,10 @@ export const useSessionStore = defineStore('conversation', () => {
     ) {
       return;
     }
-    (conversationList.value[answerInd] as RobotConversationItem).currentInd += 1;
-    const index = (conversationList.value[answerInd] as RobotConversationItem).currentInd;
+    (conversationList.value[answerInd] as RobotConversationItem).currentInd +=
+      1;
+    const index = (conversationList.value[answerInd] as RobotConversationItem)
+      .currentInd;
   };
   // #endregion
 
@@ -639,9 +711,15 @@ export const useSessionStore = defineStore('conversation', () => {
 
     if (!_ && res) {
       conversationList.value = [];
-      res.result.records.forEach(record => {
-        if ((conversationList.value as RobotConversationItem[]).find(i => i.groupId === record.groupId)) {
-          const re = (conversationList.value as RobotConversationItem[]).find(i => i.groupId === record.groupId);
+      res.result.records.forEach((record) => {
+        if (
+          (conversationList.value as RobotConversationItem[]).find(
+            (i) => i.groupId === record.groupId,
+          )
+        ) {
+          const re = (conversationList.value as RobotConversationItem[]).find(
+            (i) => i.groupId === record.groupId,
+          );
           re?.message.push(record.content.answer);
           if (typeof re?.message !== 'string') {
             re?.messageList.addItem(
@@ -656,7 +734,11 @@ export const useSessionStore = defineStore('conversation', () => {
           return;
         }
         const a = new MessageArray();
-        a.addItem(record.content.answer, record.id, typeof record.is_like === 'object' ? 2 : Number(record.is_like));
+        a.addItem(
+          record.content.answer,
+          record.id,
+          typeof record.is_like === 'object' ? 2 : Number(record.is_like),
+        );
         conversationList.value.unshift(
           {
             cid: conversationList.value.length + 1,
@@ -678,7 +760,7 @@ export const useSessionStore = defineStore('conversation', () => {
             groupId: record.groupId,
             metadata: record.metadata,
             flowdata: record?.flow ? GenerateFlowData(record.flow) : undefined,
-          }
+          },
         );
         scrollBottom('auto');
       });
@@ -689,26 +771,26 @@ export const useSessionStore = defineStore('conversation', () => {
     let flowData = {
       id: record.recordId,
       title: record.id,
-      status: "success",
+      status: 'success',
       display: true,
       flowId: record.flowId,
-      data:[[]] as any[]
+      data: [[]] as any[],
     };
     for (let i = 0; i < record.steps.length; i++) {
       flowData.data[0].push({
         id: record.steps[i].stepId,
-        title : record.steps[i].stepId,
+        title: record.steps[i].stepId,
         status: record.steps[i].stepStatus,
-        data:{
+        data: {
           input: record.steps[i].input,
           output: record.steps[i].output,
-        }
+        },
       });
     }
     return flowData;
-  }
+  };
   const comment = (cid: number, isSupport: boolean, index: number): void => {
-    const ind = conversationList.value.find(item => item.cid === cid);
+    const ind = conversationList.value.find((item) => item.cid === cid);
     // ind.message.items[index].is_like = isSupport;
   };
 
@@ -717,7 +799,11 @@ export const useSessionStore = defineStore('conversation', () => {
    */
   const stopDebug = async (): Promise<void> => {
     isPaused.value = true;
-    (conversationList.value[conversationList.value.length - 1] as RobotConversationItem).isFinish = true;
+    (
+      conversationList.value[
+        conversationList.value.length - 1
+      ] as RobotConversationItem
+    ).isFinish = true;
     cancel();
     await api.stopGeneration();
   };

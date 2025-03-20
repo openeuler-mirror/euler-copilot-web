@@ -56,14 +56,18 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   const isSelectedAll = ref(false);
   // 不确定状态
   const indeterminate = computed(() =>
-    selectedSessionIds.value.length === 0 ? false : selectedSessionIds.value.length !== historySession.value.length,
+    selectedSessionIds.value.length === 0
+      ? false
+      : selectedSessionIds.value.length !== historySession.value.length,
   );
   /**
    * 全选
    */
   const selectAllSession = (): void => {
     if (isSelectedAll.value) {
-      selectedSessionIds.value = historySession.value.map(item => item.conversationId);
+      selectedSessionIds.value = historySession.value.map(
+        (item) => item.conversationId,
+      );
     } else {
       selectedSessionIds.value = [];
     }
@@ -74,7 +78,9 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    */
   const selectSession = (conversationId: string): void => {
     if (selectedSessionIds.value.includes(conversationId)) {
-      selectedSessionIds.value = selectedSessionIds.value.filter(val => val !== conversationId);
+      selectedSessionIds.value = selectedSessionIds.value.filter(
+        (val) => val !== conversationId,
+      );
     } else {
       selectedSessionIds.value.push(conversationId);
     }
@@ -102,7 +108,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     const [err, res] = await api.getSessionRecord();
     const { conversationList } = storeToRefs(useSessionStore());
     if (!err && res) {
-      historySession.value = res.result.conversations.reverse().map(item => ({
+      historySession.value = res.result.conversations.reverse().map((item) => ({
         conversationId: item.conversationId,
         createdTime: item.createdTime,
         title: item.title,
@@ -112,7 +118,8 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
         await generateSession();
       }
       if (!currentSelectedSession.value) {
-        currentSelectedSession.value = res.result.conversations[0]?.conversationId;
+        currentSelectedSession.value =
+          res.result.conversations[0]?.conversationId;
       }
       if (currentSelectedSession.value) {
         const { getConversation, isAnswerGenerating } = useSessionStore();
@@ -133,13 +140,13 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    * @param conversation
    * @returns
    */
-  const updateSessionTitle = async (conversation: SessionItem): Promise<boolean> => {
-    const [_] = await api.updateSession(
-      {
-        conversationId: conversation.conversationId,
-        title: conversation.title,
-      }
-    );
+  const updateSessionTitle = async (
+    conversation: SessionItem,
+  ): Promise<boolean> => {
+    const [_] = await api.updateSession({
+      conversationId: conversation.conversationId,
+      title: conversation.title,
+    });
     if (_) {
       return false;
     }
@@ -151,7 +158,10 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    * 创建新会话
    */
   const createNewSession = async (): Promise<void> => {
-    const sId = historySession.value.length === 0 ? null : historySession.value[0]?.conversationId;
+    const sId =
+      historySession.value.length === 0
+        ? null
+        : historySession.value[0]?.conversationId;
     if (sId) {
       const [, cov] = await api.getHistoryConversation(sId);
       if (cov && cov.result.records.length === 0) {
@@ -174,7 +184,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     const [_, res] = await api.createSession();
     if (!_ && res) {
       // 用于处理多次点击会话造成 409 的问题
-      if(res.code === 409){
+      if (res.code === 409) {
         successMsg(i18n.global.t('history.sessionLimit'));
         await getHistorySession();
         return;
@@ -192,7 +202,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     if (!_ && res) {
       currentSelectedSession.value = res.result.conversationId;
       await getHistorySession();
-      return res.result.conversationId
+      return res.result.conversationId;
     }
   };
 

@@ -26,9 +26,15 @@ const state = {
 export default function useDragAndDrop() {
   const { draggedType, isDragOver, isDragging, nodeData } = state;
 
-  const { addNodes, screenToFlowCoordinate, onNodesInitialized, updateNode, addEdges } = useVueFlow();
+  const {
+    addNodes,
+    screenToFlowCoordinate,
+    onNodesInitialized,
+    updateNode,
+    addEdges,
+  } = useVueFlow();
 
-  watch(isDragging, dragging => {
+  watch(isDragging, (dragging) => {
     document.body.style.userSelect = dragging ? 'none' : '';
   });
 
@@ -100,7 +106,7 @@ export default function useDragAndDrop() {
      */
     const { off } = onNodesInitialized(() => {
       const vueFlowContainer = document.querySelector('.my-diagram-class');
-      updateNode(nodeId, node => ({
+      updateNode(nodeId, (node) => ({
         position: {
           x: node.position.x - node.dimensions.width / 2,
           y: node.position.y - node.dimensions.height / 2,

@@ -1,8 +1,13 @@
 <template>
   <div class="upload-group">
-    <upload-card class="upload-card" :file-params="item" @delete="handleDelete" v-for="item in props.fileList"></upload-card>
+    <upload-card
+      class="upload-card"
+      :file-params="item"
+      @delete="handleDelete"
+      v-for="item in props.fileList"
+    ></upload-card>
   </div>
-</template> 
+</template>
 <script lang="ts" setup>
 import { defineProps, defineEmits } from 'vue';
 
@@ -20,7 +25,7 @@ const emit = defineEmits(['deleteFile']);
 // emit删除事件
 const handleDelete = (file) => {
   emit('deleteFile', file);
-}
+};
 </script>
 <style lang="scss">
 .upload-group {

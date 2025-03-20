@@ -48,7 +48,7 @@ const emit = defineEmits(['selectQuestion']);
 
 const selectQuestions = (event) => {
   emit('selectQuestion', event.target.innerText);
-}
+};
 const routerToAppCenter = () => {
   router.push('/app');
 };
@@ -59,9 +59,9 @@ onMounted(() => {
       .querySingleAppData({
         id: route.query?.id as string,
       })
-      .then(res => {
-        if(res?.[1]?.result?.name){
-          appName.value = res?.[1]?.result?.name
+      .then((res) => {
+        if (res?.[1]?.result?.name) {
+          appName.value = res?.[1]?.result?.name;
         }
       });
   }
@@ -73,7 +73,11 @@ onMounted(() => {
     <div class="inital-panel">
       <div class="introduction">
         {{ $t('main.describe1') }}
-        <img src="@/assets/images/logo-euler-copilot.png" alt="" v-if="!appName?.length"/>
+        <img
+          src="@/assets/images/logo-euler-copilot.png"
+          alt=""
+          v-if="!appName?.length"
+        />
         <div class="appNameTitle">{{ appName }}</div>
         {{ $t('main.describe2') }}
       </div>
@@ -82,12 +86,19 @@ onMounted(() => {
         <div class="eg">
           <p>{{ $t('main.left_describe') }}</p>
           <ul class="eg-list">
-            <li class="eg-list-item" v-for="item in EG_LIST" :key="item.key" :style="item.style">
+            <li
+              class="eg-list-item"
+              v-for="item in EG_LIST"
+              :key="item.key"
+              :style="item.style"
+            >
               <img v-if="themeStore.theme === 'dark'" :src="item.iconDark" />
               <img v-else :src="item.icon" alt="" />
               <div class="eg-list-item__text">
                 <p>{{ $t('main.' + item.key) }}</p>
-                <span class="eg-list-item__text-desc">{{ $t('main.' + item.insertMessage) }}</span>
+                <span class="eg-list-item__text-desc">
+                  {{ $t('main.' + item.insertMessage) }}
+                </span>
               </div>
             </li>
           </ul>
@@ -99,8 +110,12 @@ onMounted(() => {
           <p class="title">{{ $t('main.question') }}</p>
           <ul class="question-list">
             <li class="question-item" v-for="item in questions" :key="item.id">
-              <span class="question-number" :class="{ blue: item.id <= 3 }">{{ item.id }}</span>
-              <span class="question-des"  @click="selectQuestions">{{ $t('question.' + item.question) }}</span>
+              <span class="question-number" :class="{ blue: item.id <= 3 }">
+                {{ item.id }}
+              </span>
+              <span class="question-des" @click="selectQuestions">
+                {{ $t('question.' + item.question) }}
+              </span>
             </li>
           </ul>
         </div>
@@ -160,7 +175,7 @@ onMounted(() => {
   margin-left: 50px;
 }
 
-.appNameTitle{
+.appNameTitle {
   color: #6c77fa;
   font-size: 24px;
   font-weight: 700;
@@ -174,11 +189,11 @@ onMounted(() => {
       color: #5ab3ff;
     }
   }
-  .question-number{
+  .question-number {
     margin-right: 8px;
     color: var(--o-text-color-secondary);
   }
-  .question-des{
+  .question-des {
     color: var(--o-text-color-secondary);
   }
 }
@@ -213,7 +228,6 @@ onMounted(() => {
       font-size: 14px;
       color: var(--o-text-color-secondary);
     }
-
   }
 }
 
@@ -269,7 +283,7 @@ onMounted(() => {
         align-self: center;
         position: absolute;
         min-width: 120px;
-        padding:0 15px;
+        padding: 0 15px;
         line-height: 32px;
         border-radius: 100px;
         height: 32px;
@@ -295,9 +309,9 @@ onMounted(() => {
     li {
       cursor: text;
       background: var(--o-bg-color-light);
-      &:hover{
-      background: var(--o-bg-color-base);
-      box-shadow: 0px 5.18px 20.72px 0px var(--o-bg-color-dark);
+      &:hover {
+        background: var(--o-bg-color-base);
+        box-shadow: 0px 5.18px 20.72px 0px var(--o-bg-color-dark);
       }
     }
     &-item {
@@ -351,7 +365,7 @@ onMounted(() => {
       }
     }
   }
-  .eg-btn{
+  .eg-btn {
     cursor: pointer;
   }
 }

@@ -15,15 +15,25 @@ import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
-import { IconSearch, IconCaretRight, IconCaretDown, IconPlusCircle } from '@computing/opendesign-icons';
+import {
+  IconSearch,
+  IconCaretRight,
+  IconCaretDown,
+  IconPlusCircle,
+} from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
 import { BranchSourceIdType, StatusInfoTitle } from './types';
 import { useRoute } from 'vue-router';
-import { nodeTypeToIcon, iconTypeList, getSrcIcon, DefaultViewPortZoom } from './types';
+import {
+  nodeTypeToIcon,
+  iconTypeList,
+  getSrcIcon,
+  DefaultViewPortZoom,
+} from './types';
 import yaml from 'js-yaml';
 import $bus from 'src/bus/index';
-import CustomLoading from '../../customLoading/index.vue'
+import CustomLoading from '../../customLoading/index.vue';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -86,7 +96,7 @@ const { onDragOver, onDrop, onDragLeave, onDragStart } = useDragAndDrop();
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
 
-const handleChangeZoom = zoomValue => {
+const handleChangeZoom = (zoomValue) => {
   const viewPortX = Number(sessionStorage.getItem('workflowViewPortX')) || 0;
   const viewPortY = Number(sessionStorage.getItem('workflowViewPortY')) || 20;
   setViewport({
@@ -100,7 +110,7 @@ const handleChangeZoom = zoomValue => {
 const viewportChangeEndFunc = (e) => {
   sessionStorage.setItem('workflowViewPortX', e.x);
   sessionStorage.setItem('workflowViewPortY', e.y);
-}
+};
 
 watch(
   props,
@@ -115,7 +125,7 @@ watch(
   { deep: true, immediate: true },
 );
 
-onConnect(e => {
+onConnect((e) => {
   // 边的起点和终点节点的两个状态
   const sourceItem = findNode(e.source);
   const targetItem = findNode(e.target);
@@ -131,7 +141,7 @@ onConnect(e => {
     type: 'normal',
   });
 });
-const handleChange = activeList => {
+const handleChange = (activeList) => {
   activeNames.value = activeName.value;
 };
 
@@ -146,7 +156,7 @@ const handleClose = () => {
   isAddWorkFlow.value = false;
 };
 // 删除节点
-const delNode = id => {
+const delNode = (id) => {
   if (id) {
     const node = findNode(id);
     node ? removeNodes(node) : '';
@@ -180,7 +190,7 @@ async function layoutGraph(direction) {
 }
 
 // 拖拽添加
-const dropFunc = e => {
+const dropFunc = (e) => {
   if (!flowObj.value?.flowId) {
     ElMessage.warning('请先创建/编辑工作流');
     return;
@@ -199,36 +209,36 @@ onMounted(() => {
       page: 1,
       pageSize: 10,
     })
-    .then(res => {
+    .then((res) => {
       apiServiceList.value = res[1]?.result.services;
       allApiServiceList.value = res[1]?.result.services;
       activeName.value = [res[1]?.result.services[0]?.serviceId];
       activeNames.value = [res[1]?.result.services[0]?.serviceId];
       apiLoading.value = false;
     });
-    handleChangeZoom(DefaultViewPortZoom);
-})
-
-
+  handleChangeZoom(DefaultViewPortZoom);
+});
 
 onUnmounted(() => {
   // 组件销毁时，清空sessionStorage的veiwport位置
   sessionStorage.setItem('workflowViewPortX', '');
   sessionStorage.setItem('workflowViewPortY', '');
-})
+});
 
 // 过滤工作流接口返回的可拖拽节点
 const searchApiList = () => {
-  apiServiceList.value = allApiServiceList.value.map(item => {
+  apiServiceList.value = allApiServiceList.value.map((item) => {
     const filterObj = { ...item, nodeMetaDatas: [] };
     if (item?.nodeMetaDatas) {
-      filterObj.nodeMetaDatas = item.nodeMetaDatas.filter(item => item?.name.includes(apiSearchValue.value));
+      filterObj.nodeMetaDatas = item.nodeMetaDatas.filter((item) =>
+        item?.name.includes(apiSearchValue.value),
+      );
     }
     return filterObj;
   });
 };
 
-const handleDebugDialogOps = visible => {
+const handleDebugDialogOps = (visible) => {
   // 这里将对应的保存
   if (!debugDialogVisible.value) {
     saveFlow();
@@ -239,28 +249,30 @@ const handleDebugDialogOps = visible => {
   // 调试弹窗关闭时---结果清空
   debugStatus.value = '';
   // 调试弹窗关闭时---节点状态清空
-  getNodes.value.forEach(node => {
-    updateNode(node.id, { data: { ...node.data, status: 'default', costTime: '' } });
+  getNodes.value.forEach((node) => {
+    updateNode(node.id, {
+      data: { ...node.data, status: 'default', costTime: '' },
+    });
   });
   // 调试弹窗关闭时---需要将边状态清空
-  getEdges.value.forEach(edge => {
+  getEdges.value.forEach((edge) => {
     // 更新节点的起源与终点
     updateEdgeData(edge.id, { targetStatus: 'default' });
     updateEdgeData(edge.id, { sourceStatus: 'default' });
   });
 };
 
-const edgesChange = edges => {
+const edgesChange = (edges) => {
   // 边增加删除时直接将工作流debug状态置为false
   if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
     emits('updateFlowsDebug', false);
   }
 };
 
-const nodesChange = nodes => {
+const nodesChange = (nodes) => {
   // 判断如果选中的节点数目大于1，则删除首个
   if (getSelectedNodes.value.length > 1) {
-    removeSelectedNodes([getSelectedNodes.value[0]])
+    removeSelectedNodes([getSelectedNodes.value[0]]);
   }
   if (nodes?.[0]?.type === 'remove') {
     delNode(nodes[0].id);
@@ -274,7 +286,7 @@ const nodesChange = nodes => {
 };
 
 // 子组件获取的flow
-const getCreatedFlow = createdFlowObj => {
+const getCreatedFlow = (createdFlowObj) => {
   if (flowObj) {
     flowObj.value = { ...createdFlowObj };
     workFlowItemName.value = createdFlowObj.name;
@@ -294,7 +306,7 @@ const queryFlow = (deal: string) => {
       .querySingleAppData({
         id: route.query?.appId as string,
       })
-      .then(res => {
+      .then((res) => {
         const appInfo = res?.[1]?.result;
         if (appInfo) {
           workFlowList.value = appInfo.workflows ? [...appInfo.workflows] : [];
@@ -314,14 +326,14 @@ const queryFlow = (deal: string) => {
   }
 };
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
-const editFlow = item => {
+const editFlow = (item) => {
   loading.value = true;
   api
     .querySingleFlowTopology({
       appId: route.query?.appId,
       flowId: item.id,
     })
-    .then(res => {
+    .then((res) => {
       if (res[1]?.result?.flow) {
         flowObj.value = res[1].result.flow;
         redrageFlow(flowObj.value.nodes, flowObj.value.edges);
@@ -331,7 +343,7 @@ const editFlow = item => {
 };
 
 // 删除工作流
-const delFlow = item => {
+const delFlow = (item) => {
   // 删除的如果是当前选中的，需要将选中的清空
   if (workFlowItemName.value === item.name) {
     workFlowItemName.value = '';
@@ -342,7 +354,7 @@ const delFlow = item => {
       appId: route.query?.appId,
       flowId: item.id,
     })
-    .then(res => {
+    .then((res) => {
       if (res[1]?.result) {
         ElMessage.success('删除工作流成功');
         // 并且需要更新工作流下拉框--默认选中第一项
@@ -353,7 +365,7 @@ const delFlow = item => {
 };
 
 // 下拉选择对应的工作流
-const choiceFlowId = flowItem => {
+const choiceFlowId = (flowItem) => {
   if (flowItem) {
     workFlowItemName.value = flowItem.name;
     editFlow(flowItem);
@@ -362,7 +374,7 @@ const choiceFlowId = flowItem => {
 
 // 回显工作流节点和边
 const redrageFlow = (nodesList, edgesList) => {
-  const newNodeList = nodesList.map(node => {
+  const newNodeList = nodesList.map((node) => {
     let newNode = {
       id: node.stepId,
       type: node.callId,
@@ -392,7 +404,7 @@ const redrageFlow = (nodesList, edgesList) => {
     }
     return newNode;
   });
-  const newEdgeList = edgesList.map(edge => {
+  const newEdgeList = edgesList.map((edge) => {
     const newEdge = {
       id: edge.edgeId,
       source: edge.sourceNode,
@@ -409,13 +421,13 @@ const redrageFlow = (nodesList, edgesList) => {
 };
 
 // 接受工作流调试时获取的相应的数据
-$bus.on('getNodesStatue', lines => {
+$bus.on('getNodesStatue', (lines) => {
   // 对相应节点修改状态--此处需要分为开始/结束,分支,普通三种节点修改
   try {
-    lines?.forEach(item => {
+    lines?.forEach((item) => {
       const newLines = yaml.load(item);
       // 工作流开始时更新debugResult
-      if (newLines?.data?.event === 'flow.start'){
+      if (newLines?.data?.event === 'flow.start') {
         totalTime.value = 0;
         debugTime.value = '';
         debugStatus.value = newLines.data.flow?.stepStatus;
@@ -427,22 +439,35 @@ $bus.on('getNodesStatue', lines => {
         return;
       }
       // step.input和step.output对应的节点状态需要修改
-      if (newLines?.data?.event === 'step.input' || newLines?.data?.event === 'step.output') {
+      if (
+        newLines?.data?.event === 'step.input' ||
+        newLines?.data?.event === 'step.output'
+      ) {
         // output-节点运行结束时，获取节点运行的耗时
         let constTime = '';
         if (newLines.data.event === 'step.output') {
           totalTime.value += newLines.data?.metadata?.timeCost;
           constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`;
           // 此处获取output的数据，并将此数据传给节点显示
-          updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, {
-            params: newLines.data?.content,
-            type: 'output',
-          });
+          updateNodeFunc(
+            newLines.data.flow.stepId,
+            newLines.data.flow?.stepStatus,
+            constTime,
+            {
+              params: newLines.data?.content,
+              type: 'output',
+            },
+          );
         } else {
-          updateNodeFunc(newLines.data.flow.stepId, newLines.data.flow?.stepStatus, constTime, {
-            params: newLines.data?.content,
-            type: 'input',
-          });
+          updateNodeFunc(
+            newLines.data.flow.stepId,
+            newLines.data.flow?.stepStatus,
+            constTime,
+            {
+              params: newLines.data?.content,
+              type: 'input',
+            },
+          );
         }
       } else if (newLines?.data?.event === 'flow.stop') {
         debugStatus.value = newLines.data.flow?.stepStatus;
@@ -462,7 +487,7 @@ $bus.on('getNodesStatue', lines => {
 $bus.on('debugChatEnd', () => {
   // 更新发布按钮状态
   emits('updateFlowsDebug');
-})
+});
 
 // 更新节点状态--调试到对应节点id，根据id设置节点与边状态
 const updateNodeFunc = (id, status, constTime, content?) => {
@@ -473,14 +498,18 @@ const updateNodeFunc = (id, status, constTime, content?) => {
   // 更新当前节点的状态，以及运行时间
   updateNode(id, { data: { ...data, status, constTime } });
   // 遍历获取以当前节点为起源节点的边和为目的节点的边
-  const changeSourceEdges = [...getEdges.value.filter(item => item.source === id)];
-  const changeTargetEdges = [...getEdges.value.filter(item => item.target === id)];
+  const changeSourceEdges = [
+    ...getEdges.value.filter((item) => item.source === id),
+  ];
+  const changeTargetEdges = [
+    ...getEdges.value.filter((item) => item.target === id),
+  ];
   // 分别遍历相应的以该节点为起源的边-并更新它们的状态为最新状态
-  changeSourceEdges.forEach(item => {
+  changeSourceEdges.forEach((item) => {
     updateEdgeData(item.id, { sourceStatus: status });
   });
   // 分别遍历相应相应的以该节点为目标的边-并更新它们的状态为最新状态
-  changeTargetEdges.forEach(item => {
+  changeTargetEdges.forEach((item) => {
     updateEdgeData(item.id, { targetStatus: status });
   });
 };
@@ -492,7 +521,7 @@ const saveFlow = (updateNodeParameter?) => {
     return;
   }
   // 将对应的节点和边存储格式改造
-  let updateNodes = getNodes.value.map(item => {
+  let updateNodes = getNodes.value.map((item) => {
     const { ...otherItem } = item.data;
     let newItem = {
       enable: true,
@@ -525,7 +554,7 @@ const saveFlow = (updateNodeParameter?) => {
     return newItem;
   });
   // 更新对应的边的结构
-  const updateEdges = getEdges.value.map(item => {
+  const updateEdges = getEdges.value.map((item) => {
     let newEdge = {
       edgeId: item.id,
       sourceNode: item.sourceNode.id,
@@ -537,10 +566,11 @@ const saveFlow = (updateNodeParameter?) => {
   });
   // 判断是否调用修改yaml文件，以确定是否修改对应的input_paramteters
   if (updateNodeParameter) {
-    updateNodes.forEach(item => {
+    updateNodes.forEach((item) => {
       if (item.stepId === updateNodeParameter.id) {
         if (item.type === 'choice') {
-          item.parameters.input_parameters.choices = updateNodeParameter.inputStream;
+          item.parameters.input_parameters.choices =
+            updateNodeParameter.inputStream;
         } else {
           item.parameters.input_parameters = updateNodeParameter.inputStream;
         }
@@ -569,7 +599,7 @@ const saveFlow = (updateNodeParameter?) => {
         },
       },
     )
-    .then(res => {
+    .then((res) => {
       if (res[1]?.result) {
         ElMessage.success('工作流更新成功');
         queryFlow('update');
@@ -598,8 +628,13 @@ defineExpose({
 <template>
   <div class="workFlowContainer" @drop="dropFunc">
     <aside class="aside-wrapper" ref="copilotAside">
-      <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
-        <div class="trapezoid" :class="{isExpandIcon: isCopilotAsideVisible}" @click="hanleAsideVisible" />
+      <ElTooltip
+        placement="right"
+        :content="
+          isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
+        "
+      >
+        <div class="trapezoid" @click="hanleAsideVisible" />
       </ElTooltip>
 
       <transition name="transition-fade">
@@ -618,12 +653,22 @@ defineExpose({
               ></el-input>
             </div>
             <div class="apiContanter">
-              <el-collapse v-model="activeName" @change="handleChange" class="o-hpc-collapse">
-                <el-collapse-item title="Consistency" :name="item.serviceId" v-for="item in apiServiceList">
+              <el-collapse
+                v-model="activeName"
+                @change="handleChange"
+                class="o-hpc-collapse"
+              >
+                <el-collapse-item
+                  title="Consistency"
+                  :name="item.serviceId"
+                  v-for="item in apiServiceList"
+                >
                   <template #title>
                     <el-icon
                       class="el-collapse-item__arrow"
-                      :class="{ 'is-active': activeNames.includes(item.serviceId) }"
+                      :class="{
+                        'is-active': activeNames.includes(item.serviceId),
+                      }"
                     >
                       <IconCaretRight />
                     </el-icon>
@@ -634,7 +679,12 @@ defineExpose({
                     v-for="(node, index) in item.nodeMetaDatas"
                     :key="index"
                     :draggable="true"
-                    @dragstart="onDragStart($event, node.type, { serviceId: item.serviceId, ...node })"
+                    @dragstart="
+                      onDragStart($event, node.type, {
+                        serviceId: item.serviceId,
+                        ...node,
+                      })
+                    "
                   >
                     <img class="nodeIcon" :src="getSrcIcon(node)" />
                     <div class="stanceName">{{ node.name }}</div>
@@ -665,7 +715,11 @@ defineExpose({
       >
         <Background pattern-color="#aaa" :gap="8" />
         <MiniMap :width="220" mask-color="#f4f6fa" :mask-stroke-width="250" />
-        <CustomControl :handleChangeZoom="handleChangeZoom" :flowZoom="flowZoom" :layoutGraph="layoutGraph" />
+        <CustomControl
+          :handleChangeZoom="handleChangeZoom"
+          :flowZoom="flowZoom"
+          :layoutGraph="layoutGraph"
+        />
         <!-- 自定义节点 -->
         <template #node-custom="customNodeProps">
           <CustomNode
@@ -760,20 +814,34 @@ defineExpose({
             </template>
           </el-select>
         </div>
-        <div class="debugBtn" :class="{isDebugDis: debugDialogVisible}" @click="handleDebugDialogOps(true)"></div>
+        <div class="debugBtn" @click="handleDebugDialogOps(true)">
+          <img
+            src="@/assets/images/debugBtnDis.png"
+            v-if="debugDialogVisible"
+          />
+          <img src="@/assets/images/debugBtn.png" v-else />
+        </div>
         <div class="debugStatus"></div>
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
           <div class="icon" :class="`${debugStatus}Icon`"></div>
           <div class="resultText">{{ StatusInfoTitle[debugStatus] }}</div>
-          <span class="time" :class="`${debugStatus}Bg`" v-if="debugStatus !== 'running'">{{ debugTime }}</span>
+          <span
+            class="time"
+            :class="`${debugStatus}Bg`"
+            v-if="debugStatus !== 'running'"
+          >
+            {{ debugTime }}
+          </span>
         </div>
       </div>
       <!-- 暂无工作流展示 -->
       <div class="noWorkFlow" v-else>
         <div class="noFlow"></div>
         <div class="noFlowDesc">暂无工作流</div>
-        <el-button type="primary" class="w96 addWorkFlow" @click="addWorkFlow">新建工作流</el-button>
+        <el-button type="primary" class="w96 addWorkFlow" @click="addWorkFlow">
+          新建工作流
+        </el-button>
       </div>
     </div>
     <!-- 工作流新建弹窗 -->

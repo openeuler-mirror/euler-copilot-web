@@ -34,7 +34,10 @@ export function useLayout() {
       // 查找到节点的信息
       const graphNode = findNode(node.id);
       // 获取到所有节点中最高的高度，之后可计算每个节点与最高高度差设置y，使得节点的中心点都在同一水平线上
-      maxHeight = maxHeight > graphNode.dimensions.height ? maxHeight : graphNode.dimensions.height;
+      maxHeight =
+        maxHeight > graphNode.dimensions.height
+          ? maxHeight
+          : graphNode.dimensions.height;
     }
 
     for (const node of nodes) {
@@ -57,13 +60,19 @@ export function useLayout() {
     dagre.layout(dagreGraph);
 
     // set nodes with updated positions
-    return nodes.map(node => {
+    return nodes.map((node) => {
       const nodeWithPosition = dagreGraph.node(node.id);
       let diff = maxHeight - nodeWithPosition.height;
-      let position = { x: nodeWithPosition.x, y: nodeWithPosition.y + diff / 2 };
+      let position = {
+        x: nodeWithPosition.x,
+        y: nodeWithPosition.y + diff / 2,
+      };
       // 需要进行判断--是否为开始结束
       if (node.id === 'start' || node.id === 'end') {
-        position = { x: nodeWithPosition.x + 112, y: nodeWithPosition.y + diff / 2 };
+        position = {
+          x: nodeWithPosition.x + 112,
+          y: nodeWithPosition.y + diff / 2,
+        };
       }
 
       return {

@@ -34,7 +34,11 @@
   </g>
 </template>
 <script setup>
-import { getBezierPath, getSmoothStepPath, getSimpleBezierPath } from '@vue-flow/core';
+import {
+  getBezierPath,
+  getSmoothStepPath,
+  getSimpleBezierPath,
+} from '@vue-flow/core';
 import { computed, watch, ref, onMounted } from 'vue';
 const status = ref('default');
 const startOffset = ref(0);
@@ -107,11 +111,13 @@ watch(
       // 非连线过程，则需要判断当前的status
       if (props.data?.targetStatus === 'error') {
         // 如果目标节点为失败，根据起源节点判断边状态
-        status.value = props.data?.sourceStatus === 'success' ? 'success_error' : 'error';
+        status.value =
+          props.data?.sourceStatus === 'success' ? 'success_error' : 'error';
       } else if (props.data?.targetStatus === 'success') {
         // 如果目标节点为成功，根据起源节点判断边状态
-        status.value = props.data?.sourceStatus === 'success' ? 'success' : 'error_success';
-      } else if(props.data?.targetStatus === 'running') {
+        status.value =
+          props.data?.sourceStatus === 'success' ? 'success' : 'error_success';
+      } else if (props.data?.targetStatus === 'running') {
         // 运行中状态
         status.value = 'running';
       } else {
@@ -121,10 +127,16 @@ watch(
     }
     if (status.value === 'success_error' || status.value === 'error_success') {
       if (props?.targetX < props?.sourceX) {
-        if (props.data.sourceStatus === 'success' && props.data.targetStatus === 'error') {
+        if (
+          props.data.sourceStatus === 'success' &&
+          props.data.targetStatus === 'error'
+        ) {
           status.value = 'error_success';
         }
-        if (props.data.sourceStatus === 'error' && props.data.targetStatus === 'success') {
+        if (
+          props.data.sourceStatus === 'error' &&
+          props.data.targetStatus === 'success'
+        ) {
           status.value = 'success_error';
         }
       }

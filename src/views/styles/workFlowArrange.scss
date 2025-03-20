@@ -298,7 +298,8 @@
     background: url('@/assets/svgs/light_delete.svg');
   }
 }
-.workFlowOption.is-selected, .workFlowOption.is-hovering {
+.workFlowOption.is-selected,
+.workFlowOption.is-hovering {
   .editIcon {
     background: url('@/assets/svgs/dark_editor_active.svg');
   }
@@ -338,7 +339,11 @@
         .iconStyle {
           width: 24px;
           height: 24px;
-          background: linear-gradient(120deg, rgba(109, 117, 250, 0.15), rgba(90, 179, 255, 0.15));
+          background: linear-gradient(
+            120deg,
+            rgba(109, 117, 250, 0.15),
+            rgba(90, 179, 255, 0.15)
+          );
         }
         .label {
           flex: 1;

@@ -14,14 +14,20 @@ const policy = ref<string>('');
  */
 const readAgreement = async () => {
   const language = localStorage.getItem('localeLang');
-  const response = language === 'en'?await import('src/conf/agreement-en.md?raw'):await import('src/conf/agreement.md?raw');
+  const response =
+    language === 'en'
+      ? await import('src/conf/agreement-en.md?raw')
+      : await import('src/conf/agreement.md?raw');
   agreement.value = marked.parse(response.default) as string;
   agreeDialogVisiable.value = true;
 };
 
-const readPolicy= async () => {
+const readPolicy = async () => {
   const language = localStorage.getItem('localeLang');
-  const response = language === 'en'?await import('src/conf/policy-en.md?raw'):await import('src/conf/policy.md?raw');
+  const response =
+    language === 'en'
+      ? await import('src/conf/policy-en.md?raw')
+      : await import('src/conf/policy.md?raw');
   policy.value = marked.parse(response.default) as string;
   policyDialogVisiable.value = true;
 };
@@ -29,10 +35,8 @@ const readPolicy= async () => {
 
 <template>
   <div class="common-footer">
-    <span class="common-footer-tips"
-      >{{$t('main.opinions')}}</span
-    >
-    <span @click="readAgreement">{{$t('main.service_agreement')}}</span>
+    <span class="common-footer-tips">{{ $t('main.opinions') }}</span>
+    <span @click="readAgreement">{{ $t('main.service_agreement') }}</span>
     <EulerDialog
       :visible="agreeDialogVisiable"
       :content="agreement"
@@ -40,7 +44,9 @@ const readPolicy= async () => {
       :agreement-name="$t('main.service_agreement')"
       @submit="agreeDialogVisiable = false"
     ></EulerDialog>
-    <span class="common-footer-policy" @click="readPolicy">{{$t('main.privacy_policy')}}</span>
+    <span class="common-footer-policy" @click="readPolicy">
+      {{ $t('main.privacy_policy') }}
+    </span>
     <EulerDialog
       :visible="policyDialogVisiable"
       :content="policy"
@@ -50,18 +56,21 @@ const readPolicy= async () => {
     ></EulerDialog>
     <el-tooltip class="box-item" effect="light" placement="top">
       <template #default>
-        <span class="common-footer-content">{{$t('main.contact_us')}}</span>
+        <span class="common-footer-content">{{ $t('main.contact_us') }}</span>
       </template>
-      <template #content> {{$t('main.email1')}}<p class="common-footer-email">contact@openeuler.io</p></template>
+      <template #content>
+        {{ $t('main.email1') }}
+        <p class="common-footer-email">contact@openeuler.io</p>
+      </template>
     </el-tooltip>
-    <span>{{$t('main.version')}}</span>
+    <span>{{ $t('main.version') }}</span>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.common-footer-email{
+.common-footer-email {
   display: inline-block;
-  color:#3291fe;
+  color: #3291fe;
 }
 .common-footer {
   display: flex;
@@ -114,7 +123,11 @@ const readPolicy= async () => {
   }
 
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
     display: none;
   }
 
@@ -123,13 +136,13 @@ const readPolicy= async () => {
     height: 3px;
     display: none;
   }
-  
-  ::-webkit-scrollbar-thumb {
-      background-color: #d3dce9 !important;
-      border-radius: 3px;
-    }
 
-  .el-scrollbar__thumb{
+  ::-webkit-scrollbar-thumb {
+    background-color: #d3dce9 !important;
+    border-radius: 3px;
+  }
+
+  .el-scrollbar__thumb {
     width: 1px;
   }
 }

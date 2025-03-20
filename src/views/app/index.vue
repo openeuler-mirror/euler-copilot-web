@@ -4,35 +4,53 @@
       <CustomLoading :loading="loading"></CustomLoading>
       <div class="appCenterTitle">{{ $t('app.app_center') }}</div>
       <div class="appCenterSearch">
-        <el-input style="max-width: 400px" v-model="appSearchValue" :placeholder="$t('app.app_search')" :suffix-icon="IconSearch">
+        <el-input
+          style="max-width: 400px"
+          v-model="appSearchValue"
+          :placeholder="$t('app.app_search')"
+          :suffix-icon="IconSearch"
+        >
           <template #prepend>
-            <el-select v-model="appSearchType" style="width: 115px" :suffix-icon="IconCaretDown">
+            <el-select
+              v-model="appSearchType"
+              style="width: 115px"
+              :suffix-icon="IconCaretDown"
+            >
               <el-option :label="$t('app.all_select')" value="all" />
               <el-option :label="$t('app.app_name')" value="name" />
-              <el-option :label="$t('app.app_introduction')" value="description" />
+              <el-option
+                :label="$t('app.app_introduction')"
+                value="description"
+              />
               <el-option :label="$t('app.username')" value="author" />
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createApp" @click="handleCreateApp">{{$t('app.app_create')}}</el-button>
+        <el-button type="primary" class="createApp" @click="handleCreateApp">
+          {{ $t('app.app_create') }}
+        </el-button>
       </div>
       <div class="appCenterType">
-        <div class="appCenterBtn" :class="{ appCenterBtnActive: appType === 'my' }" @click="handleSearchAppList('my')">
-          {{$t('app.all_app')}}
+        <div
+          class="appCenterBtn"
+          :class="{ appCenterBtnActive: appType === 'my' }"
+          @click="handleSearchAppList('my')"
+        >
+          {{ $t('app.all_app') }}
         </div>
         <div
           class="appCenterBtn"
           :class="{ appCenterBtnActive: appType === 'createdByMe' }"
           @click="handleSearchAppList('createdByMe')"
         >
-        {{$t('app.my_created')}}
+          {{ $t('app.my_created') }}
         </div>
         <div
           class="appCenterBtn"
           :class="{ appCenterBtnActive: appType === 'favorited' }"
           @click="handleSearchAppList('favorited')"
         >
-        {{$t('app.my_favorite')}}
+          {{ $t('app.my_favorite') }}
         </div>
       </div>
       <div class="appCenterCardContainer">
@@ -51,13 +69,22 @@
               </div>
               <div class="appCenterCardContent">
                 <div class="appCenterCardContentTop">
-                  <div class="appCenterCardContentTitle">{{ appItem.name }}</div>
+                  <div class="appCenterCardContentTitle">
+                    {{ appItem.name }}
+                  </div>
                   <div
                     class="appCenterCardContentCollect"
-                    :class="!appItem.published && appType === 'createdByMe' ? 'noClick' : ''"
+                    :class="
+                      !appItem.published && appType === 'createdByMe'
+                        ? 'noClick'
+                        : ''
+                    "
                     @click.stop="handleFavorite($event, appItem)"
                   >
-                    <IconFavorite v-if="appItem.favorited" class="appFavorite" />
+                    <IconFavorite
+                      v-if="appItem.favorited"
+                      class="appFavorite"
+                    />
                     <IconUnfavorite v-else="appItem.favorited" />
                   </div>
                 </div>
@@ -68,12 +95,22 @@
             </div>
             <div class="appCenterCardBottom">
               <div class="appCenterCardUser">@{{ appItem.author }}</div>
-              <div class="appCenterCardOps" v-if="appItem.author === userinfo.user_sub">
-                <el-button text @click="handleEditApp($event, appItem)">{{$t('app.app_edit')}}</el-button>
-                <el-button text @click="handleDelApp($event, appItem)">{{$t('app.app_delete')}}</el-button>
+              <div
+                class="appCenterCardOps"
+                v-if="appItem.author === userinfo.user_sub"
+              >
+                <el-button text @click="handleEditApp($event, appItem)">
+                  {{ $t('app.app_edit') }}
+                </el-button>
+                <el-button text @click="handleDelApp($event, appItem)">
+                  {{ $t('app.app_delete') }}
+                </el-button>
               </div>
             </div>
-            <div class="unPublishSymbol" v-if="!appItem.published && appType === 'createdByMe'">
+            <div
+              class="unPublishSymbol"
+              v-if="!appItem.published && appType === 'createdByMe'"
+            >
               <div class="coverIcon"></div>
               <div class="textDesc">{{ $t('app.unpublished') }}</div>
             </div>
@@ -81,7 +118,7 @@
         </div>
         <div class="appCenterNoData" v-else>
           <div class="noDataIcon"></div>
-          <div class="desc">{{$t('app.no_data')}}</div>
+          <div class="desc">{{ $t('app.no_data') }}</div>
         </div>
       </div>
       <el-pagination
@@ -100,14 +137,20 @@
 <script setup lang="ts">
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 
-import { IconCaretDown, IconSearch, IconFavorite, IconUnfavorite, IconSuccess } from '@computing/opendesign-icons';
+import {
+  IconCaretDown,
+  IconSearch,
+  IconFavorite,
+  IconUnfavorite,
+  IconSuccess,
+} from '@computing/opendesign-icons';
 import './style.scss';
 import { ref, onMounted, watch, markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
-import RobotIcon from '../../assets/svgs/robot_icon.svg'
+import RobotIcon from '../../assets/svgs/robot_icon.svg';
 import { storeToRefs } from 'pinia';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import CustomLoading from '../customLoading/index.vue';
@@ -134,8 +177,8 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
 };
 
 const getImgBg = (appItem) => {
-  return appItem.icon ||  RobotIcon;
-}
+  return appItem.icon || RobotIcon;
+};
 
 const handleCreateApp = () => {
   api
@@ -143,14 +186,14 @@ const handleCreateApp = () => {
       name: '默认应用',
       description: '我的应用',
     })
-    .then(res => {
+    .then((res) => {
       if (res[1]) {
         router.push(`/createApp?appId=${res?.[1]?.result.appId}`);
       }
     });
 };
 
-const routerToDetail = appItem => {
+const routerToDetail = (appItem) => {
   if (!appItem.published) {
     //未发布应用不允许跳转
     return;
@@ -182,7 +225,7 @@ const handleQueryAppList = (payload?: any) => {
       pageSize: currentPageSize.value,
       ...payload,
     })
-    .then(res => {
+    .then((res) => {
       appList.value = res[1]?.result.applications;
       currentPage.value = res[1]?.result.currentPage;
       totalCount.value = res[1]?.result.totalApps;
@@ -201,12 +244,12 @@ const handleFavorite = (e, item) => {
       id: item.appId,
       favorited: !item.favorited,
     })
-    .then(res => {
+    .then((res) => {
       handleParmasQueryAppList();
     });
 };
 
-const handleSearchAppList = type => {
+const handleSearchAppList = (type) => {
   appType.value = type;
   if (type === 'my') {
     handleParmasQueryAppList();
@@ -229,7 +272,7 @@ const handleDelApp = (e, item) => {
       .deleteSingleAppData({
         id: item.appId,
       })
-      .then(res => {
+      .then((res) => {
         if (res[1]) {
           ElMessage({
             showClose: true,
@@ -262,7 +305,7 @@ onMounted(() => {
 });
 </script>
 <style lang="scss" scoped>
-.create-button__icon{
+.create-button__icon {
   border-radius: 20px;
 }
 .appCenterCardSingle {

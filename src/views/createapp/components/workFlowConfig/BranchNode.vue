@@ -23,7 +23,7 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     required: false,
-  }
+  },
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
@@ -57,26 +57,30 @@ watch(
     costTime.value = props.data?.constTime || '';
     // 这里是分支节点独有的，需要根据接口拖拽节点里的choices决定有几个handle节点
     if (props.data?.parameters?.input_parameters?.choices) {
-      branchIdList.value = props.data?.parameters?.input_parameters?.choices.map(
-        item => item?.branchId,
-      );
+      branchIdList.value =
+        props.data?.parameters?.input_parameters?.choices.map(
+          (item) => item?.branchId,
+        );
     }
     // 默认的输入赋值
-    inputAndOutput.value.input_parameters = props.data?.parameters?.input_parameters || {};
+    inputAndOutput.value.input_parameters =
+      props.data?.parameters?.input_parameters || {};
     // 判断是否有调试的输入输出，有调试的输入输出，需要将其显示/否则显示默认的输出
     if (props.data.content?.type === 'input') {
       inputAndOutput.value.input_parameters = props.data.content.params;
     } else if (props.data.content?.type === 'output') {
       inputAndOutput.value.output_parameters = props.data.content.params;
     } else {
-      inputAndOutput.value.input_parameters = props.data?.parameters?.input_parameters || {};
-      inputAndOutput.value.output_parameters = props.data?.parameters?.output_parameters || {};
+      inputAndOutput.value.input_parameters =
+        props.data?.parameters?.input_parameters || {};
+      inputAndOutput.value.output_parameters =
+        props.data?.parameters?.output_parameters || {};
     }
   },
   { deep: true, immediate: true },
 );
 
-const delNode = id => {
+const delNode = (id) => {
   emits('delNode', id);
 };
 
@@ -96,23 +100,53 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
       <div class="title" v-if="props.data.name">
         <div class="iconStyle"></div>
         <div class="label">{{ props.data.name }}</div>
-        <div class="moreTip" :class="{'notAllow': props.disabled}">
-          <el-popover :disabled="props.disabled" placement="right" trigger="hover" popper-class="nodeDealPopper">
+        <div class="moreTip" :class="{ notAllow: props.disabled }">
+          <el-popover
+            :disabled="props.disabled"
+            placement="right"
+            trigger="hover"
+            popper-class="nodeDealPopper"
+          >
             <template #reference>···</template>
-            <el-button text class="dealItem" @click="editYaml(props.data.name, props.data.description, props.data.parameters)">编辑</el-button>
-            <el-button text class="dealItem" @click="delNode(props.id)">删除</el-button>
+            <el-button
+              text
+              class="dealItem"
+              @click="
+                editYaml(
+                  props.data.name,
+                  props.data.description,
+                  props.data.parameters,
+                )
+              "
+            >
+              编辑
+            </el-button>
+            <el-button text class="dealItem" @click="delNode(props.id)">
+              删除
+            </el-button>
           </el-popover>
         </div>
       </div>
-      <div class="desc" v-if="props.data.description">{{ props.data.description }}</div>
-      <div class="branchDesc" v-if="props.data?.parameters?.input_parameters?.choices">
+      <div class="desc" v-if="props.data.description">
+        {{ props.data.description }}
+      </div>
+      <div
+        class="branchDesc"
+        v-if="props.data?.parameters?.input_parameters?.choices"
+      >
         <div
           class="branchItem"
-          v-for="(item, index) in props.data?.parameters?.input_parameters?.choices"
+          v-for="(item, index) in props.data?.parameters?.input_parameters
+            ?.choices"
           :key="index"
         >
           {{ item.description }}
-          <Handle class="souceFirstHandle" :id="branchIdList[index]" type="source" :position="Position.Right"></Handle>
+          <Handle
+            class="souceFirstHandle"
+            :id="branchIdList[index]"
+            type="source"
+            :position="Position.Right"
+          ></Handle>
           <div class="delOverShadow rightBox" style="top: 0%"></div>
           <div class="outHandleRing outRingRight" style="top: 30%"></div>
         </div>

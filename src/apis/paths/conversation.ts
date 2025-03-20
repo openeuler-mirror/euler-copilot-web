@@ -25,7 +25,7 @@ export const stopGeneration = (): Promise<
           // conversationId: string;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
   return post(`/api/stop`);
@@ -36,13 +36,7 @@ export const stopGeneration = (): Promise<
  * @returns
  */
 export const getSessionRecord = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<ConversationList>
-      | undefined
-    )
-  ]
+  [any, FcResponse<ConversationList> | undefined]
 > => {
   return get(BASE_URL);
 };
@@ -59,24 +53,19 @@ export const createSession = (): Promise<
           conversationId: string;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
   return post(BASE_URL);
 };
-
 
 /**
  * 创建工作流debug会话
  * @param params
  * @returns
  */
-export const createSessionDebug = (params:any): Promise<
-[
-  any, any
-]
-> => {
-  return post(`/api/conversation?debug=${params.debug}`)
+export const createSessionDebug = (params: any): Promise<[any, any]> => {
+  return post(`/api/conversation?debug=${params.debug}`);
 };
 /**
  * 更新会话标题
@@ -87,12 +76,10 @@ export const createSessionDebug = (params:any): Promise<
  * }
  * @returns
  */
-export const updateSession = (
-  params: {
-    conversationId: string,
-    title: string,
-  },
-): Promise<
+export const updateSession = (params: {
+  conversationId: string;
+  title: string;
+}): Promise<
   [
     any,
     (
@@ -102,14 +89,18 @@ export const updateSession = (
           }>
         >
       | undefined
-    )
+    ),
   ]
 > => {
-  return put(BASE_URL, {
-    title: params.title,
-  }, {
-    conversationId: params.conversationId,
-  });
+  return put(
+    BASE_URL,
+    {
+      title: params.title,
+    },
+    {
+      conversationId: params.conversationId,
+    },
+  );
 };
 
 /**
@@ -119,30 +110,23 @@ export const updateSession = (
  */
 export const deleteSession = (data: {
   conversationList: string[];
-}): Promise<[any, FcResponse<Array<{ conversationList: string[] }>> | undefined]> => {
+}): Promise<
+  [any, FcResponse<Array<{ conversationList: string[] }>> | undefined]
+> => {
   return del(`${BASE_URL}`, data);
 };
 
 /**
  * 获取会话历史对话记录
- * @param conversationId 
+ * @param conversationId
  * GET /api/record/eccb08c3-0621-4602-a4d2-4eaada892557
  */
 export const getHistoryConversation = (
-  conversationId: string
-): Promise<
-  [
-    any,
-    (
-      | FcResponse<ConversationRecordList>
-      | undefined
-    )
-  ]
-> => {
+  conversationId: string,
+): Promise<[any, FcResponse<ConversationRecordList> | undefined]> => {
   // return get('/api/record', { conversationId: conversationId });
-  return get('/api/record/'+ conversationId);
+  return get('/api/record/' + conversationId);
   // 修改 chat 格式
-
 };
 
 /**
@@ -157,7 +141,8 @@ export const commentConversation = (params: {
   reasonLink?: string;
   reasonDescription?: string;
 }): Promise<[any, FcResponse<Record<string, unknown>> | undefined]> => {
-  const { qaRecordId, isLike, dislikeReason, reasonLink, reasonDescription } = params;
+  const { qaRecordId, isLike, dislikeReason, reasonLink, reasonDescription } =
+    params;
   return post(`/api/comment`, {
     record_id: qaRecordId,
     is_like: isLike,
@@ -176,11 +161,11 @@ export const getRecognitionMode = (): Promise<
             id: string;
             name: string;
             description: string;
-            auth:any;
+            auth: any;
           }>
         >
       | undefined
-    )
+    ),
   ]
 > => {
   return get('/api/plugin');
@@ -198,7 +183,7 @@ export enum UploadStatus {
 export const getUploadFiles = (
   sessionId: string,
   used = true,
-  unused = true
+  unused = true,
 ): Promise<
   [
     any,
@@ -209,12 +194,16 @@ export const getUploadFiles = (
             name: string;
             type: string;
             size: number;
-            status: UploadStatus.USED | UploadStatus.UNUSED | UploadStatus.RESOLVING | UploadStatus.RESOLVEFAIL;
+            status:
+              | UploadStatus.USED
+              | UploadStatus.UNUSED
+              | UploadStatus.RESOLVING
+              | UploadStatus.RESOLVEFAIL;
             created_at: number;
           }>;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
   return get(`/api/document/${sessionId}`, { used, unused });
@@ -222,7 +211,7 @@ export const getUploadFiles = (
 
 export const uploadFiles = (
   formData,
-  sessionId
+  sessionId,
 ): Promise<
   [
     any,
@@ -231,16 +220,21 @@ export const uploadFiles = (
           documents: Array<any>;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
-  return post(`/api/document/${sessionId}`, formData, {}, {
-    'Content-Type': 'multipart/form-data',
-  });
+  return post(
+    `/api/document/${sessionId}`,
+    formData,
+    {},
+    {
+      'Content-Type': 'multipart/form-data',
+    },
+  );
 };
 
 export const deleteUploadedFile = (
-  documentId: any
+  documentId: any,
 ): Promise<[any, FcResponse<any> | undefined]> => {
   return del(`/api/document/${documentId}`);
 };

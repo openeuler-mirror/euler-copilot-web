@@ -63,16 +63,17 @@
         cursor: pointer;
         color: var(--o-text-color-primary);
         gap: 8px;
-        .el-icon, svg {
+        .el-icon,
+        svg {
           width: 16px;
           height: 16px;
         }
-        .warningRemind svg path{
+        .warningRemind svg path {
           &:first-child {
-            fill :#ebaf00;
+            fill: #ebaf00;
           }
           &:last-child {
-            fill: #fff
+            fill: #fff;
           }
         }
       }
@@ -298,7 +299,6 @@
                 border-radius: 8px;
                 text-align: center;
               }
-        
             }
             .permissionInputSearch {
               width: 176px;

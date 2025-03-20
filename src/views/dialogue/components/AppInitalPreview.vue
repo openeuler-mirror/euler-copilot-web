@@ -1,16 +1,28 @@
 <template>
-  <InterPreview :create-app-form="createAppForm" createApp=true />
+  <InterPreview :create-app-form="createAppForm" createApp="true" />
   <div class="sendbox-wrapper">
     <div class="dialogue-conversation-bottom-sendbox">
       <div class="dialogue-conversation-bottom-sendbox__textarea">
-        <textarea ref="inputRef" maxlength="2000" :placeholder="$t('main.ask_me_anything')" />
+        <textarea
+          ref="inputRef"
+          maxlength="2000"
+          :placeholder="$t('main.ask_me_anything')"
+        />
       </div>
       <div class="dialogue-conversation-bottom-sendbox__upload">
-          <div class="upload-wrapper">
-            <input ref="uploadButton" type="file" multiple src="@/assets/svgs/upload_light.svg" />
-            <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" />
-            <img v-else src="@/assets/svgs/upload_dark.svg" />
-          </div>
+        <div class="upload-wrapper">
+          <input
+            ref="uploadButton"
+            type="file"
+            multiple
+            src="@/assets/svgs/upload_light.svg"
+          />
+          <img
+            v-if="themeStore.theme === 'dark'"
+            src="@/assets/svgs/upload_light.svg"
+          />
+          <img v-else src="@/assets/svgs/upload_dark.svg" />
+        </div>
       </div>
       <div class="dialogue-conversation-bottom-sendbox__icon">
         <img src="@/assets/images/send_disable.png" alt="" />

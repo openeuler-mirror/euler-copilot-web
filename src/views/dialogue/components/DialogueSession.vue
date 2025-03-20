@@ -148,24 +148,35 @@ let groupid = ref(0);
 
 const tagNum = ref(3);
 
-let filterQuestions = computed(() => questions.filter(item => item.groupId === groupid.value % 6));
+let filterQuestions = computed(() =>
+  questions.filter((item) => item.groupId === groupid.value % 6),
+);
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
 // 对话列表
 const { sendQuestion } = useSessionStore();
-const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
+const { conversationList, isAnswerGenerating, dialogueRef } =
+  storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (groupId: string | undefined, question: string, user_selected_flow?: string[]) => {
+const handleSendMessage = async (
+  groupId: string | undefined,
+  question: string,
+  user_selected_flow?: string[],
+) => {
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
-  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
+  if (
+    len > 0 &&
+    !(conversationList.value[len - 1] as RobotConversationItem).isFinish
+  )
+    return;
   dialogueInput.value = '';
   if (uploadFilesView.value.length > 0) {
     // 发送文件则刷新左侧会话列表
@@ -177,9 +188,25 @@ const handleSendMessage = async (groupId: string | undefined, question: string, 
     await generateSession();
   }
   if (user_selected_flow) {
-    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, user_selected_flow, undefined);
+    await sendQuestion(
+      groupId,
+      question,
+      user_selected_app.value,
+      undefined,
+      undefined,
+      user_selected_flow,
+      undefined,
+    );
   } else {
-    await sendQuestion(groupId, question, user_selected_app.value, undefined, undefined, undefined, undefined);
+    await sendQuestion(
+      groupId,
+      question,
+      user_selected_app.value,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
   }
 };
 
@@ -281,12 +308,13 @@ const pollingMap = new Map();
 // 上传类型数组
 const acceptTypeList = [...Object.values(UploadTypeName)];
 // 上传类型字符串
-const acceptType: string = acceptTypeList.map(item => `.${item},`).join(' ');
+const acceptType: string = acceptTypeList.map((item) => `.${item},`).join(' ');
 // 发送消息按钮
 const isAllowToSend = computed(() => {
   let defaultStatus = true;
-  uploadFilesView.value?.forEach(element => {
-    element.status !== UploadStatus.USED && element.status !== UploadStatus.UNUSED
+  uploadFilesView.value?.forEach((element) => {
+    element.status !== UploadStatus.USED &&
+    element.status !== UploadStatus.UNUSED
       ? (defaultStatus = false)
       : undefined;
   });
@@ -294,7 +322,7 @@ const isAllowToSend = computed(() => {
 });
 
 // 会话切换时
-watch(currentSelectedSession, async newVal => {
+watch(currentSelectedSession, async (newVal) => {
   if (!newVal) return;
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
@@ -323,8 +351,8 @@ watch(currentSelectedSession, async newVal => {
     const { documents } = response.result;
     existUploadList.length = 0;
     documents
-      .filter(item => item.type !== UploadStatus.RESOLVEFAIL)
-      .forEach(item => {
+      .filter((item) => item.type !== UploadStatus.RESOLVEFAIL)
+      .forEach((item) => {
         existUploadList.push(item);
         if (item.status !== UploadStatus.USED) {
           isNewSession ? uploadFilesView.value.push(item as any) : null;
@@ -357,8 +385,12 @@ const isUploadTypeError = (files): boolean => {
 // 上传是否存在同名文件
 const isUploadFileExist = (files): boolean => {
   for (let file of files) {
-    const isInBackendList = existUploadList.map(item => item.name).includes(file.name);
-    const isInUploadViews = uploadFilesView.value.map(item => item.name).includes(file.name);
+    const isInBackendList = existUploadList
+      .map((item) => item.name)
+      .includes(file.name);
+    const isInUploadViews = uploadFilesView.value
+      .map((item) => item.name)
+      .includes(file.name);
     if (isInBackendList || isInUploadViews) {
       return true;
     }
@@ -388,7 +420,7 @@ const isAllowToUpload = (files): boolean => {
 };
 
 // 构造上传数据
-const generateUploadData = files => {
+const generateUploadData = (files) => {
   let formData = new FormData();
   for (let file of files) {
     formData.append('documents', file);
@@ -422,13 +454,16 @@ const sizeFormator = (size: number) => {
   return `${size.toFixed(2)}KB`;
 };
 
-const getPollingProcess = sessionId => {
+const getPollingProcess = (sessionId) => {
   let timer;
   let currentCount = 0;
   const maxErrorCount = 200;
   const process = async () => {
     const pollingExistUploadList = existUploadMap.get(sessionId) || [];
-    const pollingUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
+    const pollingUploadFilesView = isSameSession(
+      sessionId,
+      currentSelectedSession.value,
+    )
       ? uploadFilesView.value
       : uploadViewsMap.get(sessionId);
     const [_, response] = await api.getUploadFiles(sessionId);
@@ -438,14 +473,16 @@ const getPollingProcess = sessionId => {
       // 更新existUploadList列表
       pollingExistUploadList.length = 0;
       documents
-        .filter(item => item.status !== UploadStatus.RESOLVEFAIL)
-        .forEach(item => {
+        .filter((item) => item.status !== UploadStatus.RESOLVEFAIL)
+        .forEach((item) => {
           pollingExistUploadList.push(item);
         });
       // 更新上传的可见列表
-      pollingUploadFilesView?.forEach(item => {
+      pollingUploadFilesView?.forEach((item) => {
         if (item.status !== UploadStatus.UPLOADFAIL) {
-          const foundDocument = documents.find(document => document.name === item.name);
+          const foundDocument = documents.find(
+            (document) => document.name === item.name,
+          );
           if (foundDocument) {
             const { id, name, type, size, status } = foundDocument;
             item.id = id;
@@ -459,7 +496,7 @@ const getPollingProcess = sessionId => {
         }
       });
       // 若所有文件解析成功 则停止轮询
-      documents.forEach(document => {
+      documents.forEach((document) => {
         if (document.status === UploadStatus.RESOLVING) {
           isStopPolling = false;
         }
@@ -494,17 +531,26 @@ const isSameSession = (sessionId, curSessionId): boolean => {
 };
 
 // 上传文件(用户操作可能分批次)
-const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promise<void> => {
+const updateFilesInSession = async (
+  formData,
+  curUploadBatch,
+  sessionId,
+): Promise<void> => {
   const [_, response] = await api.uploadFiles(formData, sessionId);
-  const requestUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
+  const requestUploadFilesView = isSameSession(
+    sessionId,
+    currentSelectedSession.value,
+  )
     ? uploadFilesView.value
     : uploadViewsMap.get(sessionId);
   if (!_ && response) {
     const { documents } = response.result;
     // 再次更新视图 更新上传状态
-    requestUploadFilesView.forEach(item => {
+    requestUploadFilesView.forEach((item) => {
       if (item.batch === curUploadBatch) {
-        const matchedItem = documents.find(element => element.name === item.name);
+        const matchedItem = documents.find(
+          (element) => element.name === item.name,
+        );
         if (matchedItem) {
           const { id, type, size, name } = matchedItem;
           item.id = id;
@@ -526,7 +572,7 @@ const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promis
     }
     curPollingProcess.startPolling();
   } else {
-    requestUploadFilesView.forEach(item => {
+    requestUploadFilesView.forEach((item) => {
       if (item.batch === curUploadBatch) {
         item.status = UploadStatus.UPLOADFAIL;
       }
@@ -535,7 +581,7 @@ const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promis
 };
 
 // 点击上传选中文件时
-const onFileChange = event => {
+const onFileChange = (event) => {
   const files = event.target.files;
   const curUploadBatch = uploadBatch;
   // 清空上传id
@@ -565,8 +611,12 @@ const emitUpload = (event): void => {
 
 const handleDelete = (file): void => {
   // 删除列表中的删除项
-  uploadFilesView.value = uploadFilesView.value.filter((item: UploadFileCard) => item.name !== file.name);
-  existUploadList = existUploadList.filter((item: UploadFileCard) => item.name !== file.name);
+  uploadFilesView.value = uploadFilesView.value.filter(
+    (item: UploadFileCard) => item.name !== file.name,
+  );
+  existUploadList = existUploadList.filter(
+    (item: UploadFileCard) => item.name !== file.name,
+  );
   uploadViewsMap.set(currentSelectedSession.value, uploadFilesView.value);
   existUploadMap.set(currentSelectedSession.value, existUploadList);
 };
@@ -591,7 +641,7 @@ watch(selectMode, (newValue, oldValue) => {
     if (selectMode.value[0] === 'auto') {
       user_selected_app.value.push('auto');
     } else {
-      selectMode.value.forEach(item => {
+      selectMode.value.forEach((item) => {
         const plugin = {
           plugin_name: item,
         };
@@ -600,14 +650,28 @@ watch(selectMode, (newValue, oldValue) => {
     }
   }
   nextTick(() => {
-    const totalW = (document.querySelector('.recognitionMode') as HTMLElement).offsetWidth;
-    const selectPreW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
-    const allTags = document.querySelectorAll('.recognitionMode .el-select-tags-wrapper .el-tag--info');
+    const totalW = (document.querySelector('.recognitionMode') as HTMLElement)
+      .offsetWidth;
+    const selectPreW = (document.querySelector('.el-select') as HTMLElement)
+      .offsetWidth;
+    const allTags = document.querySelectorAll(
+      '.recognitionMode .el-select-tags-wrapper .el-tag--info',
+    );
     document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? ((document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).style.display = 'flex')
+      ? ((
+          document.querySelector(
+            '.recognitionMode .el-select-tags-wrapper',
+          ) as HTMLElement
+        ).style.display = 'flex')
       : '';
-    const allTagsWidth = document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? (document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).offsetWidth
+    const allTagsWidth = document.querySelector(
+      '.recognitionMode .el-select-tags-wrapper',
+    )
+      ? (
+          document.querySelector(
+            '.recognitionMode .el-select-tags-wrapper',
+          ) as HTMLElement
+        ).offsetWidth
       : '';
     const nTag = allTags[allTags.length - 1] as HTMLElement;
     const isNExist = true;
@@ -615,13 +679,18 @@ watch(selectMode, (newValue, oldValue) => {
       return;
     }
     if (totalW > allTagsWidth + 100) {
-      (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${allTagsWidth + 70}px`;
+      (
+        document.querySelector('.recognitionMode .el-select') as HTMLElement
+      ).style.width = `${allTagsWidth + 70}px`;
     } else {
-      (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${totalW}px`;
+      (
+        document.querySelector('.recognitionMode .el-select') as HTMLElement
+      ).style.width = `${totalW}px`;
     }
     if (allTags.length > 3) {
       const lastTag = allTags[allTags.length - 3] as HTMLElement;
-      const selectDomW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
+      const selectDomW = (document.querySelector('.el-select') as HTMLElement)
+        .offsetWidth;
       let show_w = 0;
       if (selectDomW >= totalW) {
         show_w = selectDomW - lastTag.offsetWidth + 200;
@@ -652,14 +721,14 @@ const getappMode = (appId: string) => {
     .querySingleAppData({
       id: appId as string,
     })
-    .then(res => {
+    .then((res) => {
       const appInfo = res?.[1]?.result;
       if (appInfo) {
         Form.value = {
           icon: appInfo?.icon,
           name: appInfo?.name,
           description: appInfo?.description,
-          links: appInfo?.links?.map(item => item.url),
+          links: appInfo?.links?.map((item) => item.url),
           recommendedQuestions: appInfo?.recommendedQuestions,
           dialogRounds: appInfo?.dialogRounds,
           permission: {
@@ -673,7 +742,7 @@ const getappMode = (appId: string) => {
 
 watch(
   () => user_selected_app,
-  val => {
+  (val) => {
     if (user_selected_app.value[0] && !isCreateApp.value) {
       getappMode(user_selected_app.value[0]);
     }
@@ -689,7 +758,7 @@ watch(
 
 watch(
   () => isCreateApp,
-  val => {
+  (val) => {
     if (isCreateApp.value === true) {
       AppForm.value = props.createAppForm;
     }
@@ -705,7 +774,11 @@ watch(
   <div class="dialogue-rightContainer">
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-conversation">
-      <div class="dialogue-conversation-main" ref="dialogueRef" v-if="!isCreateApp">
+      <div
+        class="dialogue-conversation-main"
+        ref="dialogueRef"
+        v-if="!isCreateApp"
+      >
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
@@ -714,8 +787,12 @@ watch(
           :inputParams="item.params"
           :content="item.message"
           :echartsObj="getItem(item, 'echartsObj')"
-          :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
-          :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : ''"
+          :recordList="
+            item.belong === 'robot' ? item.messageList.getRecordIdList() : ''
+          "
+          :isLikeList="
+            item.belong === 'robot' ? item.messageList.getIslikeList() : ''
+          "
           :is-finish="getItem(item, 'isFinish')"
           :is-support="getItem(item, 'isSupport')"
           :is-against="getItem(item, 'isAgainst')"
@@ -734,11 +811,22 @@ watch(
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0 && (app.selectedAppId === '' || !app.selectedAppId)">
+        <div
+          v-if="
+            conversationList.length === 0 &&
+            (app.selectedAppId === '' || !app.selectedAppId)
+          "
+        >
           <InitalPanel @selectQuestion="selectQuestion" />
         </div>
-        <div class="dialogue-interPreview-main" v-if="conversationList.length === 0 && app.selectedAppId !== ''">
-          <InterPreview :createAppForm="Form" @selectQuestion="selectQuestion" />
+        <div
+          class="dialogue-interPreview-main"
+          v-if="conversationList.length === 0 && app.selectedAppId !== ''"
+        >
+          <InterPreview
+            :createAppForm="Form"
+            @selectQuestion="selectQuestion"
+          />
         </div>
       </div>
       <div class="createApp-demo"></div>
@@ -749,7 +837,11 @@ watch(
           class="dialogue-panel__stop"
           @click="handlePauseAndReGenerate(Number(conversationList.length))"
         >
-          <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/dark_stop_answer.svg" alt="" />
+          <img
+            v-if="themeStore.theme === 'dark'"
+            src="@/assets/svgs/dark_stop_answer.svg"
+            alt=""
+          />
           <img v-else src="@/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="dialogue-panel__stop-answer">
             {{ $t('feedback.stop') }}
@@ -770,7 +862,11 @@ watch(
             </div>
             <!-- 上传 -->
             <div class="dialogue-conversation-bottom-sendbox__upload">
-              <el-tooltip placement="top" :content="$t('upload.upload_tip_text')" effect="light">
+              <el-tooltip
+                placement="top"
+                :content="$t('upload.upload_tip_text')"
+                effect="light"
+              >
                 <div class="upload-wrapper">
                   <input
                     ref="uploadButton"
@@ -780,8 +876,16 @@ watch(
                     @change="onFileChange"
                     src="@/assets/svgs/upload_light.svg"
                   />
-                  <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" @click="emitUpload" />
-                  <img v-else src="@/assets/svgs/upload_dark.svg" @click="emitUpload" />
+                  <img
+                    v-if="themeStore.theme === 'dark'"
+                    src="@/assets/svgs/upload_light.svg"
+                    @click="emitUpload"
+                  />
+                  <img
+                    v-else
+                    src="@/assets/svgs/upload_dark.svg"
+                    @click="emitUpload"
+                  />
                 </div>
               </el-tooltip>
             </div>
@@ -789,20 +893,40 @@ watch(
             <div class="dialogue-conversation-bottom-sendbox__icon">
               <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
               <img
-                v-if="!isAllowToSend || isAnswerGenerating || dialogueInput.length <= 0"
+                v-if="
+                  !isAllowToSend ||
+                  isAnswerGenerating ||
+                  dialogueInput.length <= 0
+                "
                 src="@/assets/images/send_disable.png"
                 alt=""
               />
-              <div v-else class='send-message-btn'>
-                <img v-if="themeStore.theme === 'dark'" @click="handleSendMessage(undefined, dialogueInput)" src="@/assets/images/dark_send.png" alt="" />
-                <img v-else @click="handleSendMessage(undefined, dialogueInput)" src="@/assets/images/light_send.png" alt="" />
+              <div v-else class="send-message-btn">
+                <img
+                  v-if="themeStore.theme === 'dark'"
+                  @click="handleSendMessage(undefined, dialogueInput)"
+                  src="@/assets/images/dark_send.png"
+                  alt=""
+                />
+                <img
+                  v-else
+                  @click="handleSendMessage(undefined, dialogueInput)"
+                  src="@/assets/images/light_send.png"
+                  alt=""
+                />
               </div>
             </div>
           </div>
           <!-- 上传问价列表 -->
           <transition name="fade">
-            <div class="dialogue-conversation-bottom__upload-list" v-if="uploadFilesView.length > 0">
-              <upload-file-group :file-list="uploadFilesView" @delete-file="handleDelete"></upload-file-group>
+            <div
+              class="dialogue-conversation-bottom__upload-list"
+              v-if="uploadFilesView.length > 0"
+            >
+              <upload-file-group
+                :file-list="uploadFilesView"
+                @delete-file="handleDelete"
+              ></upload-file-group>
             </div>
           </transition>
         </div>
@@ -876,7 +1000,11 @@ button[disabled]:hover {
 
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
     display: none;
   }
 
@@ -928,14 +1056,13 @@ button[disabled]:hover {
       border-radius: 8px;
       bottom: 0px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      .dialogue-conversation-bottom-sendbox__icon{
-        &>img{
-          cursor:not-allowed;
+      .dialogue-conversation-bottom-sendbox__icon {
+        & > img {
+          cursor: not-allowed;
         }
-        &>.send-message-btn>img{
+        & > .send-message-btn > img {
           cursor: pointer;
         }
-
       }
     }
 
@@ -1041,7 +1168,8 @@ button[disabled]:hover {
           }
 
           img:hover {
-            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg) brightness(100%) contrast(103%);
+            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
+              brightness(100%) contrast(103%);
           }
         }
       }
@@ -1087,12 +1215,20 @@ button[disabled]:hover {
       margin-bottom: 8px;
 
       &:hover {
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 0.8), rgba(90, 179, 255, 0.8));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.8),
+          rgba(90, 179, 255, 0.8)
+        );
         color: var(--o-text-color-fourth);
       }
 
       &:active {
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 1), rgba(90, 179, 255, 1));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 1),
+          rgba(90, 179, 255, 1)
+        );
         color: var(--o-text-color-fourth);
       }
     }
@@ -1188,7 +1324,7 @@ button[disabled]:hover {
   margin-top: 16px;
 }
 
-.dialogue-interPreview-main{
+.dialogue-interPreview-main {
   width: 100%;
 }
 </style>
