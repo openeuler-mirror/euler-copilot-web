@@ -4,15 +4,19 @@
       <!-- <span class="think-label">think</span> -->
       <div class="collapse-control">
         <div :class="{ 'is-collapsed': isCollapsed }" class="collapse-icon">
-           <el-icon>
-            <IconCaretDown/>
-           </el-icon>
+          <el-icon>
+            <IconCaretDown />
+          </el-icon>
         </div>
         <span class="collapse-text">思考</span>
       </div>
     </div>
     <transition name="collapse">
-      <div v-show="!isCollapsed" class="thought-content" v-html="contentAfterMark"></div>
+      <div
+        v-show="!isCollapsed"
+        class="thought-content"
+        v-html="contentAfterMark"
+      ></div>
     </transition>
   </div>
 </template>
@@ -38,7 +42,9 @@ const contentAfterMark = computed(() => {
     return '';
   }
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
-  let str = marked.parse(xss(props.content).replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+  let str = marked.parse(
+    xss(props.content).replace(/&gt;/g, '>').replace(/&lt;/g, '<'),
+  );
   return str;
 });
 </script>

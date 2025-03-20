@@ -37,5 +37,6 @@ export const report = (params: {
 };
 
 export const externalApi = {
-  feedback,report
+  feedback,
+  report,
 };

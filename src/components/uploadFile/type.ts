@@ -11,7 +11,7 @@ export enum UploadType {
   DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   DOC = 'application/msword',
   TXT = 'text/plain',
-  MDF= '',
+  MDF = '',
   MDB = 'markdown/plain',
   XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 }

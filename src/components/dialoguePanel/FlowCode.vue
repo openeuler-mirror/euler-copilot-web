@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, withDefaults, watch, shallowRef, reactive } from 'vue';
+import {
+  ref,
+  computed,
+  onMounted,
+  withDefaults,
+  watch,
+  shallowRef,
+  reactive,
+} from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -33,13 +41,13 @@ const code = ref(JSON.stringify(props.code, null, 2));
 const codeMirrorView = shallowRef();
 // const extensions = [StreamLanguage.define(json)];
 const extensions = ref([json()]);
-const handleReady = payload => {
+const handleReady = (payload) => {
   codeMirrorView.value = payload.view;
   setTimeout(() => {
     payload.view.scrollDOM.scrollTop = 0;
   }, 100);
 };
-const handleChange = payload => {
+const handleChange = (payload) => {
   params.value = payload;
 };
 
@@ -50,7 +58,7 @@ const copy = () => {
       .then(() => {
         console.log('文本已复制到剪切板');
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('复制文本时出错:', err);
       });
   }
@@ -58,14 +66,14 @@ const copy = () => {
 
 watch(
   () => code,
-  newVal => {
+  (newVal) => {
     params.value = code;
   },
 );
 
 watch(
   () => themeStore.theme,
-  newVal => {
+  (newVal) => {
     if (themeStore.theme === 'dark') {
       extensions.value = [json(), oneDark];
     } else {
@@ -89,8 +97,11 @@ onMounted(() => {
       <span v-else-if="props.title === 'output'">输出</span>
       <span v-else-if="props.title === 'params'">参数</span>
       <span v-else>补充参数 {{ props.title }}</span>
-      <span @click="copy()" class="copyIcon"
-      :class="themeStore.theme === 'light' ? 'lightCopy' : 'darkCopy'"></span>
+      <span
+        @click="copy()"
+        class="copyIcon"
+        :class="themeStore.theme === 'light' ? 'lightCopy' : 'darkCopy'"
+      ></span>
     </div>
     <div class="code-container">
       <Codemirror

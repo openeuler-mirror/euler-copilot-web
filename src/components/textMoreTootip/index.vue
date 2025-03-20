@@ -22,11 +22,11 @@
 <script>
 export default {
   // 显示文字组件，可以设置最多显示几行，超过后会隐藏并且鼠标hover显示全部信息（需要给组件设置宽度）
-  name: "VueText",
+  name: 'VueText',
   props: {
     value: {
       type: String,
-      default: "",
+      default: '',
     },
     row: {
       //最多显示几行，超过后会...隐藏 为0时不隐藏
@@ -54,7 +54,7 @@ export default {
     value: function () {
       this.isShowHover = false;
       this.textStyle = {
-        cursor: "text",
+        cursor: 'text',
       };
       this.$nextTick(() => {
         this.getStyle(this.row - 0);
@@ -66,10 +66,10 @@ export default {
   },
   methods: {
     init() {
-      this.div = document.querySelector(".hover-wrap");
+      this.div = document.querySelector('.hover-wrap');
       if (!this.div && this.row - 0) {
-        this.div = document.createElement("div");
-        this.div.className = "hover-wrap";
+        this.div = document.createElement('div');
+        this.div.className = 'hover-wrap';
         this.div.style.top = 0;
         this.div.style.left = 0;
         document.body.append(this.div);
@@ -80,23 +80,23 @@ export default {
     },
     getStyle(val) {
       let lineHeight =
-        getComputedStyle(this.text).lineHeight.replace("px", "") - 0 || 18;
-      let height = getComputedStyle(this.text).height.replace("px", "") - 0;
+        getComputedStyle(this.text).lineHeight.replace('px', '') - 0 || 18;
+      let height = getComputedStyle(this.text).height.replace('px', '') - 0;
       if (height > lineHeight * val) {
         this.isShowHover = false;
         this.textStyle = {
           height: `${lineHeight * val}px`,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          display: "-webkit-box",
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
           webkitLineClamp: val,
-          webkitBoxOrient: "vertical",
-          cursor: "pointer",
+          webkitBoxOrient: 'vertical',
+          cursor: 'pointer',
         };
       } else {
         this.isShowHover = true;
         this.textStyle = {
-          cursor: "text",
+          cursor: 'text',
         };
       }
     },
@@ -107,15 +107,15 @@ export default {
       let box = e.target.getBoundingClientRect();
       let left = 0;
       this.div.innerHTML = this.value;
-      let top = box.top - this.div.getBoundingClientRect().height + "px";
+      let top = box.top - this.div.getBoundingClientRect().height + 'px';
       left =
         box.left +
         (box.width - this.div.getBoundingClientRect().width) / 2 +
-        "px";
+        'px';
       this.div.style.top = top;
       this.div.style.left = left;
-      this.div.classList.add("active");
-      this.div.style.opacity = "0";
+      this.div.classList.add('active');
+      this.div.style.opacity = '0';
       this.visible = true;
     },
     mouseleave(e) {
@@ -125,13 +125,13 @@ export default {
       if (e.relatedTarget !== this.div) {
         this.div.style.top = 0;
         this.div.style.left = 0;
-        this.div.classList.remove("active");
+        this.div.classList.remove('active');
         this.visible = false;
       }
       this.div.onmouseleave = () => {
         this.div.style.top = 0;
         this.div.style.left = 0;
-        this.div.classList.remove("active");
+        this.div.classList.remove('active');
       };
     },
   },

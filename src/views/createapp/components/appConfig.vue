@@ -2,7 +2,12 @@
 import { ref, reactive, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
-import { IconCaretRight, IconPlusCircle, IconDelete, IconSearch } from '@computing/opendesign-icons';
+import {
+  IconCaretRight,
+  IconPlusCircle,
+  IconDelete,
+  IconSearch,
+} from '@computing/opendesign-icons';
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
 import CustomLoading from '../../customLoading/index.vue';
@@ -13,9 +18,12 @@ const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const themeStore = useChangeThemeStore();
 const route = useRoute();
-const props = withDefaults(defineProps<{
-  handleValidateContent: Function,
-}>(), {});
+const props = withDefaults(
+  defineProps<{
+    handleValidateContent: Function;
+  }>(),
+  {},
+);
 const emits = defineEmits(['getFlowList', 'getPublishStatus']);
 const loading = ref(false);
 const createAppForm = ref({
@@ -55,25 +63,36 @@ const publishStatus = ref(false);
 const checkLinks = (rule, value, callback) => {
   // 这里校验各个url链接
   let result = true;
-  createAppForm.value.links.forEach(item => {
+  createAppForm.value.links.forEach((item) => {
     if (!checkUrl(item)) {
       result = false;
     }
-  })
-  console.log('这里的校验')
+  });
+  console.log('这里的校验');
   if (!result) {
-    callback(new Error('填写的url不合法'))
+    callback(new Error('填写的url不合法'));
   } else {
     callback();
   }
-}
+};
 
 // 这里后面需要换为变量-以便于中英文切换
 const createAppRole = ref({
   name: [{ required: true, message: '应用名称不能为空', trigger: 'blur' }],
-  description: [{ required: true, message: '应用简介不能为空', trigger: 'change' }],
-  dialogRounds: [{ required: true, message: '对话轮次不能为空', trigger: 'change' }],
-  links: [{required: true, message: '请填写合法的url', validator: checkLinks, trigger: 'blur'}]
+  description: [
+    { required: true, message: '应用简介不能为空', trigger: 'change' },
+  ],
+  dialogRounds: [
+    { required: true, message: '对话轮次不能为空', trigger: 'change' },
+  ],
+  links: [
+    {
+      required: true,
+      message: '请填写合法的url',
+      validator: checkLinks,
+      trigger: 'blur',
+    },
+  ],
 });
 const createAppFormRef = ref();
 const modeOptions = reactive([
@@ -92,31 +111,36 @@ const addLink = () => {
 const addRecommond = () => {
   createAppForm.value.recommendedQuestions.push('');
 };
-const delConnectItem = idx => {
+const delConnectItem = (idx) => {
   createAppForm.value.links.splice(idx, 1);
 };
-const delRecommendItem = idx => {
+const delRecommendItem = (idx) => {
   createAppForm.value.recommendedQuestions.splice(idx, 1);
 };
 const searchPerson = () => {
-  curPersonList.value = permissionList.value.filter(item => item?.userName?.toLowerCase()?.includes(searchName.value));
+  curPersonList.value = permissionList.value.filter((item) =>
+    item?.userName?.toLowerCase()?.includes(searchName.value),
+  );
 };
 const handleAvatarSuccess = (res, file) => {
   convertToBase64(file.raw);
 };
 
 // 转为base64-仅限小图标，后续请改为上传图片接口
-const convertToBase64 = file => {
+const convertToBase64 = (file) => {
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = (e) => {
     base64Image.value = e.target?.result;
   };
   reader.readAsDataURL(file);
 };
 
-watch(() => base64Image.value, () => {
-  createAppForm.value.icon = base64Image.value;
-})
+watch(
+  () => base64Image.value,
+  () => {
+    createAppForm.value.icon = base64Image.value;
+  },
+);
 
 watch(
   () => publishStatus.value,
@@ -128,8 +152,7 @@ watch(
   { deep: true, immediate: true },
 );
 
-
-const httpRequest = res => {
+const httpRequest = (res) => {
   res.onSuccess();
 };
 
@@ -141,14 +164,14 @@ onMounted(() => {
       .querySingleAppData({
         id: route.query?.appId as string,
       })
-      .then(res => {
+      .then((res) => {
         const appInfo = res?.[1]?.result;
         if (appInfo) {
           createAppForm.value = {
             icon: appInfo.icon,
             name: appInfo.name,
             description: appInfo.description,
-            links: appInfo.links.map(item => item.url),
+            links: appInfo.links.map((item) => item.url),
             recommendedQuestions: appInfo.recommendedQuestions,
             dialogRounds: appInfo.dialogRounds,
             permission: {
@@ -164,7 +187,7 @@ onMounted(() => {
       });
   }
   // 获取当前权限配置-部分人可见的部分人列表数据
-  api.getPartAppConfgUser().then(res => {
+  api.getPartAppConfgUser().then((res) => {
     if (res[1]?.result) {
       permissionList.value = res[1]?.result?.userInfoList;
       curPersonList.value = res[1]?.result?.userInfoList;
@@ -186,7 +209,7 @@ const checkUrl = (url) => {
   } else {
     return false;
   }
-}
+};
 
 watch(
   () => createAppForm.value,
@@ -207,14 +230,14 @@ const validateForm = async () => {
   } catch (error) {
     return false;
   }
-}
+};
 
 const handleTextareaEnter = (e: any) => {
-  if(e.keyCode==13){
+  if (e.keyCode == 13) {
     e.returnValue = false;
     return false;
   }
-}
+};
 
 const beforeUpload = async (file: ElFile) => {
   const isLt2M = file.size / 1024 / 1024 < 2;
@@ -227,7 +250,7 @@ const beforeUpload = async (file: ElFile) => {
   }
   try {
     const reader = new FileReader();
-    reader.onerror = error => {
+    reader.onerror = (error) => {
       ElMessage({
         message: 'Error reading file!',
         type: 'error',
@@ -237,7 +260,7 @@ const beforeUpload = async (file: ElFile) => {
     await new Promise((resolve, reject) => {
       reader.readAsText(file);
       reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
-      reader.onerror = error => reject(error); // 如果出错则拒绝 Promise
+      reader.onerror = (error) => reject(error); // 如果出错则拒绝 Promise
     });
     return true;
   } catch (error) {
@@ -264,11 +287,19 @@ defineExpose({
     :rules="createAppRole"
     class="createAppContainerMainLeft"
   >
-    <el-collapse v-model="activeName" @change="handleChange" class="o-hpc-collapse" :prefix-icon="IconCaretRight">
+    <el-collapse
+      v-model="activeName"
+      @change="handleChange"
+      class="o-hpc-collapse"
+      :prefix-icon="IconCaretRight"
+    >
       <el-collapse-item title="Consistency" :name="1">
         <template #title>
           <span>基本信息</span>
-          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(1) }">
+          <el-icon
+            class="el-collapse-item__arrow"
+            :class="{ 'is-active': activeNames.includes(1) }"
+          >
             <IconCaretRight />
           </el-icon>
         </template>
@@ -283,7 +314,11 @@ defineExpose({
               :http-request="httpRequest"
               :accept="'image/*'"
             >
-              <img v-if="createAppForm.icon.length" :src="createAppForm.icon" class="avatar" />
+              <img
+                v-if="createAppForm.icon.length"
+                :src="createAppForm.icon"
+                class="avatar"
+              />
               <div v-else class="defaultIcon"></div>
               <div class="uploadIcon"></div>
             </el-upload>
@@ -291,7 +326,13 @@ defineExpose({
           </div>
         </el-form-item>
         <el-form-item label="应用名称" prop="name">
-          <el-input class="w320" maxlength="20" v-model="createAppForm.name" clearable placeholder="请输入"></el-input>
+          <el-input
+            class="w320"
+            maxlength="20"
+            v-model="createAppForm.name"
+            clearable
+            placeholder="请输入"
+          ></el-input>
         </el-form-item>
         <el-form-item label="应用简介" prop="description">
           <el-input
@@ -308,7 +349,11 @@ defineExpose({
         <!-- 这里notRequired样式,在局部的通过校验时，控制局部的样式为正常。links为空时通过校验 -->
         <el-form-item label="相关链接" prop="links" class="notRequired">
           <div class="linkLine">
-            <el-button :icon="IconPlusCircle" @click="addLink" :disabled="createAppForm.links.length > 4">
+            <el-button
+              :icon="IconPlusCircle"
+              @click="addLink"
+              :disabled="createAppForm.links.length > 4"
+            >
               添加链接
             </el-button>
             <span class="linkText">最多添加5个链接</span>
@@ -317,7 +362,7 @@ defineExpose({
             <el-input
               class="w320"
               maxlength="200"
-              :class="{ 'validUrl' : checkUrl(createAppForm.links[index])}"
+              :class="{ validUrl: checkUrl(createAppForm.links[index]) }"
               v-model="createAppForm.links[index]"
               placeholder="请输入"
               clearable
@@ -328,7 +373,11 @@ defineExpose({
           </div>
         </el-form-item>
 
-        <el-form-item label="推荐问题" prop="recommendedQuestions" class="notRequired">
+        <el-form-item
+          label="推荐问题"
+          prop="recommendedQuestions"
+          class="notRequired"
+        >
           <div class="linkLine">
             <el-button
               :icon="IconPlusCircle"
@@ -339,7 +388,10 @@ defineExpose({
             </el-button>
             <span class="linkText">最多添加3个问题</span>
           </div>
-          <div class="linkArea" v-for="(item, index) in createAppForm.recommendedQuestions">
+          <div
+            class="linkArea"
+            v-for="(item, index) in createAppForm.recommendedQuestions"
+          >
             <el-input
               class="w320"
               maxlength="30"
@@ -356,7 +408,10 @@ defineExpose({
       <el-collapse-item title="Consistency" :name="2">
         <template #title>
           <span>多轮对话</span>
-          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(2) }">
+          <el-icon
+            class="el-collapse-item__arrow"
+            :class="{ 'is-active': activeNames.includes(2) }"
+          >
             <IconCaretRight />
           </el-icon>
         </template>
@@ -376,23 +431,33 @@ defineExpose({
       <el-collapse-item title="Consistency" :name="3">
         <template #title>
           <span>权限配置</span>
-          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeNames.includes(3) }">
+          <el-icon
+            class="el-collapse-item__arrow"
+            :class="{ 'is-active': activeNames.includes(3) }"
+          >
             <IconCaretRight />
           </el-icon>
         </template>
         <el-form-item label="权限" prop="permission" class="permissionItem">
           <div class="permissionSelect">
             <el-radio-group v-model="createAppForm.permission.visibility">
-              <el-radio v-for="(item, index) in permissionTypeList" :key="index" :value="item.value">
+              <el-radio
+                v-for="(item, index) in permissionTypeList"
+                :key="index"
+                :value="item.value"
+              >
                 {{ item.label }}
               </el-radio>
             </el-radio-group>
           </div>
-          <div class="partPermissionPerson" v-if="createAppForm.permission.visibility === 'protected'">
+          <div
+            class="partPermissionPerson"
+            v-if="createAppForm.permission.visibility === 'protected'"
+          >
             <div class="permissionChoice">
               <div class="perimissionChoiceTitle">
                 <div>可选</div>
-                <div class="choiceNum">{{curPersonList.length}}</div>
+                <div class="choiceNum">{{ curPersonList.length }}</div>
               </div>
               <el-input
                 ref="inputRef"
@@ -404,8 +469,14 @@ defineExpose({
                 :prefix-icon="IconSearch"
               ></el-input>
               <div class="personList">
-                <el-checkbox-group v-model="createAppForm.permission.authorizedUsers">
-                  <el-checkbox v-for="(item, index) in curPersonList" :key="index" :value="item?.userSub">
+                <el-checkbox-group
+                  v-model="createAppForm.permission.authorizedUsers"
+                >
+                  <el-checkbox
+                    v-for="(item, index) in curPersonList"
+                    :key="index"
+                    :value="item?.userSub"
+                  >
                     <span class="circle"></span>
                     {{ item?.userName }}
                   </el-checkbox>
@@ -415,11 +486,20 @@ defineExpose({
             <div class="permissionChoice">
               <div class="perimissionChoiceTitle">
                 <div>已选</div>
-                <div class="choiceNum">{{ createAppForm.permission.authorizedUsers.length }}</div>
+                <div class="choiceNum">
+                  {{ createAppForm.permission.authorizedUsers.length }}
+                </div>
               </div>
               <div class="personList">
-                <el-checkbox-group v-model="createAppForm.permission.authorizedUsers">
-                  <el-checkbox v-for="(item, index) in createAppForm.permission.authorizedUsers" :key="index" :value="item">
+                <el-checkbox-group
+                  v-model="createAppForm.permission.authorizedUsers"
+                >
+                  <el-checkbox
+                    v-for="(item, index) in createAppForm.permission
+                      .authorizedUsers"
+                    :key="index"
+                    :value="item"
+                  >
                     <span class="circle"></span>
                     {{ item }}
                   </el-checkbox>

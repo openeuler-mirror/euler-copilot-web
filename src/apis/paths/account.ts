@@ -19,13 +19,13 @@ export const authorizeUser = (): Promise<
     any,
     (
       | FcResponse<{
-        user_sub: string;
-        username: string;
-        organization: string;
-        revision_number: string | null;
-      }>
+          user_sub: string;
+          username: string;
+          organization: string;
+          revision_number: string | null;
+        }>
       | undefined
-    )
+    ),
   ]
 > => {
   return get('/api/auth/user');
@@ -35,7 +35,9 @@ export const authorizeUser = (): Promise<
  * 退出登录
  * @returns
  */
-export const authorizeLogout = (): Promise<[any, FcResponse<unknown> | undefined]> => {
+export const authorizeLogout = (): Promise<
+  [any, FcResponse<unknown> | undefined]
+> => {
   return get('/api/auth/logout');
 };
 
@@ -44,20 +46,19 @@ export const authorizeLogout = (): Promise<[any, FcResponse<unknown> | undefined
  * @returns
  */
 export const login = (
-  code: string
+  code: string,
 ): Promise<
   [
     any,
     (
       | FcResponse<{
-        csrf_token: string;
-      }>
+          csrf_token: string;
+        }>
       | undefined
-    )
+    ),
   ]
 > => {
   return get('/api/auth/login', { code });
-
 };
 
 /**
@@ -72,10 +73,10 @@ export const userLogin = (
     any,
     (
       | FcResponse<{
-        csrf_token: string;
-      }>
+          csrf_token: string;
+        }>
       | undefined
-    )
+    ),
   ]
 > => {
   return get('/api/auth/login', { passwd, account });
@@ -90,10 +91,10 @@ export const refreshToken = (): Promise<
     any,
     (
       | FcResponse<{
-        csrf_token: string;
-      }>
+          csrf_token: string;
+        }>
       | undefined
-    )
+    ),
   ]
 > => {
   return get('/api/auth/refresh_token');
@@ -105,29 +106,30 @@ export const refreshToken = (): Promise<
  * @returns
  */
 export const updateRevision = (
-  revisionNumber: number | string
+  revisionNumber: number | string,
 ): Promise<
   [
     any,
     (
       | FcResponse<{
-        user_sub: string;
-        username: string;
-        organization: string;
-        revision_number: string | null;
-      }>
+          user_sub: string;
+          username: string;
+          organization: string;
+          revision_number: string | null;
+        }>
       | undefined
-    )
+    ),
   ]
 > => {
-  return post('/api/auth/update_revision_number', { revision_num: revisionNumber });
+  return post('/api/auth/update_revision_number', {
+    revision_num: revisionNumber,
+  });
 };
-
 
 function queryAuthUrl(action: string) {
   return get<{
     url: string;
-  }>('/api/auth/redirect',{action});
+  }>('/api/auth/redirect', { action });
 }
 
 export const accountApi = {
@@ -137,5 +139,5 @@ export const accountApi = {
   userLogin,
   refreshToken,
   updateRevision,
-  queryAuthUrl
+  queryAuthUrl,
 };

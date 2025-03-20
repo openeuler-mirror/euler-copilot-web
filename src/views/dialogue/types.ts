@@ -31,7 +31,7 @@ export interface EgItem {
   insertMessage: string;
   style?: string;
   title: string;
-  des?:string;
+  des?: string;
 }
 
 export interface ChainItem {
@@ -53,61 +53,60 @@ export interface UserConversationItem {
 }
 
 export interface FlowType {
-  id:number
-  title:string,
-  status:string,
-  data:any,
-  display:boolean,
-  progress:string,
-  flowId?:string,
+  id: number;
+  title: string;
+  status: string;
+  data: any;
+  display: boolean;
+  progress: string;
+  flowId?: string;
 }
 
 export interface FlowDataType {
-  id: string,
-  stauts:string,
+  id: string;
+  stauts: string;
   // title: '',
-  data: any|undefined,
+  data: any | undefined;
 }
 
 export interface AppShowType {
-  appId: string,
-  name:string,
+  appId: string;
+  name: string;
 }
 
-
 export interface RobotConversationItem {
-  files?:any;
-  flow?:any;
+  files?: any;
+  flow?: any;
   cid: number;
   conversationId: string;
   recordId: string;
-  extraData?:any;
+  extraData?: any;
   belong: RobotDialoguePanelType;
   message: string[];
-  messageList:MessageArray;
+  messageList: MessageArray;
   // 当前选中第n次回答的索引值
   currentInd: number;
   isFinish?: boolean;
   isSupport?: boolean;
   isAgainst?: boolean;
   createdAt?: string | Date;
-  groupId:string|undefined;
-  search_suggestions?:string[];
-  echartsObj?:any,
-  metadata?:undefined | Metadata;
-  flowdata?:FlowType;
-  paramsList?:any;
+  groupId: string | undefined;
+  search_suggestions?: string[];
+  echartsObj?: any;
+  metadata?: undefined | Metadata;
+  flowdata?: FlowType;
+  paramsList?: any;
 }
 
 export interface MessageRecord {
-  message:string;
-  record_id:string;
-  is_like:number|undefined;
+  message: string;
+  record_id: string;
+  is_like: number | undefined;
 }
 
 export class MessageArray {
-  private items:MessageRecord[] = [];
-  addItem(message: string,record_id:string,is_like:number):void {
+  private items: MessageRecord[] = [];
+  addItem(message: string, record_id: string, is_like: number): void {
     const newItem: MessageRecord = {
       message,
       record_id,
@@ -116,37 +115,40 @@ export class MessageArray {
     this.items.push(newItem);
   }
 
-  getItem(index: number):MessageRecord|undefined {
+  getItem(index: number): MessageRecord | undefined {
     return this.items[index];
   }
 
-  getLength():number {
+  getLength(): number {
     return this.items.length;
   }
 
-  getAllItems():MessageRecord[]{
+  getAllItems(): MessageRecord[] {
     return this.items;
   }
 
-  getMessageList(): string[] {   
-    return this.items.map(item => item.message);  
-  }  
-
-  getRecordIdList(): string[] {    
-    return this.items.map(item => item.record_id);  
-  }  
-  
-  getIslikeList(): number[] {   
-    return this.items.map(item => item.is_like);  
-  }  
-
-  getisLikeByIndex(index:number): number {
-    return this.items.map(item => item.is_like)[index];
+  getMessageList(): string[] {
+    return this.items.map((item) => item.message);
   }
 
-  changeisLikeByCidAndIndex(cid:number,index:number,islike:number|boolean):void {
+  getRecordIdList(): string[] {
+    return this.items.map((item) => item.record_id);
+  }
+
+  getIslikeList(): number[] {
+    return this.items.map((item) => item.is_like);
+  }
+
+  getisLikeByIndex(index: number): number {
+    return this.items.map((item) => item.is_like)[index];
+  }
+
+  changeisLikeByCidAndIndex(
+    cid: number,
+    index: number,
+    islike: number | boolean,
+  ): void {
     const a = this.getisLikeByIndex(index)[cid];
     this.getisLikeByIndex(index)[cid] = islike;
   }
-
 }

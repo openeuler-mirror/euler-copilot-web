@@ -13,21 +13,15 @@ import { Application } from './type';
 
 type App = {
   applications: Application[];
-}
+};
 /**
- * 获取最近 top5 应用   
+ * 获取最近 top5 应用
  * @returns
  */
-export const getTopFiveApp = (count: number): Promise<
-  [
-    any,
-    (
-      | FcResponse<App>
-      | undefined
-    )
-  ]
-> => {
-  return get('/api/app/recent',{count});
+export const getTopFiveApp = (
+  count: number,
+): Promise<[any, FcResponse<App> | undefined]> => {
+  return get('/api/app/recent', { count });
 };
 
 export const appApi = {

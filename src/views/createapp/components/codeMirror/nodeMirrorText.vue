@@ -1,19 +1,37 @@
 <template>
   <!-- 这里为下拉面板结果详情 -->
-  <el-collapse v-model="nodeResult" class="o-hpc-collapse resultDropDown" :prefix-icon="IconChevronDown">
+  <el-collapse
+    v-model="nodeResult"
+    class="o-hpc-collapse resultDropDown"
+    :prefix-icon="IconChevronDown"
+  >
     <!-- 这里直接展示输入和输出 -->
-    <el-collapse-item v-for="(item, index) in resultInfo.infoList" :key="index" :name="item.id">
+    <el-collapse-item
+      v-for="(item, index) in resultInfo.infoList"
+      :key="index"
+      :name="item.id"
+    >
       <template #title>
         <span class="icon" :class="`${resultInfo.status}Icon`"></span>
         <span>{{ resultInfo.title }}</span>
         <!-- 这里接口返回的需要限制最大位数 -->
-        <span class="time" :class="`${resultInfo.status}Bg`" v-if="resultInfo.time">{{ resultInfo.time }}</span>
+        <span
+          class="time"
+          :class="`${resultInfo.status}Bg`"
+          v-if="resultInfo.time"
+        >
+          {{ resultInfo.time }}
+        </span>
         <span class="flexRight">展开结果</span>
         <el-icon class="el-collapse-item__arrow">
           <IconChevronDown></IconChevronDown>
         </el-icon>
       </template>
-      <div v-for="(subItem, idx) in item.desc" :key="idx" class="o-collapse-content">
+      <div
+        v-for="(subItem, idx) in item.desc"
+        :key="idx"
+        class="o-collapse-content"
+      >
         <div class="itemTitle">
           <div class="subName">{{ subItem.name }}</div>
           <div
@@ -22,7 +40,12 @@
             @click="handleCopy(subItem.code)"
           ></div>
         </div>
-        <MirrorText ref="textarea" :class="{'outputMirror': idx === 1}" :yamlCode="yaml.dump(subItem.code)" :disabled="true"></MirrorText>
+        <MirrorText
+          ref="textarea"
+          :class="{ outputMirror: idx === 1 }"
+          :yamlCode="yaml.dump(subItem.code)"
+          :disabled="true"
+        ></MirrorText>
       </div>
     </el-collapse-item>
   </el-collapse>
@@ -77,10 +100,12 @@ watch(
     // 目前props.status只有success、error、running三种
     resultInfo.value.title = StatusInfoTitle[props.status];
     if (props?.inputAndOutput) {
-
-      resultInfo.value.time = props.inputAndOutput.input_parameters.timeout ?? 0;
-      resultInfo.value.infoList[0].desc[0].code = props.inputAndOutput.input_parameters;
-      resultInfo.value.infoList[0].desc[1].code = props.inputAndOutput.output_parameters;
+      resultInfo.value.time =
+        props.inputAndOutput.input_parameters.timeout ?? 0;
+      resultInfo.value.infoList[0].desc[0].code =
+        props.inputAndOutput.input_parameters;
+      resultInfo.value.infoList[0].desc[1].code =
+        props.inputAndOutput.output_parameters;
     }
     if (props.status === 'success' || props.status === 'error') {
       resultInfo.value.time = props.costTime;
@@ -92,7 +117,7 @@ watch(
 );
 
 // 复制
-const handleCopy = code => {
+const handleCopy = (code) => {
   // 判断是否有值
   if (!code) {
     errorMsg('无可复制的信息');

@@ -26,7 +26,7 @@ const reportList = <
     label: string;
     isChecked: boolean;
   }[]
->reportLabel.map(item => {
+>reportLabel.map((item) => {
   return new Object({
     isChecked: false,
     label: item,
@@ -51,7 +51,9 @@ const emits = defineEmits<{
 
 /** 举报 */
 const handleComplaint = () => {
-  const str = descText.value.length ? radio.value + ';' + descText.value : radio.value;
+  const str = descText.value.length
+    ? radio.value + ';' + descText.value
+    : radio.value;
   if (!isErrorInputVisiable.value) {
     emits('report', str);
     return;
@@ -62,11 +64,19 @@ const handleComplaint = () => {
 
 <template>
   <div class="against-popover">
-    <p class="against-popover-title">{{ $t('feedback.reason_for_reporting') }}</p>
+    <p class="against-popover-title">
+      {{ $t('feedback.reason_for_reporting') }}
+    </p>
     <ul class="against-list">
       <el-radio-group v-model="radio" class="ml-4">
-        <div :class="[language === 'EN' ? 'radio-en' : 'radio']" v-for="(item, index) in list" :key="index">
-          <el-radio-button class="radio_item" :label="item.label">{{ $t('Report.' + item.label) }}</el-radio-button>
+        <div
+          :class="[language === 'EN' ? 'radio-en' : 'radio']"
+          v-for="(item, index) in list"
+          :key="index"
+        >
+          <el-radio-button class="radio_item" :label="item.label">
+            {{ $t('Report.' + item.label) }}
+          </el-radio-button>
         </div>
       </el-radio-group>
     </ul>
@@ -79,7 +89,9 @@ const handleComplaint = () => {
     </div>
     <div class="against-button">
       <el-button @click="emits('close')">{{ $t('history.cancel') }}</el-button>
-      <el-button type="primary" :disabled="!radio" @click="handleComplaint">{{ $t('history.ok') }}</el-button>
+      <el-button type="primary" :disabled="!radio" @click="handleComplaint">
+        {{ $t('history.ok') }}
+      </el-button>
     </div>
   </div>
 </template>

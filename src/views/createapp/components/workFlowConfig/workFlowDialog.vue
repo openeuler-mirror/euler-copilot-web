@@ -1,5 +1,10 @@
 <template>
-  <el-dialog v-model="workFlowDiaVisible" @close="onCancel" title="新建工作流" class="workFlowDia">
+  <el-dialog
+    v-model="workFlowDiaVisible"
+    @close="onCancel"
+    title="新建工作流"
+    class="workFlowDia"
+  >
     <el-form
       ref="workFlowForm"
       class=""
@@ -31,8 +36,17 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button class="o-dlg-btn" type="primary" size="small" @click="handleSubmit(workFlowForm)">确定</el-button>
-        <el-button class="o-dlg-btn" size="small" @click="onCancel">取消</el-button>
+        <el-button
+          class="o-dlg-btn"
+          type="primary"
+          size="small"
+          @click="handleSubmit(workFlowForm)"
+        >
+          确定
+        </el-button>
+        <el-button class="o-dlg-btn" size="small" @click="onCancel">
+          取消
+        </el-button>
       </span>
     </template>
   </el-dialog>
@@ -54,7 +68,7 @@ const props = defineProps({
   },
   workFlowList: {
     type: Array,
-  }
+  },
 });
 const emits = defineEmits(['handleClose', 'createFlowId']);
 const workFlowForm = ref();
@@ -64,22 +78,24 @@ const workFlowData = ref({
 });
 const workFlowRules = ref({
   name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入工作流描述', trigger: 'blur' }],
+  description: [
+    { required: true, message: '请输入工作流描述', trigger: 'blur' },
+  ],
 });
 const onCancel = () => {
   emits('handleClose');
 };
 const handleSubmit = (formEl: FormInstance | undefined) => {
   // 校验必填项是否填写
-  formEl?.validate(valid => {
+  formEl?.validate((valid) => {
     if (valid) {
       // 判断是否有重复的工作流名称
       let isMultNameFlag = false;
-      props.workFlowList?.forEach(flowItem => {
+      props.workFlowList?.forEach((flowItem) => {
         if (flowItem?.name === workFlowData.value.name) {
           isMultNameFlag = true;
         }
-      })
+      });
       // 如果与已有名称重复，则提示
       if (isMultNameFlag) {
         ElMessage.warning('当前应用下已有该工作流名称，请修改名称');
@@ -146,7 +162,7 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
             },
           },
         )
-        .then(res => {
+        .then((res) => {
           if (res[1]?.result?.flow) {
             ElMessage.success('创建成功');
             // 将创建成功后的flow对象传给父组件

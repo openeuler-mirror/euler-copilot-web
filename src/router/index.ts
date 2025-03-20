@@ -13,7 +13,9 @@ import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { useAccountStore } from 'src/store';
 
 const router = createRouter({
-  history: createWebHashHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/'),
+  history: createWebHashHistory(
+    qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/',
+  ),
   routes: [
     {
       path: '/',

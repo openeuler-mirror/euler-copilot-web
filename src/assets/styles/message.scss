@@ -1,40 +1,38 @@
+.el-message {
+  width: 30%;
+  border-radius: 5px;
+}
 
-.el-message{
-    width: 30%;
-    border-radius: 5px;
-  }
-  
-  .el-message--success{
-    background-color: #C2E7C7;
+.el-message--success {
+  background-color: #c2e7c7;
+  color: #000;
+  border-color: #24ab36;
+  border-radius: 10px;
+  .el-message__content {
     color: #000;
-    border-color: #24AB36;
-    border-radius: 10px;
-    .el-message__content{
-      color: #000;
-      font-size: 12px;
-  
-    }
+    font-size: 12px;
   }
-  
-  .el-message--warning{
-    background-color: #F9ECB8;
-    border-color: #EBAF00;
-    img{
-      width: 16px;
-      height: 16px;
-    }
-    .el-message__content{
-      color: #000;
-      font-size: 12px;
-    }
+}
+
+.el-message--warning {
+  background-color: #f9ecb8;
+  border-color: #ebaf00;
+  img {
+    width: 16px;
+    height: 16px;
   }
-  
-  .el-message--error{
-    background-color: #F7C1C1;
+  .el-message__content {
     color: #000;
-    border-color: #E42121;
-    .el-message__content{
-      color: #000;
-      font-size: 12px;
-    }
+    font-size: 12px;
   }
+}
+
+.el-message--error {
+  background-color: #f7c1c1;
+  color: #000;
+  border-color: #e42121;
+  .el-message__content {
+    color: #000;
+    font-size: 12px;
+  }
+}

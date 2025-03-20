@@ -2,12 +2,21 @@
 import { ElMessage } from 'element-plus';
 import { ref, watch, onMounted } from 'vue';
 import * as jsYaml from 'js-yaml';
-import { IconUpload, IconVisible, IconDelete, IconCaretRight } from '@computing/opendesign-icons';
-import type { UploadFile, ElUploadProgressEvent, ElFile } from 'element-plus/es/components/upload/src/upload.type';
+import {
+  IconUpload,
+  IconVisible,
+  IconDelete,
+  IconCaretRight,
+} from '@computing/opendesign-icons';
+import type {
+  UploadFile,
+  ElUploadProgressEvent,
+  ElFile,
+} from 'element-plus/es/components/upload/src/upload.type';
 import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
-import { yaml } from "@codemirror/lang-yaml"
+import { yaml } from '@codemirror/lang-yaml';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useChangeThemeStore } from 'src/store/conversation';
 import CustomLoading from 'src/views/customLoading/index.vue';
@@ -30,7 +39,7 @@ const handleCreateapi = async () => {
     } else {
       errorMsg('创建失败');
     }
-      loading.value = false;
+    loading.value = false;
   }
 };
 
@@ -62,7 +71,7 @@ const props = defineProps({
   getServiceName: {
     type: String,
     default: '',
-  }
+  },
 });
 const emits = defineEmits<{
   (e: 'closeDrawer'): void;
@@ -117,7 +126,7 @@ const beforeUpload = async (file: ElFile) => {
   }
   try {
     const reader = new FileReader();
-    reader.onload = async event => {
+    reader.onload = async (event) => {
       getServiceYaml.value = event.target?.result as string;
       //yaml 展示
       try {
@@ -128,7 +137,7 @@ const beforeUpload = async (file: ElFile) => {
       }
     };
 
-    reader.onerror = error => {
+    reader.onerror = (error) => {
       console.error('Error reading file:', error);
       ElMessage({
         message: 'Error reading file!',
@@ -140,7 +149,7 @@ const beforeUpload = async (file: ElFile) => {
     await new Promise((resolve, reject) => {
       reader.readAsText(file);
       reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
-      reader.onerror = error => reject(error); // 如果出错则拒绝 Promise
+      reader.onerror = (error) => reject(error); // 如果出错则拒绝 Promise
     });
     return true;
   } catch (error) {
@@ -176,14 +185,14 @@ const doPreview = (e: Event) => {
 };
 
 const getServiceYamlFun = async (id: string) => {
-  await api.querySingleApiData({ serviceId: id, edit: true }).then(res => {
+  await api.querySingleApiData({ serviceId: id, edit: true }).then((res) => {
     if (res) {
       getServiceYaml.value = jsYaml.dump(res?.result.data);
       getServiceName.value = res?.result.name;
     }
   });
 };
-const handleChange = payload => {
+const handleChange = (payload) => {
   yamlToJsonContent.value = jsYaml.load(payload);
   setTimeout(() => {
     payload.view.scrollDOM.scrollTop = 0;
@@ -205,15 +214,12 @@ watch(
   { immediate: true, deep: true },
 );
 
-watch(
-  getServiceYaml,
-  () => {
-    yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
-  },
-);
+watch(getServiceYaml, () => {
+  yamlToJsonContent.value = jsYaml.load(getServiceYaml.value);
+});
 watch(
   () => themeStore.theme,
-  newVal => {
+  (newVal) => {
     if (themeStore.theme === 'dark') {
       extensions.value = [yaml(), oneDark];
     } else {
@@ -224,12 +230,12 @@ watch(
 
 const updateFunc = () => {
   const foldDoms = document.querySelectorAll('span[title="Fold line"]');
-  foldDoms.forEach(dom => {
+  foldDoms.forEach((dom) => {
     dom.innerText = '';
   });
 
   const unFoldDoms = document.querySelectorAll('span[title="Unfold line"]');
-  unFoldDoms.forEach(dom => {
+  unFoldDoms.forEach((dom) => {
     dom.innerText = '';
   });
 };
@@ -283,7 +289,11 @@ onMounted(() => {
         </div>
       </div>
       <div v-if="progressVal && !uploadDone" class="upload-loading">
-        <el-progress class="uplaod-progress" :percentage="progressVal" :stroke-width="8" />
+        <el-progress
+          class="uplaod-progress"
+          :percentage="progressVal"
+          :stroke-width="8"
+        />
       </div>
     </div>
   </el-upload>
@@ -304,24 +314,35 @@ onMounted(() => {
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
     <span class="serviceName">{{ getServiceName }}</span>
-    <el-collapse v-model="activeServiceNameList" class="o-hpc-collapse" :prefix-icon="IconChevronDown">
+    <el-collapse
+      v-model="activeServiceNameList"
+      class="o-hpc-collapse"
+      :prefix-icon="IconChevronDown"
+    >
       <!-- 这里直接展示输入和输出 -->
-      <el-collapse-item v-for="(item, index) in getServiceJson" :key="index" :name="item.name">
+      <el-collapse-item
+        v-for="(item, index) in getServiceJson"
+        :key="index"
+        :name="item.name"
+      >
         <template #title>
           <span>{{ item.name }}</span>
           <!-- 这里接口返回的需要限制最大位数 -->
-          <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeServiceNameList.includes(item.name) }">
+          <el-icon
+            class="el-collapse-item__arrow"
+            :class="{ 'is-active': activeServiceNameList.includes(item.name) }"
+          >
             <IconCaretRight></IconCaretRight>
           </el-icon>
         </template>
         <div class="o-collapse-content">
           <div class="itemTitle">
             <div class="subName">
-              <div>{{$t('semantic.interface_path')}}</div>
+              <div>{{ $t('semantic.interface_path') }}</div>
               <div>{{ item.path }}</div>
             </div>
             <div class="subName">
-              <div>{{$t('semantic.interface_description')}}</div>
+              <div>{{ $t('semantic.interface_description') }}</div>
               <div>{{ item.description }}</div>
             </div>
           </div>
@@ -330,22 +351,28 @@ onMounted(() => {
     </el-collapse>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'upload'">
-    <el-button @click="handleClose">{{$t('semantic.cancel')}}</el-button>
-    <el-button type="primary" @click="handleClose">{{$t('semantic.submit')}}</el-button>
+    <el-button @click="handleClose">{{ $t('semantic.cancel') }}</el-button>
+    <el-button type="primary" @click="handleClose">
+      {{ $t('semantic.submit') }}
+    </el-button>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'edit'">
-    <el-button @click="handleClose">{{$t('semantic.cancel')}}</el-button>
-    <el-button @click="handleEdit">{{$t('semantic.edit')}}</el-button>
-    <el-button type="primary" @click="handleCreateapi()">{{$t('semantic.analyze')}}</el-button>
+    <el-button @click="handleClose">{{ $t('semantic.cancel') }}</el-button>
+    <el-button @click="handleEdit">{{ $t('semantic.edit') }}</el-button>
+    <el-button type="primary" @click="handleCreateapi()">
+      {{ $t('semantic.analyze') }}
+    </el-button>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'get'">
-    <el-button @click="handleClose">{{$t('semantic.cancel')}}</el-button>
-    <el-button type="primary" @click="handleClose">{{$t('semantic.submit')}}</el-button>
+    <el-button @click="handleClose">{{ $t('semantic.cancel') }}</el-button>
+    <el-button type="primary" @click="handleClose">
+      {{ $t('semantic.submit') }}
+    </el-button>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.serviceName{
+.serviceName {
   display: block;
   font-size: 14px;
   color: var(--o-text-color-primary);

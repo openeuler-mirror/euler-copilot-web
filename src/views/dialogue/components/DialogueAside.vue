@@ -12,13 +12,17 @@ import {
 } from 'element-plus';
 import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
-import { useAccountStore, useHistorySessionStore, useSessionStore } from '@/store';
+import {
+  useAccountStore,
+  useHistorySessionStore,
+  useSessionStore,
+} from '@/store';
 import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { useI18n } from 'vue-i18n';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-import appIcon from '@/assets/images/app.png'
+import appIcon from '@/assets/images/app.png';
 import { IconChevronUp } from '@computing/opendesign-icons';
 import router from 'src/router';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
@@ -38,8 +42,12 @@ const props = withDefaults(
   },
 );
 const { t } = useI18n();
-const { historySession, selectedSessionIds, isSelectedAll, currentSelectedSession } =
-  storeToRefs(useHistorySessionStore());
+const {
+  historySession,
+  selectedSessionIds,
+  isSelectedAll,
+  currentSelectedSession,
+} = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
 const { getHistorySession } = useHistorySessionStore();
 const { userinfo } = storeToRefs(useAccountStore());
@@ -55,7 +63,9 @@ const apps = ref([]);
 const filteredHistorySessions = computed(() => {
   // filter by searchKey
   const filtered = searchKey.value
-    ? historySession.value.filter(session => session.title.includes(searchKey.value))
+    ? historySession.value.filter((session) =>
+        session.title.includes(searchKey.value),
+      )
     : historySession.value;
   const template: { key: string; title: string; list: HistorySession[] }[] = [
     {
@@ -74,9 +84,9 @@ const filteredHistorySessions = computed(() => {
       list: [],
     },
   ];
-  filtered.forEach(session => {
+  filtered.forEach((session) => {
     const key = checkDate(session.createdTime);
-    template.find(item => item.key == key)?.list.push(session);
+    template.find((item) => item.key == key)?.list.push(session);
   });
   return template;
 });
@@ -87,7 +97,9 @@ const filteredHistorySessions = computed(() => {
  * @return {void} This function does not return anything.
  */
 function openUrl(): void {
-  window.open('https://hiss.shixizhi.huawei.com/portal/1643780836745113602?sxz-lang=zh_CN&pageId=1643780840505217026');
+  window.open(
+    'https://hiss.shixizhi.huawei.com/portal/1643780836745113602?sxz-lang=zh_CN&pageId=1643780840505217026',
+  );
 }
 
 /**
@@ -112,7 +124,7 @@ function checkDate(date: string | Date): string {
 
 onMounted(() => {
   getHistorySession();
-})
+});
 
 const deletedSessionName = ref('');
 const sessionList = ref();
@@ -152,7 +164,9 @@ const isBatchDeletion = ref<boolean>(false);
  */
 const deleteSession = async () => {
   dialogVisible.value = false;
-  const conversationList = deleteType.value ? selectedSessionIds.value : sessionList.value;
+  const conversationList = deleteType.value
+    ? selectedSessionIds.value
+    : sessionList.value;
   const [, res] = await api.deleteSession({ conversationList });
   if (res) {
     selectedSessionIds.value = [];
@@ -192,7 +206,9 @@ function cancelDeleteSession(): void {
  */
 function selectAllSession(): void {
   isSelectedAll.value
-    ? (selectedSessionIds.value = historySession.value.map(item => item.conversationId))
+    ? (selectedSessionIds.value = historySession.value.map(
+        (item) => item.conversationId,
+      ))
     : (selectedSessionIds.value = []);
 }
 
@@ -222,24 +238,24 @@ const toggleCollapse = () => {
 };
 
 const selectApp = (id) => {
-  if(selectedAppId.value === id) {
-    selectedAppId.value = "";
+  if (selectedAppId.value === id) {
+    selectedAppId.value = '';
     user_selected_app.value = [''];
     app.value.selectedAppId = '';
-  }else{
+  } else {
     selectedAppId.value = id;
-    user_selected_app.value =[id];
+    user_selected_app.value = [id];
     // app.value.appId = id;
     app.value.selectedAppId = id;
   }
   getHistorySession();
 };
 function ensureAppAtFirstPosition() {
-  if(!app.value.appId){
+  if (!app.value.appId) {
     return;
   }
   const newApp = app.value;
-  const index = apps.value.findIndex(app => app.appId === newApp.appId);
+  const index = apps.value.findIndex((app) => app.appId === newApp.appId);
   if (index !== -1 && index !== 0) {
     const [item] = apps.value.splice(index, 1);
     apps.value.unshift(item);
@@ -251,18 +267,18 @@ function ensureAppAtFirstPosition() {
 }
 
 const getAppsValue = async () => {
-//获取 top5 list 
-const [_, res] = await api.getTopFiveApp(5);
+  //获取 top5 list
+  const [_, res] = await api.getTopFiveApp(5);
   if (res?.result) {
     appList.value = res.result.applications;
     apps.value = res.result.applications;
   }
-  if(app.value.appId){
+  if (app.value.appId) {
     selectedAppId.value = app.value.appId;
     app.value.selectedAppId = app.value.appId;
   }
   ensureAppAtFirstPosition();
-}
+};
 
 /**
  * 监听 userinfo 的变化，当 userinfo 中的 user_sub 存在时调用 getAppsValue 方法。
@@ -279,26 +295,27 @@ watch(
     deep: true,
   },
 );
-watch(
-  [app],
-  () => {
-      getAppsValue();
-  }
-);
+watch([app], () => {
+  getAppsValue();
+});
 watch(
   () => router.currentRoute.value,
   () => {
-    if(router.currentRoute.value.name === 'dialogue'){
+    if (router.currentRoute.value.name === 'dialogue') {
       getAppsValue();
     }
-  }
+  },
 );
-
 </script>
 
 <template>
   <aside class="aside-wrapper" ref="copilotAside">
-    <ElTooltip placement="right" :content="isCopilotAsideVisible ? t('history.collapse') : t('history.expand')">
+    <ElTooltip
+      placement="right"
+      :content="
+        isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
+      "
+    >
       <div class="trapezoid" @click="hanleAsideVisible" />
     </ElTooltip>
     <transition name="transition-fade">
@@ -306,11 +323,15 @@ watch(
         <div class="collapsible-apps">
           <div class="collapsible-header" @click="toggleCollapse">
             <div class="header-content">
-              <img :src=appIcon />
+              <img :src="appIcon" />
               <span>{{ t('history.myApp') }}</span>
             </div>
             <!-- 标签 icon 丢失 -->
-            <IconChevronUp :size="20" :width="20" :class="{ rotate: !isCollapsed }" />
+            <IconChevronUp
+              :size="20"
+              :width="20"
+              :class="{ rotate: !isCollapsed }"
+            />
           </div>
           <transition name="collapse">
             <ul v-if="!isCollapsed" class="app-list">
@@ -334,23 +355,40 @@ watch(
         <div class="history-record">
           <div class="history-record-title">
             <h4>{{ $t('history.recent_chats') }}</h4>
-            <span v-if="!isBatchDeletion" @click="isBatchDeletion = true" class="batch-delete">{{
-              $t('history.delete_chats')
-            }}</span>
+            <span
+              v-if="!isBatchDeletion"
+              @click="isBatchDeletion = true"
+              class="batch-delete"
+            >
+              {{ $t('history.delete_chats') }}
+            </span>
             <span v-else>
-              <span @click="deleteSessionList()">{{ $t('history.delete') }}</span>
-              <span @click="cancelDeleteSession()">{{ $t('history.cancel') }}</span>
+              <span @click="deleteSessionList()">
+                {{ $t('history.delete') }}
+              </span>
+              <span @click="cancelDeleteSession()">
+                {{ $t('history.cancel') }}
+              </span>
             </span>
           </div>
 
           <!-- search -->
           <div>
-            <ElInput v-model="searchKey" :placeholder="$t('history.find_recent_chats')" class="search-input">
+            <ElInput
+              v-model="searchKey"
+              :placeholder="$t('history.find_recent_chats')"
+              class="search-input"
+            >
               <template #suffix>
-                <img class="search-input__icon" src="@/assets/svgs/search.svg" />
+                <img
+                  class="search-input__icon"
+                  src="@/assets/svgs/search.svg"
+                />
               </template>
             </ElInput>
-            <p class="history-record-tips">{{ $t('history.chat_history_limit') }}</p>
+            <p class="history-record-tips">
+              {{ $t('history.chat_history_limit') }}
+            </p>
           </div>
 
           <div v-if="isBatchDeletion" class="history-record-delete">
@@ -366,8 +404,15 @@ watch(
             <ElCollapse v-model="activeNames">
               <template v-for="item in filteredHistorySessions" :key="item.key">
                 <ElCollapseItem :title="item.title" :name="item.key">
-                  <template v-for="session in item.list" :key="session.conversationId">
-                    <SessionCard :conversation="session" :deletion="isBatchDeletion" @deleteOne="deleteOne" />
+                  <template
+                    v-for="session in item.list"
+                    :key="session.conversationId"
+                  >
+                    <SessionCard
+                      :conversation="session"
+                      :deletion="isBatchDeletion"
+                      @deleteOne="deleteOne"
+                    />
                   </template>
                 </ElCollapseItem>
               </template>
@@ -375,7 +420,10 @@ watch(
           </ul>
 
           <div v-else class="history-record-null">
-            <img v-if="props.theme === 'dark'" src="@/assets/svgs/dark_null.svg" />
+            <img
+              v-if="props.theme === 'dark'"
+              src="@/assets/svgs/dark_null.svg"
+            />
             <img v-else src="@/assets/svgs/light_null.svg" alt="" />
             <span>{{ $t('history.no_chat_history') }}</span>
           </div>
@@ -384,7 +432,9 @@ watch(
         <div class="history-record-blogroll">
           <ElDivider />
           <h5>{{ $t('history.links') }}</h5>
-          <p @click="openUrl">{{ $t('history.hiss_basic_software_service_capability_platform') }}</p>
+          <p @click="openUrl">
+            {{ $t('history.hiss_basic_software_service_capability_platform') }}
+          </p>
         </div>
 
         <ElDialog
@@ -396,18 +446,29 @@ watch(
         >
           <div class="dialog-delete_all">
             <img class="dialog-delete_all_svg" src="@/assets/svgs/alarm.svg" />
-            <span class="dialog-delete_all_text" v-if="isBatchDeletion"
-              >{{ $t('history.confirmation_content1') }} <span>{{ selectedSessionIds.length }}</span
-              >{{ $t('history.confirmation_content2') }}
+            <span class="dialog-delete_all_text" v-if="isBatchDeletion">
+              {{ $t('history.confirmation_content1') }}
+              <span>{{ selectedSessionIds.length }}</span>
+              {{ $t('history.confirmation_content2') }}
             </span>
-            <span class="dialog-delete_all_text" v-else
-              >{{ $t('history.delete_content1') }}【{{ deletedSessionName }}】{{ $t('history.delete_content2') }}
+            <span class="dialog-delete_all_text" v-else>
+              {{ $t('history.delete_content1') }}【{{ deletedSessionName }}】{{
+                $t('history.delete_content2')
+              }}
             </span>
           </div>
           <template #footer>
             <span class="dialog-footer">
-              <ElButton type="primary" class="primary-button" @click="deleteSession"> {{ $t('history.ok') }} </ElButton>
-              <ElButton @click="dialogVisible = false">{{ $t('history.cancel') }}</ElButton>
+              <ElButton
+                type="primary"
+                class="primary-button"
+                @click="deleteSession"
+              >
+                {{ $t('history.ok') }}
+              </ElButton>
+              <ElButton @click="dialogVisible = false">
+                {{ $t('history.cancel') }}
+              </ElButton>
             </span>
           </template>
         </ElDialog>
@@ -464,7 +525,7 @@ watch(
       :deep(svg) {
         color: #3b82f6;
       }
-      img{
+      img {
         width: 30px;
       }
       span {
@@ -497,7 +558,7 @@ watch(
       align-items: center;
       border: 8px;
       border-radius: 8px;
-      margin:1px 0;
+      margin: 1px 0;
       span {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -505,16 +566,20 @@ watch(
         display: block;
         margin-left: 24px;
         align-items: center;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       &:hover {
         background-color: var(--applist-hover);
       }
 
       &.selected {
-        background: linear-gradient(127.6deg, rgba(109, 117, 250, 0.2) -1.725%, rgba(90, 179, 255, 0.2) 98.22%);
+        background: linear-gradient(
+          127.6deg,
+          rgba(109, 117, 250, 0.2) -1.725%,
+          rgba(90, 179, 255, 0.2) 98.22%
+        );
         color: var(--o-text-color-primary);
       }
     }
@@ -801,8 +866,8 @@ watch(
       margin-bottom: 8px;
     }
 
-    .history-record-list{
-      button{
+    .history-record-list {
+      button {
         // margin: 5px;
       }
     }

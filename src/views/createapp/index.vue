@@ -9,7 +9,7 @@ const { t } = useI18n();
 import { useRouter, useRoute } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
-import { IconSuccess,  IconRemind} from '@computing/opendesign-icons';
+import { IconSuccess, IconRemind } from '@computing/opendesign-icons';
 const router = useRouter();
 const route = useRoute();
 const publishStatus = ref('未发布');
@@ -20,7 +20,7 @@ const appConfigRef = ref();
 const workFlowRef = ref();
 const flowList = ref([]);
 const loading = ref(false);
-const handleChangeAppType = type => {
+const handleChangeAppType = (type) => {
   createAppType.value = type;
   // 切换createAppType【tab值】时，将其保存在sessionStorage，刷新时保证不变
   sessionStorage.setItem('createAppType', type);
@@ -34,12 +34,12 @@ onMounted(() => {
   if (currentAppType) {
     createAppType.value = currentAppType;
   }
-})
+});
 
 onUnmounted(() => {
   // 组件销毁时，清空保存新建应用中心的createAppType【tab值】
   sessionStorage.setItem('createAppType', '');
-})
+});
 
 // 需要界面配置校验与工作流校验同时通过
 const handlePulishApp = () => {
@@ -49,7 +49,7 @@ const handlePulishApp = () => {
     .releaseSingleAppData({
       id: route.query?.appId as string,
     })
-    .then(res => {
+    .then((res) => {
       if (res[1]?.result) {
         ElMessage.success('发布成功');
         router.push(`/app`);
@@ -58,7 +58,7 @@ const handlePulishApp = () => {
     });
 };
 
-const handleValidateContent = valid => {
+const handleValidateContent = (valid) => {
   appFormValidate.value = valid;
 };
 
@@ -69,29 +69,30 @@ const updateFlowsDebug = (status?) => {
     publishValidate.value = false;
     return;
   }
-  api.querySingleAppData({
-        id: route.query?.appId as string,
-      })
-      .then(res => {
-        if (res?.[1]?.result) {
-          const flowDataList = res?.[1]?.result?.workflows || [];
-          judgeAppFlowsDebug(flowDataList);
-        }
-      })
-}
+  api
+    .querySingleAppData({
+      id: route.query?.appId as string,
+    })
+    .then((res) => {
+      if (res?.[1]?.result) {
+        const flowDataList = res?.[1]?.result?.workflows || [];
+        judgeAppFlowsDebug(flowDataList);
+      }
+    });
+};
 
 // 获取工作流列表
-const getFlowList = flowDataList => {
+const getFlowList = (flowDataList) => {
   flowList.value = flowDataList;
-  judgeAppFlowsDebug(flowDataList)
+  judgeAppFlowsDebug(flowDataList);
 };
 
 const judgeAppFlowsDebug = (flowDataList) => {
   // 判断应用下的所有工作流当前是否debug通过
-  const flowsDebug = flowDataList.every(item => item?.debug);
+  const flowsDebug = flowDataList.every((item) => item?.debug);
   // 初始化时，获取发布的校验结果---必须有工作流且所有工作流必须debug通过
   publishValidate.value = flowDataList?.length > 0 && flowsDebug;
-}
+};
 
 // 保存按钮
 const saveConfigOrFlow = () => {
@@ -105,14 +106,14 @@ const saveConfigOrFlow = () => {
           icon: appFormValue.icon,
           name: appFormValue.name,
           description: appFormValue.description,
-          links: appFormValue.links.map(item => {
+          links: appFormValue.links.map((item) => {
             return { url: item, title: '' };
           }),
           recommendedQuestions: appFormValue.recommendedQuestions,
           dialogRounds: appFormValue.dialogRounds,
           permission: appFormValue.permission,
         })
-        .then(res => {
+        .then((res) => {
           if (res[1]) {
             ElMessage({
               showClose: true,
@@ -133,9 +134,9 @@ const saveConfigOrFlow = () => {
 
 const getPublishStatus = (status) => {
   if (status) {
-    publishStatus.value = '已发布'
+    publishStatus.value = '已发布';
   }
-}
+};
 
 const handleJumperAppCenter = () => {
   router.push('/app');
@@ -147,11 +148,19 @@ const handleJumperAppCenter = () => {
     <div class="createAppContainerTop">
       <div class="createAppContainerMenu">
         <div class="createAppContainerMenuLeft">
-          <span class="createAppContainerMenuCenter" @click="handleJumperAppCenter">应用中心</span>
+          <span
+            class="createAppContainerMenuCenter"
+            @click="handleJumperAppCenter"
+          >
+            应用中心
+          </span>
           <span>/</span>
           <span class="createAppContainerMenuText">创建应用</span>
         </div>
-        <div class="createAppContainerStatus" :class="{ debugSuccess: publishStatus === '已发布' }">
+        <div
+          class="createAppContainerStatus"
+          :class="{ debugSuccess: publishStatus === '已发布' }"
+        >
           {{ publishStatus }}
         </div>
       </div>
@@ -193,7 +202,10 @@ const handleJumperAppCenter = () => {
         ref="appConfigRef"
       />
     </div>
-    <div class="createWorkFlowContainerMain" v-show="createAppType !== 'appConfig'">
+    <div
+      class="createWorkFlowContainerMain"
+      v-show="createAppType !== 'appConfig'"
+    >
       <WorkFlow
         @updateFlowsDebug="updateFlowsDebug"
         :flowList="flowList"
@@ -202,14 +214,27 @@ const handleJumperAppCenter = () => {
     </div>
     <div class="createAppContainerFooter">
       <el-button @click="handleJumperAppCenter">取消</el-button>
-      <el-button @click="saveConfigOrFlow" :disabled="createAppType === 'appConfig' ? !appFormValidate : false"
-        >保存</el-button
+      <el-button
+        @click="saveConfigOrFlow"
+        :disabled="createAppType === 'appConfig' ? !appFormValidate : false"
       >
+        保存
+      </el-button>
       <el-button :disabled="true">预览</el-button>
-      <el-tooltip :disabled="publishValidate" content="需要当前应用中所有工作流调试成功才能发布应用" placement="top">
+      <el-tooltip
+        :disabled="publishValidate"
+        content="需要当前应用中所有工作流调试成功才能发布应用"
+        placement="top"
+      >
         <!-- 需要多一层，不然影响当前el-tooltip显示content -->
         <div>
-          <el-button type="primary" :disabled="!publishValidate" @click="handlePulishApp()">发布</el-button>
+          <el-button
+            type="primary"
+            :disabled="!publishValidate"
+            @click="handlePulishApp()"
+          >
+            发布
+          </el-button>
         </div>
       </el-tooltip>
     </div>

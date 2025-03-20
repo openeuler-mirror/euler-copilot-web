@@ -14,16 +14,7 @@ import type { FcResponse } from 'src/apis/server';
  * 验证用户信息
  * @returns
  */
-export const getApiKey = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-        }>
-      | undefined
-    )
-  ]
-> => {
+export const getApiKey = (): Promise<[any, FcResponse<{}> | undefined]> => {
   return get('/api/auth/key');
 };
 
@@ -34,21 +25,9 @@ export const getApiKey = (): Promise<
 export const changeApiKey = (params: {
   action: string;
   query?: string;
-}
-  ): Promise<
-    [
-      any,
-      (
-        | FcResponse<{
-          }>
-        | undefined
-      )
-    ]
-  > => {
-    return post('/api/auth/key', params,params);
-  };
-  
-
+}): Promise<[any, FcResponse<{}> | undefined]> => {
+  return post('/api/auth/key', params, params);
+};
 
 export const apiKeyApi = {
   getApiKey,

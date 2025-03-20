@@ -3,7 +3,7 @@
     :model-value="visible"
     :show-close="false"
     width="50%"
-    :title="props.agreementName" 
+    :title="props.agreementName"
     :close-on-press-escape="false"
     :close-on-click-modal="false"
     align-center
@@ -14,7 +14,12 @@
       </el-scrollbar>
     </template>
     <template #footer>
-      <el-form v-if="needCheck && agreementName" ref="formRef" :rules="rules" :model="form">
+      <el-form
+        v-if="needCheck && agreementName"
+        ref="formRef"
+        :rules="rules"
+        :model="form"
+      >
         <el-form-item prop="check">
           <el-checkbox-group v-model="form.check">
             <el-checkbox :label="agreeMessage" name="check" />
@@ -22,7 +27,9 @@
         </el-form-item>
       </el-form>
       <div class="button-group">
-        <el-button class="confirm-button"  @click="submitForm(formRef)">{{$t('history.ok')}}</el-button>
+        <el-button class="confirm-button" @click="submitForm(formRef)">
+          {{ $t('history.ok') }}
+        </el-button>
       </div>
     </template>
   </el-dialog>
@@ -45,7 +52,7 @@ const props = withDefaults(
   }>(),
   {
     needCheck: true,
-  }
+  },
 );
 
 const emits = defineEmits<{
@@ -88,7 +95,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 </script>
 
 <style lang="scss" scoped>
-
 // .scrollbar{
 //   // height: 100%;
 //   max-height: 400px;
@@ -98,9 +104,9 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 // }
 
 .agreement-markdown h1 {
-    text-align: center;
-    padding-bottom: 30px;
-    font-size: 12px;
+  text-align: center;
+  padding-bottom: 30px;
+  font-size: 12px;
 }
 
 .button-group {
@@ -144,5 +150,4 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 form {
   margin-top: 10px;
 }
-
 </style>

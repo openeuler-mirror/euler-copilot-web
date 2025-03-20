@@ -2,7 +2,12 @@
 import { computed, ComputedRef, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
-import { useHistorySessionStore, useSessionStore, useAccountStore, useLangStore } from 'src/store';
+import {
+  useHistorySessionStore,
+  useSessionStore,
+  useAccountStore,
+  useLangStore,
+} from 'src/store';
 import { marked } from 'marked';
 import { ARGEEMENT_VERSION } from 'src/conf/version';
 import { useChangeThemeStore } from 'src/store';
@@ -222,7 +227,10 @@ const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
 
 onMounted(() => {
   if (localStorage.getItem('theme')) {
-    document.body.setAttribute('theme', localStorage.getItem('theme') || 'light');
+    document.body.setAttribute(
+      'theme',
+      localStorage.getItem('theme') || 'light',
+    );
   }
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
@@ -231,9 +239,9 @@ onMounted(() => {
   initCopilot();
   const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
   if (iframe) {
-    if(window.location.origin === 'http://localhost:3000'){
+    if (window.location.origin === 'http://localhost:3000') {
       iframe.src = `http://localhost:3002`;
-    }else{
+    } else {
       iframe.src = `${window.location.origin}/witchaind`;
     }
   }
@@ -243,7 +251,7 @@ watch(
   ruleForm,
   () => {
     let flag = false;
-    Object.keys(ruleForm).forEach(item => {
+    Object.keys(ruleForm).forEach((item) => {
       if (rules.value?.[item]?.[0]?.required) {
         if (!ruleForm?.[item]?.toString()?.length) {
           flag = true;
@@ -301,7 +309,10 @@ watch(
 
 <template>
   <div class="dialogue" id="dialogId">
-    <header class="dialogue-header" v-if="!qiankunWindow.__POWERED_BY_QIANKUN__">
+    <header
+      class="dialogue-header"
+      v-if="!qiankunWindow.__POWERED_BY_QIANKUN__"
+    >
       <span>
         <img src="@/assets/svgs/euler_copilot_logo.svg" />
         <h4>{{ $t('home.name') }}</h4>
@@ -340,9 +351,17 @@ watch(
           <template #reference>
             <img class="avatar" src="@/assets/svgs/user.svg" />
           </template>
-          <div class="exit-button lang-button" type="primary" @click="logoutHandler">{{ $t('Login.logout') }}</div>
+          <div
+            class="exit-button lang-button"
+            type="primary"
+            @click="logoutHandler"
+          >
+            {{ $t('Login.logout') }}
+          </div>
           <div class="divider"></div>
-          <div class="exit-button lang-button" @click="apikeyVisible = true">API KEY</div>
+          <div class="exit-button lang-button" @click="apikeyVisible = true">
+            API KEY
+          </div>
           <div class="divider"></div>
           <div class="exit-button lang-button" @click="KnowledgeVisible = true">
             {{ i18n.global.t('witChainD.witChainD') }}
@@ -352,13 +371,22 @@ watch(
     </header>
     <div class="dialogue-container">
       <div class="dialogue-menu">
-        <router-link v-for="item in routerList" :key="item.path" :to="item.path" class="menu-item">
+        <router-link
+          v-for="item in routerList"
+          :key="item.path"
+          :to="item.path"
+          class="menu-item"
+        >
           <span class="menu-icon">
             <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
               <img
                 v-if="
-                  router.currentRoute.value.name?.toString().indexOf(item.routerName) !== -1 ||
-                  router.currentRoute.value.name?.toString().indexOf(item.anotherName!) !== -1
+                  router.currentRoute.value.name
+                    ?.toString()
+                    .indexOf(item.routerName) !== -1 ||
+                  router.currentRoute.value.name
+                    ?.toString()
+                    .indexOf(item.anotherName!) !== -1
                 "
                 class="create-button__icon"
                 :src="item.selectedSrc"
@@ -385,16 +413,25 @@ watch(
       :before-close="handleDialogClose"
     >
       <div class="apikey_view">
-        <el-alert v-if="apikey" class="apikey_view_alert" type="info" :show-icon="true" :closable="false">{{
-          i18n.global.t('apikey.save_apikey')
-        }}</el-alert>
+        <el-alert
+          v-if="apikey"
+          class="apikey_view_alert"
+          type="info"
+          :show-icon="true"
+          :closable="false"
+        >
+          {{ i18n.global.t('apikey.save_apikey') }}
+        </el-alert>
         <div class="apikey_view_main">
           <div class="main">
             <div class="main_view" v-if="!apikey && hidden">
               <span>******************************</span>
             </div>
             <div class="main_view" v-else-if="!apikey">
-              <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_null.svg" />
+              <img
+                v-if="themeStore.theme === 'dark'"
+                src="src/assets/svgs/dark_null.svg"
+              />
               <img v-else src="src/assets/svgs/light_null.svg" alt="" />
               <span>{{ i18n.global.t('apikey.no_apikey') }}</span>
             </div>
@@ -404,15 +441,25 @@ watch(
               </div>
             </div>
             <div v-if="apikey">
-              <el-button type="primary" @click="copy">{{ i18n.global.t('feedback.copy') }}</el-button>
-              <el-button @click="revokeApi">{{ i18n.global.t('feedback.revoke') }}</el-button>
+              <el-button type="primary" @click="copy">
+                {{ i18n.global.t('feedback.copy') }}
+              </el-button>
+              <el-button @click="revokeApi">
+                {{ i18n.global.t('feedback.revoke') }}
+              </el-button>
             </div>
             <div v-else-if="!apikey && !revoke">
-              <el-button type="primary" @click="updateApi">{{ i18n.global.t('feedback.refresh') }}</el-button>
-              <el-button @click="revokeApi">{{ i18n.global.t('feedback.revoke') }}</el-button>
+              <el-button type="primary" @click="updateApi">
+                {{ i18n.global.t('feedback.refresh') }}
+              </el-button>
+              <el-button @click="revokeApi">
+                {{ i18n.global.t('feedback.revoke') }}
+              </el-button>
             </div>
             <div v-else>
-              <el-button type="primary" @click="createApi">{{ i18n.global.t('apikey.create_apikey') }}</el-button>
+              <el-button type="primary" @click="createApi">
+                {{ i18n.global.t('apikey.create_apikey') }}
+              </el-button>
             </div>
           </div>
         </div>
@@ -426,9 +473,22 @@ watch(
       @close="handleKnowledgeDialogClose"
       title="WitChainD"
     >
-      <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-position="left" @validate="handleFormValidate">
-        <el-form-item :label="$t('witChainD.witChainD_id')" prop="openai_api_key" class="docName">
-          <el-input v-model="ruleForm.kb_id" :placeholder="$t('witChainD.describe_the_witChainD')"> </el-input>
+      <el-form
+        ref="ruleFormRef"
+        :model="ruleForm"
+        :rules="rules"
+        label-position="left"
+        @validate="handleFormValidate"
+      >
+        <el-form-item
+          :label="$t('witChainD.witChainD_id')"
+          prop="openai_api_key"
+          class="docName"
+        >
+          <el-input
+            v-model="ruleForm.kb_id"
+            :placeholder="$t('witChainD.describe_the_witChainD')"
+          ></el-input>
         </el-form-item>
         <el-form-item class="model-ops-btn">
           <el-button
@@ -481,10 +541,12 @@ watch(
         //hover颜色待改进
         width: 40px;
         &:hover {
-          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
+            brightness(101%) contrast(101%);
         }
         &:active {
-          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg) brightness(101%) contrast(101%);
+          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
+            brightness(101%) contrast(101%);
         }
       }
     }
@@ -663,19 +725,23 @@ watch(
 #sun-icon {
   // background-color: pink;
   &:hover {
-    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg) brightness(94%) contrast(83%);
+    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
+      brightness(94%) contrast(83%);
   }
   &:active {
-    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg) brightness(101%) contrast(87%);
+    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg)
+      brightness(101%) contrast(87%);
   }
 }
 
 #moon-icon {
   &:hover {
-    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg) brightness(94%) contrast(83%);
+    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
+      brightness(94%) contrast(83%);
   }
   &:active {
-    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg) brightness(101%) contrast(87%);
+    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg)
+      brightness(101%) contrast(87%);
   }
 }
 </style>
