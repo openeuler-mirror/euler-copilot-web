@@ -316,7 +316,7 @@ watch(
         isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
       "
     >
-      <div class="trapezoid" @click="hanleAsideVisible" />
+      <div class="trapezoid" :class="{isExpandIcon: isCopilotAsideVisible}" @click="hanleAsideVisible" />
     </ElTooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">

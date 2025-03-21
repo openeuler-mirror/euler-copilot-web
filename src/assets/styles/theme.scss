@@ -72,6 +72,15 @@ body[theme='dark'] {
     rgb(39, 39, 76) -1.967%,
     rgba(28, 57, 81, 0.929) 98.202%
   );
+  // 这里是不同种类的debug图标
+  --flow-debug-default: url('../../assets/svgs/dark_debug.svg');
+  --flow-debug-hover: url('../../assets/svgs/dark_debug_hover.svg');
+  --flow-debug-active: url('../../assets/svgs/dark_debug_active.svg');
+  --flow-debug-dis: url('../../assets/svgs/dark_debug_dis.svg');
+  // 这里是不同种类的展开收起图标
+  --expand-fold-default: url('../../assets/svgs/dark_expand_fold.svg');
+  --expand-fold-hover: url('../../assets/svgs/dark_expand_fold_hover.svg');
+  --expand-fold-active: url('../../assets/svgs/dark_expand_fold_active.svg');
 }
 
 body[theme='light'] {
@@ -146,6 +155,15 @@ body[theme='light'] {
     rgba(109, 117, 250, 0.2) -1.967%,
     rgba(90, 179, 255, 0.2) 98.202%
   );
+  // 这里是不同种类的debug图标
+  --flow-debug-default: url('../../assets/svgs/light_debug.svg');
+  --flow-debug-hover: url('../../assets/svgs/light_debug_hover.svg');
+  --flow-debug-active: url('../../assets/svgs/light_debug_active.svg');
+  --flow-debug-dis: url('../../assets/svgs/light_debug_dis.svg');
+  // 这里是不同种类的展开收起图标
+  --expand-fold-default: url('../../assets/svgs/light_expand_fold.svg');
+  --expand-fold-hover: url('../../assets/svgs/light_expand_fold_hover.svg');
+  --expand-fold-active: url('../../assets/svgs/light_expand_fold_active.svg');
 }
 
 body {
