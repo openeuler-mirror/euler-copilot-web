@@ -782,16 +782,6 @@ const handleSendMessage = async (
   }
 }
 
-.el-popper[role='tooltip'].is-dark,
-.el-popper[role='tooltip'].is-light {
-  background-color: var(--o-bg-color-base);
-}
-
-.el-popper .el-popper__arrow::before {
-  right: 0;
-  visibility: hidden;
-}
-
 .el-popper[role='tooltip'] {
   max-width: 500px;
 }

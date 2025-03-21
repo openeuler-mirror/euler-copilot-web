@@ -45,34 +45,27 @@
   .aside-wrapper {
     position: relative;
     height: 100%;
-
+    // 因为圆弧斜线难以绘制，这里使用背景图标代替css绘制
     .trapezoid {
-      width: 56px;
-      height: 15px;
-      z-index: 1;
-      background-color: var(--o-bg-color-base);
+      width: 16px;
+      height: 56px;
+      z-index: 100;
       position: absolute;
-      left: calc(100% - 28px);
+      left: 100%;
       top: 50%;
-      border-top-left-radius: 20px 30px;
-      border-top-right-radius: 20px 30px;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-      transform: perspective(100px) rotateX(50deg);
-      transform-origin: bottom;
+      background: var(--expand-fold-default);
+      background-repeat: no-repeat;
       overflow: hidden;
-      transform: rotate(90deg);
       cursor: pointer;
-      &::after {
-        content: '';
-        position: absolute;
-        left: 25%;
-        top: 45%;
-        width: 30px;
-        height: 3px;
-        border-radius: 20px;
-        background-color: #5cafff;
+      &:hover {
+        background: var(--expand-fold-hover);
       }
+      &:active {
+        background: var(--expand-fold-active);
+      }
+    }
+    .trapezoid.isExpandIcon {
+      left: calc(100% - 8px);
     }
   }
 
@@ -185,22 +178,31 @@
         display: block;
         width: 144px;
         height: 32px;
+        border-radius: 4px;
         background-color: var(--o-bg-color-base);
         .el-select {
           width: 144px;
           height: 32px;
+          .el-select__wrapper {
+            border-radius: 4px;
+          }
         }
       }
       .debugBtn {
         width: 32px;
         height: 32px;
-        background: var(--o-bg-color-base);
+        background: var(--flow-debug-default);
         border-radius: 4px;
         cursor: pointer;
-        img {
-          width: 100%;
-          height: 100%;
+        &:hover {
+          background: var(--flow-debug-hover);
         }
+        &:active {
+          background: var(--flow-debug-active);
+        }
+      }
+      .debugBtn.isDebugDis {
+        background: var(--flow-debug-dis);
       }
     }
     .noWorkFlow {
@@ -254,7 +256,7 @@
       border-radius: 8px;
       path {
         padding: 10px;
-        height: 100px !important;
+        height: 96px !important;
       }
     }
   }

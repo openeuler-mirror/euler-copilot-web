@@ -67,7 +67,7 @@ watch(
       props.data?.parameters?.input_parameters || {};
     // 判断是否有调试的输入输出，有调试的输入输出，需要将其显示/否则显示默认的输出
     if (props.data.content?.type === 'input') {
-      inputAndOutput.value.output_parameters = props.data.content.params;
+      inputAndOutput.value.input_parameters = props.data.content.params;
     } else if (props.data.content?.type === 'output') {
       inputAndOutput.value.output_parameters = props.data.content.params;
     } else {

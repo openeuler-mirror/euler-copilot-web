@@ -28,6 +28,11 @@
           border-radius: 4px 0px 0px 4px;
         }
       }
+      .el-input {
+        > .el-input__wrapper {
+          padding: 0 8px;
+        }
+      }
 
       .createApp {
         margin-left: 16px;
@@ -59,10 +64,9 @@
     .appCenterCardContainer {
       margin-top: 12px;
       padding-top: 4px;
-      max-width: 1336px;
+      width: 1340px;
       max-height: calc(100vh - 370px);
       min-height: calc(100vh - 370px);
-      min-width: 1336px;
       overflow-y: auto;
       .appCenterCardBox {
         width: fit-content;
@@ -193,7 +197,7 @@
     }
     @media screen and (width <= 1400px) {
       .appCenterCardContainer {
-        width: 1000px;
+        width: 1004px;
       }
     }
 

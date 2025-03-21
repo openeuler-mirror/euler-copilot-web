@@ -63,6 +63,7 @@ const nodes = ref([]);
 const debugStatus = ref('');
 const debugTime = ref('');
 const totalTime = ref(0);
+const isNodeAndLineConnect = ref(false);
 const loading = ref(false);
 const apiLoading = ref(false);
 const hanleAsideVisible = () => {
@@ -93,33 +94,6 @@ const {
 const { layout } = useLayout();
 
 const { onDragOver, onDrop, onDragLeave, onDragStart } = useDragAndDrop();
-// 这里是初始化的开始结束的节点
-const initNodes = ref([
-  {
-    id: 'start',
-    type: 'start',
-    data: {
-      name: '开始',
-      description: '',
-      nodePosition: 'Right',
-      target: 'source',
-    },
-    deletable: false,
-    position: { x: 100, y: 160 },
-  },
-  {
-    id: 'end',
-    type: 'end',
-    data: {
-      name: '结束',
-      description: '',
-      nodePosition: 'Left',
-      target: 'target',
-    },
-    deletable: false,
-    position: { x: 600, y: 160 },
-  },
-]);
 // 开始的边默认为空数组【当然回显时应该有值】
 const edges = ref([]);
 
@@ -145,7 +119,6 @@ watch(
     // 获取当前工作流
     workFlowList.value = [...props.flowList];
     if (workFlowList.value.length) {
-      nodes.value = initNodes.value;
       // 默认选中第一个
       choiceFlowId(workFlowList.value?.[0]);
     }
@@ -189,6 +162,41 @@ const delNode = (id) => {
     const node = findNode(id);
     node ? removeNodes(node) : '';
   }
+};
+// 验证节点是否都连接
+const nodeAndLineConnection = () => {
+  // 获取当前所有节点和边
+  const curNodes = [...getNodes.value];
+  const curEdges = [...getEdges.value];
+  // 判断开始节点是否连接
+  let isNodeConnect = true;
+  const len = curNodes.length;
+  // 遍历每个节点
+  for (let i = 0; i < len; i++) {
+    if (curNodes[i].type === 'start') {
+      // 判断开始节点是否连接
+      isNodeConnect = curEdges.some(
+        (item) => item.sourceNode?.type === 'start',
+      );
+    } else if (curNodes[i].type === 'end') {
+      // 判断结束节点是否连接
+      isNodeConnect = curEdges.some((item) => item.targetNode?.type === 'end');
+    } else {
+      // 判断普通节点是否有连接-普通节点开始和结束都需要进行判断
+      const isStartCustomNodeConnect = curEdges.some(
+        (item) => item.sourceNode?.id === curNodes[i].id,
+      );
+      const isEndCustomNodeConnect = curEdges.some(
+        (item) => item.targetNode?.id === curNodes[i].id,
+      );
+      isNodeConnect = isStartCustomNodeConnect && isEndCustomNodeConnect;
+    }
+    if (!isNodeConnect) {
+      break;
+    }
+  }
+  // 是否所有节点都已连接
+  isNodeAndLineConnect.value = isNodeConnect;
 };
 // 编辑yaml
 const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
@@ -294,6 +302,7 @@ const edgesChange = (edges) => {
   // 边增加删除时直接将工作流debug状态置为false
   if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
     emits('updateFlowsDebug', false);
+    nodeAndLineConnection();
   }
 };
 
@@ -306,10 +315,12 @@ const nodesChange = (nodes) => {
     delNode(nodes[0].id);
     // 节点增加删除时直接将工作流debug状态置为false
     emits('updateFlowsDebug', false);
+    nodeAndLineConnection();
   }
   if (nodes?.[0]?.type === 'add') {
     // 节点增加删除时直接将工作流debug状态置为false
     emits('updateFlowsDebug', false);
+    nodeAndLineConnection();
   }
 };
 
@@ -446,6 +457,8 @@ const redrageFlow = (nodesList, edgesList) => {
   });
   setNodes(newNodeList);
   setEdges(newEdgeList);
+  // 回显节点和边后，判断各节点连接状态
+  nodeAndLineConnection();
 };
 
 // 接受工作流调试时获取的相应的数据
@@ -662,7 +675,11 @@ defineExpose({
           isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
         "
       >
-        <div class="trapezoid" @click="hanleAsideVisible" />
+        <div
+          class="trapezoid"
+          :class="{ isExpandIcon: isCopilotAsideVisible }"
+          @click="hanleAsideVisible"
+        />
       </ElTooltip>
 
       <transition name="transition-fade">
@@ -768,6 +785,7 @@ defineExpose({
           ></BranchNode>
         </template>
 
+        <!-- 开始结束节点 -->
         <template #node-start="nodeStartProps">
           <CustomSaENode v-bind="nodeStartProps"></CustomSaENode>
         </template>
@@ -841,13 +859,23 @@ defineExpose({
             </template>
           </el-select>
         </div>
-        <div class="debugBtn" @click="handleDebugDialogOps(true)">
-          <img
-            src="@/assets/images/debugBtnDis.png"
-            v-if="debugDialogVisible"
-          />
-          <img src="@/assets/images/debugBtn.png" v-else />
-        </div>
+        <el-tooltip
+          v-if="!isNodeAndLineConnect"
+          effect="dark"
+          content="节点连接完成才能进行调试"
+          placement="top"
+        >
+          <div
+            class="debugBtn isDebugDis"
+            @click="handleDebugDialogOps(true)"
+          ></div>
+        </el-tooltip>
+        <div
+          v-else
+          class="debugBtn"
+          :class="{ isDebugDis: debugDialogVisible }"
+          @click="handleDebugDialogOps(true)"
+        ></div>
         <div class="debugStatus"></div>
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
