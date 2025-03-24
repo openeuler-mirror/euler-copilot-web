@@ -60,7 +60,7 @@ const initQianKun = () => {
         qiankunMounted(props);
       }
     },
-    unmount(props) {
+    unmount() {
       if (app) {
         app.unmount();
         const appContainer = app._container as HTMLElement;
@@ -68,7 +68,7 @@ const initQianKun = () => {
         app = null;
       }
     },
-    update(props) {},
+    update() {},
   });
 };
 

@@ -1,5 +1,3 @@
-import { appApi } from 'srcapis/paths';
-
 export default {
   home: {
     name: 'EulerCopilot',

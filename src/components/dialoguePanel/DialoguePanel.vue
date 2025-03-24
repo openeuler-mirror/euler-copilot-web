@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, onBeforeUpdate, onUpdated, ref, withDefaults } from 'vue';
+import { computed, ref, withDefaults } from 'vue';
 import { writeText } from 'src/utils';
 import {
   useSessionStore,
   useChangeThemeStore,
-  txt2imgPath,
   echartsObj,
 } from 'src/store/conversation';
 import { useHistorySessionStore } from 'src/store';
@@ -19,16 +18,13 @@ import DialogueThought from './DialogueThought.vue';
 import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
-import { Linetooltip, Circlelegend } from './chartsCss';
 import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggest } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
-const { app } = storeToRefs(useSessionStore());
 const { language } = storeToRefs(useLangStore());
-const { changeLanguage } = useLangStore();
 const echartsDraw = ref();
 const visible = ref(false);
 export interface DialoguePanelProps {
@@ -79,7 +75,6 @@ export interface DialoguePanelProps {
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'srcapis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
-import { emit, title } from 'process';
 
 var option = ref();
 var show = ref(false);
@@ -305,7 +300,7 @@ const handleIsLike = () => {
     }
     if (a !== 2) {
       isSupport.value = Boolean(a);
-      isAgainst.value = !Boolean(a);
+      isAgainst.value = !a;
     } else {
       isSupport.value = 0;
       isAgainst.value = 0;
@@ -383,6 +378,7 @@ onBeforeUnmount(() => {
 });
 
 const answer_zoom = ref(false);
+
 const zoom_in = (event) => {
   txt2imgPathZoom.value = event.target.currentSrc;
   answer_zoom.value = true;
@@ -416,8 +412,6 @@ const { sendQuestion } = useSessionStore();
 
 const chatWithParams = async () => {
   visible.value = false;
-  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
-  const len = conversationList.value.length;
   const question = conversationList.value[props.cid - 1].message;
   const flowId = conversationList.value[props.cid].flowdata.flowId;
   await sendQuestion(
@@ -440,14 +434,6 @@ const searchAppName = (appId) => {
   return '';
 };
 
-const handleSendMessage = async (
-  question,
-  user_selected_flow,
-  user_selected_app,
-) => {
-  visible.value = false;
-  // handleSendMessage(undefined,undefined,user_selected_app.value);
-};
 </script>
 <template>
   <div

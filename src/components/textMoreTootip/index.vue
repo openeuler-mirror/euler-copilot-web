@@ -48,7 +48,7 @@ export default {
     },
   },
   watch: {
-    row: function (val) {
+    row: function () {
       this.init();
     },
     value: function () {

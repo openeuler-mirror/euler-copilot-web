@@ -92,7 +92,7 @@
                       v-if="apiItem.favorited"
                       class="apiFavorite"
                     />
-                    <IconUnfavorite v-else="apiItem.favorited" />
+                    <IconUnfavorite v-else />
                   </div>
                 </div>
                 <div class="apiCenterCardContentDes">

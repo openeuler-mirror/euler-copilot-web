@@ -85,14 +85,12 @@ const { sendQuestion, stopDebug } = useSessionStore();
 const testFlag = ref(true);
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
-const { generateSession, generateSessionDebug } = useHistorySessionStore();
+const { generateSessionDebug } = useHistorySessionStore();
 const {
   historySession,
   currentSelectedSession,
-  isSelectedAll,
   selectedSessionIds,
 } = storeToRefs(useHistorySessionStore());
-const { app, appList } = storeToRefs(useSessionStore());
 const themeStore = useChangeThemeStore();
 const tmpConversationId = ref('');
 const props = defineProps({
@@ -106,9 +104,6 @@ const props = defineProps({
     type: Function,
   },
 });
-interface DebugProps {
-  handleDebugDialogOps: any;
-}
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -140,7 +135,6 @@ const handleSendMessage = async (
   user_selected_flow?: string[],
 ) => {
   if (isAnswerGenerating.value) return;
-  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   if (
     len > 0 &&

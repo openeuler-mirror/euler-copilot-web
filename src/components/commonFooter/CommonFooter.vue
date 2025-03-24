@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import PrivacyText from './PrivacyText.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import marked from 'src/utils/marked';
 

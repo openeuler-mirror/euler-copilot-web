@@ -9,8 +9,9 @@
     "build": "vite build",
     "build:micro": "vite build --mode micro",
     "preview": "vite preview",
-    "lint": "eslint . --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
-    "format": "prettier --write src/"
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/",
+    "type-check": "tsc --noEmit"
   },
   "engines": {
     "node": ">= 18.18.2"

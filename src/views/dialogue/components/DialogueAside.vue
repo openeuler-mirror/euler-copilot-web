@@ -269,7 +269,7 @@ function ensureAppAtFirstPosition() {
 const getAppsValue = async () => {
   //获取 top5 list
   const [_, res] = await api.getTopFiveApp(5);
-  if (res?.result) {
+  if (!_&&res?.result) {
     appList.value = res.result.applications;
     apps.value = res.result.applications;
   }

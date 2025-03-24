@@ -6,8 +6,7 @@ import {
   useChangeThemeStore,
 } from 'src/store';
 import type { SessionItem } from './type';
-import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { dayjs } from 'element-plus';
 import i18n from 'src/i18n';
 import { errorMsg, successMsg } from 'src/components/Message';

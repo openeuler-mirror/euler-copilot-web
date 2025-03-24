@@ -25,7 +25,7 @@ import i18n from 'src/i18n';
 import { errorMsg } from 'src/components/Message';
 
 function getCookie(name: string) {
-  let matches = document.cookie.match(
+  const matches = document.cookie.match(
     new RegExp(
       '(?:^|; )' +
         name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') +
@@ -182,12 +182,12 @@ export const handleStatusError = async (
       return;
     }
     const originalRequest = error.config;
-    if (originalRequest.url === '/api/auth/refresh_token') {
+    if (originalRequest && originalRequest.url === '/api/auth/refresh_token') {
       // 长token过期,需要重新登录
       handleAuthorize(status);
       return Promise.reject(error.response);
     }
-    if (originalRequest.url === '/api/auth/user') {
+    if (originalRequest && originalRequest.url === '/api/auth/user') {
       handleAuthorize(status);
       return;
     }
