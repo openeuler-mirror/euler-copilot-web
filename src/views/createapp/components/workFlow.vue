@@ -315,7 +315,7 @@ const nodesChange = (nodes) => {
 
 // 子组件获取的flow
 const getCreatedFlow = (createdFlowObj) => {
-  if (flowObj) {
+  if (flowObj.value) {
     flowObj.value = { ...createdFlowObj };
     workFlowItemName.value = createdFlowObj.name;
     // 回显工作流节点和边

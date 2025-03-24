@@ -162,17 +162,8 @@ const beforeUpload = async (file: ElFile) => {
   }
 };
 
-const beforeUploadPromise = (fileWrapper: { file: File }): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    // ...（上面的异步逻辑，但在最后调用 resolve(true) 或 reject(false)）
-  });
-};
-// 上传进度
-const handleProgress = (event: ElUploadProgressEvent) => {
-  progressVal.value = event.percent;
-};
 // 上传完成
-const handleSuccess = (res: ElUploadProgressEvent, file: UploadFile) => {
+const handleSuccess = () => {
   uploadDone.value = true;
   progressVal.value = 0;
 };
@@ -219,7 +210,7 @@ watch(getServiceYaml, () => {
 });
 watch(
   () => themeStore.theme,
-  (newVal) => {
+  () => {
     if (themeStore.theme === 'dark') {
       extensions.value = [yaml(), oneDark];
     } else {

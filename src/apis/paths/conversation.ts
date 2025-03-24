@@ -21,9 +21,7 @@ export const stopGeneration = (): Promise<
   [
     any,
     (
-      | FcResponse<{
-          // conversationId: string;
-        }>
+      | FcResponse<object>
       | undefined
     ),
   ]

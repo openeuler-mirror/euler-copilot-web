@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { createRouter, createWebHashHistory } from 'vue-router';
-import  NotFoundComponent  from '@/views/404.vue';
+import NotFoundComponent from '@/views/404.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 const router = createRouter({

@@ -4,8 +4,6 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
 import CustomLoading from '../customLoading/index.vue';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
 import { useRouter, useRoute } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';

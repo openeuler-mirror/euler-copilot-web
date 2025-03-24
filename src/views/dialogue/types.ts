@@ -151,7 +151,6 @@ export class MessageArray {
     index: number,
     islike: number | boolean,
   ): void {
-    const a = this.getisLikeByIndex(index)[cid];
     this.getisLikeByIndex(index)[cid] = islike;
   }
 }

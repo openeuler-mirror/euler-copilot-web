@@ -17,9 +17,7 @@ if (props.flowdata) {
   contents.value = [props.flowdata];
 }
 
-// const activeNames = ref([contents.value[0].id]);
 const activeNames = ref([contents.value[0].id]);
-
 const secondCollapseActiveName = ref<number[]>([]);
 
 watch(

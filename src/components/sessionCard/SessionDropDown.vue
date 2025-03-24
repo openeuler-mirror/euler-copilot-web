@@ -40,8 +40,6 @@ const props = defineProps<{
   isFileVisible: boolean;
 }>();
 
-// 创建emit
-const emit = defineEmits(['deleteFile']);
 // 偏移量
 const offset = {
   x: 30,

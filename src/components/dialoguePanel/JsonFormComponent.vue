@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { ref, onMounted, withDefaults, watch } from 'vue';
+import { ref, withDefaults, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
 import { useHistorySessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';
 const { params } = storeToRefs(useHistorySessionStore());
 
-const visible = ref(true);
 const props = withDefaults(
   defineProps<{
     code: any; // 添加jsonData属性
@@ -33,7 +32,6 @@ function generateJsonObjectFromSchema(code) {
   for (const key in schema.properties) {
     if (schema.properties.hasOwnProperty(key)) {
       const propertySchema = schema.properties[key];
-      const str = key + ':' + propertySchema['description'];
       descriptions.value[key] = propertySchema['description'].toString();
       // 如果属性是一个对象，并且包含 required 字段
       if (propertySchema['type'] === 'object') {
@@ -42,7 +40,6 @@ function generateJsonObjectFromSchema(code) {
         for (const subKey in propertySchema.properties) {
           if (propertySchema.properties.hasOwnProperty(subKey)) {
             const subPropertySchema = propertySchema.properties[subKey];
-
             // 检查是否有默认值，并使用它，否则使用空值或根据类型推断一个值
             let value;
             if (subPropertySchema.default !== undefined) {
@@ -100,14 +97,14 @@ params.value = jsonObject.value;
 
 watch(
   () => jsonObject,
-  (newSchema) => {
+  () => {
     params.value = jsonObject.value;
   },
 );
 
 watch(
   () => params,
-  (newSchema) => {
+  () => {
     params.value = jsonObject.value;
   },
 );

@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import {
   ref,
-  computed,
   onMounted,
   withDefaults,
   watch,
   shallowRef,
-  reactive,
 } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { json } from '@codemirror/lang-json';
@@ -66,14 +64,14 @@ const copy = () => {
 
 watch(
   () => code,
-  (newVal) => {
+  () => {
     params.value = code;
   },
 );
 
 watch(
   () => themeStore.theme,
-  (newVal) => {
+  () => {
     if (themeStore.theme === 'dark') {
       extensions.value = [json(), oneDark];
     } else {
