@@ -1325,7 +1325,7 @@ const searchAppName = (appId) => {
             }
           }
           &:last-child {
-            border-bottom: 1px solid transparent;
+            border-bottom: 1px solid transparent !important;
           }
         }
         .el-collapse-item__content {

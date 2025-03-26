@@ -112,7 +112,6 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
           {
             appId: appId,
             flowId,
-            topologyCheck: false,
           },
           {
             flow: {

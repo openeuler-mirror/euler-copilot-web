@@ -25,7 +25,7 @@ const props = defineProps({
     required: false,
   },
 });
-const emits = defineEmits(['delNode', 'editYamlDrawer']);
+const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle']);
 
 const statusList = ref(['running', 'success', 'error']);
 
@@ -34,6 +34,10 @@ const curStatus = ref('');
 
 // 当前节点运行耗时
 const costTime = ref('');
+
+// 当前handle是否连接中[分别是target和source]
+const handleTargetConnecting = ref(false);
+const handleSourceConnecting = ref(false);
 
 // 定义传给mirror展示输入输出的存储量
 const inputAndOutput = ref({
@@ -64,6 +68,8 @@ watch(
       inputAndOutput.value.output_parameters =
         props.data?.parameters?.output_parameters || {};
     }
+    handleTargetConnecting.value = false;
+    handleSourceConnecting.value = false;
   },
   { deep: true, immediate: true },
 );
@@ -77,11 +83,27 @@ const delNode = (id) => {
 const editYaml = (nodeName, nodeDesc, yamlCode) => {
   emits('editYamlDrawer', nodeName, nodeDesc, yamlCode, props.id);
 };
+
+// 设置当前正在连接[这里是使连接过程中，handle节点高亮]
+const setConnectStatus = (type) => {
+  if (type === 'source') {
+    handleSourceConnecting.value = true;
+  } else {
+    handleTargetConnecting.value = true;
+  }
+  // 更新当前节点handle连接状态
+  emits('updateConnectHandle', props.id);
+};
 </script>
 
 <template>
   <div class="customNodeStyle" :class="curStatus">
-    <Handle type="target" :position="Position.Left"></Handle>
+    <Handle
+      :class="{ isConnecting: handleTargetConnecting }"
+      @mousedown="setConnectStatus('target')"
+      type="target"
+      :position="Position.Left"
+    ></Handle>
     <div class="nodeBox" :class="getNodeClass(props.data)">
       <div class="title" v-if="props.data.name">
         <img class="iconStyle" :src="getSrcIcon(props.data)" />
@@ -93,7 +115,13 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
             trigger="hover"
             popper-class="nodeDealPopper"
           >
-            <template #reference>···</template>
+            <template #reference>
+              <div class="moreDots">
+                <div class="nodeDot"></div>
+                <div class="nodeDot"></div>
+                <div class="nodeDot"></div>
+              </div>
+            </template>
             <el-button
               text
               class="dealItem"
@@ -120,6 +148,8 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
     <Handle
       type="source"
       :position="Position.Right"
+      @mousedown="setConnectStatus('source')"
+      :class="{ isConnecting: handleSourceConnecting }"
       :connectable="props.data?.isConnectSource"
     ></Handle>
     <!-- 调试时出现-暂时隐藏 -->
