@@ -34,6 +34,7 @@ const handleCreateapi = async () => {
     if (res.code === 200) {
       getServiceJson.value = res?.result?.apis;
       getServiceName.value = res?.result?.name;
+      activeServiceNameList.value = getServiceJson.value.map((item) => item.name);
       uploadtype.value = 'get';
       successMsg('创建成功');
     } else {
@@ -196,7 +197,7 @@ watch(
     getServiceYaml.value = props.getServiceYaml;
     getServiceName.value = props.getServiceName;
     if (getServiceJson.value?.length) {
-      activeServiceNameList.value = [getServiceJson.value?.[0]?.name];
+      activeServiceNameList.value = getServiceJson.value.map((item) => item.name);
     }
     if (props.type === 'edit' && props) {
       getServiceYamlFun(props.serviceId);
@@ -289,7 +290,7 @@ onMounted(() => {
     </div>
   </el-upload>
   <div class="code-container" v-if="uploadtype === 'edit'">
-    <span class="serviceName">{{ getServiceName }}</span>
+    <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
     <Codemirror
       v-model="getServiceYaml"
       placeholder="Code goes here..."
@@ -367,7 +368,7 @@ onMounted(() => {
   display: block;
   font-size: 14px;
   color: var(--o-text-color-primary);
-  height: 22px;
+  line-height: 22px;
   margin-bottom: 8px;
 }
 .json-container {
@@ -514,7 +515,9 @@ onMounted(() => {
 .o-collapse-content {
   padding-left: 18px;
   .subName {
+    margin-top: 8px;
     width: 100%;
+    line-height: 16px;
     display: flex;
     align-items: flex-start;
     div:first-child {

@@ -30,7 +30,7 @@
         </el-input>
         <el-button
           type="primary"
-          class="createapi"
+          class="createApi"
           @click="openSidebar('upload', '')"
         >
           {{ $t('semantic.interface_upload') }}
@@ -385,10 +385,7 @@ onMounted(() => {
   padding: 0px;
   &::v-deep(.el-drawer__header) {
     margin-bottom: 0px !important;
-  }
-  .el-drawer__header {
-    color: pink;
-    margin-bottom: 0px !important;
+    color: var(--o-text-color-primary) !important;
   }
 }
 .apiCenterCardSingle {
@@ -443,8 +440,8 @@ img {
     white-space: nowrap;
   }
 }
-.el-drawer__body {
-  padding: 0px 24px 16px;
+:deep(.el-drawer__body) {
+  padding: 8px 24px 16px !important;
   .drawerBody {
     height: 100%;
     textarea {
@@ -454,6 +451,8 @@ img {
   }
 }
 :deep(.el-drawer__header) {
+  color: var(--o-text-color-primary) !important;
+  padding: 24px 0px 0px 24px !important;
   margin-bottom: 0px !important;
 }
 </style>
