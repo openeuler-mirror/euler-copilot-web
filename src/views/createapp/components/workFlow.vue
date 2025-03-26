@@ -15,6 +15,7 @@ import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
+import { useChangeThemeStore } from 'src/store/conversation';
 import {
   IconSearch,
   IconCaretRight,
@@ -66,6 +67,8 @@ const totalTime = ref(0);
 const isNodeAndLineConnect = ref(false);
 const loading = ref(false);
 const apiLoading = ref(false);
+const themeStore = useChangeThemeStore();
+const connectHandleNodeId = ref('');
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -555,6 +558,25 @@ const updateNodeFunc = (id, status, constTime, content?) => {
   });
 };
 
+// 保存当前handle拖拽的nodeid--以便于拖拽结束时，设置该节点handle恢复默认状态
+const updateConnectHandle = (nodeId) => {
+  connectHandleNodeId.value = nodeId;
+};
+
+// 这里是松开鼠标时[拖拽结束]-恢复不再拖拽的handle节点默认状态【对应的是customNode里拖拽节点设置状态】
+const cancelConnectStatus = (e) => {
+  if (connectHandleNodeId.value) {
+    // 获取到当前的node,更新
+    const node = findNode(connectHandleNodeId.value);
+    // 这里获取node的data
+    const data = node?.data;
+    // 根据当前id，更新下data重新赋值，初始化节点状态和handle状态
+    updateNode(connectHandleNodeId.value, { data: { ...data } });
+    // 将其置空
+    connectHandleNodeId.value = '';
+  }
+};
+
 const saveFlow = (updateNodeParameter?) => {
   loading.value = true;
   const appId = route.query?.appId;
@@ -626,7 +648,6 @@ const saveFlow = (updateNodeParameter?) => {
       {
         appId: appId,
         flowId: flowObj.value.flowId,
-        topologyCheck: false,
       },
       {
         flow: {
@@ -757,9 +778,18 @@ defineExpose({
         @nodes-change="nodesChange"
         @paneScroll="handleZommOnScroll"
         @viewportChangeEnd="viewportChangeEndFunc"
+        @mouseup="cancelConnectStatus"
       >
-        <Background pattern-color="#aaa" :gap="8" />
-        <MiniMap :width="220" mask-color="#f4f6fa" :mask-stroke-width="250" />
+        <Background
+          :color="themeStore.theme === 'dark' ? '#3e4551' : '#dfe5ef'"
+          :size="2"
+          :gap="8"
+        />
+        <MiniMap
+          :width="220"
+          :mask-color="themeStore.theme === 'dark' ? '#2a2f37' : '#f4f6fa'"
+          :mask-stroke-width="250"
+        />
         <CustomControl
           :handleChangeZoom="handleChangeZoom"
           :flowZoom="flowZoom"
@@ -772,6 +802,7 @@ defineExpose({
             :disabled="debugDialogVisible"
             @delNode="delNode"
             @editYamlDrawer="editYamlDrawer"
+            @updateConnectHandle="updateConnectHandle"
           ></CustomNode>
         </template>
 
@@ -787,11 +818,11 @@ defineExpose({
 
         <!-- 开始结束节点 -->
         <template #node-start="nodeStartProps">
-          <CustomSaENode v-bind="nodeStartProps"></CustomSaENode>
+          <CustomSaENode @updateConnectHandle="updateConnectHandle" v-bind="nodeStartProps"></CustomSaENode>
         </template>
 
         <template #node-end="nodeEndProps">
-          <CustomSaENode v-bind="nodeEndProps"></CustomSaENode>
+          <CustomSaENode @updateConnectHandle="updateConnectHandle" v-bind="nodeEndProps"></CustomSaENode>
         </template>
 
         <!-- 自定义边线-连接后 -->

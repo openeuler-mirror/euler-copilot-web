@@ -104,7 +104,7 @@ body[theme='light'] {
   --flow-nodeBox-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
   // 工作流节点背景色
   --flow-bg-color: #fdfeff;
-  --o-bash-box-shadow: 0 4px 16px 0 rgba(42, 47, 55, 0.1);
+  --o-bash-box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
   // 工作流开始节点结束背景渐变色
   --flow-startEnd-bg: linear-gradient(
     rgba(133, 148, 253, 0.3),
@@ -168,11 +168,12 @@ body[theme='light'] {
 
 body {
   // 这里替换下拉框的选中颜色，无论亮暗都是一致
-  .el-select-dropdown__item.is-hovering {
-    background-color: #7aa5ff !important;
-  }
   .el-select-dropdown__item.is-selected {
     background-color: #6395fd !important;
     font-weight: normal !important;
+  }
+  // 悬浮优先级高于选中
+  .el-select-dropdown__item:hover {
+    background-color: #7aa5ff !important;
   }
 }

@@ -104,6 +104,20 @@ const modeOptions = reactive([
 const handleChange = (val: number[]) => {
   activeNames.value = val;
 };
+
+// 这里是将基本信息展开收起单独提出来，避免滚动条超出右方卡片上方
+const changeActiveName = () => {
+  const idx = activeNames.value.indexOf(1);
+  if (idx > -1) {
+    // 如果基本信息collapse存在【展开状态】则删除【收起】
+    activeNames.value.splice(idx, 1);
+    activeName.value.splice(idx, 1);
+  } else {
+    // 否则添加【展开】
+    activeNames.value.push(1);
+    activeName.value.push(1);
+  }
+}
 const addLink = () => {
   createAppForm.value.links.push('');
 };
@@ -279,237 +293,246 @@ defineExpose({
 </script>
 <template>
   <CustomLoading :loading="loading"></CustomLoading>
-  <el-form
-    :model="createAppForm"
-    ref="createAppFormRef"
-    label-width="118px"
-    :rules="createAppRole"
-    class="createAppContainerMainLeft"
-  >
-    <el-collapse
-      v-model="activeName"
-      @change="handleChange"
-      class="o-hpc-collapse"
-      :prefix-icon="IconCaretRight"
+  <!-- 将基本信息collapse提出 -->
+  <div class="appConfig">
+    <div class="baseInfoTitle" :class="{ 'activeCollapse': activeNames.includes(1) }" @click="changeActiveName">
+      <span>基本信息</span>
+      <el-icon :class="{ 'is-active': activeNames.includes(1) }" class="el-collapse-item__arrow">
+        <IconCaretRight />
+      </el-icon>
+    </div>
+    <el-form
+      :model="createAppForm"
+      ref="createAppFormRef"
+      label-width="118px"
+      :rules="createAppRole"
+      class="createAppContainerMainLeft"
     >
-      <el-collapse-item title="Consistency" :name="1">
-        <template #title>
-          <span>基本信息</span>
-          <el-icon
-            class="el-collapse-item__arrow"
-            :class="{ 'is-active': activeNames.includes(1) }"
-          >
-            <IconCaretRight />
-          </el-icon>
-        </template>
-        <el-form-item label="图标" prop="icon" class="notRequired">
-          <div class="uploadArea">
-            <el-upload
-              class="placeIcon avatar-uploader"
-              action="#"
-              :show-file-list="false"
-              :on-success="handleAvatarSuccess"
-              :before-upload="beforeUpload"
-              :http-request="httpRequest"
-              :accept="'image/*'"
+      <el-collapse
+        v-model="activeName"
+        @change="handleChange"
+        class="o-hpc-collapse"
+        :prefix-icon="IconCaretRight"
+      >
+        <el-collapse-item title="Consistency" :name="1">
+          <template #title>
+            <span>基本信息</span>
+            <el-icon
+              class="el-collapse-item__arrow"
+              :class="{ 'is-active': activeNames.includes(1) }"
             >
-              <img
-                v-if="createAppForm.icon.length"
-                :src="createAppForm.icon"
-                class="avatar"
-              />
-              <div v-else class="defaultIcon"></div>
-              <div class="uploadIcon"></div>
-            </el-upload>
-            <span class="text">上传图标</span>
-          </div>
-        </el-form-item>
-        <el-form-item label="应用名称" prop="name">
-          <el-input
-            class="w320"
-            maxlength="20"
-            v-model="createAppForm.name"
-            clearable
-            placeholder="请输入"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="应用简介" prop="description">
-          <el-input
-            class="w320 h80"
-            v-model="createAppForm.description"
-            maxlength="150"
-            place
-            clearable
-            type="textarea"
-            placeholder="请输入"
-            @keydown.enter="handleTextareaEnter"
-          ></el-input>
-        </el-form-item>
-        <!-- 这里notRequired样式,在局部的通过校验时，控制局部的样式为正常。links为空时通过校验 -->
-        <el-form-item label="相关链接" prop="links" class="notRequired">
-          <div class="linkLine">
-            <el-button
-              :icon="IconPlusCircle"
-              @click="addLink"
-              :disabled="createAppForm.links.length > 4"
-            >
-              添加链接
-            </el-button>
-            <span class="linkText">最多添加5个链接</span>
-          </div>
-          <div class="linkArea" v-for="(item, index) in createAppForm.links">
-            <el-input
-              class="w320"
-              maxlength="200"
-              :class="{ validUrl: checkUrl(createAppForm.links[index]) }"
-              v-model="createAppForm.links[index]"
-              placeholder="请输入"
-              clearable
-            ></el-input>
-            <el-icon class="delIcon" @click="delConnectItem(index)">
-              <IconDelete />
+              <IconCaretRight />
             </el-icon>
-          </div>
-        </el-form-item>
-
-        <el-form-item
-          label="推荐问题"
-          prop="recommendedQuestions"
-          class="notRequired"
-        >
-          <div class="linkLine">
-            <el-button
-              :icon="IconPlusCircle"
-              @click="addRecommond"
-              :disabled="createAppForm.recommendedQuestions.length > 2"
-            >
-              添加问题
-            </el-button>
-            <span class="linkText">最多添加3个问题</span>
-          </div>
-          <div
-            class="linkArea"
-            v-for="(item, index) in createAppForm.recommendedQuestions"
-          >
-            <el-input
-              class="w320"
-              maxlength="30"
-              v-model="createAppForm.recommendedQuestions[index]"
-              placeholder="请输入"
-              clearable
-            ></el-input>
-            <el-icon class="delIcon" @click="delRecommendItem(index)">
-              <IconDelete />
-            </el-icon>
-          </div>
-        </el-form-item>
-      </el-collapse-item>
-      <el-collapse-item title="Consistency" :name="2">
-        <template #title>
-          <span>多轮对话</span>
-          <el-icon
-            class="el-collapse-item__arrow"
-            :class="{ 'is-active': activeNames.includes(2) }"
-          >
-            <IconCaretRight />
-          </el-icon>
-        </template>
-        <el-form-item label="请选择对话轮次" prop="dialogRounds">
-          <div class="multiSessionItem">
-            <el-input-number
-              v-model="createAppForm.dialogRounds"
-              :step="1"
-              :value-on-clear="3"
-              :min="1"
-              :max="10"
-            ></el-input-number>
-            <span class="sessionUnit">(1 ~ 10)</span>
-          </div>
-        </el-form-item>
-      </el-collapse-item>
-      <el-collapse-item title="Consistency" :name="3">
-        <template #title>
-          <span>权限配置</span>
-          <el-icon
-            class="el-collapse-item__arrow"
-            :class="{ 'is-active': activeNames.includes(3) }"
-          >
-            <IconCaretRight />
-          </el-icon>
-        </template>
-        <el-form-item label="权限" prop="permission" class="permissionItem">
-          <div class="permissionSelect">
-            <el-radio-group v-model="createAppForm.permission.visibility">
-              <el-radio
-                v-for="(item, index) in permissionTypeList"
-                :key="index"
-                :value="item.value"
+          </template>
+          <el-form-item label="图标" prop="icon" class="notRequired">
+            <div class="uploadArea">
+              <el-upload
+                class="placeIcon avatar-uploader"
+                action="#"
+                :show-file-list="false"
+                :on-success="handleAvatarSuccess"
+                :before-upload="beforeUpload"
+                :http-request="httpRequest"
+                :accept="'image/*'"
               >
-                {{ item.label }}
-              </el-radio>
-            </el-radio-group>
-          </div>
-          <div
-            class="partPermissionPerson"
-            v-if="createAppForm.permission.visibility === 'protected'"
-          >
-            <div class="permissionChoice">
-              <div class="perimissionChoiceTitle">
-                <div>可选</div>
-                <div class="choiceNum">{{ curPersonList.length }}</div>
-              </div>
-              <el-input
-                ref="inputRef"
-                v-model="searchName"
-                class="o-style-search permissionInputSearch"
-                placeholder="搜索用户"
-                @input="searchPerson"
-                clearable
-                :prefix-icon="IconSearch"
-              ></el-input>
-              <div class="personList">
-                <el-checkbox-group
-                  v-model="createAppForm.permission.authorizedUsers"
-                >
-                  <el-checkbox
-                    v-for="(item, index) in curPersonList"
-                    :key="index"
-                    :value="item?.userSub"
-                  >
-                    <span class="circle"></span>
-                    {{ item?.userName }}
-                  </el-checkbox>
-                </el-checkbox-group>
-              </div>
+                <img
+                  v-if="createAppForm.icon.length"
+                  :src="createAppForm.icon"
+                  class="avatar"
+                />
+                <div v-else class="defaultIcon"></div>
+                <div class="uploadIcon"></div>
+              </el-upload>
+              <span class="text">上传图标</span>
             </div>
-            <div class="permissionChoice">
-              <div class="perimissionChoiceTitle">
-                <div>已选</div>
-                <div class="choiceNum">
-                  {{ createAppForm.permission.authorizedUsers.length }}
+          </el-form-item>
+          <el-form-item label="应用名称" prop="name">
+            <el-input
+              class="w320"
+              maxlength="20"
+              v-model="createAppForm.name"
+              clearable
+              placeholder="请输入"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="应用简介" prop="description">
+            <el-input
+              class="w320 h80"
+              v-model="createAppForm.description"
+              maxlength="150"
+              place
+              clearable
+              type="textarea"
+              placeholder="请输入"
+              @keydown.enter="handleTextareaEnter"
+            ></el-input>
+          </el-form-item>
+          <!-- 这里notRequired样式,在局部的通过校验时，控制局部的样式为正常。links为空时通过校验 -->
+          <el-form-item label="相关链接" prop="links" class="notRequired">
+            <div class="linkLine">
+              <el-button
+                :icon="IconPlusCircle"
+                @click="addLink"
+                :disabled="createAppForm.links.length > 4"
+              >
+                添加链接
+              </el-button>
+              <span class="linkText">最多添加5个链接</span>
+            </div>
+            <div class="linkArea" v-for="(item, index) in createAppForm.links">
+              <el-input
+                class="w320"
+                maxlength="200"
+                :class="{ validUrl: checkUrl(createAppForm.links[index]) }"
+                v-model="createAppForm.links[index]"
+                placeholder="请输入"
+                clearable
+              ></el-input>
+              <el-icon class="delIcon" @click="delConnectItem(index)">
+                <IconDelete />
+              </el-icon>
+            </div>
+          </el-form-item>
+
+          <el-form-item
+            label="推荐问题"
+            prop="recommendedQuestions"
+            class="notRequired"
+          >
+            <div class="linkLine">
+              <el-button
+                :icon="IconPlusCircle"
+                @click="addRecommond"
+                :disabled="createAppForm.recommendedQuestions.length > 2"
+              >
+                添加问题
+              </el-button>
+              <span class="linkText">最多添加3个问题</span>
+            </div>
+            <div
+              class="linkArea"
+              v-for="(item, index) in createAppForm.recommendedQuestions"
+            >
+              <el-input
+                class="w320"
+                maxlength="30"
+                v-model="createAppForm.recommendedQuestions[index]"
+                placeholder="请输入"
+                clearable
+              ></el-input>
+              <el-icon class="delIcon" @click="delRecommendItem(index)">
+                <IconDelete />
+              </el-icon>
+            </div>
+          </el-form-item>
+        </el-collapse-item>
+        <el-collapse-item class="chatsCollapse" title="Consistency" :name="2">
+          <template #title>
+            <span>多轮对话</span>
+            <el-icon
+              class="el-collapse-item__arrow"
+              :class="{ 'is-active': activeNames.includes(2) }"
+            >
+              <IconCaretRight />
+            </el-icon>
+          </template>
+          <el-form-item label="请选择对话轮次" prop="dialogRounds">
+            <div class="multiSessionItem">
+              <el-input-number
+                v-model="createAppForm.dialogRounds"
+                :step="1"
+                :value-on-clear="3"
+                :min="1"
+                :max="10"
+              ></el-input-number>
+              <span class="sessionUnit">(1 ~ 10)</span>
+            </div>
+          </el-form-item>
+        </el-collapse-item>
+        <el-collapse-item title="Consistency" :name="3">
+          <template #title>
+            <span>权限配置</span>
+            <el-icon
+              class="el-collapse-item__arrow"
+              :class="{ 'is-active': activeNames.includes(3) }"
+            >
+              <IconCaretRight />
+            </el-icon>
+          </template>
+          <el-form-item label="权限" prop="permission" class="permissionItem">
+            <div class="permissionSelect">
+              <el-radio-group v-model="createAppForm.permission.visibility">
+                <el-radio
+                  v-for="(item, index) in permissionTypeList"
+                  :key="index"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </el-radio>
+              </el-radio-group>
+            </div>
+            <div
+              class="partPermissionPerson"
+              v-if="createAppForm.permission.visibility === 'protected'"
+            >
+              <div class="permissionChoice">
+                <div class="perimissionChoiceTitle">
+                  <div>可选</div>
+                  <div class="choiceNum">{{ curPersonList.length }}</div>
+                </div>
+                <el-input
+                  ref="inputRef"
+                  v-model="searchName"
+                  class="o-style-search permissionInputSearch"
+                  placeholder="搜索用户"
+                  @input="searchPerson"
+                  clearable
+                  :prefix-icon="IconSearch"
+                ></el-input>
+                <div class="personList">
+                  <el-checkbox-group
+                    v-model="createAppForm.permission.authorizedUsers"
+                  >
+                    <el-checkbox
+                      v-for="(item, index) in curPersonList"
+                      :key="index"
+                      :value="item?.userSub"
+                    >
+                      <span class="circle"></span>
+                      {{ item?.userName }}
+                    </el-checkbox>
+                  </el-checkbox-group>
                 </div>
               </div>
-              <div class="personList">
-                <el-checkbox-group
-                  v-model="createAppForm.permission.authorizedUsers"
-                >
-                  <el-checkbox
-                    v-for="(item, index) in createAppForm.permission
-                      .authorizedUsers"
-                    :key="index"
-                    :value="item"
+              <div class="permissionChoice">
+                <div class="perimissionChoiceTitle">
+                  <div>已选</div>
+                  <div class="choiceNum">
+                    {{ createAppForm.permission.authorizedUsers.length }}
+                  </div>
+                </div>
+                <div class="personList">
+                  <el-checkbox-group
+                    v-model="createAppForm.permission.authorizedUsers"
                   >
-                    <span class="circle"></span>
-                    {{ item }}
-                  </el-checkbox>
-                </el-checkbox-group>
+                    <el-checkbox
+                      v-for="(item, index) in createAppForm.permission
+                        .authorizedUsers"
+                      :key="index"
+                      :value="item"
+                    >
+                      <span class="circle"></span>
+                      {{ item }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
               </div>
             </div>
-          </div>
-        </el-form-item>
-      </el-collapse-item>
-    </el-collapse>
-  </el-form>
+          </el-form-item>
+        </el-collapse-item>
+      </el-collapse>
+    </el-form>
+  </div>
   <div class="createAppContainerMainBox">
     <div class="previewTitle">界面预览</div>
     <div class="createAppContainerMainRight" :class="themeStore.theme">

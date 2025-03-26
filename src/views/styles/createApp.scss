@@ -129,10 +129,30 @@
     background: var(--o-bg-image) center center no-repeat;
     background-size: cover;
   }
-
+  .appConfig {
+    height: 100%;
+    .baseInfoTitle {
+      height: 24px;
+      margin-bottom: 8px;
+      margin-left: 8px;
+      font-weight: bolder;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+    }
+    .activeCollapse.baseInfoTitle {
+      color: #000;;
+    }
+      
+    .el-collapse-item__arrow {
+      color: #8d98aa;
+      margin-left: 8px;
+    }
+  }
+  // 外面多套了一层appConfig[上方]，用以调整滚动条样式
   .createAppContainerMainLeft {
     width: 560px;
-    height: 100%;
+    height: calc(100% - 32px);
     margin-top: 0px;
     --o-owndefine-del-hover: #7aa5ff;
     --o-owndefine-del-active: #6395fd;
@@ -146,10 +166,6 @@
       font-size: 16px;
       font-weight: bolder;
       margin-bottom: 8px;
-      .el-collapse-item__arrow {
-        color: #8d98aa;
-        margin-left: 8px;
-      }
     }
     .el-collapse-item__content {
       margin-left: 0px;
@@ -271,8 +287,8 @@
         .partPermissionPerson {
           width: 420px;
           height: 252px;
-          padding: 16px 0px 0px;
-          margin-top: 8px;
+          padding: 8px 0px 0px;
+          margin-top: 4px;
           display: flex;
           gap: 4px;
           .permissionChoice {
@@ -288,6 +304,7 @@
               display: flex;
               align-items: center;
               gap: 8px;
+              font-weight: bolder;
               > div {
                 height: 16px;
                 line-height: 16px;
@@ -382,6 +399,16 @@
         }
       }
     }
+    .el-collapse-item {
+      &:first-child {
+        .el-collapse-item__header {
+          display: none;
+        }
+      }
+    }
+    .chatsCollapse.el-collapse-item {
+      margin-top: 0px;
+    }
   }
 
   .createAppContainerMainBox {
@@ -407,6 +434,7 @@
     background-color: var(--o-bg-color-base);
     .el-button {
       border-radius: 4px;
+      margin-left: 0px;
     }
   }
 
@@ -443,15 +471,3 @@
     height: 56px;
   }
 }
-
-// .json-container {
-//   :deep(.el-collapse-item){
-//     background-color: pink !important;
-//   }
-//   :deep(.el-collapse-item__header){
-//     background-color: pink !important;
-//   }
-//   :deep(.el-collapse-item__content){
-//     background-color: pink !important;
-//   }
-// }

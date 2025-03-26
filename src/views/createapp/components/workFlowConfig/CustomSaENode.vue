@@ -23,10 +23,26 @@ const props = defineProps({
     required: false,
   },
 });
+const emits = defineEmits(['updateConnectHandle']);
 
 const statusList = ref(['running', 'success', 'error']);
 
 const curStatus = ref('');
+
+// 当前handle是否连接中[分别是target和source]
+const handleTargetConnecting = ref(false);
+const handleSourceConnecting = ref(false);
+
+// 设置当前正在连接
+const setConnectStatus = (type) => {
+  if (type === 'source') {
+    handleSourceConnecting.value = true;
+  } else {
+    handleTargetConnecting.value = true;
+  }
+  // 更新当前节点handle连接状态
+  emits('updateConnectHandle', props.id);
+};
 
 watch(
   () => props.data,
@@ -37,6 +53,8 @@ watch(
     } else {
       curStatus.value = props.data?.status;
     }
+    handleTargetConnecting.value = false;
+    handleSourceConnecting.value = false;
   },
   { deep: true, immediate: true },
 );
@@ -46,7 +64,9 @@ watch(
   <div class="customStartAndEndNode">
     <div class="customNodeStyle nodeSaEBorder" :class="curStatus">
       <Handle
+        :class="{ isConnecting: handleTargetConnecting }"
         :type="props.data.target"
+        @mousedown="setConnectStatus('target')"
         :position="Position[props.data.nodePosition]"
         :connectable-end="true"
       ></Handle>

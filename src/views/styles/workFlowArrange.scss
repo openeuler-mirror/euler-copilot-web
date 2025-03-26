@@ -347,6 +347,8 @@
         }
         .label {
           flex: 1;
+          height: 24px;
+          line-height: 24px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -354,6 +356,22 @@
         .moreTip {
           margin-left: auto;
           width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          .moreDots {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .nodeDot {
+              width: 2px;
+              height: 2px;
+              border-radius: 50%;
+              background-color: #8d98aa;
+            }
+          }
           &:hover {
             color: #6395fd;
           }
@@ -394,7 +412,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: rgb(141, 152, 170);
+        background: #c3cedf;
       }
     }
     .vue-flow__handle-left {
@@ -415,7 +433,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: rgb(141, 152, 170);
+        background: #c3cedf;
       }
     }
     // 选中样式
@@ -468,6 +486,21 @@
         background: #e32020;
       }
     }
+  }
+  .vue-flow__handle.isConnecting {
+    width: 12px;
+        height: 12px;
+        &::after {
+          width: 10px;
+          height: 10px;
+          background: #6395fd;
+        }
+  }
+  .vue-flow__handle-left.isConnecting {
+    left: -1px;
+  }
+  .vue-flow__handle-right.isConnecting {
+    right: -1px;
   }
 }
 .nodeDealPopper {
