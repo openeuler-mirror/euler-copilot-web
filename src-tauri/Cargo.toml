@@ -19,6 +19,7 @@ tauri = { version = "1", features = [
     "clipboard-all",
     "shell-execute",
     "shell-open",
+    "dialog-all",
     "fs-create-dir",
     "fs-exists",
     "fs-read-dir",

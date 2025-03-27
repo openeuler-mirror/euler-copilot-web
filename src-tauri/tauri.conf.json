@@ -16,6 +16,11 @@
       "window": {
         "all": true
       },
+      "dialog": {
+        "all": true,
+        "open": true,
+        "save": true
+      },
       "globalShortcut": {
         "all": true
       },
