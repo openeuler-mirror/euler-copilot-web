@@ -104,6 +104,7 @@ fn main() {
             api::refresh_session_id,
             api::plugin,
             api::chat,
+            api::chat_mcp,
             api::stop,
             config::get_base_url,
             config::get_api_key,
@@ -190,9 +191,9 @@ fn create_main_window(app_handle: &AppHandle) {
         .maximizable(false)
         .minimizable(false)
         .skip_taskbar(true)
-        .inner_size(500., 680.)
-        .min_inner_size(500., 680.)
-        .max_inner_size(720., 4096.);
+        .inner_size(576., 680.)
+        .min_inner_size(576., 680.)
+        .max_inner_size(1440., 4096.);
 
     #[cfg(target_os = "macos")]
     {

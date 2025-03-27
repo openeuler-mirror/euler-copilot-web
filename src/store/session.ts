@@ -67,67 +67,74 @@ export const useSessionStore = defineStore('session', () => {
   ): Promise<void> => {
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationID = currentSelectedSession;
-    console.log("Current conversation ID:", params.conversationID);
+    console.log('Current conversation ID:', params.conversationID);
     // 当前问答在整个问答记录中的索引
     const answerIndex = ind ?? conversationList.value.length - 1;
     // const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
 
     controller = new AbortController();
+    // try {
+    //   const sessionId: string = await invoke('refresh_session_id', {
+    //     sessionId: localStorage.getItem('session'),
+    //   });
+    //   localStorage.setItem('session', sessionId);
+    //   console.log('Refreshed session ID:', sessionId);
+    // } catch (error) {
+    //   console.error('Error refreshing session ID:', error);
+    // }
     try {
-      const sessionId: string = await invoke("refresh_session_id", {
-        sessionId: localStorage.getItem('session'),
-      });
-      localStorage.setItem('session', sessionId);
-      console.log("Refreshed session ID:", sessionId)
-    } catch (error) {
-      console.error("Error refreshing session ID:", error);
-    }
-    try {
-      await invoke('chat', {
-        session: localStorage.getItem('session'),
+      // await invoke('chat', {
+      //   session: localStorage.getItem('session'),
+      //   question: params.question,
+      //   conversation: params.conversationID,
+      //   language: 'zh',
+      //   record: params.recordID,
+      //   plugin: params.userSelectedPlugin,
+      //   flow: params.userSelectedFlow,
+      //   flowId: "",
+      await invoke('chat_mcp', {
         question: params.question,
-        conversation: params.conversationID,
-        language: 'zh',
-        record: params.recordID,
-        plugin: params.userSelectedPlugin,
-        flow: params.userSelectedFlow,
-        flowId: "",
-      }).then(async (status: any) => {
-        console.log(status);
-        const isServiceOk = await handleServiceStatus(status);
-        if (!isServiceOk) {
-          return;
-        }
-      }).catch((error) => {
-        throw new Error(`RUST backend error: ${error}`);
       })
+        // .then(async (status: any) => {
+        //   console.log(status);
+        //   const isServiceOk = await handleServiceStatus(status);
+        //   if (!isServiceOk) {
+        //     return;
+        //   }
+        // })
+        .catch((error) => {
+          throw new Error(`RUST backend error: ${error}`);
+        });
     } catch (err: any) {
       console.log(err);
       isPaused.value = true;
       isAnswerGenerating.value = false;
-      (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+      (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
+        true;
       if (err.name === 'AbortError') {
         successMsg('暂停成功');
-        (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+        (
+          conversationList.value[answerIndex] as RobotConversationItem
+        ).isFinish = true;
       } else {
         (conversationList.value[answerIndex] as RobotConversationItem).message[
-          (conversationList.value[answerIndex] as RobotConversationItem).currentInd
+          (
+            conversationList.value[answerIndex] as RobotConversationItem
+          ).currentInd
         ] += '系统繁忙，请稍后再试';
       }
     }
   };
 
-  const handleServiceStatus = async (
-    status: number
-  ): Promise<boolean> => {
-    if (status === 401 || status === 403) {
-      return false;
-    } else if (status === 429) {
-      throw new Error(`HTTP error, Rate limit exceeded`);
-    } else {
-      return true;
-    }
-  };
+  // const handleServiceStatus = async (status: number): Promise<boolean> => {
+  //   if (status === 401 || status === 403) {
+  //     return false;
+  //   } else if (status === 429) {
+  //     throw new Error(`HTTP error, Rate limit exceeded`);
+  //   } else {
+  //     return true;
+  //   }
+  // };
 
   /**
    * 处理不合法信息
@@ -163,17 +170,22 @@ export const useSessionStore = defineStore('session', () => {
     userSelectedPlugin?: string,
     regenerateInd?: number,
     recordId?: string,
-    user_selected_flow?: string,
+    user_selected_flow?: string
   ): Promise<void> => {
     if (regenerateInd) {
       // 重新生成，指定某个回答，修改默认索引
-      (conversationList.value[regenerateInd] as RobotConversationItem).message.push('');//123
-      (conversationList.value[regenerateInd] as RobotConversationItem).currentInd =
-        (conversationList.value[regenerateInd] as RobotConversationItem).message.length - 1;//123
+      (
+        conversationList.value[regenerateInd] as RobotConversationItem
+      ).message.push(''); //123
+      (
+        conversationList.value[regenerateInd] as RobotConversationItem
+      ).currentInd =
+        (conversationList.value[regenerateInd] as RobotConversationItem).message
+          .length - 1; //123
     } else {
       // 初次生成 ，创建一个问题和一个回答
       const ind = conversationList.value.length;
-      const a = new MessageArray()
+      const a = new MessageArray();
       a.addItem('', '', 2);
       conversationList.value.push(
         {
@@ -206,7 +218,7 @@ export const useSessionStore = defineStore('session', () => {
           userSelectedFlow: user_selected_flow,
         },
         regenerateInd ?? undefined
-      )
+      );
     } else if (userSelectedPlugin) {
       await getStream(
         {
@@ -215,7 +227,7 @@ export const useSessionStore = defineStore('session', () => {
           userSelectedPlugin: userSelectedPlugin,
         },
         regenerateInd ?? undefined
-      )
+      );
     } else {
       await getStream(
         {
@@ -225,7 +237,7 @@ export const useSessionStore = defineStore('session', () => {
         regenerateInd ?? undefined
       );
     }
-  }
+  };
 
   /**
    * 暂停流式返回
@@ -235,7 +247,8 @@ export const useSessionStore = defineStore('session', () => {
       conversationList.value.findIndex((val: any) => val.cid === cid) ||
       conversationList.value.length - 1;
     isPaused.value = true;
-    (conversationList.value[answerIndex] as RobotConversationItem).isFinish = true;
+    (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
+      true;
     cancel();
     await invoke('stop');
   };
@@ -245,10 +258,17 @@ export const useSessionStore = defineStore('session', () => {
    * @param cid
    */
   const reGenerateAnswer = (cid: number, userSelectedPlugin: string): void => {
-    const answerInd = conversationList.value.findIndex((val) => val.cid === cid);
-    const question = (conversationList.value[answerInd - 1] as UserConversationItem).message;
-    const recordId = (conversationList.value[answerInd] as RobotConversationItem).recordId;
-    (conversationList.value[answerInd] as RobotConversationItem).isFinish = false;
+    const answerInd = conversationList.value.findIndex(
+      (val) => val.cid === cid
+    );
+    const question = (
+      conversationList.value[answerInd - 1] as UserConversationItem
+    ).message;
+    const recordId = (
+      conversationList.value[answerInd] as RobotConversationItem
+    ).recordId;
+    (conversationList.value[answerInd] as RobotConversationItem).isFinish =
+      false;
     if (!question) {
       return;
     }
@@ -261,18 +281,27 @@ export const useSessionStore = defineStore('session', () => {
    * @param cid
    */
   const prePage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex((val) => val.cid === cid);
-    if ((conversationList.value[answerInd] as RobotConversationItem).currentInd === 0) {
+    const answerInd = conversationList.value.findIndex(
+      (val) => val.cid === cid
+    );
+    if (
+      (conversationList.value[answerInd] as RobotConversationItem)
+        .currentInd === 0
+    ) {
       return;
     }
-    (conversationList.value[answerInd] as RobotConversationItem).currentInd -= 1;
+    (
+      conversationList.value[answerInd] as RobotConversationItem
+    ).currentInd -= 1;
   };
   /**
    * 下一条
    * @param cid
    */
   const nextPage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex((val) => val.cid === cid);
+    const answerInd = conversationList.value.findIndex(
+      (val) => val.cid === cid
+    );
 
     if (
       conversationList.value[answerInd].message.length - 1 ===
@@ -280,7 +309,9 @@ export const useSessionStore = defineStore('session', () => {
     ) {
       return;
     }
-    (conversationList.value[answerInd] as RobotConversationItem).currentInd += 1;
+    (
+      conversationList.value[answerInd] as RobotConversationItem
+    ).currentInd += 1;
   };
   // #endregion
 
@@ -302,13 +333,21 @@ export const useSessionStore = defineStore('session', () => {
             (i) => i.groupId === record.groupId
           );
           re?.message.push(record.answer);
-          if (typeof (re?.message) !== 'string') {
-            re?.messageList.addItem(record.answer, record.recordId, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
+          if (typeof re?.message !== 'string') {
+            re?.messageList.addItem(
+              record.answer,
+              record.recordId,
+              typeof record.is_like === 'object' ? 2 : Number(record.is_like)
+            );
           }
           return;
         }
         const a = new MessageArray();
-        a.addItem(record.answer, record.recordId, typeof (record.is_like) === 'object' ? 2 : Number(record.is_like));
+        a.addItem(
+          record.answer,
+          record.recordId,
+          typeof record.is_like === 'object' ? 2 : Number(record.is_like)
+        );
         conversationList.value.push(
           {
             cid: conversationList.value.length + 1,
@@ -362,9 +401,9 @@ export const useChangeThemeStore = defineStore('theme', () => {
   if (themeValue) {
     theme.value = themeValue;
   } else {
-    theme.value = 'dark'
+    theme.value = 'dark';
   }
   return {
     theme,
-  }
+  };
 });

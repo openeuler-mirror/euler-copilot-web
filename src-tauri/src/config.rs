@@ -55,7 +55,7 @@ impl Config {
 
     fn default() -> Self {
         Config {
-            framework_url: "https://eulercopilot.gitee.com".to_string(),
+            framework_url: String::new(),
             framework_api_key: String::new(),
         }
     }

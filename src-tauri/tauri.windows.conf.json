@@ -8,6 +8,11 @@
         "open": true,
         "scope": [
           {
+            "name": "dolphin-mcp-cli",
+            "cmd": "dolphin-mcp-cli",
+            "args": true
+          },
+          {
             "name": "cmd",
             "cmd": "cmd",
             "args": true

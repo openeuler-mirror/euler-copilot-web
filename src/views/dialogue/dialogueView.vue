@@ -8,13 +8,18 @@ import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
 import { reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
-import marked from 'src/utils/marked';
+// import marked from 'src/utils/marked';
 
-
-declare global {  
-  interface Window {  
-    onHtmlEventDispatch?: (_t: any, _ty: any, _event: any, type: HtmlEvent, data: any) => void;
-  }  
+declare global {
+  interface Window {
+    onHtmlEventDispatch?: (
+      _t: any,
+      _ty: any,
+      _event: any,
+      type: HtmlEvent,
+      data: any
+    ) => void;
+  }
 }
 
 // 挂载全局事件
@@ -34,7 +39,7 @@ const modeOptions = reactive([
 
 const isDark = ref(localStorage.getItem('theme') === 'dark');
 const loginDialogVisible = ref(false);
-const agreeDialogVisiable = ref(false);
+// const agreeDialogVisiable = ref(false);
 
 /**
  * 初始化
@@ -43,27 +48,28 @@ const initCopilot = async (): Promise<void> => {
   const themeValue = localStorage.getItem('theme');
   if (themeValue) {
     themeStore.theme = themeValue;
-  }
-  else {
+  } else {
     localStorage.setItem('theme', 'light');
   }
   const currRoute = router.currentRoute;
   if (currRoute.value.path === '/') {
-    await invoke('refresh_session_id').then(async (sessionID: any) => {
-      if (sessionID) {
-        localStorage.setItem('session', sessionID);
-        await getModeOptions();
-        await invoke('stop');
-        readAgreement();
-      }
-    }).catch(err => {
-      console.error(err);
-    });
+    // await invoke('refresh_session_id')
+    //   .then(async (sessionID: any) => {
+    //     if (sessionID) {
+    //       localStorage.setItem('session', sessionID);
+    //       await getModeOptions();
+    //       await invoke('stop');
+    //       readAgreement();
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.error(err);
+    //   });
   }
 };
 
 const settingsHandler = () => {
-  invoke('show_settings_window')
+  invoke('show_settings_window');
 };
 
 // 协议内容
@@ -75,19 +81,20 @@ const handleSubmit = async () => {
 
 const changeTheme = () => {
   isDark.value = !isDark.value;
-  isDark.value ? document.body.setAttribute('theme', 'dark') :
-    document.body.setAttribute('theme', 'light');
+  isDark.value
+    ? document.body.setAttribute('theme', 'dark')
+    : document.body.setAttribute('theme', 'light');
   const theme = isDark.value ? 'dark' : 'light';
-  localStorage.setItem('theme',theme);
+  localStorage.setItem('theme', theme);
   themeStore.theme = theme;
-  themeStore.$patch({theme: theme});
+  themeStore.$patch({ theme: theme });
 };
 
-const readAgreement = async () => {
-  const response = await import('src/conf/agreement.md?raw');
-  agreement.value = marked.parse(response.default) as string;
-  agreeDialogVisiable.value = true;
-};
+// const readAgreement = async () => {
+//   const response = await import('src/conf/agreement.md?raw');
+//   agreement.value = marked.parse(response.default) as string;
+//   agreeDialogVisiable.value = true;
+// };
 
 onMounted(() => {
   const theme = localStorage.getItem('theme');
@@ -106,28 +113,27 @@ watch(
   }
 );
 
-const getModeOptions = async() => {
-  await invoke('plugin').then(async (data: any) => {
-    if (data && data.result) {
-      data.result.forEach((item: any) => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.id,
-          disabled: false
-        };
-        const plugin = modeOptions.find((item) => {
-          return item.label === opt.label
-        })
-        if (!plugin) {
-          modeOptions.push(opt);
-        }
-      });
-    }
-  }).catch(err => {
-    console.error(err);
-  });
-}
-
+// const getModeOptions = async () => {
+//   await invoke('plugin').then(async (data: any) => {
+//     if (data && data.result) {
+//       data.result.forEach((item: any) => {
+//         const opt = {
+//           label: item.plugin_name,
+//           value: item.id,
+//           disabled: false
+//         };
+//         const plugin = modeOptions.find((item) => {
+//           return item.label === opt.label
+//         })
+//         if (!plugin) {
+//           modeOptions.push(opt);
+//         }
+//       });
+//     }
+//   }).catch(err => {
+//     console.error(err);
+//   });
+// };
 </script>
 
 <template>
@@ -140,10 +146,10 @@ const getModeOptions = async() => {
       <div class="header-right">
         <div class="mode">
           <span v-if="isDark" @click="changeTheme">
-            <img src="src/assets/svgs/sun.svg" alt="">
+            <img src="src/assets/svgs/sun.svg" alt="" />
           </span>
           <span v-else @click="changeTheme">
-            <img id='moon-icon' src="src/assets/svgs/moon.svg" alt="">
+            <img id="moon-icon" src="src/assets/svgs/moon.svg" alt="" />
           </span>
         </div>
 
@@ -151,19 +157,29 @@ const getModeOptions = async() => {
           <template #reference>
             <img class="avatar" src="src/assets/svgs/user.svg" />
           </template>
-          <el-button class="exit-button" @click="settingsHandler">设置</el-button>
+          <el-button class="exit-button" @click="settingsHandler"
+            >设置</el-button
+          >
         </el-popover>
       </div>
     </header>
     <div class="dialogue-container">
       <div class="dialogue-container-main">
-        <DialogueSession :modeOptions="modeOptions" :login="!loginDialogVisible" />
+        <DialogueSession
+          :modeOptions="modeOptions"
+          :login="!loginDialogVisible"
+        />
       </div>
     </div>
     <footer class="dialogue-footer">
       <CommonFooter />
     </footer>
-    <EulerDialog :visible="dialogVisible" :content="agreement" agreement-name="《服务协议》" @submit="handleSubmit">
+    <EulerDialog
+      :visible="dialogVisible"
+      :content="agreement"
+      agreement-name="《服务协议》"
+      @submit="handleSubmit"
+    >
     </EulerDialog>
     <EulerDialog
       :visible="dialogVisible"
@@ -205,12 +221,12 @@ body {
           flex-direction: column;
           align-items: center;
           margin-top: 32px;
-          &_span{
-            height: 80px;  
+          &_span {
+            height: 80px;
             margin: 0px;
-            div{
+            div {
               margin: 0px;
-              width:300px;
+              width: 300px;
               font-size: 20px;
               word-wrap: break-word;
             }
@@ -224,8 +240,8 @@ body {
         span {
           font-size: 12px;
         }
-        div{
-          button{
+        div {
+          button {
             margin-top: 32px;
           }
         }
@@ -245,22 +261,26 @@ body {
   }
 }
 
-#sun-icon{
+#sun-icon {
   // background-color: pink;
-  &:hover{
-    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg) brightness(94%) contrast(83%);
+  &:hover {
+    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
+      brightness(94%) contrast(83%);
   }
-  &:active{
-    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg) brightness(101%) contrast(87%);
+  &:active {
+    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg)
+      brightness(101%) contrast(87%);
   }
 }
 
-#moon-icon{
-  &:hover{
-    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg) brightness(94%) contrast(83%);
+#moon-icon {
+  &:hover {
+    filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
+      brightness(94%) contrast(83%);
   }
-  &:active{
-    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg) brightness(101%) contrast(87%);
+  &:active {
+    filter: invert(50%) sepia(31%) saturate(458%) hue-rotate(168deg)
+      brightness(101%) contrast(87%);
   }
 }
 </style>
@@ -270,7 +290,7 @@ body {
   height: 100vh;
   width: 100vw;
   min-height: 680px;
-  min-width: 500px;
+  min-width: 576px;
   display: flex;
   flex-direction: column;
   background-image: var(--o-bg-image);
@@ -333,7 +353,7 @@ body {
       flex: 1;
     }
   }
-  &-footer{
+  &-footer {
     margin-bottom: 12px;
   }
 }

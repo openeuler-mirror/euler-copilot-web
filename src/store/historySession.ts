@@ -14,7 +14,7 @@ import { storeToRefs } from 'pinia';
 import { useSessionStore } from '.';
 import type { SessionItem } from 'src/components/sessionCard/type';
 import { successMsg } from 'src/components/Message';
-import { invoke } from '@tauri-apps/api/tauri';
+// import { invoke } from '@tauri-apps/api/tauri';
 
 export interface HistorySessionItem {
   sessionId: string;
@@ -56,7 +56,9 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    */
   const selectAllSession = (): void => {
     isSelectedAll.value
-      ? (selectedSessionIds.value = historySession.value.map((item) => item.sessionId))
+      ? (selectedSessionIds.value = historySession.value.map(
+          (item) => item.sessionId
+        ))
       : (selectedSessionIds.value = []);
   };
   /**
@@ -65,7 +67,9 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    */
   const selectSession = (sessionId: string): void => {
     selectedSessionIds.value.includes(sessionId)
-      ? (selectedSessionIds.value = selectedSessionIds.value.filter((val) => val !== sessionId))
+      ? (selectedSessionIds.value = selectedSessionIds.value.filter(
+          (val) => val !== sessionId
+        ))
       : selectedSessionIds.value.push(sessionId);
     // 更新isSelectedAll的值
     if (selectedSessionIds.value.length === historySession.value.length) {
@@ -141,7 +145,10 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    * 创建新会话
    */
   const createNewSession = async (): Promise<void> => {
-    const sId = historySession.value.length === 0 ? null : historySession.value[0]?.sessionId;
+    const sId =
+      historySession.value.length === 0
+        ? null
+        : historySession.value[0]?.sessionId;
     if (sId) {
       const [, cov] = await api.getHistoryConversation(sId);
       if (cov && cov.result.length === 0) {
@@ -162,13 +169,13 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    * 创建一个新的会话
    */
   const generateSession = async (): Promise<void> => {
-    await invoke('create_conversation').then(async (conversationId: any) => {
-      if (conversationId) {
-        currentSelectedSession.value = conversationId;
-      }
-    }).catch((err) => {
-      console.error(err);
-    });
+    // await invoke('create_conversation').then(async (conversationId: any) => {
+    //   if (conversationId) {
+    //     currentSelectedSession.value = conversationId;
+    //   }
+    // }).catch((err) => {
+    //   console.error(err);
+    // });
   };
 
   return {

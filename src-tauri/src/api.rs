@@ -8,12 +8,102 @@ use tauri::{AppHandle, Manager, Runtime, State};
 use url::Url;
 
 use crate::config::{get_api_key, get_base_url};
+use tauri::api::process::{Command, CommandEvent};
 
 pub struct ChatState(pub Mutex<bool>);
 
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
     pub message: String,
+}
+
+#[tauri::command]
+pub async fn chat_mcp<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, ChatState>,
+    question: &str,
+) -> Result<(), String> {
+    // 开始回答
+    *state.0.lock().unwrap() = true;
+
+    // Execute the dolphin-mcp-cli using uvx
+
+    // Build command with the required arguments
+    let mut cmd_args: Vec<String> = Vec::new();
+
+    // 使用get_api_key获取model参数
+    let model = get_api_key();
+    if !model.is_empty() {
+        cmd_args.push("--model".to_string());
+        cmd_args.push(model);
+    }
+
+    // 始终添加--quiet参数
+    cmd_args.push("--quiet".to_string());
+
+    // 使用get_base_url获取config参数
+    let config = get_base_url();
+    if !config.is_empty() {
+        cmd_args.push("--config".to_string());
+        cmd_args.push(config);
+    }
+
+    // 添加question参数
+    if !question.is_empty() {
+        cmd_args.push(question.to_string());
+    } else {
+        return Err("No question provided".to_string());
+    }
+
+    // Execute command with uvx
+    let (mut rx, _child) = Command::new("dolphin-mcp-cli")
+        .args(cmd_args)
+        .spawn()
+        .map_err(|e| format!("Failed to start dolphin-mcp-cli: {}", e))?;
+
+    // Process command events (output)
+    while let Some(event) = rx.recv().await {
+        // Check if answering has been stopped
+        if !*state.0.lock().unwrap() {
+            emit_message(&app, "data: [DONE]");
+            break;
+        }
+
+        match event {
+            CommandEvent::Stdout(line) => {
+                let message = format!("{}", line);
+
+                if message.starts_with("data: ") {
+                    #[cfg(debug_assertions)]
+                    println!("Sending: {}", message);
+
+                    emit_message(&app, &message);
+                }
+            }
+            CommandEvent::Stderr(line) => {
+                eprintln!("Error: {}", line);
+            }
+            CommandEvent::Error(err) => {
+                eprintln!("Command error: {}", err);
+
+                emit_message(&app, "data: [ERROR]");
+                break;
+            }
+            CommandEvent::Terminated(status) => {
+                emit_message(&app, "data: [DONE]");
+
+                #[cfg(debug_assertions)]
+                println!("Process exited with status: {}", status.code.unwrap_or(-1));
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    // End the answer
+    *state.0.lock().unwrap() = false;
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -197,18 +287,18 @@ pub async fn stop(state: State<'_, ChatState>) -> Result<(), String> {
     // 停止回答
     *state.0.lock().unwrap() = false;
 
-    let mut url = Url::parse(&get_base_url()).unwrap();
-    url.set_path("api/client/stop");
+    // let mut url = Url::parse(&get_base_url()).unwrap();
+    // url.set_path("api/client/stop");
 
-    let client = Client::new();
+    // let client = Client::new();
 
-    client
-        .post(url)
-        .headers(get_base_headers())
-        .send()
-        .await
-        .map_err(|e| format!("Failed to send request: {}", e))
-        .unwrap();
+    // client
+    //     .post(url)
+    //     .headers(get_base_headers())
+    //     .send()
+    //     .await
+    //     .map_err(|e| format!("Failed to send request: {}", e))
+    //     .unwrap();
 
     Ok(())
 }

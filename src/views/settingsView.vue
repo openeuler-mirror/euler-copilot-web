@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive } from 'vue';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { invoke } from '@tauri-apps/api/tauri';
-import { enable, isEnabled, disable } from "tauri-plugin-autostart-api";
+import { enable, isEnabled, disable } from 'tauri-plugin-autostart-api';
 
 const settingsItems = reactive({
   url: '',
   key: '',
-  autoStart: false
-})
+  autoStart: false,
+});
 
 async function loadSettings() {
   try {
@@ -29,12 +29,12 @@ async function loadSettings() {
 
 async function saveSettings() {
   if (!settingsItems.key) {
-    errorMsg('请输入 API Key');
+    errorMsg('请输入模型名称');
     return;
   }
 
-  if (settingsItems.key.length != 32) {
-    errorMsg('API Key 长度不正确');
+  if (!settingsItems.url) {
+    errorMsg('请输入 MCP 配置路径');
     return;
   }
 
@@ -53,26 +53,30 @@ async function saveSettings() {
 async function toggleAutoStart() {
   await isEnabled().then(async (isEnabled: boolean) => {
     if (isEnabled) {
-      await disable().then(() => {
-        settingsItems.autoStart = false;
-      }).catch((err) => {
-        errorMsg('开机启动关闭失败')
-        console.error(err);
-      });
+      await disable()
+        .then(() => {
+          settingsItems.autoStart = false;
+        })
+        .catch((err) => {
+          errorMsg('开机启动关闭失败');
+          console.error(err);
+        });
     } else {
-      await enable().then(() => {
-        settingsItems.autoStart = true;
-      }).catch((err) => {
-        errorMsg('开机启动开启失败')
-        console.error(err);
-      });
+      await enable()
+        .then(() => {
+          settingsItems.autoStart = true;
+        })
+        .catch((err) => {
+          errorMsg('开机启动开启失败');
+          console.error(err);
+        });
     }
   });
 }
 
 onMounted(() => {
   loadSettings();
-})
+});
 </script>
 
 <template>
@@ -86,20 +90,29 @@ onMounted(() => {
     <div class="dialogue-container">
       <div class="dialogue-container-main">
         <div class="settings">
-          <el-form ref="ruleFormRef" style="max-width: 600px" :model="settingsItems"
-            label-width="auto" class="demo-ruleForm">
-            <el-form-item label="服务地址" prop="url">
+          <el-form
+            ref="ruleFormRef"
+            style="max-width: 600px"
+            :model="settingsItems"
+            label-width="auto"
+            class="demo-ruleForm"
+          >
+            <el-form-item label="MCP 配置路径" prop="url">
               <el-input v-model="settingsItems.url" />
             </el-form-item>
-            <el-form-item label="API Key" prop="key">
+            <el-form-item label="模型名称" prop="key">
               <el-input v-model="settingsItems.key" autocomplete="off" />
             </el-form-item>
             <el-form-item label="开机启动">
-              <el-checkbox v-model="settingsItems.autoStart" @change="toggleAutoStart" :lable="settingsItems.autoStart ? '已开启' : '已关闭'" />
+              <el-checkbox
+                v-model="settingsItems.autoStart"
+                @change="toggleAutoStart"
+                :lable="settingsItems.autoStart ? '已开启' : '已关闭'"
+              />
             </el-form-item>
-              <el-button class='button' type="primary" @click="saveSettings">
-                保存
-              </el-button>
+            <el-button class="button" type="primary" @click="saveSettings">
+              保存
+            </el-button>
           </el-form>
         </div>
       </div>
@@ -115,7 +128,7 @@ body {
   height: 100vh;
 }
 
-.button{
+.button {
   left: calc(50% - 23px);
   position: relative;
 }

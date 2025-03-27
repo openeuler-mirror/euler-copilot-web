@@ -11,6 +11,11 @@
         "open": true,
         "scope": [
           {
+            "name": "dolphin-mcp-cli",
+            "cmd": "dolphin-mcp-cli",
+            "args": true
+          },
+          {
             "name": "osascript",
             "cmd": "osascript",
             "args": true
