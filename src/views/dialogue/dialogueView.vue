@@ -290,7 +290,7 @@ body {
   height: 100vh;
   width: 100vw;
   min-height: 680px;
-  min-width: 576px;
+  min-width: 1280px;
   display: flex;
   flex-direction: column;
   background-image: var(--o-bg-image);

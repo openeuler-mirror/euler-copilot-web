@@ -191,8 +191,8 @@ fn create_main_window(app_handle: &AppHandle) {
         .maximizable(false)
         .minimizable(false)
         .skip_taskbar(true)
-        .inner_size(576., 680.)
-        .min_inner_size(576., 680.)
+        .inner_size(1280., 680.)
+        .min_inner_size(1280., 680.)
         .max_inner_size(1440., 4096.);
 
     #[cfg(target_os = "macos")]
