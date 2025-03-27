@@ -154,10 +154,10 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
               ],
               // 初始创建的工作流边为空
               edges: [],
-            },
-            focusPoint: {
+              focusPoint: {
               x: 800,
               y: 800,
+            },
             },
           },
         )
