@@ -433,7 +433,6 @@ const searchAppName = (appId) => {
   }
   return '';
 };
-
 </script>
 <template>
   <div
@@ -546,14 +545,14 @@ const searchAppName = (appId) => {
               {{ Number(props.metadata?.timeCost).toFixed(2) }}
             </div>
             <img
-              class="pagenation-arror"
+              class="pagenation-arror mr-8"
               @click="prePageHandle(Number(cid))"
               src="@/assets/svgs/arror_left.svg"
             />
             <span class="pagenation-cur">{{ currentSelected! + 1 }}</span>
             <span class="pagenation-total">{{ `/${content?.length}` }}</span>
             <img
-              class="pagenation-arror"
+              class="pagenation-arror ml-8"
               @click="nextPageHandle(Number(cid))"
               src="@/assets/svgs/arror_right.svg"
             />
@@ -621,42 +620,41 @@ const searchAppName = (appId) => {
               effect="light"
               ref="tooltip"
             >
-              <div class="against-button">
-                <el-popover
-                  placement="bottom-end"
-                  :visible="isAgainstVisible"
-                  width="328"
-                  height="328"
-                  @after-enter="bindDocumentClick"
-                  @after-leave="unbindDocumentClick"
-                >
-                  <template #reference>
-                    <img
-                      class="button-icon"
-                      v-if="!isAgainst && themeStore.theme === 'dark'"
-                      src="@/assets/svgs/dark_against.svg"
-                      @click="handleSupport('against')"
-                    />
-                    <img
-                      class="button-icon"
-                      v-if="!isAgainst && themeStore.theme === 'light'"
-                      src="@/assets/svgs/light_against.svg"
-                      @click="handleSupport('against')"
-                    />
-                    <img
-                      class="button-icon"
-                      v-if="isAgainst"
-                      src="@/assets/svgs/against_active.svg"
-                      @click="handleSupport('against')"
-                    />
-                  </template>
-                  <AgainstPopover
-                    @click.stop
-                    @close="isAgainstVisible = false"
-                    @submit="handleAgainst"
+              <el-popover
+                placement="bottom-end"
+                class="against-button"
+                :visible="isAgainstVisible"
+                width="328"
+                height="328"
+                @after-enter="bindDocumentClick"
+                @after-leave="unbindDocumentClick"
+              >
+                <template #reference>
+                  <img
+                    class="button-icon"
+                    v-if="!isAgainst && themeStore.theme === 'dark'"
+                    src="@/assets/svgs/dark_against.svg"
+                    @click="handleSupport('against')"
                   />
-                </el-popover>
-              </div>
+                  <img
+                    class="button-icon"
+                    v-if="!isAgainst && themeStore.theme === 'light'"
+                    src="@/assets/svgs/light_against.svg"
+                    @click="handleSupport('against')"
+                  />
+                  <img
+                    class="button-icon"
+                    v-if="isAgainst"
+                    src="@/assets/svgs/against_active.svg"
+                    @click="handleSupport('against')"
+                  />
+                </template>
+                <AgainstPopover
+                  @click.stop
+                  @close="isAgainstVisible = false"
+                  @submit="handleAgainst"
+                />
+              </el-popover>
             </el-tooltip>
             <el-tooltip
               placement="top"
@@ -664,36 +662,35 @@ const searchAppName = (appId) => {
               effect="light"
               ref="tooltip"
             >
-              <div class="against-button">
-                <el-popover
-                  placement="bottom-end"
-                  :visible="isReportVisible"
-                  :width="size.width"
-                  :height="size.height"
-                  @after-enter="bindReportClick"
-                  @after-leave="unbindReportClick"
-                >
-                  <template #reference>
-                    <img
-                      v-if="themeStore.theme === 'dark'"
-                      class="button-icon"
-                      src="@/assets/svgs/dark_report.svg"
-                      @click="handleSupport('report')"
-                    />
-                    <img
-                      v-if="themeStore.theme === 'light'"
-                      class="button-icon"
-                      src="@/assets/svgs/light_report.svg"
-                      @click="handleSupport('report')"
-                    />
-                  </template>
-                  <ReportPopover
-                    @click.stop
-                    @close="isReportVisible = false"
-                    @report="handleReport"
+              <el-popover
+                placement="bottom-end"
+                class="against-button"
+                :visible="isReportVisible"
+                :width="size.width"
+                :height="size.height"
+                @after-enter="bindReportClick"
+                @after-leave="unbindReportClick"
+              >
+                <template #reference>
+                  <img
+                    v-if="themeStore.theme === 'dark'"
+                    class="button-icon"
+                    src="@/assets/svgs/dark_report.svg"
+                    @click="handleSupport('report')"
                   />
-                </el-popover>
-              </div>
+                  <img
+                    v-if="themeStore.theme === 'light'"
+                    class="button-icon"
+                    src="@/assets/svgs/light_report.svg"
+                    @click="handleSupport('report')"
+                  />
+                </template>
+                <ReportPopover
+                  @click.stop
+                  @close="isReportVisible = false"
+                  @report="handleReport"
+                />
+              </el-popover>
             </el-tooltip>
           </div>
         </div>
@@ -869,7 +866,7 @@ const searchAppName = (appId) => {
 .against-button {
   height: 16px;
   width: auto;
-  margin-left: 16px;
+  margin-left: 12px;
   color: var(--o-text-color-secondary);
 
   svg {
@@ -1100,7 +1097,7 @@ const searchAppName = (appId) => {
             margin-right: 8px;
             border-radius: 4px;
             font-size: 12px;
-            line-height: 18px;
+            line-height: 16px;
             color: var(--o-text-color-tertiary) !important;
             letter-spacing: 0px;
           }
@@ -1113,6 +1110,12 @@ const searchAppName = (appId) => {
           &-arror {
             margin: 0;
             cursor: pointer;
+          }
+          .ml-8 {
+            margin-left: 8px;
+          }
+          .mr-8 {
+            margin-right: 8px;
           }
 
           .pagenation-cur {
@@ -1157,13 +1160,14 @@ const searchAppName = (appId) => {
           font-size: 12px;
 
           .button-icon {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
+            margin-left: 4px;
           }
 
           .copy {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
           }
 
           .copy:hover {
@@ -1182,10 +1186,6 @@ const searchAppName = (appId) => {
             user-select: none;
             width: 16px;
             height: 16px;
-          }
-
-          .simg {
-            margin-left: 16px;
           }
         }
       }

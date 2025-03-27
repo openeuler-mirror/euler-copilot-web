@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
+import { IconLoad } from '@computing/opendesign-icons';
 import { useChangeThemeStore } from 'src/store';
 import 'xterm/css/xterm.css';
 import router from 'src/router';
@@ -107,7 +108,13 @@ onMounted(() => {
           </div>
         </div>
         <div class="question">
-          <p class="title">{{ $t('main.question') }}</p>
+          <div class="question-title">
+            <p class="title">{{ $t('main.question') }}</p>
+            <div class="change">
+              <el-icon><IconLoad /></el-icon>
+              {{ $t('main.refresh') }}
+            </div>
+          </div>
           <ul class="question-list">
             <li class="question-item" v-for="item in questions" :key="item.id">
               <span class="question-number" :class="{ blue: item.id <= 3 }">
@@ -208,19 +215,37 @@ onMounted(() => {
     height: auto;
     box-shadow: 0px 5.18px 20.72px 0px var(--question-shadow);
     background: var(--question-bg);
+    background-blend-mode: overlay;
     // opacity: 0.5;
     border-radius: 8px;
     background-size: 100% 100%;
-    margin-left: 12px;
+    margin-left: 16px;
     padding: 24px;
     flex-direction: column;
     justify-content: space-between;
-
-    .title {
-      width: 263px;
-      font-size: 18px;
-      color: var(--o-text-color-primary);
-      font-weight: bold;
+    .question-title {
+      display: flex;
+      justify-content: space-between;
+      .title {
+        width: 263px;
+        font-size: 18px;
+        color: var(--o-text-color-primary);
+        font-weight: bold;
+      }
+      .change {
+        display: flex;
+        align-items: center;
+        color: var(--o-text-color-secondary);
+        font-family: HarmonyOS_Sans_SC_Medium;
+        font-size: 12px;
+        line-height: 16px;
+        cursor: pointer;
+        & .el-icon {
+          margin-right: 4px;
+          height: 14px;
+          width: 14px;
+        }
+      }
     }
 
     .dse {
@@ -235,7 +260,7 @@ onMounted(() => {
   // background-color: var(--o-bg-color-base);
   background-color: transparent;
   border-radius: 8px;
-  padding-top: 64px;
+  padding-top: 48px;
   display: block;
   width: 1000px;
 
@@ -254,7 +279,7 @@ onMounted(() => {
   }
 
   &-tips {
-    margin-top: 24px;
+    margin-top: 32px;
     color: var(--o-text-color-secondary);
     font-size: 20px;
     line-height: 28px;
@@ -277,7 +302,8 @@ onMounted(() => {
     &-btn {
       display: flex;
       position: relative;
-      top: 50px;
+      top: 53px;
+      cursor: pointer;
       p {
         display: block;
         align-self: center;
@@ -294,79 +320,64 @@ onMounted(() => {
         font-size: 14px;
       }
     }
-  }
-
-  .eg-list {
-    display: flex;
-    width: auto;
-    background-color: var(--o-bg-color-base);
-    flex-direction: row;
-    flex-wrap: wrap;
-    row-gap: 6px;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    li {
-      cursor: text;
-      background: var(--o-bg-color-light);
-      &:hover {
-        background: var(--o-bg-color-base);
-        box-shadow: 0px 5.18px 20.72px 0px var(--o-bg-color-dark);
-      }
-    }
-    &-item {
+    .eg-list {
       display: flex;
+      width: auto;
+      background-color: var(--o-bg-color-base);
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
-      width: calc(50% - 8px);
-      height: 80px;
-      background: var(--o-bg-color-base);
-      margin-top: 8px;
-      overflow: hidden;
-      border-radius: 8px;
-      @media screen and (max-width: 1368px) {
-        width: calc(50% - 4px);
-        padding: 10px;
-      }
-
-      @media screen and (max-height: 768px) {
-        width: calc(50% - 4px);
-        padding: 10px;
-      }
-
-      &:hover {
-        cursor: pointer;
-      }
-
-      img {
-        width: 37px;
-        height: 37px;
-        margin: 0 6px 0 8px;
-      }
-
-      &__text {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--o-text-color-primary);
-        line-height: 24px;
-
-        &-desc {
-          font-size: 12px;
-          color: var(--o-text-color-secondary);
-          font-weight: 400;
+      margin-top: 16px;
+      li {
+        cursor: text;
+        background: var(--o-bg-color-light);
+        &:hover {
+          background: var(--o-bg-color-base);
+          box-shadow: 0px 5.18px 20.72px 0px var(--o-bg-color-dark);
         }
       }
+      &-item {
+        display: flex;
+        align-items: center;
+        width: calc(50% - 8px);
+        height: 80px;
+        background: var(--o-bg-color-base);
+        overflow: hidden;
+        border-radius: 8px;
 
-      p {
-        font-size: 16px;
-        color: var(--o-text-color-primary);
+        &:hover {
+          cursor: pointer;
+        }
+
+        img {
+          width: 37px;
+          height: 37px;
+          margin: 0 6px 0 8px;
+        }
+
+        &__text {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--o-text-color-primary);
+          line-height: 24px;
+
+          &-desc {
+            font-size: 12px;
+            color: var(--o-text-color-secondary);
+            font-weight: 400;
+          }
+        }
+
+        p {
+          font-size: 16px;
+          color: var(--o-text-color-primary);
+        }
       }
     }
-  }
-  .eg-btn {
-    cursor: pointer;
   }
 }
 </style>
