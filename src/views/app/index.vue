@@ -303,6 +303,13 @@ watch(
 onMounted(() => {
   handleQueryAppList();
 });
+
+onMounted(() => {
+  console.log(router.currentRoute.value.query);
+  if (router.currentRoute.value.query.to === 'createdByMe') {
+    handleSearchAppList('createdByMe');
+  }
+});
 </script>
 <style lang="scss" scoped>
 .create-button__icon {

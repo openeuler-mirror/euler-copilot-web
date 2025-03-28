@@ -184,7 +184,11 @@
           width: 144px;
           height: 32px;
           .el-select__wrapper {
+            background-color: var(--o-select-bg-color) !important;
             border-radius: 4px;
+            .el-select__placeholder {
+              color: var(--o-select-color) !important;
+            }
           }
         }
       }
@@ -268,6 +272,7 @@
 }
 
 .addWorkFlow {
+  cursor: pointer;
   display: flex;
   gap: 8px;
   align-items: center;

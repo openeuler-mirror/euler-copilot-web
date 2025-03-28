@@ -137,7 +137,7 @@ const getPublishStatus = (status) => {
 };
 
 const handleJumperAppCenter = () => {
-  router.push('/app');
+  router.push('/app?to=createdByMe');
 };
 </script>
 <template>
