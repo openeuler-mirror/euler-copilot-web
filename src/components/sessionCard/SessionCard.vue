@@ -268,6 +268,9 @@ const deleteOne = (name: string, list: string[]) => {
 
 .conversation-card {
   width: calc(100% - 18px);
+  &:last-child .conversation-card-item {
+    margin-bottom: 0px;
+  }
   &-item {
     margin-bottom: 8px;
     display: flex;

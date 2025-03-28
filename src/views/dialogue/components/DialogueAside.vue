@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
 import {
   ElButton,
   ElInput,
@@ -269,7 +270,7 @@ function ensureAppAtFirstPosition() {
 const getAppsValue = async () => {
   //获取 top5 list
   const [_, res] = await api.getTopFiveApp(5);
-  if (!_&&res?.result) {
+  if (!_ && res?.result) {
     appList.value = res.result.applications;
     apps.value = res.result.applications;
   }
@@ -316,7 +317,11 @@ watch(
         isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
       "
     >
-      <div class="trapezoid" :class="{isExpandIcon: isCopilotAsideVisible}" @click="hanleAsideVisible" />
+      <div
+        class="trapezoid"
+        :class="{ isExpandIcon: isCopilotAsideVisible }"
+        @click="hanleAsideVisible"
+      />
     </ElTooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
@@ -387,7 +392,9 @@ watch(
               </template>
             </ElInput>
             <p class="history-record-tips">
-              {{ $t('history.chat_history_limit') }}
+              {{ $t('history.chat_history_limit1') }}
+              <span>200</span>
+              {{ $t('history.chat_history_limit2') }}
             </p>
           </div>
 
@@ -400,10 +407,21 @@ watch(
               @change="selectAllSession"
             />
           </div>
-          <ul class="history-record-list" v-if="filteredHistorySessions.length">
+          <ul v-if="filteredHistorySessions.length">
             <ElCollapse v-model="activeNames">
               <template v-for="item in filteredHistorySessions" :key="item.key">
-                <ElCollapseItem :title="item.title" :name="item.key">
+                <ElCollapseItem :name="item.key">
+                  <template #title>
+                    {{ item.title }}
+                  </template>
+                  <template #icon="{ isActive }">
+                    <el-icon v-if="isActive" :size="16">
+                      <CaretBottom />
+                    </el-icon>
+                    <el-icon v-else :size="16">
+                      <CaretRight />
+                    </el-icon>
+                  </template>
                   <template
                     v-for="session in item.list"
                     :key="session.conversationId"
@@ -484,13 +502,20 @@ watch(
 }
 
 :deep(.el-collapse-item__header) {
-  height: 24px;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  height: 16px;
   margin-bottom: 8px;
   color: #8d98aa;
   font-size: 12px;
   border-top: none;
   border-bottom: none;
   padding: 0px;
+  & i {
+    margin-right: 4px;
+  }
 }
 
 :deep(.el-collapse-item__arrow) {
@@ -818,7 +843,7 @@ watch(
       width: calc(100% - 18px);
       font-size: 12px;
       border-radius: 4px;
-      border: 1px solid var(--o-border-color-lighter);
+      border-color: var(--o-border-color-lighter);
 
       &__icon {
         width: 16px;
@@ -852,14 +877,11 @@ watch(
     }
 
     .history-record-tips {
-      color: var(--o-text-color-secondary);
+      color: var(--o-text-color-tertiary);
       margin-top: 8px;
       margin-bottom: 8px;
-    }
-
-    .history-record-list {
-      button {
-        // margin: 5px;
+      & span {
+        color: var(--o-text-color-secondary);
       }
     }
   }

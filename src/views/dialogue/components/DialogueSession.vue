@@ -956,6 +956,7 @@ watch(
   margin-top: 38px;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 16px;
   cursor: pointer;
   position: relative;
   img {
@@ -1153,6 +1154,7 @@ button[disabled]:hover {
 
         .upload-wrapper {
           position: relative;
+          top: 3px;
 
           input {
             width: 32px;
@@ -1176,6 +1178,10 @@ button[disabled]:hover {
 
       &__icon {
         text-align: right;
+        & img {
+          position: relative;
+          bottom: 5px;
+        }
       }
     }
   }
