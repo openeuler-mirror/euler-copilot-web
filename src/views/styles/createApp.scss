@@ -141,7 +141,7 @@
       align-items: center;
     }
     .activeCollapse.baseInfoTitle {
-      color: #000;;
+      color: var(--o-text-color-primary);
     }
       
     .el-collapse-item__arrow {
