@@ -34,8 +34,11 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
+
+const baseURL = import.meta.env.MODE === 'electron-production' ? import.meta.env.VITE_BASE_PROXY_URL : './';
 // 创建 axios 实例
 export const server = axios.create({
+  baseURL,
   // API 请求的默认前缀
   timeout: 60 * 1000, // 请求超时时间
 });

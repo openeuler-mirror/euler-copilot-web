@@ -22,7 +22,7 @@ export default ({ mode }): UserConfigExport => {
     VITE_BASE_URL
   } = env
   
-  const baseUrl = mode === 'production' ? VITE_BASE_URL : '/'
+  const baseUrl = mode === 'micro' ? VITE_BASE_URL : './'
   return defineConfig({
     base: baseUrl,
     resolve: {
@@ -67,45 +67,12 @@ export default ({ mode }): UserConfigExport => {
     server: {
       host: "localhost",
       hmr: true,
-      open: true,
       port: 3000,
       origin: 'http://localhost:3000',
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
       proxy: {
-        "/plugin": {
-          target: env.VITE_BASE_PROXY_URL,
-          changeOrigin: true,
-          ws: false,
-          secure: false,
-        },
-        "/rag": {
-          target: env.VITE_BASE_PROXY_URL,
-          secure: false,
-          changeOrigin: true,
-          ws: false,
-          rewrite: (path: string) => path.replace(/^\/rag/, ""),
-        },
-        "/stream": {
-          target: env.VITE_BASE_PROXY_URL,
-          secure: false,
-          changeOrigin: true,
-          ws: false,
-          rewrite: (path: string) => path.replace(/^\/stream/, ""),
-        },
-        "/qabot": {
-          target: env.VITE_QABOT_URL,
-          changeOrigin: true,
-          ws: false,
-          rewrite: (path: string) => path.replace(/^\/qabot/, ""),
-        },
-        "/test": {
-          target: env.VITE_BASE_PROXY_URL,
-          changeOrigin: true,
-          ws: false,
-          rewrite: (path: string) => path.replace(/^\/test/, ""),
-        },
         "/api": {
           target: env.VITE_BASE_PROXY_URL,
           changeOrigin: true,
