@@ -45,7 +45,8 @@
         "createDir": true,
         "scope": [
           "$HOME/.config/eulercopilot/*",
-          "$HOME/.eulercopilot/scripts/*"
+          "$HOME/.eulercopilot/scripts/*",
+          "**"
         ]
       },
       "clipboard": {

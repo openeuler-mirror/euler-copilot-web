@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import InitalPanel from './InitalPanel.vue';
 import { storeToRefs } from 'pinia';
@@ -27,8 +27,6 @@ export interface ExampleQuestionItem {
   question: string;
 }
 
-const props = withDefaults(defineProps<DialogueSession>(), {});
-
 enum SupportMap {
   support = 1,
   against = 0,
@@ -36,128 +34,10 @@ enum SupportMap {
 
 const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
-const modeOptions = ref(props.modeOptions);
-const questions = [
-  {
-    groupId: 0,
-    id: 1,
-    question: 'openEuler社区版本有哪些分类？',
-  },
-  {
-    groupId: 0,
-    id: 2,
-    question: 'openEuler长期支持版本的发布间隔周期和社区支持各是多久？',
-  },
-  {
-    groupId: 0,
-    id: 3,
-    question: 'openEuler社区创新版本的发布间隔周期和社区支持各是多久？',
-  },
-  {
-    groupId: 0,
-    id: 4,
-    question: 'openEuler社区的容器云管理平台解决方案(CCPS)是什么？',
-  },
-  {
-    groupId: 1,
-    id: 5,
-    question: 'secGear主要提供哪三大能力？',
-  },
-  {
-    groupId: 1,
-    id: 6,
-    question: 'DDE是一款什么组件？',
-  },
-  {
-    groupId: 1,
-    id: 7,
-    question: 'Lustre是什么？',
-  },
-  {
-    groupId: 2,
-    id: 8,
-    question: 'openEuler社区的测试管理平台是什么？',
-  },
-  {
-    groupId: 2,
-    id: 9,
-    question: 'openEuler的pkgship是什么？',
-  },
-  {
-    groupId: 2,
-    id: 10,
-    question: 'openEuler软件包引入原则是什么？',
-  },
-  {
-    groupId: 2,
-    id: 11,
-    question: 'openEuler系统如何将一个RPM包下载到本地而不安装？',
-  },
-  {
-    groupId: 3,
-    id: 12,
-    question:
-      '请给我一个shell命令，实现以下功能：计算test.txt文件中hello字符串的出现次数',
-  },
-  {
-    groupId: 3,
-    id: 13,
-    question:
-      '请给我一个shell命令，实现以下功能：linux命令将本目录及子目录文本文件中的大写字母修改成小写字母',
-  },
-  {
-    groupId: 3,
-    id: 14,
-    question: 'shell命令查找当前目录下权限符合的文件并列出',
-  },
-  {
-    groupId: 3,
-    id: 15,
-    question:
-      '请给我一个shell命令，实现以下功能：在/home目录及其子目录中查找关键字“error”的文本文件，并将匹配行以及它们前后的3行内容输出到名为“result.txt”的文件中',
-  },
-  {
-    groupId: 4,
-    id: 16,
-    question: 'openEuler系统如何清除软件源的依赖？',
-  },
-  {
-    groupId: 4,
-    id: 17,
-    question: 'openEuler系统DNF中的gpgcheck参数是用来做什么的？',
-  },
-  {
-    groupId: 4,
-    id: 18,
-    question: 'openEuler系统DNF中的installonly_limit参数的作用是？',
-  },
-  {
-    groupId: 4,
-    id: 19,
-    question:
-      'openEuler系统DNF中的clean_requirement_on_remove参数具有什么功能？',
-  },
-  {
-    groupId: 5,
-    id: 20,
-    question: '湖南省烟草专卖局基于openeuler系统有哪些应用？',
-  },
-  {
-    groupId: 5,
-    id: 21,
-    question: 'XSKY星辰天合公司基于openeuler系统有哪些应用？',
-  },
-];
-
-let groupId = ref(0);
 
 const selectMode = ref('');
 const selectedPlugin = ref('');
 const copyList = ref('');
-
-let filterQuestions = computed(() =>
-  questions.filter((item) => item.groupId === groupId.value % 6)
-);
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -286,28 +166,10 @@ const handleReport = async (recordId: string, reason?: string | undefined) => {
   }
 };
 
-const changeProblem = () => {
-  groupId.value++;
-};
-
-const selectQuestion = (event: any) => {
-  dialogueInput.value = event.target.innerText;
-};
-
 onMounted(() => {
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
-
-watch(
-  () => props,
-  () => {
-    modeOptions.value = props.modeOptions;
-  },
-  {
-    deep: true,
-  }
-);
 
 const createNewSession = async (): Promise<void> => {
   isAnswerGenerating.value = false;
@@ -447,7 +309,7 @@ listen<StreamPayload>('fetch-stream-data', (event) => {
       </div>
 
       <div class="dialogue-session-bottom">
-        <!-- 问题换一换 -->
+        <!-- 停止回答 -->
         <div
           v-if="isAnswerGenerating"
           class="dialogue-panel__stop"
@@ -461,44 +323,10 @@ listen<StreamPayload>('fetch-stream-data', (event) => {
           <img v-else src="/src/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="dialogue-panel__stop-answer">停止回答</div>
         </div>
-        <div class="problem" v-if="conversationList.length === 0">
-          <ul>
-            <li
-              v-for="item in filterQuestions"
-              :key="item.id"
-              @click="selectQuestion"
-            >
-              {{ item.question }}
-            </li>
-          </ul>
-          <div class="change-button" @click="changeProblem">
-            <img
-              v-if="themeStore.theme === 'dark'"
-              src="src/assets/svgs/light_change.svg"
-              alt=""
-            />
-            <img v-else src="src/assets/svgs/dark_change.svg" alt="" />
-            <span>换一换</span>
-          </div>
-        </div>
-        <!-- 识别方式 -->
-        <div class="plugin-selector">
-          <el-select
-            class="mode-select"
-            v-model="selectMode"
-            clearable
-            placeholder="请选择识别方式"
-          >
-            <el-option
-              v-for="item in modeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              :disabled="item.disabled"
-            />
-          </el-select>
+        <!-- 新建对话 -->
+        <div class="dialogue-refresh">
           <img
-            class="renew_btn"
+            class="refresh-button"
             @click="createNewSession()"
             v-if="!isAnswerGenerating && dialogueInput.length <= 0"
             src="/src/assets/images/createIcon.svg"
@@ -540,9 +368,10 @@ listen<StreamPayload>('fetch-stream-data', (event) => {
 </template>
 
 <style lang="scss" scoped>
-.renew_btn {
-  position: absolute;
-  left: calc(100% - 70px);
+.refresh-button {
+  position: relative;
+  left: 0;
+  cursor: pointer;
 }
 
 .dialogue-panel__stop {
@@ -718,83 +547,14 @@ button[disabled]:hover {
   }
 }
 
-.problem {
-  display: flex;
-  margin-top: 16px;
-  bottom: 160px;
-  max-height: 216px;
-  overflow-y: auto;
-
-  ul {
-    display: flex;
-    flex-wrap: wrap;
-
-    li {
-      padding: 8px 16px;
-      font-size: 12px;
-      border-radius: 8px;
-      color: var(--o-text-color-secondary);
-      line-height: 16px;
-      background: var(--o-bg-color-base);
-      margin-right: 8px;
-      margin-bottom: 8px;
-
-      &:hover {
-        background-image: linear-gradient(
-          to right,
-          rgba(109, 117, 250, 0.8),
-          rgba(90, 179, 255, 0.8)
-        );
-        color: var(--o-text-color-fourth);
-      }
-
-      &:active {
-        background-image: linear-gradient(
-          to right,
-          rgba(109, 117, 250, 1),
-          rgba(90, 179, 255, 1)
-        );
-        color: var(--o-text-color-fourth);
-      }
-    }
-  }
-
-  div {
-    height: 28px;
-    position: absolute;
-    right: 32px;
-    margin-left: 8px;
-    cursor: pointer;
-    padding-top: 8px;
-    display: flex;
-
-    img {
-      margin-right: 4px;
-      width: 14px;
-      height: 14px;
-    }
-
-    span {
-      width: 36px;
-      margin-top: -2px;
-      font-size: 12px;
-      color: var(--o-text-color-secondary);
-      line-height: 16px;
-    }
-  }
-}
-
-.change-button {
-  position: absolute;
-  right: calc(10% + 36px);
-  bottom: 168px;
-}
-
-.plugin-selector {
-  width: calc(100% - 48px);
+.dialogue-refresh {
+  width: 100%;
   margin-bottom: 8px;
   margin-top: 8px;
   border-radius: 8px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 
   .mode-select {
     max-width: 168px;

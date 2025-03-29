@@ -191,8 +191,8 @@ fn create_main_window(app_handle: &AppHandle) {
         .maximizable(false)
         .minimizable(false)
         .skip_taskbar(true)
-        .inner_size(1280., 680.)
-        .min_inner_size(1280., 680.)
+        .inner_size(680., 680.)
+        .min_inner_size(680., 680.)
         .max_inner_size(1440., 4096.);
 
     #[cfg(target_os = "macos")]
@@ -255,7 +255,7 @@ fn create_settings_window(app_handle: &AppHandle) {
         .resizable(false)
         .maximizable(false)
         .minimizable(false)
-        .inner_size(540., 360.)
+        .inner_size(540., 256.)
         .center();
 
     builder.build().expect("无法创建设置窗口");
