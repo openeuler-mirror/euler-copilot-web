@@ -186,7 +186,7 @@ fn show_main_window(app_handle: AppHandle) {
 
 fn create_main_window(app_handle: &AppHandle) {
     let mut builder = WindowBuilder::new(app_handle, "main", WindowUrl::App("/".into()))
-        .title("Copilot")
+        .title("EulerCopilot")
         .resizable(true)
         .maximizable(false)
         .minimizable(false)

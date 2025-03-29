@@ -6,6 +6,6 @@ Comment[zh_CN]=EulerCopilot 桌面客户端
 Comment[zh_CN.UTF-8]=EulerCopilot 桌面客户端
 Exec={{{exec}}}
 Icon={{{icon}}}
-Name=Copilot
+Name=EulerCopilot
 Terminal=false
 Type=Application
