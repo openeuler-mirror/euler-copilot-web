@@ -1,2 +1,1 @@
-export { createWindow, createDefaultWindow, createChatWindow } from './create';
-export { createTray } from './tray';
+export { createWindow, createDefaultWindow } from './create'

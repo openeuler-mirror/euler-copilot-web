@@ -1,42 +1,23 @@
 export interface allWindowType {
   [propName: string]: {
-    id: string;
-    window: Electron.BrowserWindowConstructorOptions;
-    hash: string;
-  };
+    window: Electron.BrowserWindowConstructorOptions
+    hash: string
+  }
 }
 
 export const options: allWindowType = {
-  mainWindow: {
-    id: 'mainWindow',
+  defaultWin: {
     window: {
-      width: 1440,
-      height: 810,
-      minWidth: 1440,
-      minHeight: 810,
-      titleBarStyle: 'hidden',
+      width: 800,
+      height: 600,
       resizable: true,
       show: true,
       alwaysOnTop: false,
       useContentSize: true,
+      frame: true,
+      backgroundColor: '#ffffff',
       icon: 'dist/favicon.ico',
     },
-    hash: '/',
+    hash: 'defaultWin',
   },
-  chatWindow: {
-    id: 'chatWindow',
-    window: {
-      width: 680,
-      height: 960,
-      resizable: true,
-      show: false,
-      alwaysOnTop: false,
-      useContentSize: true,
-      minWidth: 680,
-      minHeight: 960,
-      titleBarStyle: 'hidden',
-      icon: 'dist/favicon.ico',
-    },
-    hash: '/chat',
-  },
-};
+}
