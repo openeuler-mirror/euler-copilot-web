@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "EulerCopilot Desktop",
-    "version": "0.9.2-alpha"
+    "version": "0.9.2-mcp-edition"
   },
   "tauri": {
     "allowlist": {
@@ -29,7 +29,7 @@
         "request": true,
         "scope": [
           "http://*",
-          "https://eulercopilot.gitee.com/*"
+          "https://*.eulercopilot.*/*"
         ]
       },
       "shell": {
@@ -67,7 +67,7 @@
     },
     "bundle": {
       "active": true,
-      "identifier": "org.openEuler.Copilot.Desktop",
+      "identifier": "org.openEuler.EulerCopilot.Desktop",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

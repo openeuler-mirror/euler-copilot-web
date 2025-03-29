@@ -44,7 +44,7 @@
       }
     },
     "bundle": {
-      "identifier": "org.openEuler.Copilot.Desktop",
+      "identifier": "org.openEuler.EulerCopilot.Desktop",
       "targets": [
         "appimage",
         "rpm"
