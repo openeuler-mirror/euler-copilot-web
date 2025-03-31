@@ -26,6 +26,7 @@
     "@computing/opendesign-icons": "file:lib\\opendesign-icons-1.0.5.tgz",
     "@computing/opendesign2": "file:lib\\opendesign2-2.0.23.tgz",
     "@dagrejs/dagre": "1.1.2",
+    "@element-plus/icons-vue": "^2.3.1",
     "axios": "1.7.9",
     "babel-loader": "^9.2.1",
     "codemirror": "^6.0.1",
