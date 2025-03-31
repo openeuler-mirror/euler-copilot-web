@@ -1,20 +1,21 @@
-import { app, ipcMain } from 'electron'
-import { createDefaultWindow } from './window'
+import { app, ipcMain } from 'electron';
+import { createDefaultWindow, createTray } from './window';
 
 app.whenReady().then(() => {
-  createDefaultWindow()
-  // const defaultWindow = createDefaultWindow()
+  const tray = createTray();
 
-  // 监听渲染进程崩溃或被杀死，重新运行程序
-  // defaultWindow.webContents.on('render-process-gone', () => {
-  //   app.relaunch()
-  //   app.exit(0)
-  // })
-})
+  const win = createDefaultWindow();
+
+  tray.on('click', () => {
+    win.show();
+  });
+
+  win.on('close', (event) => {
+    event.preventDefault();
+    win.hide();
+  });
+});
 
 app.on('window-all-closed', () => {
-  ipcMain.removeAllListeners()
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+  ipcMain.removeAllListeners();
+});
