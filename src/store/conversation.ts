@@ -261,8 +261,8 @@ export const useSessionStore = defineStore('conversation', () => {
           .filter((line) => line.startsWith('data: {'));
         // 获取最后一个
         const lastLine = lines[lines.length - 1] || {};
-        if (!judgeJson(lastLine.toString())) {
-          addItem = lastLine.toString();
+        if (!judgeJson(JSON.stringify(lastLine))) {
+          addItem = JSON.stringify(lastLine);
           lines.splice(lines.length - 1, 1);
         } else {
           addItem = '';
@@ -839,7 +839,7 @@ export const useSessionStore = defineStore('conversation', () => {
     }
     const str3 = str.substr(6, str.length - 1);
     try {
-      const obj = JSON.parse(str3);
+      const obj = JSON.parse('"' + str3);
       if (typeof obj === 'object' && obj) {
         return true;
       } else {
