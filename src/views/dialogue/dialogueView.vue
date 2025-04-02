@@ -138,7 +138,7 @@ watch(
 
 <template>
   <div class="dialogue" id="dialogId">
-    <header class="dialogue-header">
+    <header class="dialogue-header" data-tauri-drag-region>
       <span>
         <img src="src/assets/svgs/euler_copilot_logo.svg" />
         <h4>EulerCopilot</h4>
@@ -155,7 +155,7 @@ watch(
 
         <el-popover popper-class="popper-class">
           <template #reference>
-            <img class="avatar" src="src/assets/svgs/user.svg" />
+            <img class="avatar" src="src/assets/images/edit.png" />
           </template>
           <el-button class="exit-button" @click="settingsHandler"
             >设置</el-button
@@ -295,6 +295,7 @@ body {
   flex-direction: column;
   background-image: var(--o-bg-image);
   background-size: cover;
+  border-radius: 24px;
   &-header {
     display: flex;
     justify-content: space-between;
@@ -323,19 +324,14 @@ body {
     }
 
     .avatar {
-      width: 24px;
-      height: 48px;
-      border-radius: 50%;
+      width: 23px;
+      height: 20px;
       cursor: pointer;
-
-      &:hover {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
     }
 
     .header-right {
       display: flex;
-
+      align-items: center;
       .mode {
         margin-right: 18px;
       }
