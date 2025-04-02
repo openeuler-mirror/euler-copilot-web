@@ -204,7 +204,7 @@ fn create_main_window(app_handle: &AppHandle) {
 
     #[cfg(target_os = "linux")]
     {
-        builder = builder.decorations(false);
+        builder = builder.decorations(false).transparent(true);
     }
 
     builder.build().expect("无法创建主窗口");

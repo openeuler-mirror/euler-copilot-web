@@ -1,14 +1,13 @@
 <script lang="ts" setup>
-import { useRouter, useRoute } from 'vue-router';
-import { onMounted, ref, watch } from 'vue';
-import { HtmlEvent, onHtmlEventDispatch } from 'src/utils';
-import { useChangeThemeStore } from 'src/store';
-import DialogueSession from './components/DialogueSession.vue';
-import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
-import EulerDialog from 'src/components/EulerDialog.vue';
-import { reactive } from 'vue';
-import { invoke } from '@tauri-apps/api/tauri';
-// import marked from 'src/utils/marked';
+import { useRouter, useRoute } from "vue-router";
+import { onMounted, ref, watch } from "vue";
+import { HtmlEvent, onHtmlEventDispatch } from "src/utils";
+import { useChangeThemeStore } from "src/store";
+import DialogueSession from "./components/DialogueSession.vue";
+import CommonFooter from "src/components/commonFooter/CommonFooter.vue";
+import EulerDialog from "src/components/EulerDialog.vue";
+import { reactive } from "vue";
+import { invoke } from "@tauri-apps/api/tauri";
 
 declare global {
   interface Window {
@@ -31,28 +30,27 @@ const themeStore = useChangeThemeStore();
 const dialogVisible = ref(false);
 const modeOptions = reactive([
   {
-    label: '自动识别',
-    value: 'auto',
+    label: "自动识别",
+    value: "auto",
     disabled: false,
   },
 ]);
 
-const isDark = ref(localStorage.getItem('theme') === 'dark');
+const isDark = ref(localStorage.getItem("theme") === "dark");
 const loginDialogVisible = ref(false);
-// const agreeDialogVisiable = ref(false);
 
 /**
  * 初始化
  */
 const initCopilot = async (): Promise<void> => {
-  const themeValue = localStorage.getItem('theme');
+  const themeValue = localStorage.getItem("theme");
   if (themeValue) {
     themeStore.theme = themeValue;
   } else {
-    localStorage.setItem('theme', 'light');
+    localStorage.setItem("theme", "light");
   }
   const currRoute = router.currentRoute;
-  if (currRoute.value.path === '/') {
+  if (currRoute.value.path === "/") {
     // await invoke('refresh_session_id')
     //   .then(async (sessionID: any) => {
     //     if (sessionID) {
@@ -69,11 +67,11 @@ const initCopilot = async (): Promise<void> => {
 };
 
 const settingsHandler = () => {
-  invoke('show_settings_window');
+  invoke("show_settings_window");
 };
 
 // 协议内容
-const agreement = ref<string>('');
+const agreement = ref<string>("");
 
 const handleSubmit = async () => {
   dialogVisible.value = false;
@@ -82,24 +80,18 @@ const handleSubmit = async () => {
 const changeTheme = () => {
   isDark.value = !isDark.value;
   isDark.value
-    ? document.body.setAttribute('theme', 'dark')
-    : document.body.setAttribute('theme', 'light');
-  const theme = isDark.value ? 'dark' : 'light';
-  localStorage.setItem('theme', theme);
+    ? document.body.setAttribute("theme", "dark")
+    : document.body.setAttribute("theme", "light");
+  const theme = isDark.value ? "dark" : "light";
+  localStorage.setItem("theme", theme);
   themeStore.theme = theme;
   themeStore.$patch({ theme: theme });
 };
 
-// const readAgreement = async () => {
-//   const response = await import('src/conf/agreement.md?raw');
-//   agreement.value = marked.parse(response.default) as string;
-//   agreeDialogVisiable.value = true;
-// };
-
 onMounted(() => {
-  const theme = localStorage.getItem('theme');
+  const theme = localStorage.getItem("theme");
   if (theme) {
-    document.body.setAttribute('theme', theme);
+    document.body.setAttribute("theme", theme);
   }
 });
 
@@ -112,28 +104,6 @@ watch(
     immediate: true,
   }
 );
-
-// const getModeOptions = async () => {
-//   await invoke('plugin').then(async (data: any) => {
-//     if (data && data.result) {
-//       data.result.forEach((item: any) => {
-//         const opt = {
-//           label: item.plugin_name,
-//           value: item.id,
-//           disabled: false
-//         };
-//         const plugin = modeOptions.find((item) => {
-//           return item.label === opt.label
-//         })
-//         if (!plugin) {
-//           modeOptions.push(opt);
-//         }
-//       });
-//     }
-//   }).catch(err => {
-//     console.error(err);
-//   });
-// };
 </script>
 
 <template>
@@ -152,15 +122,11 @@ watch(
             <img id="moon-icon" src="src/assets/svgs/moon.svg" alt="" />
           </span>
         </div>
-
-        <el-popover popper-class="popper-class">
-          <template #reference>
+        <div class="mode">
+          <span @click="settingsHandler">
             <img class="avatar" src="src/assets/images/edit.png" />
-          </template>
-          <el-button class="exit-button" @click="settingsHandler"
-            >设置</el-button
-          >
-        </el-popover>
+          </span>
+        </div>
       </div>
     </header>
     <div class="dialogue-container">
