@@ -228,7 +228,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
         conversationList.value[lastIndex] as RobotConversationItem
       ).searchSuggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
-    } else if (json.type == "extract") {
+    } else if (json.type === "extract") {
       let data = json.data;
       if (typeof data === "string") {
         data = JSON.parse(data);
@@ -258,7 +258,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
     }
   } catch (error) {
     contentMessage.value = "";
-    if (line == "[DONE]") {
+    if (line === "[DONE]") {
       (conversationList.value[lastIndex] as RobotConversationItem).isFinish =
         true;
       isAnswerGenerating.value = false;
@@ -380,10 +380,9 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 .el-textarea__inner:hover {
   box-shadow: unset !important;
   font-size: 16px;
-  padding: 0 !important;
   min-height: 56px !important;
   padding: 16px !important;
-    line-height: 24px;
+  line-height: 24px;
 }
 </style>
 <style lang="scss" scoped>
@@ -402,10 +401,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
   height: 40px;
   border-radius: 8px;
   border: 1px solid var(--o-text-color-primary);
-  margin-top: 38px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 16px;
+  margin: 38px auto 16px;
   cursor: pointer;
   position: relative;
 

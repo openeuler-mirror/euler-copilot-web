@@ -1,11 +1,3 @@
-
-<script lang="ts" setup>
-import { useChangeThemeStore } from 'src/store';
-
-const themeStore = useChangeThemeStore();
-console.log(themeStore,'themeStore')
-</script>
-
 <template>
  <div class="home-container">
     <div class="home-logo">
