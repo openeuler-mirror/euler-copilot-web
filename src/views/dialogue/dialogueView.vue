@@ -124,7 +124,7 @@ watch(
         </div>
         <div class="mode">
           <span @click="settingsHandler">
-            <img class="settings" src="src/assets/images/settings.png" />
+            <img class="settings" src="src/assets/svgs/settings.svg" />
           </span>
         </div>
       </div>
@@ -239,8 +239,8 @@ body {
     }
 
     .settings {
-      width: 23px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       cursor: pointer;
     }
 

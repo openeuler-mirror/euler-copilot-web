@@ -181,8 +181,8 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       <div class="dialogue-panel__content">
         <img v-if="avatar" :src="avatar" />
         <div v-else>
-          <img v-if="themeStore.theme === 'dark'" src="src/assets/images/dark_user.png" />
-          <img v-else src="src/assets/images/light_user.png" />
+          <img v-if="themeStore.theme === 'dark'" src="src/assets/svgs/dark_user.svg" />
+          <img v-else src="src/assets/svgs/light_user.svg" />
         </div>
         <p v-if="content">{{ content }}</p>
       </div>
@@ -483,7 +483,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
         top: 0px;
         width: 48px;
         height: 48px;
-        background-image: url('src/assets/images/robot.png');
+        background-image: url('src/assets/svgs/robot.svg');
       }
 
       &-icon {
@@ -515,7 +515,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
         top: 30px;
         width: 48px;
         height: 48px;
-        background-image: url('src/assets/images/robot.png');
+        background-image: url('src/assets/svgs/robot.svg');
       }
     }
 
@@ -535,7 +535,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
         top: 0px;
         width: 48px;
         height: 48px;
-        background-image: url('src/assets/images/robot.png');
+        background-image: url('src/assets/svgs/robot.svg');
       }
     }
 
