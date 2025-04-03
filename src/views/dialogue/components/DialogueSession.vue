@@ -492,13 +492,13 @@ button[disabled]:hover {
   &-bottom {
     margin-top: 24px;
     height: auto;
-    width: calc(100% - 48px);
+    width: 100%;
 
     &-sendbox {
       background-color: var(--o-bg-color-base);
       border-radius: 8px;
       bottom: 0px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       overflow: hidden;
 
       .word-limit {
@@ -545,7 +545,7 @@ button[disabled]:hover {
       &__icon {
         bottom: 4px;
         text-align: right;
-        right: 8px;
+        right: 4px;
 
         img {
           width: 40px;
@@ -560,14 +560,11 @@ button[disabled]:hover {
   width: 56px;
   background-color: var(--o-bg-color-base);
   border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  .mode-select {
-    max-width: 168px;
-    height: 40px;
-  }
 }
 
 :deep(.el-input__wrapper) {

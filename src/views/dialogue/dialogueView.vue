@@ -249,7 +249,7 @@ body {
       display: flex;
       align-items: center;
       .mode {
-        margin-right: 18px;
+        margin-left: 18px;
       }
     }
   }

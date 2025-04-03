@@ -1,19 +1,19 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-import PrivacyText from './PrivacyText.vue';
-import EulerDialog from 'src/components/EulerDialog.vue';
-import marked from 'src/utils/marked';
+import { ref } from "vue";
+import PrivacyText from "./PrivacyText.vue";
+import EulerDialog from "src/components/EulerDialog.vue";
+import marked from "src/utils/marked";
 
 const dialogVisible = ref(false);
 const agreeDialogVisiable = ref(false);
 
 // 协议内容
-const agreement = ref<string>('');
+const agreement = ref<string>("");
 /**
  * 读取协议
  */
 const readAgreement = async () => {
-  const response = await import('src/conf/agreement.md?raw');
+  const response = await import("src/conf/agreement.md?raw");
   agreement.value = marked.parse(response.default) as string;
   agreeDialogVisiable.value = true;
 };
@@ -22,7 +22,7 @@ const readAgreement = async () => {
 <template>
   <div class="common-footer">
     <span class="common-footer-tips"
-      >所有内容均由人工智能生成输出、仅供参考</span
+      >所有内容均由人工智能生成输出，仅供参考，不代表我们的态度和观点</span
     >
     <span @click="readAgreement">服务协议</span>
     <EulerDialog
@@ -32,13 +32,15 @@ const readAgreement = async () => {
       agreement-name="《服务协议》"
       @submit="agreeDialogVisiable = false"
     ></EulerDialog>
-    <span class="common-footer-policy" @click="dialogVisible = true">隐私政策</span>
-    <el-dialog 
-    v-model="dialogVisible" 
-    title="隐私政策" 
-    width="36%" 
-    height="42%"
-    align-center
+    <span class="common-footer-policy" @click="dialogVisible = true"
+      >隐私政策</span
+    >
+    <el-dialog
+      v-model="dialogVisible"
+      title="隐私政策"
+      width="36%"
+      height="42%"
+      align-center
     >
       <PrivacyText class="dialog-body" />
       <template #footer>
@@ -106,7 +108,11 @@ a {
   }
 
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
     display: none;
   }
 
@@ -115,13 +121,13 @@ a {
     height: 3px;
     display: none;
   }
-  
-  ::-webkit-scrollbar-thumb {
-      background-color: #d3dce9 !important;
-      border-radius: 3px;
-    }
 
-  .el-scrollbar__thumb{
+  ::-webkit-scrollbar-thumb {
+    background-color: #d3dce9 !important;
+    border-radius: 3px;
+  }
+
+  .el-scrollbar__thumb {
     width: 1px;
   }
 }
