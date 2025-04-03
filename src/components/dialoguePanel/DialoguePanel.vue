@@ -253,6 +253,27 @@ const selectQuestion = (item: ExampleQuestionItem) => {
 .overflowTable {
   width: 100%;
   overflow-x: scroll;
+  &::-webkit-scrollbar-track {
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
+    display: block !important;
+  }
+
+  &::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+    display: block !important;
+  }
+
+  /* 滚动条的滑块 */
+  &::-webkit-scrollbar-thumb {
+    background-color: #c3cedf;
+    border-radius: 3px;
+    display: block !important;
+  }
 }
 
 .suggestionItem {
