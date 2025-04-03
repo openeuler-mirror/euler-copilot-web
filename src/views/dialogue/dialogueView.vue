@@ -260,6 +260,7 @@ body {
     justify-content: space-between;
 
     &-main {
+      max-width: 100%;
       display: flex;
       flex: 1;
     }

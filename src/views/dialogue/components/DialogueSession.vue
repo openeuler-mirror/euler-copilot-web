@@ -326,7 +326,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
         <div class="dialogue-btn-send">
           <!-- 新建对话 -->
           <div
-            class="dialogue-refresh"
+            class="dialogue-session-bottom-refresh"
             v-if="!isAnswerGenerating && dialogueInput.length <= 0"
             @click="createNewSession()"
           >
@@ -433,6 +433,7 @@ button[disabled]:hover {
 }
 
 .dialogue-session {
+  max-width: 100%;
   flex: 1;
   border-radius: 0 8px 8px 0;
   display: flex;
@@ -481,7 +482,7 @@ button[disabled]:hover {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: calc(100%);
+    height: 100%;
     overflow-y: auto;
 
     .initial-message {
@@ -493,6 +494,18 @@ button[disabled]:hover {
     margin-top: 24px;
     height: auto;
     width: 100%;
+
+    &-refresh {
+      width: 56px;
+      height: 56px;
+      background-color: var(--o-bg-color-base);
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
 
     &-sendbox {
       background-color: var(--o-bg-color-base);
@@ -553,18 +566,6 @@ button[disabled]:hover {
       }
     }
   }
-}
-
-.dialogue-refresh {
-  height: 56px;
-  width: 56px;
-  background-color: var(--o-bg-color-base);
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
 }
 
 :deep(.el-input__wrapper) {

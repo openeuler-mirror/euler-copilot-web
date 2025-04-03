@@ -404,7 +404,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
   }
 }
 .dialogue-panel {
-  width:calc(100% - 48px);
+  width: 100%;
   &__user {
     position: relative;
     margin-bottom: 24px;
@@ -440,7 +440,6 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       width: 48px;
       height: 48px;
       position: absolute;
-      left: -10px;
     }
 
     p {
@@ -450,14 +449,14 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       display: flex;
       align-items: center;
       color: var(--o-text-color-primary);
-      margin-left: 45px;
+      margin-left: 66px;
       background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
     }
   }
 
   &__robot {
     position: relative;
-    padding-left: 45px;
+    padding-left: 66px;
     border-radius: 8px;
 
     .loading {
@@ -480,7 +479,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       &::before {
         content: '';
         position: absolute;
-        left: -10px;
+        left: 0px;
         top: 0px;
         width: 48px;
         height: 48px;
@@ -512,7 +511,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       &::before {
         content: '';
         position: absolute;
-        left: -10px;
+        left: 0px;
         top: 30px;
         width: 48px;
         height: 48px;
@@ -532,7 +531,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       &::before {
         content: '';
         position: absolute;
-        left: -10px;
+        left: 0px;
         top: 0px;
         width: 48px;
         height: 48px;
