@@ -327,7 +327,6 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           <!-- 新建对话 -->
           <div
             class="dialogue-refresh"
-            v-if="!isAnswerGenerating && dialogueInput.length <= 0"
             @click="createNewSession()"
           >
             <img
