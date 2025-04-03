@@ -24,7 +24,7 @@ const readAgreement = async () => {
     <span class="common-footer-tips"
       >所有内容均由人工智能生成输出，仅供参考，不代表我们的态度和观点</span
     >
-    <span @click="readAgreement">服务协议</span>
+    <span class="common-footer-policy" @click="readAgreement">服务协议</span>
     <EulerDialog
       :visible="agreeDialogVisiable"
       :content="agreement"
@@ -64,7 +64,6 @@ a {
   span {
     font-size: 12px;
     color: var(--o-text-color-tertiary);
-    cursor: pointer;
     padding-left: 8px;
   }
   .common-footer-tips {
@@ -72,6 +71,7 @@ a {
     padding: 0 8px 0 0;
   }
   &-policy {
+    cursor: pointer;
     &:hover {
       color: #7aa5ff;
     }

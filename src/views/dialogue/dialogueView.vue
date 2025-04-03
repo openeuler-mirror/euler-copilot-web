@@ -163,7 +163,6 @@ body {
   position: fixed;
   width: 100vw;
   height: 100vh;
-  padding: 10px;
 }
 
 .el-dialog__body {
@@ -206,10 +205,10 @@ body {
 <style lang="scss" scoped>
 .dialogue {
   overflow: hidden;
-  width: calc(100vw - 20px);
-  height: calc(100vh - 20px);
+  width: 100vw;
+  height: 100vh;
   min-height: 680px;
-  min-width: 660px;
+  min-width: 680px;
   display: flex;
   flex-direction: column;
   background-image: var(--o-bg-image);
