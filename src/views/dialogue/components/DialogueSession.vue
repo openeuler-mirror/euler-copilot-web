@@ -331,7 +331,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
         <div class="dialogue-btn-send">
           <!-- 新建对话 -->
           <div
-            class="dialogue-refresh"
+            class="dialogue-session-bottom-refresh"
             @click="isAnswerGenerating ? handleCreateNewSession(Number(conversationList.length)) : createNewSession()"
           >
             <img class="refresh-button" src="/src/assets/svgs/create.svg" />
