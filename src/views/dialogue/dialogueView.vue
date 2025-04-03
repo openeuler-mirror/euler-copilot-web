@@ -215,6 +215,8 @@ body {
   background-image: var(--o-bg-image);
   background-size: cover;
   border-radius: 24px;
+  border: 2px outset rgb(201, 228, 255, 0.4);
+  position: relative;
   &-header {
     display: flex;
     justify-content: space-between;
