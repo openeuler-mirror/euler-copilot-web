@@ -124,7 +124,7 @@ watch(
         </div>
         <div class="mode">
           <span @click="settingsHandler">
-            <img class="avatar" src="src/assets/images/edit.png" />
+            <img class="settings" src="src/assets/images/settings.png" />
           </span>
         </div>
       </div>
@@ -159,61 +159,16 @@ watch(
 
 <style lang="scss">
 body {
+  background: transparent;
   overflow: hidden;
   position: fixed;
   width: 100vw;
   height: 100vh;
+  padding: 10px;
 }
 
 .el-dialog__body {
   overflow: hidden;
-}
-
-.apikey {
-  &_view {
-    &_alert {
-      margin-bottom: 8px;
-    }
-
-    &_main {
-      .main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 4%;
-        height: 300px;
-        &_view {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          margin-top: 32px;
-          &_span {
-            height: 80px;
-            margin: 0px;
-            div {
-              margin: 0px;
-              width: 300px;
-              font-size: 20px;
-              word-wrap: break-word;
-            }
-          }
-        }
-
-        img {
-          width: 180px;
-        }
-
-        span {
-          font-size: 12px;
-        }
-        div {
-          button {
-            margin-top: 32px;
-          }
-        }
-      }
-    }
-  }
 }
 
 .popper-class {
@@ -228,7 +183,6 @@ body {
 }
 
 #sun-icon {
-  // background-color: pink;
   &:hover {
     filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
       brightness(94%) contrast(83%);
@@ -253,15 +207,16 @@ body {
 <style lang="scss" scoped>
 .dialogue {
   overflow: hidden;
-  height: 100vh;
-  width: 100vw;
+  width: calc(100vw - 20px);
+  height: calc(100vh - 20px);
   min-height: 680px;
-  min-width: 680px;
+  min-width: 660px;
   display: flex;
   flex-direction: column;
   background-image: var(--o-bg-image);
   background-size: cover;
   border-radius: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   &-header {
     display: flex;
     justify-content: space-between;
@@ -276,11 +231,6 @@ body {
       vertical-align: top;
       font-size: 16px;
       height: 48px;
-      img {
-        width: 24px;
-        height: 48px;
-        border-radius: 50%;
-      }
 
       h4 {
         font-size: 18px;
@@ -289,7 +239,7 @@ body {
       }
     }
 
-    .avatar {
+    .settings {
       width: 23px;
       height: 20px;
       cursor: pointer;

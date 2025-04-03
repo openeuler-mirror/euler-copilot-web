@@ -330,11 +330,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
             v-if="!isAnswerGenerating && dialogueInput.length <= 0"
             @click="createNewSession()"
           >
-            <img
-              class="refresh-button"
-              src="/src/assets/images/createDialogue.png"
-              alt=""
-            />
+            <img class="refresh-button" src="/src/assets/svgs/create.svg" />
           </div>
           <!-- 输入框 -->
           <div class="dialogue-session-bottom-sendbox">

@@ -190,7 +190,6 @@ fn create_main_window(app_handle: &AppHandle) {
         .resizable(true)
         .maximizable(false)
         .minimizable(false)
-        .skip_taskbar(true)
         .inner_size(680., 680.)
         .min_inner_size(680., 680.)
         .max_inner_size(1440., 4096.);
@@ -198,6 +197,7 @@ fn create_main_window(app_handle: &AppHandle) {
     #[cfg(target_os = "macos")]
     {
         builder = builder
+            .skip_taskbar(true)
             .title_bar_style(tauri::TitleBarStyle::Overlay)
             .hidden_title(true);
     }
