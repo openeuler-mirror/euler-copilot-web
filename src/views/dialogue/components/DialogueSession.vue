@@ -188,6 +188,11 @@ const handlePauseAndReGenerate = (cid?: number) => {
   contentMessage.value = "";
 };
 
+const handleCreateNewSession = (cid?: number) => {
+  handlePauseAndReGenerate(cid);
+  createNewSession();
+}
+
 const handleMarkdown = async (content: string) => {
   const lastIndex = conversationList.value.length - 1;
   let markedStr = marked.parse(
@@ -327,7 +332,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           <!-- 新建对话 -->
           <div
             class="dialogue-refresh"
-            @click="createNewSession()"
+            @click="isAnswerGenerating ? handleCreateNewSession(Number(conversationList.length)) : createNewSession()"
           >
             <img
               class="refresh-button"
