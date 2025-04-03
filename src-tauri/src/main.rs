@@ -190,8 +190,8 @@ fn create_main_window(app_handle: &AppHandle) {
         .resizable(true)
         .maximizable(false)
         .minimizable(false)
-        .inner_size(680., 680.)
-        .min_inner_size(680., 680.)
+        .inner_size(680., 810.)
+        .min_inner_size(680., 810.)
         .max_inner_size(1440., 4096.)
         .decorations(false)
         .transparent(true);

@@ -207,7 +207,7 @@ body {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
-  min-height: 680px;
+  min-height: 810px;
   min-width: 680px;
   display: flex;
   flex-direction: column;
