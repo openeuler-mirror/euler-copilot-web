@@ -177,10 +177,6 @@ fn show_main_window(app_handle: AppHandle) {
     } else {
         let window = window.unwrap();
         if !window.is_visible().unwrap() {
-            // 重置窗口内容，防止背景叠加
-            window
-                .eval("document.body.style.background = 'transparent';")
-                .ok();
             window.setup_window_pos().unwrap();
             window.show().unwrap();
             window.set_focus().unwrap();

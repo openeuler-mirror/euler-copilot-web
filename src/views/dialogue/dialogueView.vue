@@ -159,13 +159,11 @@ watch(
 
 <style lang="scss">
 body {
-  background: transparent;
   overflow: hidden;
   position: fixed;
   width: 100vw;
   height: 100vh;
   padding: 10px;
-  backdrop-filter: none;
 }
 
 .el-dialog__body {
@@ -217,7 +215,6 @@ body {
   background-image: var(--o-bg-image);
   background-size: cover;
   border-radius: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   &-header {
     display: flex;
     justify-content: space-between;
