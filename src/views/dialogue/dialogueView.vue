@@ -1,14 +1,13 @@
 <script lang="ts" setup>
-import { useRouter, useRoute } from 'vue-router';
-import { onMounted, ref, watch } from 'vue';
-import { HtmlEvent, onHtmlEventDispatch } from 'src/utils';
-import { useChangeThemeStore } from 'src/store';
-import DialogueSession from './components/DialogueSession.vue';
-import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
-import EulerDialog from 'src/components/EulerDialog.vue';
-import { reactive } from 'vue';
-import { invoke } from '@tauri-apps/api/tauri';
-// import marked from 'src/utils/marked';
+import { useRouter, useRoute } from "vue-router";
+import { onMounted, ref, watch } from "vue";
+import { HtmlEvent, onHtmlEventDispatch } from "src/utils";
+import { useChangeThemeStore } from "src/store";
+import DialogueSession from "./components/DialogueSession.vue";
+import CommonFooter from "src/components/commonFooter/CommonFooter.vue";
+import EulerDialog from "src/components/EulerDialog.vue";
+import { reactive } from "vue";
+import { invoke } from "@tauri-apps/api/tauri";
 
 declare global {
   interface Window {
@@ -31,28 +30,27 @@ const themeStore = useChangeThemeStore();
 const dialogVisible = ref(false);
 const modeOptions = reactive([
   {
-    label: '自动识别',
-    value: 'auto',
+    label: "自动识别",
+    value: "auto",
     disabled: false,
   },
 ]);
 
-const isDark = ref(localStorage.getItem('theme') === 'dark');
+const isDark = ref(localStorage.getItem("theme") === "dark");
 const loginDialogVisible = ref(false);
-// const agreeDialogVisiable = ref(false);
 
 /**
  * 初始化
  */
 const initCopilot = async (): Promise<void> => {
-  const themeValue = localStorage.getItem('theme');
+  const themeValue = localStorage.getItem("theme");
   if (themeValue) {
     themeStore.theme = themeValue;
   } else {
-    localStorage.setItem('theme', 'light');
+    localStorage.setItem("theme", "light");
   }
   const currRoute = router.currentRoute;
-  if (currRoute.value.path === '/') {
+  if (currRoute.value.path === "/") {
     // await invoke('refresh_session_id')
     //   .then(async (sessionID: any) => {
     //     if (sessionID) {
@@ -69,11 +67,11 @@ const initCopilot = async (): Promise<void> => {
 };
 
 const settingsHandler = () => {
-  invoke('show_settings_window');
+  invoke("show_settings_window");
 };
 
 // 协议内容
-const agreement = ref<string>('');
+const agreement = ref<string>("");
 
 const handleSubmit = async () => {
   dialogVisible.value = false;
@@ -82,24 +80,18 @@ const handleSubmit = async () => {
 const changeTheme = () => {
   isDark.value = !isDark.value;
   isDark.value
-    ? document.body.setAttribute('theme', 'dark')
-    : document.body.setAttribute('theme', 'light');
-  const theme = isDark.value ? 'dark' : 'light';
-  localStorage.setItem('theme', theme);
+    ? document.body.setAttribute("theme", "dark")
+    : document.body.setAttribute("theme", "light");
+  const theme = isDark.value ? "dark" : "light";
+  localStorage.setItem("theme", theme);
   themeStore.theme = theme;
   themeStore.$patch({ theme: theme });
 };
 
-// const readAgreement = async () => {
-//   const response = await import('src/conf/agreement.md?raw');
-//   agreement.value = marked.parse(response.default) as string;
-//   agreeDialogVisiable.value = true;
-// };
-
 onMounted(() => {
-  const theme = localStorage.getItem('theme');
+  const theme = localStorage.getItem("theme");
   if (theme) {
-    document.body.setAttribute('theme', theme);
+    document.body.setAttribute("theme", theme);
   }
 });
 
@@ -112,28 +104,6 @@ watch(
     immediate: true,
   }
 );
-
-// const getModeOptions = async () => {
-//   await invoke('plugin').then(async (data: any) => {
-//     if (data && data.result) {
-//       data.result.forEach((item: any) => {
-//         const opt = {
-//           label: item.plugin_name,
-//           value: item.id,
-//           disabled: false
-//         };
-//         const plugin = modeOptions.find((item) => {
-//           return item.label === opt.label
-//         })
-//         if (!plugin) {
-//           modeOptions.push(opt);
-//         }
-//       });
-//     }
-//   }).catch(err => {
-//     console.error(err);
-//   });
-// };
 </script>
 
 <template>
@@ -152,15 +122,11 @@ watch(
             <img id="moon-icon" src="src/assets/svgs/moon.svg" alt="" />
           </span>
         </div>
-
-        <el-popover popper-class="popper-class">
-          <template #reference>
-            <img class="avatar" src="src/assets/images/edit.png" />
-          </template>
-          <el-button class="exit-button" @click="settingsHandler"
-            >设置</el-button
-          >
-        </el-popover>
+        <div class="mode">
+          <span @click="settingsHandler">
+            <img class="settings" src="src/assets/svgs/settings.svg" />
+          </span>
+        </div>
       </div>
     </header>
     <div class="dialogue-container">
@@ -203,53 +169,6 @@ body {
   overflow: hidden;
 }
 
-.apikey {
-  &_view {
-    &_alert {
-      margin-bottom: 8px;
-    }
-
-    &_main {
-      .main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 4%;
-        height: 300px;
-        &_view {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          margin-top: 32px;
-          &_span {
-            height: 80px;
-            margin: 0px;
-            div {
-              margin: 0px;
-              width: 300px;
-              font-size: 20px;
-              word-wrap: break-word;
-            }
-          }
-        }
-
-        img {
-          width: 180px;
-        }
-
-        span {
-          font-size: 12px;
-        }
-        div {
-          button {
-            margin-top: 32px;
-          }
-        }
-      }
-    }
-  }
-}
-
 .popper-class {
   padding: 3px 0 !important;
 
@@ -262,7 +181,6 @@ body {
 }
 
 #sun-icon {
-  // background-color: pink;
   &:hover {
     filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
       brightness(94%) contrast(83%);
@@ -287,8 +205,8 @@ body {
 <style lang="scss" scoped>
 .dialogue {
   overflow: hidden;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
   min-height: 680px;
   min-width: 680px;
   display: flex;
@@ -296,6 +214,8 @@ body {
   background-image: var(--o-bg-image);
   background-size: cover;
   border-radius: 24px;
+  border: 2px outset rgb(201, 228, 255, 0.4);
+  position: relative;
   &-header {
     display: flex;
     justify-content: space-between;
@@ -310,11 +230,6 @@ body {
       vertical-align: top;
       font-size: 16px;
       height: 48px;
-      img {
-        width: 24px;
-        height: 48px;
-        border-radius: 50%;
-      }
 
       h4 {
         font-size: 18px;
@@ -323,9 +238,9 @@ body {
       }
     }
 
-    .avatar {
-      width: 23px;
-      height: 20px;
+    .settings {
+      width: 24px;
+      height: 24px;
       cursor: pointer;
     }
 
@@ -333,7 +248,7 @@ body {
       display: flex;
       align-items: center;
       .mode {
-        margin-right: 18px;
+        margin-left: 18px;
       }
     }
   }
@@ -345,6 +260,7 @@ body {
     justify-content: space-between;
 
     &-main {
+      max-width: 100%;
       display: flex;
       flex: 1;
     }

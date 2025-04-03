@@ -26,8 +26,6 @@ pub async fn chat_mcp<R: Runtime>(
     // 开始回答
     *state.0.lock().unwrap() = true;
 
-    // Execute the dolphin-mcp-cli using uvx
-
     // Build command with the required arguments
     let mut cmd_args: Vec<String> = Vec::new();
 
@@ -55,7 +53,7 @@ pub async fn chat_mcp<R: Runtime>(
         return Err("No question provided".to_string());
     }
 
-    // Execute command with uvx
+    // Execute dolphin-mcp-cli command
     let (mut rx, _child) = Command::new("dolphin-mcp-cli")
         .args(cmd_args)
         .spawn()

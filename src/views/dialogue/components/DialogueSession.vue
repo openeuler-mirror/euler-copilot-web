@@ -334,11 +334,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
             class="dialogue-refresh"
             @click="isAnswerGenerating ? handleCreateNewSession(Number(conversationList.length)) : createNewSession()"
           >
-            <img
-              class="refresh-button"
-              src="/src/assets/images/createDialogue.png"
-              alt=""
-            />
+            <img class="refresh-button" src="/src/assets/svgs/create.svg" />
           </div>
           <!-- 输入框 -->
           <div class="dialogue-session-bottom-sendbox">
@@ -441,6 +437,7 @@ button[disabled]:hover {
 }
 
 .dialogue-session {
+  max-width: 100%;
   flex: 1;
   border-radius: 0 8px 8px 0;
   display: flex;
@@ -489,7 +486,7 @@ button[disabled]:hover {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: calc(100%);
+    height: 100%;
     overflow-y: auto;
 
     .initial-message {
@@ -500,13 +497,25 @@ button[disabled]:hover {
   &-bottom {
     margin-top: 24px;
     height: auto;
-    width: calc(100% - 48px);
+    width: 100%;
+
+    &-refresh {
+      width: 56px;
+      height: 56px;
+      background-color: var(--o-bg-color-base);
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
 
     &-sendbox {
       background-color: var(--o-bg-color-base);
       border-radius: 8px;
       bottom: 0px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       overflow: hidden;
 
       .word-limit {
@@ -553,28 +562,13 @@ button[disabled]:hover {
       &__icon {
         bottom: 4px;
         text-align: right;
-        right: 8px;
+        right: 4px;
 
         img {
           width: 40px;
         }
       }
     }
-  }
-}
-
-.dialogue-refresh {
-  height: 56px;
-  width: 56px;
-  background-color: var(--o-bg-color-base);
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  .mode-select {
-    max-width: 168px;
-    height: 40px;
   }
 }
 
