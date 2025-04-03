@@ -191,7 +191,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
 const handleCreateNewSession = (cid?: number) => {
   handlePauseAndReGenerate(cid);
   createNewSession();
-}
+};
 
 const handleMarkdown = async (content: string) => {
   const lastIndex = conversationList.value.length - 1;
@@ -332,7 +332,11 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
           <!-- 新建对话 -->
           <div
             class="dialogue-session-bottom-refresh"
-            @click="isAnswerGenerating ? handleCreateNewSession(Number(conversationList.length)) : createNewSession()"
+            @click="
+              isAnswerGenerating
+                ? handleCreateNewSession(Number(conversationList.length))
+                : createNewSession()
+            "
           >
             <img class="refresh-button" src="/src/assets/svgs/create.svg" />
           </div>
@@ -508,6 +512,7 @@ button[disabled]:hover {
       display: flex;
       justify-content: center;
       align-items: center;
+      align-self: flex-end;
       cursor: pointer;
     }
 
