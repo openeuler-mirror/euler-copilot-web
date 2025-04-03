@@ -165,6 +165,7 @@ body {
   width: 100vw;
   height: 100vh;
   padding: 10px;
+  backdrop-filter: none;
 }
 
 .el-dialog__body {

@@ -177,6 +177,10 @@ fn show_main_window(app_handle: AppHandle) {
     } else {
         let window = window.unwrap();
         if !window.is_visible().unwrap() {
+            // 重置窗口内容，防止背景叠加
+            window
+                .eval("document.body.style.background = 'transparent';")
+                .ok();
             window.setup_window_pos().unwrap();
             window.show().unwrap();
             window.set_focus().unwrap();
@@ -192,19 +196,13 @@ fn create_main_window(app_handle: &AppHandle) {
         .minimizable(false)
         .inner_size(680., 680.)
         .min_inner_size(680., 680.)
-        .max_inner_size(1440., 4096.);
+        .max_inner_size(1440., 4096.)
+        .decorations(false)
+        .transparent(true);
 
     #[cfg(target_os = "macos")]
     {
-        builder = builder
-            .skip_taskbar(true)
-            .title_bar_style(tauri::TitleBarStyle::Overlay)
-            .hidden_title(true);
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        builder = builder.decorations(false).transparent(true);
+        builder = builder.skip_taskbar(true);
     }
 
     builder.build().expect("无法创建主窗口");
