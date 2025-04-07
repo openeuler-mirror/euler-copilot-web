@@ -357,20 +357,17 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
             </div>
             <!-- 发送问题 -->
             <div class="dialogue-session-bottom-sendbox__icon">
-              <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
               <img
                 v-if="isAnswerGenerating || dialogueInput.length <= 0"
-                src="/src/assets/images/send_disable.png"
+                src="/src/assets/svgs/send_disable.svg"
                 alt=""
               />
-              <div v-else @click="handleSendMessage(dialogueInput)">
-                <img
-                  v-if="themeStore.theme === 'dark'"
-                  src="/src/assets/images/dark_send.png"
-                  alt=""
-                />
-                <img v-else src="/src/assets/images/light_send.png" alt="" />
-              </div>
+              <img
+                v-else
+                @click="handleSendMessage(dialogueInput)"
+                src="/src/assets/svgs/send_enable.svg"
+                alt=""
+              />
             </div>
           </div>
         </div>
@@ -522,23 +519,13 @@ button[disabled]:hover {
       bottom: 0px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-
-      .word-limit {
-        font-size: 12px;
-        display: block;
-        height: 30px;
-        line-height: 30px;
-        float: right;
-        text-align: center;
-        margin-right: 98px;
-        color: #8d98aa;
-
-        .red-word {
-          color: #e02020;
-        }
-      }
+      display: flex;
+      align-items: baseline;
+      flex: 1;
 
       &__textarea {
+        flex: 1;
+
         textarea {
           width: 100%;
           height: 100%;
@@ -565,13 +552,12 @@ button[disabled]:hover {
       }
 
       &__icon {
+        width: 40px;
+        height: 40px;
+        position: relative;
         bottom: 4px;
+        right: 8px;
         text-align: right;
-        right: 4px;
-
-        img {
-          width: 40px;
-        }
       }
     }
   }
@@ -601,22 +587,5 @@ button[disabled]:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.dialogue-session-bottom-sendbox__icon {
-  width: 40px;
-  height: 40px;
-  position: relative;
-}
-
-.dialogue-session-bottom-sendbox {
-  display: flex;
-  align-items: baseline;
-  padding-right: 8px;
-  flex: 1;
-}
-
-.dialogue-session-bottom-sendbox__textarea {
-  flex: 1;
 }
 </style>
