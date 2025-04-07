@@ -65,6 +65,7 @@ const debugStatus = ref('');
 const debugTime = ref('');
 const totalTime = ref(0);
 const isNodeAndLineConnect = ref(false);
+const isNodeConnect = ref(false);
 const loading = ref(false);
 const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
@@ -654,10 +655,10 @@ const saveFlow = (updateNodeParameter?) => {
           ...flowObj.value,
           nodes: updateNodes,
           edges: updateEdges,
-        },
-        focusPoint: {
+          focusPoint: {
           x: 800,
           y: 800,
+        },
         },
       },
     )
@@ -666,6 +667,9 @@ const saveFlow = (updateNodeParameter?) => {
         ElMessage.success('工作流更新成功');
         queryFlow('update');
         const updatedCurFlow = res[1].result.flow;
+        console.log(res[1].result);
+        isNodeConnect.value = res[1].result.connectivity;
+        console.log(isNodeConnect.value);
         redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
       }
       loading.value = false;
@@ -891,7 +895,7 @@ defineExpose({
           </el-select>
         </div>
         <el-tooltip
-          v-if="!isNodeAndLineConnect"
+          v-if="!isNodeAndLineConnect && !isNodeConnect"
           effect="dark"
           content="节点连接完成才能进行调试"
           placement="top"

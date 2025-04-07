@@ -55,9 +55,13 @@ body[theme='dark'] {
   --el-collapse-border: rgb(62, 69, 81, 0.5);
   --el-collapse-content-bg: rgb(42, 47, 55, 0.5);
   --applist-hover: #313741;
-  --flow-running-bg: linear-gradient(127.95deg,
-      rgb(39, 39, 76) -1.967%,
-      rgba(28, 57, 81, 0.929) 98.202%);
+  --flow-running-bg: linear-gradient(
+    127.95deg,
+    rgb(39, 39, 76) -1.967%,
+    rgba(28, 57, 81, 0.929) 98.202%
+  );
+  --o-api-description: rgb(211, 220, 233);
+  --el-drawer-padding-primary: 24px;
   // 这里是不同种类的debug图标
   --flow-debug-default: url('../../assets/svgs/dark_debug.svg');
   --flow-debug-hover: url('../../assets/svgs/dark_debug_hover.svg');
@@ -123,9 +127,12 @@ body[theme='light'] {
   --question-bg: linear-gradient(177.93deg, rgba(255, 255, 255, 0) -40.031%, rgba(255, 255, 255, 0.35) 1.263%, rgba(255, 255, 255)36.178%), linear-gradient(270deg, rgb(227, 242, 255, 0.5), rgb(195, 227, 255, 0.5) 33.232%, rgb(197, 203, 249, 0.5) 85.699%);
   --question-shadow: rgba(221, 225, 240, 0.5);
   --applist-hover: #f3f4f6;
-  --flow-running-bg: linear-gradient(127.95deg,
-      rgba(109, 117, 250, 0.2) -1.967%,
-      rgba(90, 179, 255, 0.2) 98.202%);
+  --flow-running-bg: linear-gradient(
+    127.95deg,
+    rgba(109, 117, 250, 0.2) -1.967%,
+    rgba(90, 179, 255, 0.2) 98.202%
+  );
+  --o-api-description: rgb(78, 88, 101);
   // 这里是不同种类的debug图标
   --flow-debug-default: url('../../assets/svgs/light_debug.svg');
   --flow-debug-hover: url('../../assets/svgs/light_debug_hover.svg');
@@ -146,7 +153,7 @@ body {
     background-color: #6395fd !important;
     font-weight: normal !important;
   }
-
+  --el-drawer-padding-primary: 24px;
   // 悬浮优先级高于选中
   .el-select-dropdown__item:hover {
     background-color: #7aa5ff !important;
