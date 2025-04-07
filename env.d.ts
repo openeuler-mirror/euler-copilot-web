@@ -10,6 +10,7 @@
 /// <reference types="vite/client" />
 declare interface Window {
   onHtmlEventDispatch: any;
+  eulercopilot: any;
 }
 
 declare interface ImportMetaEnv {

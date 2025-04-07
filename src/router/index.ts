@@ -7,67 +7,80 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 import NotFoundComponent from '@/views/404.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
+import { dynamicRoutes } from './route';
+
+const staticRoutes: Array<RouteRecordRaw> = [
+  {
+    path: '/',
+    redirect: '/',
+    component: () => import('src/views/dialogue/dialogueView.vue'),
+    children: [
+      {
+        path: '/',
+        name: 'dialogue',
+        component: () => import('src/views/dialogue/Copilot.vue'),
+      },
+      {
+        path: '/api',
+        name: 'api',
+        component: (): Promise<typeof import('src/views/api/index.vue')> =>
+          import('src/views/api/index.vue'),
+      },
+      {
+        path: '/app',
+        name: 'app',
+        component: (): Promise<typeof import('src/views/app/index.vue')> =>
+          import('src/views/app/index.vue'),
+      },
+      {
+        path: '/createApp',
+        name: 'createApp',
+        component: (): Promise<
+          typeof import('src/views/createapp/index.vue')
+        > => import('src/views/createapp/index.vue'),
+      },
+      {
+        path: '/witchainD',
+        name: 'witchainD',
+        component: (): Promise<typeof import('src/views/tools/index.vue')> =>
+          import('src/views/tools/index.vue'),
+      },
+    ],
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
+      import('src/views/dialogue/Copilot.vue'),
+  },
+  {
+    path: '/copilot',
+    name: 'copilot',
+    component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
+      import('src/views/dialogue/Copilot.vue'),
+  },
+
+  {
+    path: '/404',
+    component: NotFoundComponent,
+    name: 'NotFound',
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/404',
+  },
+];
+
+const routes = [...staticRoutes, ...dynamicRoutes];
 
 const router = createRouter({
   history: createWebHashHistory(
     qiankunWindow.__POWERED_BY_QIANKUN__ ? '/eulercopilot/' : '/',
   ),
-  routes: [
-    {
-      path: '/',
-      name: 'dialogue',
-      component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
-        import('src/views/dialogue/Copilot.vue'),
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
-        import('src/views/dialogue/Copilot.vue'),
-    },
-    {
-      path: '/copilot',
-      name: 'copilot',
-      component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
-        import('src/views/dialogue/Copilot.vue'),
-    },
-    {
-      path: '/api',
-      name: 'api',
-      component: (): Promise<typeof import('src/views/api/index.vue')> =>
-        import('src/views/api/index.vue'),
-    },
-    {
-      path: '/app',
-      name: 'app',
-      component: (): Promise<typeof import('src/views/app/index.vue')> =>
-        import('src/views/app/index.vue'),
-    },
-    {
-      path: '/createApp',
-      name: 'createApp',
-      component: (): Promise<typeof import('src/views/createapp/index.vue')> =>
-        import('src/views/createapp/index.vue'),
-    },
-    {
-      path: '/witchainD',
-      name: 'witchainD',
-      component: (): Promise<typeof import('src/views/tools/index.vue')> =>
-        import('src/views/tools/index.vue'),
-    },
-    {
-      path: '/404',
-      component: NotFoundComponent,
-      name: 'NotFound',
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/404',
-    },
-  ],
+  routes,
 });
 
 export default router;

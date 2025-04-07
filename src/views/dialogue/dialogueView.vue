@@ -27,6 +27,7 @@ import AppIcon from '@/assets/images/routerApp.png';
 import AppIconSelected from '@/assets/svgs/routerAppSelected.svg';
 import WitchainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
 import tools from '../tools/index.vue';
+import TitleBar from './components/TitleBar.vue';
 
 const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo } = useAccountStore();
@@ -224,7 +225,6 @@ const changeLanguagefun = (lang: 'CN' | 'EN') => {
 const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
   formValidateStatus.value[prop] = isValid;
 };
-
 onMounted(() => {
   if (localStorage.getItem('theme')) {
     document.body.setAttribute(
@@ -309,7 +309,8 @@ watch(
 
 <template>
   <div class="dialogue" id="dialogId">
-    <header
+    <TitleBar />
+    <!-- <header
       class="dialogue-header"
       v-if="!qiankunWindow.__POWERED_BY_QIANKUN__"
     >
@@ -368,7 +369,7 @@ watch(
           </div>
         </el-popover>
       </div>
-    </header>
+    </header> -->
     <div class="dialogue-container">
       <div class="dialogue-menu">
         <router-link

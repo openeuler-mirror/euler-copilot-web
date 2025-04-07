@@ -20,7 +20,7 @@ export function createTray(): Tray {
   appTray = new Tray(iconPath);
 
   const contextMenu = Menu.buildFromTemplate(trayMenus);
-  appTray.setToolTip('Eulercopilot');
+  appTray.setToolTip('EulerCopilot');
 
   appTray.setContextMenu(contextMenu);
   return appTray;

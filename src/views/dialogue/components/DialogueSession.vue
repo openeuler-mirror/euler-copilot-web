@@ -19,7 +19,7 @@ const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
 
 export interface DialogueSession {
-  isCreateApp: any;
+  isCreateApp?: any;
   createAppForm: any;
 }
 

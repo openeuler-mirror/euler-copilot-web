@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { defineStore } from 'pinia';
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, watch, onMounted } from 'vue';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import {
   AppShowType,
@@ -869,6 +869,15 @@ export const useChangeThemeStore = defineStore('theme', () => {
   if (localStorage.getItem('theme')) {
     theme.value = localStorage.getItem('theme') || 'dark';
   }
+
+  onMounted(() => {
+    window.addEventListener('storage', (e: StorageEvent) => {
+      if (e.key === 'theme') {
+        theme.value = e.newValue || 'light';
+        document.body.setAttribute('theme', theme.value);
+      }
+    });
+  });
   return {
     theme,
   };

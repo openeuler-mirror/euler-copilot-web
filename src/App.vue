@@ -2,7 +2,6 @@
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
-import DialogueView from 'src/views/dialogue/dialogueView.vue';
 </script>
 
 <template>
@@ -10,6 +9,13 @@ import DialogueView from 'src/views/dialogue/dialogueView.vue';
     class="eulercopilot-main"
     :style="{ height: qiankunWindow.__POWERED_BY_QIANKUN__ ? '100%' : '100vh' }"
   >
-    <DialogueView />
+    <router-view />
   </div>
 </template>
+
+<style lang="scss" scoped>
+.eulercopilot-main {
+  width: 100vw;
+  height: 100vh;
+}
+</style>

@@ -44,7 +44,7 @@ const readAgreement = async () => {
 };
 
 watch(
-  [router, userinfo],
+  [router.currentRoute, userinfo],
   () => {
     const currRoute = router.currentRoute;
     if (currRoute.value.query.appId && userinfo.user_sub) {
@@ -119,23 +119,23 @@ onMounted(async () => {
       <DialogueAside />
       <DialogueSession :createAppForm="createAppForm" />
     </div>
-  </div>
 
-  <EulerDialog
-    :visible="dialogVisible"
-    :content="agreement"
-    agreement-name="《服务协议》"
-    height="400px"
-    @submit="handleSubmit"
-  ></EulerDialog>
-  <EulerDialog
-    :visible="agreeDialogVisiable"
-    :content="tip"
-    :need-check="false"
-    height="300px"
-    agreement-name="内测声明"
-    @submit="agreeDialogVisiable = false"
-  ></EulerDialog>
+    <EulerDialog
+      :visible="dialogVisible"
+      :content="agreement"
+      agreement-name="《服务协议》"
+      height="400px"
+      @submit="handleSubmit"
+    ></EulerDialog>
+    <EulerDialog
+      :visible="agreeDialogVisiable"
+      :content="tip"
+      :need-check="false"
+      height="300px"
+      agreement-name="内测声明"
+      @submit="agreeDialogVisiable = false"
+    ></EulerDialog>
+  </div>
 </template>
 <style lang="scss" scoped>
 .copilot-container {
