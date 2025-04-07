@@ -116,7 +116,7 @@ watch(
       <div class="header-right">
         <div class="mode">
           <span v-if="isDark" @click="changeTheme">
-            <img src="src/assets/svgs/sun.svg" alt="" />
+            <img id="sun-icon" src="src/assets/svgs/sun.svg" alt="" />
           </span>
           <span v-else @click="changeTheme">
             <img id="moon-icon" src="src/assets/svgs/moon.svg" alt="" />
@@ -181,6 +181,7 @@ body {
 }
 
 #sun-icon {
+  cursor: pointer;
   &:hover {
     filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
       brightness(94%) contrast(83%);
@@ -192,6 +193,7 @@ body {
 }
 
 #moon-icon {
+  cursor: pointer;
   &:hover {
     filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
       brightness(94%) contrast(83%);

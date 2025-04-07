@@ -461,9 +461,11 @@ const selectQuestion = (item: ExampleQuestionItem) => {
       width: 48px;
       height: 48px;
       position: absolute;
+      user-select: none;
     }
 
     p {
+      user-select: text;
       min-height: 48px;
       border-radius: 8px;
       border-top-left-radius: 0px;
@@ -541,6 +543,7 @@ const selectQuestion = (item: ExampleQuestionItem) => {
     }
 
     &-content {
+      user-select: text;
       background-color: var(--o-bg-color-base);
       padding: 24px 24px 16px 24px;
       border-top-right-radius: 8px;
@@ -593,8 +596,6 @@ const selectQuestion = (item: ExampleQuestionItem) => {
               line-height: 16px;
               color: var(--o-text-color-primary) !important;
             }
-
-            // letter-spacing: 2px;
           }
 
         .regenerate-button {

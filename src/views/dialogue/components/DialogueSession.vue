@@ -364,6 +364,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
               />
               <img
                 v-else
+                :style="{ cursor: 'pointer' }"
                 @click="handleSendMessage(dialogueInput)"
                 src="/src/assets/svgs/send_enable.svg"
                 alt=""
@@ -384,6 +385,12 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
   min-height: 56px !important;
   padding: 16px !important;
   line-height: 24px;
+  user-select: text;
+}
+
+/* 设置全局不可选择文本 */
+body {
+  user-select: none;
 }
 </style>
 <style lang="scss" scoped>
@@ -395,6 +402,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
 }
 
 .dialogue-panel__stop {
+  user-select: none;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -403,8 +411,8 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
   border-radius: 8px;
   border: 1px solid var(--o-text-color-primary);
   margin: 38px auto 16px;
-  cursor: pointer;
   position: relative;
+  cursor: pointer;
 
   img {
     width: 16px;
