@@ -7,28 +7,28 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { defineStore } from 'pinia';
-import { ref, nextTick } from 'vue';
-import { useHistorySessionStore } from 'src/store';
+import { defineStore } from "pinia";
+import { ref, nextTick } from "vue";
+import { useHistorySessionStore } from "src/store";
 import {
   MessageArray,
   type ConversationItem,
   type RobotConversationItem,
   type UserConversationItem,
-} from 'src/views/dialogue/types';
-import { api } from 'src/apis';
-import { successMsg } from 'src/components/Message';
-import { invoke } from '@tauri-apps/api/tauri';
+} from "src/views/dialogue/types";
+import { api } from "src/apis";
+import { successMsg } from "src/components/Message";
+import { invoke } from "@tauri-apps/api/tauri";
 
 let controller = new AbortController();
-export const useSessionStore = defineStore('session', () => {
+export const useSessionStore = defineStore("session", () => {
   // #region ----------------------------------------< scroll >--------------------------------------
   // 会话窗口容器
   const dialogueRef = ref<HTMLDivElement | null>(null);
   /**
    * 滚动到底部
    */
-  const scrollBottom = (action: 'smooth' | 'auto' = 'smooth'): void => {
+  const scrollBottom = (action: "smooth" | "auto" = "smooth"): void => {
     nextTick(() => {
       if (!dialogueRef.value) {
         return;
@@ -67,7 +67,7 @@ export const useSessionStore = defineStore('session', () => {
   ): Promise<void> => {
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationID = currentSelectedSession;
-    console.log('Current conversation ID:', params.conversationID);
+    console.log("Current conversation ID:", params.conversationID);
     // 当前问答在整个问答记录中的索引
     const answerIndex = ind ?? conversationList.value.length - 1;
     // const conversationItem = conversationList.value[answerIndex] as RobotConversationItem;
@@ -92,7 +92,7 @@ export const useSessionStore = defineStore('session', () => {
       //   plugin: params.userSelectedPlugin,
       //   flow: params.userSelectedFlow,
       //   flowId: "",
-      await invoke('chat_mcp', {
+      await invoke("chat_mcp", {
         question: params.question,
       })
         // .then(async (status: any) => {
@@ -111,8 +111,8 @@ export const useSessionStore = defineStore('session', () => {
       isAnswerGenerating.value = false;
       (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
         true;
-      if (err.name === 'AbortError') {
-        successMsg('暂停成功');
+      if (err.name === "AbortError") {
+        successMsg("暂停成功");
         (
           conversationList.value[answerIndex] as RobotConversationItem
         ).isFinish = true;
@@ -121,7 +121,7 @@ export const useSessionStore = defineStore('session', () => {
           (
             conversationList.value[answerIndex] as RobotConversationItem
           ).currentInd
-        ] += '系统繁忙，请稍后再试';
+        ] += "系统繁忙，请稍后再试";
       }
     }
   };
@@ -141,12 +141,12 @@ export const useSessionStore = defineStore('session', () => {
    * @param ind 当前问答对索引
    */
   const judgeMessage = (ind: number, msg: string): boolean => {
-    let errorMsg = '';
-    if (msg.includes('[SENSITIVE]')) {
-      errorMsg = '很抱歉，暂时只支持问题 openEuler 和 Linux 领域相关的问题';
+    let errorMsg = "";
+    if (msg.includes("[SENSITIVE]")) {
+      errorMsg = "很抱歉，暂时只支持问题 openEuler 和 Linux 领域相关的问题";
     }
-    if (msg.includes('[ERROR]')) {
-      errorMsg = '系统繁忙，请稍后再试';
+    if (msg.includes("[ERROR]")) {
+      errorMsg = "系统繁忙，请稍后再试";
     }
     if (errorMsg) {
       (conversationList.value[ind] as RobotConversationItem).message[
@@ -176,7 +176,7 @@ export const useSessionStore = defineStore('session', () => {
       // 重新生成，指定某个回答，修改默认索引
       (
         conversationList.value[regenerateInd] as RobotConversationItem
-      ).message.push(''); //123
+      ).message.push(""); //123
       (
         conversationList.value[regenerateInd] as RobotConversationItem
       ).currentInd =
@@ -186,24 +186,24 @@ export const useSessionStore = defineStore('session', () => {
       // 初次生成 ，创建一个问题和一个回答
       const ind = conversationList.value.length;
       const a = new MessageArray();
-      a.addItem('', '', 2);
+      a.addItem("", "", 2);
       conversationList.value.push(
         {
           cid: ind + 1,
-          belong: 'user',
+          belong: "user",
           message: question,
         },
         {
           cid: ind + 2,
-          belong: 'robot',
-          message: [''],
-          copyList: [''],
+          belong: "robot",
+          message: [""],
+          copyList: [""],
           messageList: a,
           currentInd: 0,
           isFinish: false,
-          recordId: '',
-          groupId: '',
-          sessionId: '',
+          recordId: "",
+          groupId: "",
+          sessionId: "",
         }
       );
     }
@@ -250,7 +250,7 @@ export const useSessionStore = defineStore('session', () => {
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
       true;
     cancel();
-    await invoke('stop');
+    await invoke("stop");
   };
 
   /**
@@ -333,11 +333,11 @@ export const useSessionStore = defineStore('session', () => {
             (i) => i.groupId === record.groupId
           );
           re?.message.push(record.answer);
-          if (typeof re?.message !== 'string') {
+          if (typeof re?.message !== "string") {
             re?.messageList.addItem(
               record.answer,
               record.recordId,
-              typeof record.is_like === 'object' ? 2 : Number(record.is_like)
+              typeof record.is_like === "object" ? 2 : Number(record.is_like)
             );
           }
           return;
@@ -346,20 +346,20 @@ export const useSessionStore = defineStore('session', () => {
         a.addItem(
           record.answer,
           record.recordId,
-          typeof record.is_like === 'object' ? 2 : Number(record.is_like)
+          typeof record.is_like === "object" ? 2 : Number(record.is_like)
         );
         conversationList.value.push(
           {
             cid: conversationList.value.length + 1,
-            belong: 'user',
+            belong: "user",
             message: record.question,
             createdAt: record.created_time,
           },
           {
             cid: conversationList.value.length + 2,
-            belong: 'robot',
+            belong: "robot",
             message: [record.answer],
-            copyList: [''],
+            copyList: [""],
             messageList: a,
             currentInd: 0,
             isAgainst: false,
@@ -370,7 +370,7 @@ export const useSessionStore = defineStore('session', () => {
             groupId: record.groupId,
           }
         );
-        scrollBottom('auto');
+        scrollBottom("auto");
       });
     }
   };
@@ -395,13 +395,13 @@ export const useSessionStore = defineStore('session', () => {
   };
 });
 
-export const useChangeThemeStore = defineStore('theme', () => {
-  const theme = ref('');
-  const themeValue = localStorage.getItem('theme');
+export const useChangeThemeStore = defineStore("theme", () => {
+  const theme = ref("");
+  const themeValue = localStorage.getItem("theme");
   if (themeValue) {
     theme.value = themeValue;
   } else {
-    theme.value = 'dark';
+    theme.value = "dark";
   }
   return {
     theme,

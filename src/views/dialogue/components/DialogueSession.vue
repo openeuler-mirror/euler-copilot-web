@@ -226,6 +226,24 @@ const handleMarkdown = async (content: string) => {
 listen<StreamPayload>("fetch-stream-data", (event) => {
   const line = event.payload.message.replace(/^data:\s*/, "").trim();
   const lastIndex = conversationList.value.length - 1;
+
+  // 处理完成信号
+  if (line === "[DONE]") {
+    (conversationList.value[lastIndex] as RobotConversationItem).isFinish =
+      true;
+    isAnswerGenerating.value = false;
+    return;
+  }
+
+  // 处理错误信号
+  if (line === "[ERROR]") {
+    errorMsg("发生错误，请稍后重试");
+    (conversationList.value[lastIndex] as RobotConversationItem).isFinish =
+      true;
+    isAnswerGenerating.value = false;
+    return;
+  }
+
   try {
     const json = JSON.parse(line);
     if (json.search_suggestions) {
@@ -233,6 +251,7 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
         conversationList.value[lastIndex] as RobotConversationItem
       ).searchSuggestions = json.search_suggestions;
     } else if (json.qa_record_id) {
+      // 仅记录ID，无需额外处理
     } else if (json.type === "extract") {
       let data = json.data;
       if (typeof data === "string") {
@@ -258,20 +277,41 @@ listen<StreamPayload>("fetch-stream-data", (event) => {
         handleMarkdown(contentMessage.value);
       }
     } else if (json.content) {
-      contentMessage.value = contentMessage.value + json.content;
+      // 增量更新内容
+      contentMessage.value += json.content;
+      // 立即渲染最新内容
       handleMarkdown(contentMessage.value);
+      // 滚动到底部以查看最新内容
+      scrollBottom("auto");
     }
   } catch (error) {
-    contentMessage.value = "";
-    if (line === "[DONE]") {
-      (conversationList.value[lastIndex] as RobotConversationItem).isFinish =
-        true;
-      isAnswerGenerating.value = false;
-    } else if (judgeMessage(lastIndex, line)) {
-      console.error("JSON decode error:", line);
+    // JSON 解析失败，可能是纯文本输出
+    if (line && line !== "[DONE]") {
+      // 直接将文本添加到内容中
+      contentMessage.value += line + "\n";
+      handleMarkdown(contentMessage.value);
+      // 滚动到底部以查看最新内容
+      scrollBottom("auto");
+    }
+
+    if (judgeMessage(lastIndex, line)) {
+      console.error("无法解析的消息:", line);
     }
   }
 });
+
+// 定义一个滚动函数，确保新内容出现时视图滚动到底部
+const scrollBottom = (action: "smooth" | "auto" = "smooth"): void => {
+  if (!dialogueRef.value) return;
+
+  // 使用requestAnimationFrame确保在下一次重绘前执行滚动
+  requestAnimationFrame(() => {
+    dialogueRef.value?.scrollTo({
+      top: dialogueRef.value.scrollHeight,
+      behavior: action,
+    });
+  });
+};
 </script>
 
 <template>

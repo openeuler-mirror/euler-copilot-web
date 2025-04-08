@@ -7,9 +7,9 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { writeText, readText } from '@tauri-apps/api/clipboard';
-import { invoke } from '@tauri-apps/api/tauri';
-import { successMsg, errorMsg } from 'src/components/Message';
+import { writeText, readText } from "@tauri-apps/api/clipboard";
+import { invoke } from "@tauri-apps/api/tauri";
+import { successMsg, errorMsg } from "src/components/Message";
 
 /**
  * 随机整数范围 min <= return < max
@@ -21,7 +21,7 @@ export const randomInt = (): number => {
   return window.crypto.getRandomValues(new Uint32Array(1))[0];
 };
 
-export type HtmlEvent = 'copyPreCode';
+export type HtmlEvent = "copyPreCode";
 
 /**
  * HTML事件分发
@@ -38,7 +38,7 @@ export const onHtmlEventDispatch = (
   type: HtmlEvent,
   data: any
 ): void => {
-  if (type === 'copyPreCode') {
+  if (type === "copyPreCode") {
     const code = document.getElementById(data);
     if (code) {
       copyText(code.innerText);
@@ -55,14 +55,14 @@ export const copyText = async (content: string): Promise<void> => {
   await readText()
     .then(async (text) => {
       if (text === content) {
-        successMsg('复制成功');
+        successMsg("复制成功");
       } else {
-        errorMsg('复制失败');
+        errorMsg("复制失败");
       }
     })
     .catch((err) => {
       console.error(err);
-      errorMsg('复制失败');
+      errorMsg("复制失败");
     });
 };
 
@@ -70,35 +70,35 @@ export const copyText = async (content: string): Promise<void> => {
  * 在终端中运行命令
  */
 export const runCommand = async (command: string): Promise<void> => {
-  if (command.startsWith('docker run')) {
+  if (command.startsWith("docker run")) {
     const containerName = extractContainerName(command);
-    await invoke('open_terminal', { command: command })
+    await invoke("open_terminal", { command: command })
       .then(async () => {
-        successMsg('已启动命令行终端');
+        successMsg("已启动命令行终端");
         await pollContainerStatus(containerName);
       })
       .catch((err) => {
         console.error(err);
-        errorMsg('命令行终端启动失败');
+        errorMsg("命令行终端启动失败");
       });
   } else {
-    await invoke('open_terminal', { command: command })
+    await invoke("open_terminal", { command: command })
       .then(() => {
-        successMsg('已启动命令行终端');
+        successMsg("已启动命令行终端");
       })
       .catch((err) => {
         console.error(err);
-        errorMsg('命令行终端启动失败');
+        errorMsg("命令行终端启动失败");
       });
   }
 };
 
 const extractContainerName = (command: string): string => {
-  const parts = command.split(' ');
-  const nameIndex = parts.indexOf('--name');
+  const parts = command.split(" ");
+  const nameIndex = parts.indexOf("--name");
   return nameIndex !== -1 && nameIndex + 1 < parts.length
     ? parts[nameIndex + 1]
-    : '';
+    : "";
 };
 
 const pollContainerStatus = async (
@@ -108,7 +108,7 @@ const pollContainerStatus = async (
 ): Promise<void> => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const status = await checkDockerContainerStatus(containerName);
-    if (status.includes('Up')) {
+    if (status.includes("Up")) {
       successMsg(`容器 ${containerName} 运行状态: ${status}`);
       return;
     }
@@ -120,18 +120,18 @@ const pollContainerStatus = async (
 const checkDockerContainerStatus = async (
   containerName: string
 ): Promise<string> => {
-  if (!containerName) return '';
+  if (!containerName) return "";
 
   const checkCommand = `docker ps -f name=${containerName} --format '{{.Status}}'`;
 
   try {
-    const status = (await invoke('run_command', {
+    const status = (await invoke("run_command", {
       command: checkCommand,
     })) as string;
     return status.trim();
   } catch (err) {
     console.error(err);
-    errorMsg('检查容器状态失败');
-    return '';
+    errorMsg("检查容器状态失败");
+    return "";
   }
 };

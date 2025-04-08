@@ -9,8 +9,8 @@
 // See the Mulan PSL v2 for more details.
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
-import hljs from 'highlight.js';
-import { randomInt } from './tools';
+import hljs from "highlight.js";
+import { randomInt } from "./tools";
 
 /**
  * 保存按钮
@@ -28,14 +28,13 @@ export const link = /\bhttps?:\/\/[\w/.-]+/g;
 
 const marked = new Marked(
   markedHighlight({
-    langPrefix: 'hljs language-',
+    langPrefix: "hljs language-",
     highlight(code, lang, _info) {
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      const language = hljs.getLanguage(lang) ? lang : "plaintext";
       return hljs.highlight(code, { language }).value;
-    }
+    },
   })
 );
-
 
 // #region ----------------------------------------< markedjs 配置 >--------------------------------------
 /**
@@ -51,7 +50,7 @@ marked.setOptions({
 
 // #region ----------------------------------------< renderer >--------------------------------------
 
-const renderer = new marked.Renderer()
+const renderer = new marked.Renderer();
 renderer.code = function ({ text, lang }) {
   const id = `pre-${Date.now()}-${randomInt()}`;
   return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${text}</code></pre>`;
@@ -59,13 +58,12 @@ renderer.code = function ({ text, lang }) {
 renderer.link = function ({ href, title, tokens }) {
   const text = this.parser.parseInline(tokens);
   if (href === title) {
-    const txt = title.replace(link, '');
+    const txt = title.replace(link, "");
     const url = (href.match(link) ?? [])[0];
     return `<a href="${url}" target="_blank">${url}</a>${txt}`;
   }
   return `<a href="${href}" target="_blank">${text}</a>`;
-}
-
+};
 
 marked.use({ renderer: renderer });
 // #endregion

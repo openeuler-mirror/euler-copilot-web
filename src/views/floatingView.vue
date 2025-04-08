@@ -10,52 +10,52 @@
 </template>
 
 <script lang="ts" setup>
-import { invoke } from '@tauri-apps/api/tauri';
-import { WebviewWindow } from '@tauri-apps/api/window';
-import { showMenu } from 'tauri-plugin-context-menu';
+import { invoke } from "@tauri-apps/api/tauri";
+import { WebviewWindow } from "@tauri-apps/api/window";
+import { showMenu } from "tauri-plugin-context-menu";
 
 const toggleMainWindow = async () => {
-  const mainWindow: WebviewWindow | null = WebviewWindow.getByLabel('main');
+  const mainWindow: WebviewWindow | null = WebviewWindow.getByLabel("main");
   if (!mainWindow) {
-    await invoke('show_main_window');
+    await invoke("show_main_window");
   } else {
     if (await mainWindow.isVisible()) {
       await mainWindow.hide();
     } else {
-      await invoke('show_main_window');
+      await invoke("show_main_window");
     }
   }
 };
 
 const showContextMenu = (event: MouseEvent) => {
-  const mainWindow: WebviewWindow | null = WebviewWindow.getByLabel('main');
+  const mainWindow: WebviewWindow | null = WebviewWindow.getByLabel("main");
   showMenu({
     pos: { x: event.clientX, y: event.clientY },
     items: [
       {
-        label: '显示窗口',
+        label: "显示窗口",
         event: () => {
-          invoke('show_main_window');
+          invoke("show_main_window");
         },
       },
       {
-        label: '隐藏窗口',
+        label: "隐藏窗口",
         event: () => {
           mainWindow?.hide();
         },
       },
       { is_separator: true },
       {
-        label: '设置',
+        label: "设置",
         event: () => {
-          invoke('show_settings_window');
+          invoke("show_settings_window");
         },
       },
       { is_separator: true },
       {
-        label: '退出',
+        label: "退出",
         event: () => {
-          invoke('exit_app');
+          invoke("exit_app");
         },
       },
     ],
