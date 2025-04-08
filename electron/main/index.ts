@@ -29,8 +29,16 @@ const osLocale = processZhLocale(
   (app.getPreferredSystemLanguages()?.[0] ?? 'en').toLowerCase(),
 );
 
+// 添加表示应用是否正在退出的标志位
+let isQuitting = false;
+
 app.once('ready', () => {
   onReady();
+});
+
+// 处理应用退出前的事件，设置退出标志
+app.on('before-quit', () => {
+  isQuitting = true;
 });
 
 app.on('will-quit', () => {
@@ -42,6 +50,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+// 在macOS上，当应用图标被点击时重置退出标志
+app.on('activate', () => {
+  isQuitting = false;
 });
 
 async function onReady() {
@@ -82,11 +95,21 @@ async function startup() {
     win.show();
   });
   win.on('close', (event) => {
+    // 如果应用正在退出（例如通过Cmd+Q触发），则允许窗口正常关闭
+    if (isQuitting) {
+      return;
+    }
+    // 否则阻止关闭，只是隐藏窗口
     event.preventDefault();
     win.hide();
   });
 
   chatWindow.on('close', (event) => {
+    // 如果应用正在退出（例如通过Cmd+Q触发），则允许窗口正常关闭
+    if (isQuitting) {
+      return;
+    }
+    // 否则阻止关闭，只是隐藏窗口
     event.preventDefault();
     chatWindow.hide();
   });
