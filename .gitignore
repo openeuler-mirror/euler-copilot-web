@@ -30,6 +30,7 @@ coverage
 .env
 .env.development
 *-lock.*
+pnpm-lock.yaml
 
 *.tsbuildinfo
 
