@@ -399,7 +399,7 @@ const selectQuestion = (item: Suggest) => {
 };
 
 const popperSize = () => {
-  if (language.value == 'EN') {
+  if (language.value == 'en') {
     size.width = 418;
     size.height = 496;
     return size;

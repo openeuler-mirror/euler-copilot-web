@@ -6,12 +6,8 @@ import {
   useHistorySessionStore,
   useSessionStore,
   useAccountStore,
-  useLangStore,
 } from 'src/store';
-import { marked } from 'marked';
-import { ARGEEMENT_VERSION } from 'src/conf/version';
 import { useChangeThemeStore } from 'src/store';
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
@@ -37,12 +33,6 @@ const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
-const { logout } = useAccountStore();
-const { historySession } = storeToRefs(useHistorySessionStore());
-const { conversationList } = storeToRefs(useSessionStore());
-const { language } = storeToRefs(useLangStore());
-const { changeLanguage } = useLangStore();
-const dialogVisible = ref(false);
 const themeStore = useChangeThemeStore();
 const apikeyVisible = ref(false);
 const KnowledgeVisible = ref(false);
@@ -114,45 +104,7 @@ const formValidateStatus = ref<any>({
   kb_id: true,
 });
 
-const logoutHandler = () => {
-  logout();
-  historySession.value = [];
-  conversationList.value = [];
-};
-
-// 协议内容
-const agreement = ref<string>('');
-// 协议版本
-const agreementVersion = ref<string>(ARGEEMENT_VERSION);
-
-/**
- * 读取协议
- */
-const readAgreement = async () => {
-  const response = await import('src/conf/agreement.md?raw');
-  agreement.value = marked.parse(response.default) as string;
-};
-
-/**
- * 处理服务协议是否显示
- * @param CheckedVersion
- */
-const handleAgreement = async (CheckedVersion: string | null) => {
-  if (agreementVersion.value === CheckedVersion) {
-    return;
-  }
-  await readAgreement();
-  dialogVisible.value = true;
-};
-
 const theme = ref(localStorage.getItem('theme') || 'light');
-
-const changeTheme = () => {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark';
-  document.body.setAttribute('theme', theme.value);
-  localStorage.setItem('theme', theme.value);
-  themeStore.theme = theme.value;
-};
 
 const createApi = async () => {
   apikey.value = '';
@@ -194,8 +146,6 @@ const copy = () => {
   navigator.clipboard.writeText(apikey.value);
 };
 
-const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
-
 const handleConfirmCreateModel = async (formData: any | undefined) => {
   const [_, res] = await api.updateKnowledgeList({
     kb_id: ruleForm.kb_id || '',
@@ -208,17 +158,6 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
     ruleForm.kb_id = '';
     ElMessage.error('失败');
     KnowledgeVisible.value = false;
-  }
-};
-
-const changeLanguagefun = (lang: 'CN' | 'EN') => {
-  changeLanguage(lang);
-  // 同步语言到iframe
-  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
-  if (iframe?.contentWindow) {
-    const data = { lang: localStorage.getItem('localeLang') };
-    let target = `${window.location.origin}/witchaind`;
-    iframe.contentWindow.postMessage(data, target);
   }
 };
 
@@ -310,66 +249,6 @@ watch(
 <template>
   <div class="dialogue" id="dialogId">
     <TitleBar />
-    <!-- <header
-      class="dialogue-header"
-      v-if="!qiankunWindow.__POWERED_BY_QIANKUN__"
-    >
-      <span>
-        <img src="@/assets/svgs/euler_copilot_logo.svg" />
-        <h4>{{ $t('home.name') }}</h4>
-      </span>
-      <div class="header-right">
-        <el-popover popper-class="popper-class">
-          <template #reference>
-            <span class="language">{{ lang }}</span>
-          </template>
-          <div
-            class="exit-button lang-button"
-            :class="lang === 'English' ? 'lang-selected' : ''"
-            @click="changeLanguagefun('EN')"
-          >
-            English
-          </div>
-          <div class="divider"></div>
-          <div
-            class="exit-button lang-button"
-            :class="lang === '简体中文' ? 'lang-selected' : ''"
-            @click="changeLanguagefun('CN')"
-          >
-            简体中文
-          </div>
-        </el-popover>
-        <div class="mode">
-          <span v-if="theme === 'light'" @click="changeTheme">
-            <img id="sun-icon" src="@/assets/svgs/sun.svg" alt="" />
-          </span>
-          <span v-else @click="changeTheme">
-            <img id="moon-icon" src="@/assets/svgs/moon.svg" alt="" />
-          </span>
-        </div>
-
-        <el-popover popper-class="popper-class">
-          <template #reference>
-            <img class="avatar" src="@/assets/svgs/user.svg" />
-          </template>
-          <div
-            class="exit-button lang-button"
-            type="primary"
-            @click="logoutHandler"
-          >
-            {{ $t('Login.logout') }}
-          </div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" @click="apikeyVisible = true">
-            API KEY
-          </div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" @click="KnowledgeVisible = true">
-            {{ i18n.global.t('witChainD.witChainD') }}
-          </div>
-        </el-popover>
-      </div>
-    </header> -->
     <div class="dialogue-container">
       <div class="dialogue-menu">
         <router-link
@@ -758,48 +637,5 @@ watch(
   overflow: hidden;
   background-image: var(--o-bg-image);
   background-size: cover;
-  &-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 48px;
-    padding: 0 24px;
-    background-color: var(--o-bg-color-base);
-    span {
-      align-items: center;
-      display: flex;
-      align-content: center;
-      vertical-align: top;
-      font-size: 16px;
-      height: 48px;
-      img {
-        width: 24px;
-        height: 48px;
-        border-radius: 50%;
-      }
-      h4 {
-        font-size: 18px;
-        margin-left: 5px;
-        color: var(--o-text-color-primary);
-      }
-    }
-    .avatar {
-      width: 24px;
-      height: 48px;
-      border-radius: 50%;
-      cursor: pointer;
-      &:hover {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-    }
-    .header-right {
-      display: flex;
-      .mode {
-        cursor: pointer;
-        margin-right: 18px;
-        margin-left: 18px;
-      }
-    }
-  }
 }
 </style>

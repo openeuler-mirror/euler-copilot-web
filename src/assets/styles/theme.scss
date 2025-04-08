@@ -1,4 +1,5 @@
 body[theme='dark'] {
+  background-color: #000000;
   --o-bg-image: url('../../assets/images/dark_background.png');
   --o-sider: url('../../assets/images/dark_sider.png');
   --o-sider-hover: url('../../assets/images/dark_sider-hover.png');
@@ -75,6 +76,7 @@ body[theme='dark'] {
 }
 
 body[theme='light'] {
+  background-color: #ffffff;
   --o-bg-image: url('../../assets/images/light_background.png');
   --o-sider: url('../../assets/images/light_sider.png');
   --o-sider-hover: url('../../assets/images/light_sider-hover.png');

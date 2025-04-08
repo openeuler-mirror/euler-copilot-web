@@ -170,7 +170,6 @@ const handleSendMessage = async (
   user_selected_flow?: string[],
 ) => {
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
-  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   if (
     len > 0 &&

@@ -70,7 +70,7 @@ const handleComplaint = () => {
     <ul class="against-list">
       <el-radio-group v-model="radio" class="ml-4">
         <div
-          :class="[language === 'EN' ? 'radio-en' : 'radio']"
+          :class="[language === 'en' ? 'radio-en' : 'radio']"
           v-for="(item, index) in list"
           :key="index"
         >

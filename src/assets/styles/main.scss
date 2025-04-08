@@ -6,3 +6,7 @@
 .el-popper {
     max-width: 376px !important;
 }
+body {
+  will-change: transform;
+  transition: transform 0.3s ease;
+}

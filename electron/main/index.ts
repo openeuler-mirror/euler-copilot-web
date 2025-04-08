@@ -1,4 +1,10 @@
-import path from 'node:path';
+// You can use this software according to the terms and conditions of the Mulan PSL v2.
+// You may obtain a copy of Mulan PSL v2 at:
+//      http://license.coscl.org.cn/MulanPSL2
+// THIS SOFTWARE IS PROVIDED ON AN 'AS IS' BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+// PURPOSE.
+// See the Mulan PSL v2 for more details.
 import fs from 'node:fs';
 import {
   app,
@@ -8,19 +14,16 @@ import {
   BrowserWindow,
 } from 'electron';
 import { createDefaultWindow, createTray, createChatWindow } from './window';
-import { getUserDataPath } from './node/userDataPath';
 import type { INLSConfiguration } from './common/nls';
-import { productObj } from './common/product';
+import { cachePath, commonCacheConfPath, updateConf } from './common/conf';
 
 interface ICacheConf {
   userLocale: string;
   theme: 'system' | 'light' | 'dark';
 }
 
-const userDataPath = getUserDataPath(productObj.name);
-const cachePath = getCachePath();
-
-const commonCacheConf: Partial<ICacheConf> = getUserDefinedConf(userDataPath);
+const commonCacheConf: Partial<ICacheConf> =
+  getUserDefinedConf(commonCacheConfPath);
 
 const osLocale = processZhLocale(
   (app.getPreferredSystemLanguages()?.[0] ?? 'en').toLowerCase(),
@@ -36,21 +39,25 @@ app.on('will-quit', () => {
 
 app.on('window-all-closed', () => {
   ipcMain.removeAllListeners();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
 
 async function onReady() {
   try {
-    const [, nlsConfig] = await Promise.all([
+    const [, nlsConfig, themeConfig] = await Promise.all([
       mkdirpIgnoreError(cachePath),
       resolveNlsConfiguration(),
+      resolveThemeConfiguration(),
     ]);
 
-    nativeTheme.themeSource = commonCacheConf.theme || 'light';
-    process.env['EULERCOPILOT_THEME'] = commonCacheConf.theme || 'light';
+    nativeTheme.themeSource = themeConfig.theme || 'light';
+    process.env['EULERCOPILOT_THEME'] = themeConfig.theme || 'light';
     process.env['EULERCOPILOT_NLS_CONFIG'] = JSON.stringify(nlsConfig);
     process.env['EULERCOPILOT_CACHE_PATH'] = cachePath || '';
 
-    startup();
+    await startup();
   } catch (error) {}
 }
 
@@ -69,20 +76,6 @@ async function startup() {
       win = createDefaultWindow();
       chatWindow = createChatWindow();
     }
-  });
-
-  ipcMain.handle('copilot:theme', (e, args) => {
-    chatWindow.setTitleBarOverlay({
-      color: args.backgroundColor,
-      height: 40,
-      symbolColor: args.theme === 'dark' ? 'white' : 'black',
-    });
-
-    win.setTitleBarOverlay({
-      color: args.backgroundColor,
-      height: 48,
-      symbolColor: args.theme === 'dark' ? 'white' : 'black',
-    });
   });
 
   tray.on('click', () => {
@@ -116,10 +109,10 @@ function registerIpcListener() {
 
 function getUserDefinedConf(dir: string) {
   try {
-    return fs.readFileSync(
-      path.join(dir, 'eulercopilot-common-storage.json'),
-      'utf-8',
-    );
+    if (!fs.existsSync(dir)) {
+      fs.writeFileSync(dir, JSON.stringify({}));
+    }
+    return JSON.parse(fs.readFileSync(dir, 'utf-8'));
   } catch (error) {
     // Ignore error
     return {};
@@ -140,13 +133,26 @@ function processZhLocale(appLocale: string): string {
     // country codes, assume they use Simplified Chinese.
     // For other cases, assume they use Traditional.
     if (['hans', 'cn', 'sg', 'my'].includes(region)) {
-      return 'zh-cn';
+      return 'zh_cn';
     }
 
-    return 'zh-tw';
+    return 'zh_tw';
   }
 
   return appLocale;
+}
+
+async function resolveThemeConfiguration(): Promise<any> {
+  if (commonCacheConf.theme) {
+    return {
+      theme: commonCacheConf.theme,
+    };
+  }
+  const isDarkMode = nativeTheme.shouldUseDarkColors;
+  updateConf({ theme: isDarkMode ? 'dark' : 'light' });
+  return {
+    theme: isDarkMode ? 'dark' : 'light',
+  };
 }
 
 /**
@@ -163,7 +169,9 @@ async function resolveNlsConfiguration(): Promise<INLSConfiguration> {
   }
 
   let userLocale = app.getLocale();
+
   if (!userLocale) {
+    updateConf({ userLocale: 'en' });
     return {
       userLocale: 'en',
       osLocale,
@@ -172,7 +180,7 @@ async function resolveNlsConfiguration(): Promise<INLSConfiguration> {
   }
 
   userLocale = processZhLocale(userLocale.toLowerCase());
-
+  updateConf({ userLocale: 'en' });
   return {
     userLocale,
     osLocale,
@@ -185,6 +193,9 @@ async function mkdirpIgnoreError(
 ): Promise<string | undefined> {
   if (typeof dir === 'string') {
     try {
+      if (fs.existsSync(dir)) {
+        return dir;
+      }
       await fs.promises.mkdir(dir, { recursive: true });
 
       return dir;
@@ -194,8 +205,4 @@ async function mkdirpIgnoreError(
   }
 
   return undefined;
-}
-
-function getCachePath(): string | undefined {
-  return path.join(userDataPath, 'CachedData');
 }

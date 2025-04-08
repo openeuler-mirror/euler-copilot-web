@@ -128,14 +128,9 @@ onBeforeUnmount(() => {
   background-size: cover;
   background-position: center;
   color: var(--o-text-color-primary);
-  padding: 40px 0 0 0;
 }
 
 .chat-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -143,19 +138,21 @@ onBeforeUnmount(() => {
   padding: 0 24px;
   background-color: var(--o-bg-color-base);
   box-shadow: 2px 0 8px 0 rgba(29, 35, 41, 0.1);
-  // -webkit-app-region: drag;
+  -webkit-app-region: drag;
 
   &-logo {
     display: flex;
     align-items: center;
     gap: 10px;
     flex: 1;
-    -webkit-app-region: drag;
+  }
+  &-operation {
+    -webkit-app-region: no-drag;
   }
 }
 
 .chat-container {
-  height: 100%;
+  height: calc(100% - 40px);
   display: flex;
   flex-direction: column;
   align-items: center;

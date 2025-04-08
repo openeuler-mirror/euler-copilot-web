@@ -1,15 +1,30 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { electronProcess, ipcRenderer } from '@/utils/electron';
 
 export const useLangStore = defineStore('lang', () => {
   const i18n = useI18n();
-  const language = ref<string>(localStorage.getItem('localeLang') || 'CN');
-  const changeLanguage = (data: 'CN' | 'EN') => {
-    language.value = data.toString();
+  const language = ref<string>(localStorage.getItem('localeLang') || 'en');
+  const changeLanguage = (lang: 'zh_cn' | 'en') => {
+    language.value = lang;
     i18n.locale.value = language.value;
-    localStorage.setItem('localeLang', data);
+    localStorage.setItem('localeLang', lang);
+    if (ipcRenderer) {
+      ipcRenderer.invoke('copilot:lang', { lang });
+    }
   };
+
+  onMounted(() => {
+    if (electronProcess) {
+      const nlsConfig = JSON.parse(
+        electronProcess.env['EULERCOPILOT_NLS_CONFIG'],
+      );
+
+      electronProcess.env['EULERCOPILOT_NLS_CONFIG'] &&
+        changeLanguage(nlsConfig.userLocale);
+    }
+  });
   return {
     language,
     changeLanguage,

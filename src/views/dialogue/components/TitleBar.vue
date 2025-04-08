@@ -15,9 +15,9 @@ const { language } = storeToRefs(useLangStore());
 const { changeLanguage } = useLangStore();
 const themeStore = useChangeThemeStore();
 
-const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
+const lang = computed(() => (language.value === 'en' ? 'English' : '简体中文'));
 
-const changeLanguagefun = (lang: 'CN' | 'EN') => {
+const changeLanguagefun = (lang: 'zh_cn' | 'en') => {
   changeLanguage(lang);
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
@@ -25,6 +25,9 @@ const changeLanguagefun = (lang: 'CN' | 'EN') => {
     const data = { lang: localStorage.getItem('localeLang') };
     let target = `${window.location.origin}/witchaind`;
     iframe.contentWindow.postMessage(data, target);
+  }
+  if (ipcRenderer) {
+    ipcRenderer.invoke('copilot:lang', { lang: lang });
   }
 };
 
@@ -87,7 +90,7 @@ const headerStyles = computed<CSSProperties>(() => {
         <div
           class="exit-button lang-button"
           :class="lang === 'English' ? 'lang-selected' : ''"
-          @click="changeLanguagefun('EN')"
+          @click="changeLanguagefun('en')"
         >
           English
         </div>
@@ -95,7 +98,7 @@ const headerStyles = computed<CSSProperties>(() => {
         <div
           class="exit-button lang-button"
           :class="lang === '简体中文' ? 'lang-selected' : ''"
-          @click="changeLanguagefun('CN')"
+          @click="changeLanguagefun('zh_cn')"
         >
           简体中文
         </div>
@@ -141,8 +144,8 @@ const headerStyles = computed<CSSProperties>(() => {
   height: 48px;
   padding: 0 24px;
   background-color: var(--o-bg-color-base);
+  -webkit-app-region: drag;
   &-left {
-    -webkit-app-region: drag;
     flex: 1;
   }
   span {
@@ -173,6 +176,7 @@ const headerStyles = computed<CSSProperties>(() => {
     }
   }
   .header-right {
+    -webkit-app-region: no-drag;
     display: flex;
     .mode {
       cursor: pointer;
