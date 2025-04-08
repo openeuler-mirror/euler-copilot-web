@@ -232,6 +232,7 @@ export const useSessionStore = defineStore('conversation', () => {
       echartsObj.value = {};
       txt2imgPath.value = '';
       let addItem = '';
+      let tempMessage = '';
       while (isEnd) {
         if (isPaused.value) {
           // 手动暂停输出
@@ -256,9 +257,15 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         }
         // 这里删除了\n\n
-        const lines = decodedValue
-          .split('\n\n')
-          .filter((line) => line.startsWith('data: {'));
+
+        if(!decodedValue.endsWith('}\n\n') || tempMessage){
+          tempMessage += decodedValue;
+        }
+
+        if(tempMessage && !tempMessage.endsWith('}\n\n')) continue;
+
+        const lines = tempMessage ? tempMessage.split('data:') : decodedValue.split('data:');
+        lines.shift();
         // 获取最后一个
         const lastLine = lines[lines.length - 1] || {};
         if (!judgeJson(JSON.stringify(lastLine))) {
@@ -267,6 +274,7 @@ export const useSessionStore = defineStore('conversation', () => {
         } else {
           addItem = '';
         }
+
         // pa
         lines.forEach((line) => {
           // 这里json解析
