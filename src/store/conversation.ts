@@ -265,7 +265,6 @@ export const useSessionStore = defineStore('conversation', () => {
         if(tempMessage && !tempMessage.endsWith('}\n\n')) continue;
 
         const lines = tempMessage ? tempMessage.split('data:') : decodedValue.split('data:');
-        lines.shift();
         // 获取最后一个
         const lastLine = lines[lines.length - 1] || {};
         if (!judgeJson(JSON.stringify(lastLine))) {
