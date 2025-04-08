@@ -110,7 +110,7 @@ watch(
       font-size: 16px;
       background-color: var(--o-bg-color-base);
       font-family:
-        HarmonyOS_Sans_SC_Medium,
+        HarmonyOS_Sans_SC_Regular,
         system-ui,
         -apple-system,
         BlinkMacSystemFont,
@@ -133,7 +133,7 @@ watch(
     }
 
     textarea::-webkit-input-placeholder {
-      font-family: HarmonyOS_Sans_SC_Medium;
+      font-family: HarmonyOS_Sans_SC_Regular;
     }
   }
 
