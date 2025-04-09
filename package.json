@@ -6,6 +6,11 @@
     "name": "openEuler",
     "email": "contact@openeuler.org"
   },
+  "homepage": "https://gitee.com/openeuler/euler-copilot-framework",
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/openeuler/euler-copilot-web.git"
+  },
   "private": true,
   "main": "./dist/main/index.js",
   "scripts": {
@@ -34,12 +39,12 @@
     "appId": "org.openeuler.eulercopilot",
     "productName": "EulerCopilot",
     "asar": true,
-    "copyright": "",
+    "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.",
+    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
     "directories": {
-      "output": "release/${productName}-${version}"
+      "output": "release/${name}-${version}"
     },
     "win": {
-      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
       "target": [
         {
           "target": "nsis"
@@ -47,7 +52,6 @@
       ]
     },
     "mac": {
-      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
       "executableName": "EulerCopilot",
       "category": "public.app-category.utilities",
       "target": [
@@ -55,7 +59,6 @@
       ]
     },
     "linux": {
-      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
       "executableName": "euler-copilot-desktop",
       "category": "Utility",
       "target": [
