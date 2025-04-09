@@ -39,7 +39,7 @@
       "output": "release/${productName}-${version}"
     },
     "win": {
-      "artifactName": "${productName}-${version}.${ext}",
+      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
       "target": [
         {
           "target": "nsis"
@@ -47,13 +47,17 @@
       ]
     },
     "mac": {
-      "artifactName": "${productName}-${version}.${ext}",
+      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
+      "executableName": "EulerCopilot",
+      "category": "public.app-category.utilities",
       "target": [
         "dmg"
       ]
     },
     "linux": {
-      "artifactName": "${productName}-${version}.${ext}",
+      "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
+      "executableName": "euler-copilot-desktop",
+      "category": "Utility",
       "target": [
         "deb",
         "rpm",
