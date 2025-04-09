@@ -232,7 +232,6 @@ export const useSessionStore = defineStore('conversation', () => {
       echartsObj.value = {};
       txt2imgPath.value = '';
       let addItem = '';
-      let tempMessage = '';
       while (isEnd) {
         if (isPaused.value) {
           // 手动暂停输出
@@ -256,25 +255,10 @@ export const useSessionStore = defineStore('conversation', () => {
           }
           break;
         }
-        // 这里删除了\n\n
-
-        if(!decodedValue.endsWith('}\n\n') || tempMessage){
-          tempMessage += decodedValue;
-        }
-
-        if(tempMessage && !tempMessage.endsWith('}\n\n')) continue;
-
-        const lines = tempMessage ? tempMessage.split('data:') : decodedValue.split('data:');
-        // 获取最后一个
-        const lastLine = lines[lines.length - 1] || {};
-        if (!judgeJson(JSON.stringify(lastLine))) {
-          addItem = JSON.stringify(lastLine);
-          lines.splice(lines.length - 1, 1);
-        } else {
-          addItem = '';
-        }
-
-        // pa
+        // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
+        const lines = decodedValue.split('data:');
+        // 删除第一个空字符串
+        lines.shift();
         lines.forEach((line) => {
           // 这里json解析
           const message = Object(
