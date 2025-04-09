@@ -236,7 +236,7 @@ onMounted(() => {
         display: flex;
         align-items: center;
         color: var(--o-text-color-secondary);
-        font-family: HarmonyOS_Sans_SC_Medium;
+        font-family: HarmonyOS_Sans_SC_Regular;
         font-size: 12px;
         line-height: 16px;
         cursor: pointer;

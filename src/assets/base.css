@@ -1,11 +1,11 @@
 @font-face {
-  font-family: 'HarmonyOS_Sans_SC_Medium';
-  src: url('./fonts/HarmonyOS_Sans_SC_Medium.ttf');
+  font-family: 'HarmonyOS_Sans_SC_Regular';
+  src: url('./fonts/HarmonyOS_Sans_SC_Regular.ttf');
   font-weight: normal;
   font-style: normal;
 }
 * {
-  font-family: HarmonyOS_Sans_SC_Medium, 'Helvetica Neue', Helvetica,
+  font-family: HarmonyOS_Sans_SC_Regular, 'Helvetica Neue', Helvetica,
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial,
     sans-serif;
 }

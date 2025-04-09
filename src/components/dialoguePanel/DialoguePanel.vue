@@ -73,7 +73,7 @@ export interface DialoguePanelProps {
   isWorkFlowDebug: boolean;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
-import { Metadata } from 'srcapis/paths/type';
+import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
 
 var option = ref();
