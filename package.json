@@ -1,9 +1,10 @@
 {
-  "name": "eulercopilot",
-  "version": "1.0.0",
-  "description": "Openeuler intelligent question and answer assistant",
+  "name": "euler-copilot",
+  "version": "0.9.6",
+  "description": "openEuler 智能问答助手",
   "author": {
-    "name": "Openeuler"
+    "name": "openEuler",
+    "email": "contact@openeuler.org"
   },
   "private": true,
   "main": "./dist/main/index.js",
@@ -30,30 +31,29 @@
     "package:linux": "pnpm run build:desktop && electron-builder --linux"
   },
   "build": {
-    "appId": "com.openeuler.eulercopilot",
-    "productName": "eulercopilot",
+    "appId": "org.openeuler.eulercopilot",
+    "productName": "EulerCopilot",
     "asar": true,
     "copyright": "",
     "directories": {
-      "output": "release/eulercopilot-${version}"
+      "output": "release/${productName}-${version}"
     },
     "win": {
-      "icon": "dist/app_favicon.ico",
+      "artifactName": "${productName}-${version}.${ext}",
       "target": [
         {
           "target": "nsis"
         }
-      ],
-      "artifactName": "${productName}_${version}.${ext}"
+      ]
     },
     "mac": {
-      "artifactName": "${productName}_${version}.${ext}",
+      "artifactName": "${productName}-${version}.${ext}",
       "target": [
         "dmg"
       ]
     },
     "linux": {
-      "artifactName": "${productName}_${version}.${ext}",
+      "artifactName": "${productName}-${version}.${ext}",
       "target": [
         "deb",
         "rpm",
@@ -69,7 +69,7 @@
       "installerHeaderIcon": "dist/app_favicon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "eulercopilot",
+      "shortcutName": "EulerCopilot",
       "deleteAppDataOnUninstall": true,
       "include": "./installer.nsh"
     }

@@ -16,7 +16,6 @@ coverage
 
 /cypress/videos/
 /cypress/screenshots/
-/eulercopilot-1.0.0/
 
 # Editor directories and files
 .vscode
