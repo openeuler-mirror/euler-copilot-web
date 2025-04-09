@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="dialogue-conversation-bottom-sendbox__icon">
-        <img src="@/assets/images/send_disable.png" alt="" />
+        <img src="@/assets/svgs/send_disabled.svg" alt="" />
       </div>
     </div>
   </div>

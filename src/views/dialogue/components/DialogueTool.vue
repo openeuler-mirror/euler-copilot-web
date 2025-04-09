@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { TOOL_LIST, HOT_SPOT_TRACKING, FRIENDS_CHAIN } from '../constants';
 import type { LinkItem, ChainItem } from '../types';
 import { ref } from 'vue';
 /**

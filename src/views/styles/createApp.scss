@@ -196,9 +196,9 @@
           .defaultIcon {
             width: 100%;
             height: 100%;
-            background: url('@/assets/images/app_upload.svg');
+            background: url('@/assets/svgs/app_upload.svg');
             &:hover {
-              background: url('@/assets/images/app_upload_hover.svg');
+              background: url('@/assets/svgs/app_upload_hover.svg');
             }
           }
           .uploadIcon {
@@ -208,7 +208,7 @@
             bottom: 0;
             width: 16px;
             height: 16px;
-            background: url('@/assets/images/uplod_icon.svg');
+            background: url('@/assets/svgs/upload_icon.svg');
           }
         }
         .avatar-uploader-icon {

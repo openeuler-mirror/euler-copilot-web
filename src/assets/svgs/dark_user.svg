@@ -1,0 +1,29 @@
+<svg width="48.000000" height="48.000000" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<filter id="filter_16_14774_dd" x="12.645996" y="33.339844" width="22.708344" height="9.320312" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+			<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+			<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+			<feGaussianBlur stdDeviation="1.33333" result="effect_layerBlur_1"/>
+		</filter>
+		<linearGradient x1="15.666668" y1="25.000000" x2="24.000000" y2="31.414291" id="paint_linear_16_14775_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#FFFFFF" stop-opacity="0.000000"/>
+			<stop offset="1.000000" stop-color="#FFFFFF"/>
+		</linearGradient>
+		<linearGradient x1="27.930830" y1="19.547705" x2="17.999998" y2="11.000003" id="paint_linear_16_14776_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#FFFFFF"/>
+			<stop offset="0.397278" stop-color="#FFFFFF"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.396078"/>
+		</linearGradient>
+	</defs>
+	<g opacity="0.200000">
+		<circle id="蒙版" cx="24.000000" cy="24.000000" r="24.000002" fill="#989BA7" fill-opacity="1.000000"/>
+	</g>
+	<g opacity="0.200000" filter="url(#filter_16_14774_dd)">
+		<rect id="矩形" x="16.645996" y="37.339844" rx="0.660177" width="14.708340" height="1.320354" fill="#000000" fill-opacity="1.000000"/>
+	</g>
+	<path id="path" d="M32.17 34L15.82 34C14.81 34 14 33.17 14 32.16L14 30.92L14.03 30.81C15.26 27.39 19.36 25 24 25C28.63 25 32.73 27.39 33.96 30.81L34 30.92L34 32.16C34 33.17 33.17 34 32.17 34Z" fill="url(#paint_linear_16_14775_0)" fill-opacity="1.000000" fill-rule="nonzero"/>
+	<path id="path" d="M24 23C20.68 23 18 20.3 18 17C18 13.69 20.68 11 24 11C27.31 11 30 13.69 30 17C30 20.3 27.31 23 24 23Z" fill="url(#paint_linear_16_14776_0)" fill-opacity="1.000000" fill-rule="nonzero"/>
+</svg>

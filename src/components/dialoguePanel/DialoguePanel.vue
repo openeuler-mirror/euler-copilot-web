@@ -455,9 +455,9 @@ const searchAppName = (appId) => {
         <div v-else class="userArea">
           <img
             v-if="themeStore.theme === 'dark'"
-            src="@/assets/images/dark_user.png"
+            src="@/assets/svgs/dark_user.svg"
           />
-          <img v-else src="@/assets/images/light_user.png" />
+          <img v-else src="@/assets/svgs/light_user.svg" />
         </div>
         <div class="content" v-if="content">
           <div class="message">{{ content }}</div>
@@ -1023,7 +1023,7 @@ const searchAppName = (appId) => {
         width: 48px;
         height: 48px;
         left: -10px;
-        background-image: url('src/assets/images/robot.png');
+        background-image: url('src/assets/svgs/robot.svg');
       }
 
       &-icon {
@@ -1055,7 +1055,7 @@ const searchAppName = (appId) => {
         top: 30px;
         width: 48px;
         height: 48px;
-        background-image: url('src/assets/images/robot.png');
+        background-image: url('src/assets/svgs/robot.svg');
       }
     }
 
@@ -1075,7 +1075,7 @@ const searchAppName = (appId) => {
         top: 0px;
         width: 48px;
         height: 48px;
-        background-image: url('src/assets/images/robot.png');
+        background-image: url('src/assets/svgs/robot.svg');
       }
     }
 
