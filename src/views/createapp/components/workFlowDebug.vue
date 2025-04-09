@@ -46,7 +46,7 @@
         <div class="sendIcon">
           <img
             v-if="isAnswerGenerating || dialogueInput.length <= 0"
-            src="@/assets/svgs/send_disable.svg"
+            src="@/assets/svgs/send_disabled.svg"
             alt=""
           />
           <div
@@ -54,12 +54,7 @@
             @click="handleSendMessage(undefined, dialogueInput)"
             class="ableSend"
           >
-            <img
-              v-if="themeStore.theme === 'dark'"
-              src="@/assets/svgs/send_enable.svg"
-              alt=""
-            />
-            <img v-else src="@/assets/svgs/send_enable.svg" alt="" />
+            <img src="@/assets/svgs/send_enabled.svg" alt="" />
           </div>
         </div>
       </div>

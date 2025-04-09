@@ -898,20 +898,13 @@ watch(
                   isAnswerGenerating ||
                   dialogueInput.length <= 0
                 "
-                src="@/assets/svgs/send_disable.svg"
+                src="@/assets/svgs/send_disabled.svg"
                 alt=""
               />
               <div v-else class="send-message-btn">
                 <img
-                  v-if="themeStore.theme === 'dark'"
                   @click="handleSendMessage(undefined, dialogueInput)"
-                  src="@/assets/svgs/send_enable.svg"
-                  alt=""
-                />
-                <img
-                  v-else
-                  @click="handleSendMessage(undefined, dialogueInput)"
-                  src="@/assets/svgs/send_enable.svg"
+                  src="@/assets/svgs/send_enabled.svg"
                   alt=""
                 />
               </div>
