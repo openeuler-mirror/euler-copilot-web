@@ -33,7 +33,7 @@ const changeTheme = (e: PointerEvent) => {
       </div>
     </div>
     <div class="edit">
-      <img src="../../assets/images/edit.png" />
+      <img src="../../assets/svgs/settings.svg" />
     </div>
   </div>
 </template>

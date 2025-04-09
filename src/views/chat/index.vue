@@ -3,8 +3,8 @@ import Welcome from './Welcome.vue';
 import Operations from './Operations.vue';
 import CommonFooter from '@/components/commonFooter/CommonFooter.vue';
 import Bubble from '@/components/bubble/index.vue';
-import userAvatar from '@/assets/images/dark_user.png';
-import robotAvatar from '@/assets/images/robot.png';
+import userAvatar from '@/assets/svgs/dark_user.svg';
+import robotAvatar from '@/assets/svgs/robot.svg';
 import { computed, ref, onBeforeMount, onBeforeUnmount } from 'vue';
 
 const userInput = ref('');
@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
 
       <div class="chat-container-bottom">
         <div class="create-button">
-          <img src="@/assets/images/routerCopilotSelected.png" alt="" />
+          <img src="@/assets/svgs/create.svg" alt="" />
         </div>
         <div class="chat-sender">
           <textarea
@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
             placeholder="在此输入你想了解的内容，输入Shift+Enter换行"
             maxlength="2000"
           />
-          <img src="@/assets/images/light_send.png" alt="" />
+          <img src="@/assets/svgs/send_enabled.svg" alt="" />
         </div>
       </div>
 
@@ -215,9 +215,9 @@ onBeforeUnmount(() => {
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
       img {
-        height: 100%;
-        filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
-          brightness(101%) contrast(101%);
+        width: 40px;
+        height: 40px;
+        margin: 8px;
       }
     }
 
