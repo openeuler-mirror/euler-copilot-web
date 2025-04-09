@@ -46,7 +46,7 @@
         <div class="sendIcon">
           <img
             v-if="isAnswerGenerating || dialogueInput.length <= 0"
-            src="@/assets/images/send_disable.png"
+            src="@/assets/svgs/send_disable.svg"
             alt=""
           />
           <div
@@ -56,10 +56,10 @@
           >
             <img
               v-if="themeStore.theme === 'dark'"
-              src="@/assets/images/dark_send.png"
+              src="@/assets/svgs/send_enable.svg"
               alt=""
             />
-            <img v-else src="@/assets/images/light_send.png" alt="" />
+            <img v-else src="@/assets/svgs/send_enable.svg" alt="" />
           </div>
         </div>
       </div>
@@ -86,11 +86,8 @@ const testFlag = ref(true);
 const { conversationList, isAnswerGenerating } = storeToRefs(useSessionStore());
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 const { generateSessionDebug } = useHistorySessionStore();
-const {
-  historySession,
-  currentSelectedSession,
-  selectedSessionIds,
-} = storeToRefs(useHistorySessionStore());
+const { historySession, currentSelectedSession, selectedSessionIds } =
+  storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
 const tmpConversationId = ref('');
 const props = defineProps({

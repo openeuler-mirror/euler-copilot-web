@@ -179,10 +179,10 @@ watch(
       .defaultIconNoCamera {
         width: 100%;
         height: 100%;
-        background: url('@/assets/images/dark_user.png');
+        background: url('@/assets/svgs/dark_user.svg');
         background-size: contain !important;
         &:hover {
-          background: url('@/assets/images/light_user.png');
+          background: url('@/assets/svgs/light_user.svg');
         }
       }
     }
