@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 40px;
+  height: 48px;
   padding: 0 24px;
   background-color: var(--o-bg-color-base);
   box-shadow: 2px 0 8px 0 rgba(29, 35, 41, 0.1);

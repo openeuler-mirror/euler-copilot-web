@@ -26,14 +26,14 @@ const changeTheme = (e: PointerEvent) => {
   <div class="operations">
     <div class="theme" @click="changeTheme">
       <div class="theme-icon" v-if="isDark">
-        <img id="sun-icon" src="../../assets/svgs/sun.svg" alt="" />
+        <img id="sun-icon" src="@/assets/svgs/sun.svg" alt="" />
       </div>
       <div class="theme-icon" v-else>
-        <img id="moon-icon" src="../../assets/svgs/moon.svg" alt="" />
+        <img id="moon-icon" src="@/assets/svgs/moon.svg" alt="" />
       </div>
     </div>
-    <div class="edit">
-      <img src="../../assets/svgs/settings.svg" />
+    <div class="settings">
+      <img src="@/assets/svgs/settings.svg" />
     </div>
   </div>
 </template>
@@ -50,8 +50,8 @@ const changeTheme = (e: PointerEvent) => {
 
   .theme {
     &-icon {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       img {
         width: 100%;
         height: 100%;
@@ -59,9 +59,9 @@ const changeTheme = (e: PointerEvent) => {
     }
   }
 
-  .edit {
-    width: 20px;
-    height: 20px;
+  .settings {
+    width: 24px;
+    height: 24px;
 
     img {
       width: 100%;

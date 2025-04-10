@@ -35,6 +35,21 @@ export function createWindow(
 
 let defaultWindow: BrowserWindow | null = null;
 
+/**
+ * 获取窗口标题栏的样式配置
+ * @param theme 主题类型 'dark'|'light'
+ * @returns Electron.TitleBarOverlay 配置
+ */
+function getDefaultTitleBarOverlay(
+  theme: string = 'light',
+): Electron.TitleBarOverlay {
+  return {
+    color: theme === 'dark' ? '#1f2329' : '#ffffff',
+    symbolColor: theme === 'dark' ? 'white' : 'black',
+    height: 48,
+  };
+}
+
 export function createDefaultWindow(): BrowserWindow {
   if (defaultWindow) return defaultWindow;
 
@@ -42,12 +57,7 @@ export function createDefaultWindow(): BrowserWindow {
   const defaultWindowOptions = allWindow.mainWindow.window;
   const theme = process.env.EULERCOPILOT_THEME || 'light';
 
-  defaultWindowOptions.titleBarOverlay = {
-    color: theme === 'dark' ? '#1f2329' : '#ffffff',
-    height: 48,
-    symbolColor: theme === 'dark' ? 'white' : 'black',
-  };
-
+  defaultWindowOptions.titleBarOverlay = getDefaultTitleBarOverlay(theme);
   defaultWindow = createWindow(defaultWindowOptions, hash);
 
   return defaultWindow;
@@ -60,11 +70,7 @@ export function createChatWindow(): BrowserWindow {
   const chatWindowOptions = allWindow.chatWindow.window;
   const theme = process.env.EULERCOPILOT_THEME || 'light';
 
-  chatWindowOptions.titleBarOverlay = {
-    color: theme === 'dark' ? '#1f2329' : '#ffffff',
-    height: 40,
-    symbolColor: theme === 'dark' ? 'white' : 'black',
-  };
+  chatWindowOptions.titleBarOverlay = getDefaultTitleBarOverlay(theme);
   chatWindow = createWindow(chatWindowOptions, hash);
 
   const shortcutKey =
@@ -82,7 +88,6 @@ ipcMain.handle('copilot:theme', (e, args) => {
   if (chatWindow) {
     chatWindow.setTitleBarOverlay({
       color: args.backgroundColor,
-      height: 40,
       symbolColor: args.theme === 'dark' ? 'white' : 'black',
     });
   }
@@ -90,7 +95,6 @@ ipcMain.handle('copilot:theme', (e, args) => {
   if (defaultWindow) {
     defaultWindow.setTitleBarOverlay({
       color: args.backgroundColor,
-      height: 48,
       symbolColor: args.theme === 'dark' ? 'white' : 'black',
     });
   }

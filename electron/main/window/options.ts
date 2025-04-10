@@ -40,6 +40,7 @@ export const options: allWindowType = {
       alwaysOnTop: false,
       useContentSize: true,
       minWidth: 680,
+      minHeight: 810,
       titleBarStyle: 'hidden',
       icon: 'dist/favicon.ico',
     },
