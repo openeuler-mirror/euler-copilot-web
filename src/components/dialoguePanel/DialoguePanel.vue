@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import marked from 'src/utils/marked.js';
+import marked from 'src/utils/marked';
 import { computed, ref, withDefaults } from 'vue';
 import { writeText } from 'src/utils';
 import {
