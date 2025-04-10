@@ -70,6 +70,9 @@ const headerStyles = computed<CSSProperties>(() => {
       styles.paddingLeft = 'calc(50% - 60px)';
     } else if (platform === 'win32') {
       styles.paddingRight = '145px';
+    } else if (platform === 'linux') {
+      styles.paddingRight = '110px';
+      styles.paddingLeft = 'calc(50% - 60px)';
     }
   }
   return styles;
