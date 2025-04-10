@@ -10,5 +10,5 @@ export interface IProductConfiguration {
 }
 
 export const productObj: IProductConfiguration = {
-  name: 'eulercopilot',
+  name: 'EulerCopilot',
 };
