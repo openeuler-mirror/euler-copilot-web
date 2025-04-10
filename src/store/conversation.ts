@@ -248,7 +248,6 @@ export const useSessionStore = defineStore('conversation', () => {
       echartsObj.value = {};
       txt2imgPath.value = '';
       let addItem = '';
-      // var bufferString = '';
       while (isEnd) {
         if (isPaused.value) {
           // 手动暂停输出
@@ -257,10 +256,6 @@ export const useSessionStore = defineStore('conversation', () => {
         }
         const { done, value } = await reader.read();
         const decodedValue = addItem + decoder.decode(value, { stream: true });
-        console.log(value);
-        console.log(decodedValue);
-        // bufferString += decodedValue;
-
         if (done) {
           if (excelPath.value.length > 0) {
             conversationItem.message[conversationItem.currentInd] +=
