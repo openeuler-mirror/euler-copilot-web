@@ -83,6 +83,22 @@ export const useSessionStore = defineStore('conversation', () => {
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
   /**
+   * 将所有获取的数据进行data: \n\n 分割只保留有效信息，更容易处理最后的状态码
+   * @param input
+   * {
+   **/
+  function splitDataString(input) {
+    if (input.includes('"data: ')) {
+        return [input];
+    }
+    const parts = input.split(/data: /g).filter(part => part.trim() !== '');
+    if (input.startsWith('data: ')) {
+        return parts.map(part => 'data: ' + part);
+    } else {
+        return [parts[0], ...parts.slice(1).map(part => 'data: ' + part)];
+    }
+}
+  /**
    * 请求流式数据
    * @param params
    * {
@@ -240,7 +256,6 @@ export const useSessionStore = defineStore('conversation', () => {
         }
         const { done, value } = await reader.read();
         const decodedValue = addItem + decoder.decode(value, { stream: true });
-
         if (done) {
           if (excelPath.value.length > 0) {
             conversationItem.message[conversationItem.currentInd] +=
@@ -255,10 +270,12 @@ export const useSessionStore = defineStore('conversation', () => {
           }
           break;
         }
+        if (decodedValue.includes('data: [DONE]')) {
+          isEnd = true;
+          continue;
+        }
         // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
-        const lines = decodedValue.split('data:');
-        // 删除第一个空字符串
-        lines.shift();
+        const lines = splitDataString(decodedValue);
         lines.forEach((line) => {
           // 这里json解析
           const message = Object(
