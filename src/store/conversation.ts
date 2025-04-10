@@ -82,7 +82,11 @@ export const useSessionStore = defineStore('conversation', () => {
   const appList = ref<Application[]>();
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
-
+  /**
+   * 将所有获取的数据进行data: \n\n 分割只保留有效信息，更容易处理最后的状态码
+   * @param input
+   * {
+   **/
   function splitDataString(input) {
     if (input.includes('"data: ')) {
         return [input];
@@ -94,7 +98,6 @@ export const useSessionStore = defineStore('conversation', () => {
         return [parts[0], ...parts.slice(1).map(part => 'data: ' + part)];
     }
 }
-
   /**
    * 请求流式数据
    * @param params
@@ -245,6 +248,7 @@ export const useSessionStore = defineStore('conversation', () => {
       echartsObj.value = {};
       txt2imgPath.value = '';
       let addItem = '';
+      // var bufferString = '';
       while (isEnd) {
         if (isPaused.value) {
           // 手动暂停输出
@@ -253,6 +257,10 @@ export const useSessionStore = defineStore('conversation', () => {
         }
         const { done, value } = await reader.read();
         const decodedValue = addItem + decoder.decode(value, { stream: true });
+        console.log(value);
+        console.log(decodedValue);
+        // bufferString += decodedValue;
+
         if (done) {
           if (excelPath.value.length > 0) {
             conversationItem.message[conversationItem.currentInd] +=

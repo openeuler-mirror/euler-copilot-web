@@ -11,7 +11,7 @@
     display: flex;
     position: relative;
     align-items: center;
-    min-width: 1628px;
+    // min-width: 1628px;
     .createAppContainerMenu {
       display: flex;
       gap: 16px;
@@ -81,7 +81,7 @@
   }
 
   .createAppContainerMain {
-    min-width: 1200px;
+    // min-width: 1200px;
     margin-top: 16px;
     padding: 24px 24px 24px 16px;
     display: flex;
@@ -94,7 +94,7 @@
     display: flex;
     gap: 24px;
     flex: 1;
-    min-width: 1628px;
+    // min-width: 1628px;
     max-height: calc(100% - 112px);
     margin-top: 16px;
   }
