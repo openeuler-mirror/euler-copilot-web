@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, VNode, h } from 'vue';
 import type { CSSProperties } from 'vue';
 
 type Style = Record<'avatar' | 'content', CSSProperties>;
@@ -11,6 +11,7 @@ interface BubbleProps {
   placement?: 'start' | 'end';
   shape?: 'round' | 'corner';
   styles?: Partial<Style>;
+  contentRender?: (content: string) => VNode;
 }
 
 const props = withDefaults(defineProps<BubbleProps>(), {
@@ -33,7 +34,18 @@ const props = withDefaults(defineProps<BubbleProps>(), {
       class="bubble-wrapper-content"
       :style="styles ? styles['content'] : ''"
     >
-      <div>{{ content }}</div>
+      <div class="loading" v-if="loading">
+        <img src="@/assets/images/loading.png" alt="" class="loading-icon" />
+        <div class="loading-text">EulerCopilot正在生成回答...</div>
+      </div>
+      <div v-else>
+        <div v-if="contentRender">
+          <component :is="contentRender(content)" />
+        </div>
+        <div v-else>
+          {{ content }}
+        </div>
+      </div>
 
       <slot name="footer" />
     </div>
@@ -69,6 +81,34 @@ const props = withDefaults(defineProps<BubbleProps>(), {
     white-space: pre-wrap;
     word-break: break-all;
     overflow-wrap: break-all;
+
+    .loading {
+      display: flex;
+      background-color: var(--o-bg-color-base);
+      border-radius: 8px;
+      border-top-left-radius: 0px;
+
+      @keyframes rotate-img {
+        from {
+          transform: rotate(0);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      &-icon {
+        animation: rotate-img 1s infinite linear;
+      }
+
+      &-text {
+        font-size: 16px;
+        line-height: 24px;
+        padding-left: 12px;
+        color: var(--o-text-color-primary);
+      }
+    }
   }
 }
 </style>
