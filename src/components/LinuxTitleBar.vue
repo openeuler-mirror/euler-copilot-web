@@ -45,28 +45,6 @@ const overlayRef = ref<HTMLElement | null>(null);
 // 动态监听主题变化
 const isDarkTheme = computed(() => themeStore.theme === 'dark');
 
-// 窗口控制操作 - 修复通道名称和事件处理
-const handleMinimize = (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  console.log('Minimize window');
-  sendWindowControlCommand('minimize');
-};
-
-const handleMaximize = (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  console.log('Maximize/restore window');
-  sendWindowControlCommand('maximize');
-};
-
-const handleClose = (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  console.log('Close window');
-  sendWindowControlCommand('close');
-};
-
 // 封装发送窗口控制命令 - 使用正确的IPC通道名
 const sendWindowControlCommand = (command) => {
   if (window.eulercopilot && window.eulercopilot.ipcRenderer) {
