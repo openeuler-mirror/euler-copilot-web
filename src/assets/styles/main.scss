@@ -15,14 +15,14 @@ body {
 html.platform-linux {
   body {
     background: transparent;
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
     // 添加圆角过渡动画
     transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   #app {
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
     // 添加圆角过渡动画
     transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);

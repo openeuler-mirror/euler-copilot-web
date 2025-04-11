@@ -10,6 +10,34 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useChangeThemeStore } from '@/store/conversation';
 
+// 窗口控制按钮图标定义
+const windowControlIcons = {
+  minimize: `
+    <svg width="12" height="12" viewBox="0 0 12 12">
+      <rect width="10" height="1" x="1" y="5.5" fill="currentColor" />
+    </svg>
+  `,
+  maximize: `
+    <svg width="12" height="12" viewBox="0 0 12 12">
+      <rect width="9" height="9" x="1.5" y="1.5" fill="none" stroke="currentColor" />
+    </svg>
+  `,
+  restore: `
+    <svg width="12" height="12" viewBox="0 0 12 12">
+      <path fill="none" stroke="currentColor" d="M 1.5 10.5 L 8.5 10.5 L 8.5 3.5 L 1.5 3.5 Z"/>
+      <path fill="none" stroke="currentColor" d="M 3.5 1 L 3.5 3.5"/>
+      <path fill="none" stroke="currentColor" d="M 3 1.5 L 11 1.5"/>
+      <path fill="none" stroke="currentColor" d="M 10.5 1 L 10.5 9"/>
+      <path fill="none" stroke="currentColor" d="M 8.5 8.5 L 11 8.5"/>
+    </svg>
+  `,
+  close: `
+    <svg width="12" height="12" viewBox="0 0 12 12">
+      <path d="M2,2 L10,10 M2,10 L10,2" stroke="currentColor" stroke-width="1.75" fill="none" />
+    </svg>
+  `,
+};
+
 const isMaximized = ref(false);
 const themeStore = useChangeThemeStore();
 const overlayRef = ref<HTMLElement | null>(null);
@@ -92,11 +120,7 @@ const createWindowControls = () => {
   minimizeBtn.className = 'linux-control-button minimize';
   minimizeBtn.title = '最小化';
   minimizeBtn.style.cssText = buttonBaseStyle;
-  minimizeBtn.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 12 12">
-      <rect width="10" height="1" x="1" y="5.5" fill="currentColor" />
-    </svg>
-  `;
+  minimizeBtn.innerHTML = windowControlIcons.minimize;
   minimizeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -109,16 +133,8 @@ const createWindowControls = () => {
   maximizeBtn.title = isMaximized.value ? '还原' : '最大化';
   maximizeBtn.style.cssText = buttonBaseStyle;
   maximizeBtn.innerHTML = isMaximized.value
-    ? `
-    <svg width="12" height="12" viewBox="0 0 12 12">
-      <path fill="none" stroke="currentColor" d="M3.5,3.5v5h5v-5H3.5z M2.5,2.5h7v7h-7V2.5z" />
-    </svg>
-  `
-    : `
-    <svg width="12" height="12" viewBox="0 0 12 12">
-      <rect width="9" height="9" x="1.5" y="1.5" fill="none" stroke="currentColor" />
-    </svg>
-  `;
+    ? windowControlIcons.restore
+    : windowControlIcons.maximize;
   maximizeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -130,11 +146,7 @@ const createWindowControls = () => {
   closeBtn.className = 'linux-control-button close';
   closeBtn.title = '关闭';
   closeBtn.style.cssText = buttonBaseStyle;
-  closeBtn.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 12 12">
-      <path d="M2.5,2.5 L9.5,9.5 M2.5,9.5 L9.5,2.5" stroke="currentColor" stroke-width="1.5" fill="none" />
-    </svg>
-  `;
+  closeBtn.innerHTML = windowControlIcons.close;
   closeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -184,16 +196,8 @@ const updateMaximizeButton = () => {
 
   maximizeBtn.title = isMaximized.value ? '还原' : '最大化';
   maximizeBtn.innerHTML = isMaximized.value
-    ? `
-    <svg width="12" height="12" viewBox="0 0 12 12">
-      <path fill="none" stroke="currentColor" d="M3.5,3.5v5h5v-5H3.5z M2.5,2.5h7v7h-7V2.5z" />
-    </svg>
-  `
-    : `
-    <svg width="12" height="12" viewBox="0 0 12 12">
-      <rect width="9" height="9" x="1.5" y="1.5" fill="none" stroke="currentColor" />
-    </svg>
-  `;
+    ? windowControlIcons.restore
+    : windowControlIcons.maximize;
 };
 
 // 按钮基础样式
