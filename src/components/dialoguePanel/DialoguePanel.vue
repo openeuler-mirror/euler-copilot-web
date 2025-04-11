@@ -934,8 +934,6 @@ const searchAppName = (appId) => {
   }
 }
 .dialogue-panel {
-  // padding-right: 25px;
-  // padding: 0px 15%;
   width: 1000px;
   &__user {
     position: relative;

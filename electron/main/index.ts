@@ -128,6 +128,37 @@ function registerIpcListener() {
   ipcMain.handle('copilot:system', () => {
     nativeTheme.themeSource = 'system';
   });
+
+  // 添加窗口控制命令处理程序
+  ipcMain.handle('copilot:window-control', (event, command) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+
+    switch (command) {
+      case 'minimize':
+        win.minimize();
+        break;
+      case 'maximize':
+        if (win.isMaximized()) {
+          win.unmaximize();
+        } else {
+          win.maximize();
+        }
+        break;
+      case 'close':
+        win.close();
+        break;
+    }
+  });
+
+  // 添加获取窗口最大化状态的处理程序
+  ipcMain.handle('copilot:window-is-maximized', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+      return win.isMaximized();
+    }
+    return false;
+  });
 }
 
 function getUserDefinedConf(dir: string) {

@@ -71,8 +71,7 @@ const headerStyles = computed<CSSProperties>(() => {
     } else if (platform === 'win32') {
       styles.paddingRight = '145px';
     } else if (platform === 'linux') {
-      styles.paddingRight = '110px';
-      styles.paddingLeft = 'calc(50% - 60px)';
+      styles.paddingRight = '120px';
     }
   }
   return styles;
@@ -145,7 +144,7 @@ const headerStyles = computed<CSSProperties>(() => {
   justify-content: space-between;
   align-items: center;
   height: 48px;
-  padding: 0 24px;
+  padding: 0 20px;
   background-color: var(--o-bg-color-base);
   -webkit-app-region: drag;
   &-left {

@@ -33,7 +33,7 @@ html {
 }
 
 body {
-  min-width: 1366px;
+  min-width: 100vw;
   min-height: 100vh;
   transition:
     color 0.5s,

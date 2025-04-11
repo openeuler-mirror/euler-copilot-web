@@ -6,15 +6,65 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import path from 'node:path';
-import { app, Tray, Menu } from 'electron';
+import { app, Tray, Menu, BrowserWindow } from 'electron';
 import type { MenuItemConstructorOptions } from 'electron';
+import { createDefaultWindow, createChatWindow } from './create';
+
+// 保存对主窗口和聊天窗口的引用，方便在托盘菜单中使用
+let defaultWindow: BrowserWindow | null = null;
+let chatWindow: BrowserWindow | null = null;
 
 export function createTray(): Tray {
   let appTray: Tray | null = null;
 
   if (appTray) return appTray;
 
+  // 获取窗口引用
+  defaultWindow =
+    BrowserWindow.getAllWindows().find((win) =>
+      win.webContents.getURL().includes('main'),
+    ) || null;
+
+  chatWindow =
+    BrowserWindow.getAllWindows().find((win) =>
+      win.webContents.getURL().includes('chat'),
+    ) || null;
+
+  // 如果没有找到窗口，尝试创建它们
+  if (!defaultWindow) {
+    defaultWindow = createDefaultWindow();
+  }
+
+  if (!chatWindow) {
+    chatWindow = createChatWindow();
+  }
+
   const trayMenus: MenuItemConstructorOptions[] = [
+    {
+      label: '显示主窗口',
+      click: () => {
+        if (defaultWindow) {
+          defaultWindow.show();
+          defaultWindow.focus();
+        } else {
+          defaultWindow = createDefaultWindow();
+          defaultWindow.show();
+        }
+      },
+    },
+    {
+      label: '启动快捷问答',
+      click: () => {
+        if (chatWindow) {
+          chatWindow.show();
+          chatWindow.focus();
+        } else {
+          chatWindow = createChatWindow();
+          chatWindow.show();
+        }
+      },
+    },
+    { type: 'separator' },
     {
       label: '退出',
       click: () => {
