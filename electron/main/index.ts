@@ -22,8 +22,7 @@ interface ICacheConf {
   theme: 'system' | 'light' | 'dark';
 }
 
-const commonCacheConf: Partial<ICacheConf> =
-  getUserDefinedConf(commonCacheConfPath);
+const commonCacheConf: Partial<ICacheConf> = {};
 
 const osLocale = processZhLocale(
   (app.getPreferredSystemLanguages()?.[0] ?? 'en').toLowerCase(),
@@ -59,8 +58,9 @@ app.on('activate', () => {
 
 async function onReady() {
   try {
-    const [, nlsConfig, themeConfig] = await Promise.all([
-      mkdirpIgnoreError(cachePath),
+    await mkdirpIgnoreError(cachePath);
+    await getUserDefinedConf(commonCacheConfPath);
+    const [nlsConfig, themeConfig] = await Promise.all([
       resolveNlsConfiguration(),
       resolveThemeConfiguration(),
     ]);

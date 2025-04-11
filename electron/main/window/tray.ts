@@ -23,9 +23,9 @@ export function createTray(): Tray {
     },
   ];
   const iconPath =
-    process.platform === 'darwin'
-      ? path.join(__dirname, '../favicon.ico')
-      : path.join(__dirname, '../app_favicon.ico');
+    process.platform === 'win32'
+      ? path.join(__dirname, '../app_favicon.ico')
+      : path.join(__dirname, '../favicon.ico');
   appTray = new Tray(iconPath);
   const contextMenu = Menu.buildFromTemplate(trayMenus);
   appTray.setToolTip('EulerCopilot');

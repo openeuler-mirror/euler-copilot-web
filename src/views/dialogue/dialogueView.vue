@@ -16,12 +16,12 @@ import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import CopilotIcon from '@/assets/images/routerCopilot.png';
 import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
-import WitchainDIcon from '@/assets/images/witChainD.png';
+import WitchainDIcon from '@/assets/images/witchainD.png';
 import ApiIcon from '@/assets/images/routerApi.png';
 import ApiIconSelected from '@/assets/svgs/routerApiSelected.svg';
 import AppIcon from '@/assets/images/routerApp.png';
 import AppIconSelected from '@/assets/svgs/routerAppSelected.svg';
-import WitchainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
+import WitchainDIconSelected from '@/assets/svgs/WitchainDSelected.svg';
 import tools from '../tools/index.vue';
 import TitleBar from './components/TitleBar.vue';
 
