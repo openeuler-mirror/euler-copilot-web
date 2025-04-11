@@ -17,10 +17,23 @@ html.platform-linux {
     background: transparent;
     border-radius: 16px;
     overflow: hidden;
+    // 添加圆角过渡动画
+    transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   #app {
     border-radius: 16px;
     overflow: hidden;
+    // 添加圆角过渡动画
+    transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  // 窗口最大化状态下取消圆角
+  &.window-maximized {
+    body, #app {
+      border-radius: 0 !important;
+      // 保持过渡动画一致性
+      transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
   }
 }
