@@ -1,57 +1,9 @@
 <template>
-  <div class="linux-titlebar-container" :class="{ 'dark-theme': isDarkTheme }">
-    <div class="window-controls">
-      <button
-        class="control-button minimize"
-        @mousedown.stop.prevent="handleMinimize"
-        @click.stop.prevent="handleMinimize"
-        title="最小化"
-      >
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <rect width="10" height="1" x="1" y="5.5" fill="currentColor" />
-        </svg>
-      </button>
-      <button
-        class="control-button maximize"
-        @mousedown.stop.prevent="handleMaximize"
-        @click.stop.prevent="handleMaximize"
-        :title="isMaximized ? '还原' : '最大化'"
-      >
-        <svg width="12" height="12" viewBox="0 0 12 12" v-if="isMaximized">
-          <path
-            fill="none"
-            stroke="currentColor"
-            d="M3.5,3.5v5h5v-5H3.5z M2.5,2.5h7v7h-7V2.5z"
-          />
-        </svg>
-        <svg width="12" height="12" viewBox="0 0 12 12" v-else>
-          <rect
-            width="9"
-            height="9"
-            x="1.5"
-            y="1.5"
-            fill="none"
-            stroke="currentColor"
-          />
-        </svg>
-      </button>
-      <button
-        class="control-button close"
-        @mousedown.stop.prevent="handleClose"
-        @click.stop.prevent="handleClose"
-        title="关闭"
-      >
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <path
-            d="M2.5,2.5 L9.5,9.5 M2.5,9.5 L9.5,2.5"
-            stroke="currentColor"
-            stroke-width="1.5"
-            fill="none"
-          />
-        </svg>
-      </button>
-    </div>
-  </div>
+  <!-- 简化后的容器，实际按钮通过JavaScript动态创建 -->
+  <div
+    class="linux-titlebar-container"
+    :class="{ 'dark-theme': isDarkTheme }"
+  ></div>
 </template>
 
 <script setup lang="ts">
@@ -129,7 +81,6 @@ const createWindowControls = () => {
     padding: 12px;
     width: 120px;
     height: 48px;
-    z-index: 9999999;
     pointer-events: auto;
     -webkit-app-region: no-drag;
     display: flex;
@@ -196,11 +147,13 @@ const createWindowControls = () => {
       button.style.backgroundColor = isCloseButton
         ? '#e81123'
         : 'rgba(128, 128, 128, 0.2)';
-      if (isCloseButton) button.style.color = 'white';
+      button.style.color = isCloseButton
+        ? 'white'
+        : 'var(--o-text-color-primary)';
     });
     button.addEventListener('mouseleave', () => {
       button.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
-      if (isCloseButton) button.style.color = 'inherit';
+      button.style.color = 'var(--o-text-color-secondary)';
     });
   };
 
@@ -256,7 +209,7 @@ const buttonBaseStyle = `
   border-radius: 12px;
   margin-left: 8px;
   background-color: rgba(128, 128, 128, 0.1);
-  color: inherit;
+  color: var(--o-text-color-secondary);
   padding: 0;
 `;
 
@@ -336,42 +289,8 @@ onBeforeUnmount(() => {
   top: 0;
   right: 0;
   padding: 12px;
-  z-index: 100000;
   pointer-events: auto;
   visibility: hidden; /* 隐藏原始控件，使用DOM覆盖层代替 */
-}
-
-.window-controls {
-  position: relative;
-  display: flex;
-}
-
-.control-button {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  outline: none;
-  cursor: pointer !important;
-  border-radius: 12px;
-  margin-left: 8px;
-  pointer-events: auto;
-  position: relative;
-
-  background-color: rgba($color: grey, $alpha: 0.1);
-  color: var(--o-text-color-secondary);
-
-  &:hover {
-    background-color: rgba($color: grey, $alpha: 0.2);
-    color: var(--o-text-color-primary);
-  }
-
-  &.close:hover {
-    background-color: #e81123;
-    color: white;
-  }
 }
 </style>
 
@@ -381,7 +300,6 @@ onBeforeUnmount(() => {
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
-  z-index: 9999999 !important;
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
