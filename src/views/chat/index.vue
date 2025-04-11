@@ -1,21 +1,14 @@
 <script lang="ts" setup>
-import Welcome from './Welcome.vue';
 import Operations from './Operations.vue';
 import CommonFooter from '@/components/commonFooter/CommonFooter.vue';
 import Bubble from '@/components/bubble/index.vue';
+import Sender from './Sender.vue';
+import Welcome from './Welcome.vue';
 import userAvatar from '@/assets/svgs/dark_user.svg';
 import robotAvatar from '@/assets/svgs/robot.svg';
-import { computed, ref, onBeforeMount, onBeforeUnmount } from 'vue';
-
-const userInput = ref('');
-
-const handleKeydown = (evt: any): any => {
-  if (evt.key === 'Enter' && !evt.shiftKey) {
-    evt.preventDefault();
-    if (userInput.value !== '') {
-    }
-  }
-};
+import { computed, ref, onBeforeMount, onBeforeUnmount, h } from 'vue';
+import { fetchStream } from '@/utils/fetchStream';
+import marked from '@/utils/marked';
 
 const headerStyles = computed(() => {
   return window.eulercopilot.process.platform === 'darwin'
@@ -27,6 +20,125 @@ function storageListener(e: StorageEvent) {
   if (e.key === 'theme') {
     document.body.setAttribute('theme', e.newValue || 'light');
   }
+}
+
+const { conversations, setConversations } = useConversations();
+
+const { isStreaming, queryStream } = useStream();
+
+function useStream() {
+  const isStreaming = ref(false);
+
+  const queryStream = async (
+    q: string,
+    cId: string,
+    lang: 'zh' | 'en' = 'zh',
+  ) => {
+    const headers = {};
+    headers['Content-Type'] = 'application/json; charset=UTF-8';
+    const body = {
+      question: q,
+      conversationId: cId,
+      language: lang,
+      features: {
+        context_num: 2,
+        max_tokens: 2048,
+      },
+    };
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers,
+    });
+
+    for await (const chunk of fetchStream({
+      readableStream: resp.body!,
+    })) {
+      if (!chunk.data) {
+        break;
+      }
+      if (chunk.data.trim() === '[DONE]') {
+        isStreaming.value = false;
+        break;
+      }
+      setConversations(chunk.data);
+    }
+  };
+
+  return { isStreaming, queryStream };
+}
+
+function useConversations() {
+  interface Conversation {
+    id: string;
+    content: string;
+    role: 'user' | 'assistant';
+    metadata?: StreamMetadata;
+  }
+
+  type StreamEvent = 'text.add' | 'init' | 'input';
+  interface StreamMetadata {
+    inputTokens: number;
+
+    outputTokens: number;
+
+    timeCost: number;
+  }
+
+  interface StreamChunk {
+    content: {
+      text: string;
+    };
+    conversationId: string;
+    event: StreamEvent;
+    groupId: string;
+    id: string;
+    metadata: StreamMetadata;
+    taskId: string;
+  }
+
+  const conversations = ref<Conversation[]>([]);
+
+  const setConversations = (data: string) => {
+    console.log(JSON.parse(data));
+    const conversation = conversations.value[conversations.value.length - 1];
+    const { id, event, content, metadata } = JSON.parse(data) as StreamChunk;
+    if (event === 'init') {
+      conversation.id = id;
+      conversations.value.push({
+        id: '',
+        content: '',
+        role: 'assistant',
+      });
+    }
+    if (event === 'text.add') {
+      conversation.content += content.text;
+      conversation.metadata = metadata;
+    }
+  };
+
+  return { conversations, setConversations };
+}
+
+function onSend(q: string) {
+  conversations.value.push({
+    id: `user-${conversations.value.length / 2 + 1}`,
+    content: q,
+    role: 'user',
+  });
+  isStreaming.value = true;
+  queryStream(q, '1d190929-910d-49e7-8064-39f3bdbee695');
+}
+
+const markedContent = computed(
+  () => (text: string) => marked.parse(text) as string,
+);
+
+function renderMarkdown(text: string) {
+  return h('div', {
+    id: 'markdown-preview',
+    innerHTML: text,
+  });
 }
 
 onBeforeMount(() => {
@@ -59,60 +171,60 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <!-- TODO：待完成 -->
     <div class="chat-container">
-      <!-- <Welcome class="welcome" /> -->
-      <div class="chat-container-bubble">
-        <Bubble
-          :avatar="userAvatar"
-          content="hello"
-          :styles="{
-            content: {
-              backgroundImage:
-                'linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2))',
-            },
-          }"
-        />
-        <Bubble
-          :avatar="robotAvatar"
-          :styles="{
-            content: {
-              padding: '24px 24px 16px 24px',
-            },
-          }"
-          content="hello! How can i assist you today Docker or openeuler related tasks? Mock Mock Mock MockMock MockMock MockMock MockMock MockMock Mock"
-        >
-          <template #footer>
-            <div class="bubble-footer">
-              <div class="action-toolbar">
-                <div class="left">tokens:132↑| 9‌↓| 1743141974.70 1 /1</div>
-                <div class="button-group">
-                  <el-tooltip
-                    placement="top"
-                    :content="$t('feedback.copy')"
-                    effect="light"
-                  >
-                    <img src="@/assets/svgs/dark_copy.svg" />
-                  </el-tooltip>
+      <div class="chat-container-main">
+        <div class="chat-container-bubble" v-if="conversations.length">
+          <div
+            v-for="({ id, role, content, metadata }, idx) in conversations"
+            :key="id"
+          >
+            <Bubble
+              :avatar="role === 'user' ? userAvatar : robotAvatar"
+              :content="role === 'assistant' ? markedContent(content) : content"
+              :content-render="
+                role === 'assistant' ? renderMarkdown : undefined
+              "
+              :loading="
+                role === 'assistant' &&
+                !content &&
+                idx === conversations.length - 1
+              "
+              :styles="{
+                content:
+                  role === 'user'
+                    ? {
+                        backgroundImage:
+                          'linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2))',
+                      }
+                    : {},
+              }"
+            >
+              <template v-if="role === 'assistant' && !isStreaming" #footer>
+                <div class="bubble-footer">
+                  <div class="action-toolbar">
+                    <div class="left">
+                      tokens:{{ metadata?.inputTokens }}↑|
+                      {{ metadata?.outputTokens }}‌↓|
+                      {{ Number(metadata?.timeCost).toFixed(2) }}
+                    </div>
+                    <div class="button-group">
+                      <el-tooltip
+                        placement="top"
+                        :content="$t('feedback.copy')"
+                        effect="light"
+                      >
+                        <img src="@/assets/svgs/dark_copy.svg" />
+                      </el-tooltip>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </template>
-        </Bubble>
-      </div>
+              </template>
+            </Bubble>
+          </div>
+        </div>
+        <Welcome class="welcome" v-else />
 
-      <div class="chat-container-bottom">
-        <div class="create-button">
-          <img src="@/assets/svgs/create.svg" alt="" />
-        </div>
-        <div class="chat-sender">
-          <textarea
-            v-model="userInput"
-            placeholder="在此输入你想了解的内容，输入Shift+Enter换行"
-            maxlength="2000"
-          />
-          <img src="@/assets/svgs/send_enabled.svg" alt="" />
-        </div>
+        <Sender :is-streaming="isStreaming" @send="onSend" class="sender" />
       </div>
 
       <CommonFooter />
@@ -152,123 +264,65 @@ onBeforeUnmount(() => {
 }
 
 .chat-container {
-  height: calc(100% - 40px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
+  height: calc(100% - 50px);
+
   padding: 16px;
-
-  .welcome {
-    margin-top: 200px;
-  }
-
-  &-bubble {
+  &-main {
     width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    flex: 1;
+    align-items: center;
+    justify-content: space-between;
 
-    .bubble-footer {
-      margin-top: 20px;
-      .action-toolbar {
-        border-top: 1px dashed var(--o-border-color-light);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 0 0 0;
+    .welcome {
+      margin-top: 200px;
+      flex: 1;
+    }
 
-        img {
-          width: 24px;
-          height: 24px;
-        }
+    .chat-container-bubble {
+      width: 100%;
+      height: 30%;
+      overflow: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex: 1;
 
-        .left {
-          font-size: 12px;
-          line-height: 18px;
-          color: var(--o-text-color-tertiary);
-        }
-
-        .button-group {
-          height: 24px;
+      .bubble-footer {
+        margin-top: 20px;
+        .action-toolbar {
+          border-top: 1px dashed var(--o-border-color-light);
           display: flex;
+          justify-content: space-between;
           align-items: center;
+          padding: 16px 0 0 0;
+
+          img {
+            width: 24px;
+            height: 24px;
+          }
+
+          .left {
+            font-size: 12px;
+            line-height: 18px;
+            color: var(--o-text-color-tertiary);
+          }
+
+          .button-group {
+            height: 24px;
+            display: flex;
+            align-items: center;
+          }
         }
       }
     }
   }
 
-  &-bottom {
-    width: 100%;
-    display: flex;
-    gap: 12px;
-    margin-bottom: 10px;
-
-    .create-button {
-      width: 56px;
-      height: 56px;
-      flex-shrink: 0;
-      background-color: var(--o-bg-color-base);
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-
-      img {
-        width: 40px;
-        height: 40px;
-        margin: 8px;
-      }
-    }
-
-    .chat-sender {
-      width: 100%;
-      height: 56px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      background-color: var(--o-bg-color-base);
-      position: relative;
-      padding-right: 60px;
-
-      textarea {
-        padding-top: 18px;
-        padding-left: 12px;
-        height: 100%;
-        border-radius: 8px;
-        width: 100%;
-        border: none;
-        outline: none;
-        color: var(--o-text-color-primary);
-        font-size: 16px;
-        background-color: var(--o-bg-color-base);
-        overflow: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-
-        font-family:
-          HarmonyOS_Sans_SC_Medium,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          Roboto,
-          Oxygen,
-          Ubuntu,
-          Cantarell,
-          'Open Sans',
-          'Helvetica Neue',
-          sans-serif;
-      }
-
-      img {
-        width: 40px;
-        height: 40px;
-        position: absolute;
-        right: 10px;
-        top: 8px;
-        cursor: pointer;
-      }
-    }
+  .sender {
+    margin-top: 25px;
   }
 }
 </style>
