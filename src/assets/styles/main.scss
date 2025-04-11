@@ -10,3 +10,17 @@ body {
   will-change: transform;
   transition: transform 0.3s ease;
 }
+
+// Linux平台窗口圆角样式
+html.platform-linux {
+  body {
+    background: transparent;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  
+  #app {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+}

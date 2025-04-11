@@ -5,6 +5,8 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
+import { isLinux } from '../common/platform';
+
 export interface allWindowType {
   [propName: string]: {
     id: string;
@@ -12,6 +14,17 @@ export interface allWindowType {
     hash: string;
   };
 }
+
+// Linux平台专用窗口配置，添加圆角支持
+const getLinuxSpecificOptions =
+  (): Partial<Electron.BrowserWindowConstructorOptions> => {
+    if (!isLinux) return {};
+
+    return {
+      transparent: true,
+      backgroundColor: '#00000000',
+    };
+  };
 
 export const options: allWindowType = {
   mainWindow: {
@@ -27,6 +40,7 @@ export const options: allWindowType = {
       alwaysOnTop: false,
       useContentSize: true,
       icon: 'dist/favicon.ico',
+      ...getLinuxSpecificOptions(),
     },
     hash: '/',
   },
@@ -35,14 +49,16 @@ export const options: allWindowType = {
     window: {
       width: 680,
       height: 960,
-      resizable: true,
-      show: false,
-      alwaysOnTop: false,
-      useContentSize: true,
       minWidth: 680,
       minHeight: 810,
+      resizable: true,
+      show: false,
+      skipTaskbar: true,
+      alwaysOnTop: true,
+      useContentSize: true,
       titleBarStyle: 'hidden',
       icon: 'dist/favicon.ico',
+      ...getLinuxSpecificOptions(),
     },
     hash: '/chat',
   },

@@ -9,6 +9,11 @@ export const electronProcess = window.eulercopilot
   ? window.eulercopilot.process
   : undefined;
 
+// 为了向后兼容，设置window.electronProcess
+if (window.eulercopilot && !window.electronProcess) {
+  window.electronProcess = window.eulercopilot.process;
+}
+
 export const ipcRenderer = window.eulercopilot
   ? window.eulercopilot.ipcRenderer
   : undefined;

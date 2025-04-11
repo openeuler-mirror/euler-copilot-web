@@ -11,6 +11,14 @@
 declare interface Window {
   onHtmlEventDispatch: any;
   eulercopilot: any;
+  // 添加electronProcess属性定义
+  electronProcess?: {
+    platform: 'win32' | 'darwin' | 'linux';
+    versions: {
+      electron: string;
+    };
+    env?: Record<string, any>;
+  };
 }
 
 declare interface ImportMetaEnv {
