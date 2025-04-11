@@ -18,9 +18,13 @@ const handleKeydown = (evt: any): any => {
 };
 
 const headerStyles = computed(() => {
-  return window.eulercopilot.process.platform === 'darwin'
-    ? { paddingLeft: 'calc(50% - 60px)' }
-    : { paddingRight: '150px' };
+  if (window.eulercopilot.process.platform === 'win32') {
+    return { paddingRight: '145px' };
+  } else if (window.eulercopilot.process.platform === 'linux') {
+    return { paddingRight: '120px' };
+  } else if (window.eulercopilot.process.platform === 'darwin') {
+    return { paddingLeft: 'calc(50% - 60px)' };
+  }
 });
 
 function storageListener(e: StorageEvent) {
