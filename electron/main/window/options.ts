@@ -26,10 +26,28 @@ const getLinuxSpecificOptions =
     };
   };
 
+// 调整Linux平台窗口尺寸，为16px阴影留出空间
+const adjustWindowSize = (
+  options: Electron.BrowserWindowConstructorOptions,
+): Electron.BrowserWindowConstructorOptions => {
+  if (!isLinux) return options;
+
+  // 阴影在各个方向增加16px，所以宽高各需要增加32px
+  const shadowOffset = 32; // 16px * 2
+  const result = { ...options };
+
+  if (result.width) result.width += shadowOffset;
+  if (result.height) result.height += shadowOffset;
+  if (result.minWidth) result.minWidth += shadowOffset;
+  if (result.minHeight) result.minHeight += shadowOffset;
+
+  return result;
+};
+
 export const options: allWindowType = {
   mainWindow: {
     id: 'mainWindow',
-    window: {
+    window: adjustWindowSize({
       width: 1440,
       height: 810,
       minWidth: 1440,
@@ -41,12 +59,12 @@ export const options: allWindowType = {
       useContentSize: true,
       icon: 'dist/favicon.ico',
       ...getLinuxSpecificOptions(),
-    },
+    }),
     hash: '/',
   },
   chatWindow: {
     id: 'chatWindow',
-    window: {
+    window: adjustWindowSize({
       width: 680,
       height: 960,
       minWidth: 680,
@@ -59,7 +77,7 @@ export const options: allWindowType = {
       titleBarStyle: 'hidden',
       icon: 'dist/favicon.ico',
       ...getLinuxSpecificOptions(),
-    },
+    }),
     hash: '/chat',
   },
 };

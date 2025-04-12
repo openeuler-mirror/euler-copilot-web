@@ -1,14 +1,10 @@
 <template>
   <!-- 简化后的容器，实际按钮通过JavaScript动态创建 -->
-  <div
-    class="linux-titlebar-container"
-    :class="{ 'dark-theme': isDarkTheme }"
-  ></div>
+  <div class="linux-titlebar-container"></div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
-import { useChangeThemeStore } from '@/store/conversation';
 
 // 窗口控制按钮图标定义
 const windowControlIcons = {
@@ -39,11 +35,7 @@ const windowControlIcons = {
 };
 
 const isMaximized = ref(false);
-const themeStore = useChangeThemeStore();
 const overlayRef = ref<HTMLElement | null>(null);
-
-// 动态监听主题变化
-const isDarkTheme = computed(() => themeStore.theme === 'dark');
 
 // 封装发送窗口控制命令 - 使用正确的IPC通道名
 const sendWindowControlCommand = (command) => {
@@ -65,8 +57,17 @@ const updateMaximizedState = (maximized: boolean) => {
   } else {
     document.documentElement.classList.remove('window-maximized');
   }
+};
 
-  console.log('Window maximized state:', maximized);
+// 更新覆盖层位置
+const updateOverlayPosition = (overlay) => {
+  if (isMaximized.value) {
+    overlay.style.top = '0';
+    overlay.style.right = '0';
+  } else {
+    overlay.style.top = '16px';
+    overlay.style.right = '16px';
+  }
 };
 
 // 创建固定的窗口控制按钮
@@ -92,6 +93,9 @@ const createWindowControls = () => {
     display: flex;
     justify-content: flex-end;
   `;
+
+  // 根据当前窗口状态调整位置
+  updateOverlayPosition(overlay);
 
   // 创建最小化按钮
   const minimizeBtn = document.createElement('button');
@@ -195,20 +199,14 @@ const buttonBaseStyle = `
   padding: 0;
 `;
 
-// 监听主题变化
-watch(
-  () => themeStore.theme,
-  (newTheme) => {
-    console.log('Theme changed to:', newTheme);
-  },
-  { immediate: true },
-);
-
 // 监听窗口最大化状态变化
 watch(
   () => isMaximized.value,
   () => {
     updateMaximizeButton();
+    if (overlayRef.value) {
+      updateOverlayPosition(overlayRef.value);
+    }
   },
 );
 
@@ -238,7 +236,6 @@ onMounted(() => {
     window.eulercopilot.ipcRenderer.on(
       'window-maximized-change',
       (maximized) => {
-        console.log('Window maximized state changed:', maximized);
         updateMaximizedState(maximized);
       },
     );
@@ -266,12 +263,10 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .linux-titlebar-container {
-  -webkit-app-region: no-drag;
   position: fixed;
   top: 0;
   right: 0;
   padding: 12px;
-  pointer-events: auto;
   visibility: hidden; /* 隐藏原始控件，使用DOM覆盖层代替 */
 }
 </style>
@@ -280,11 +275,12 @@ onBeforeUnmount(() => {
 /* 全局样式，确保按钮在所有状态下都能显示 */
 #linux-titlebar-overlay {
   position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  transition:
+    right 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 </style>
