@@ -25,8 +25,6 @@ html.platform-linux {
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.3);
     // 添加过渡动画
     transition:
-      width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-      height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
       border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -35,7 +33,7 @@ html.platform-linux {
     border-radius: 12px;
     overflow: hidden;
     // 添加过渡动画
-    transition:border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   // 窗口最大化状态下取消圆角和阴影
@@ -51,8 +49,6 @@ html.platform-linux {
       box-shadow: none !important;
       // 保持过渡动画一致性
       transition:
-        width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-        height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
         border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1),
         box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
