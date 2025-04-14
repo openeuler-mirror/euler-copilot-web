@@ -212,37 +212,36 @@ watch(
 
 // 组件挂载时创建控制按钮
 onMounted(() => {
-  console.log('LinuxTitleBar mounted');
+  // 初始化窗口控制按钮，无论 IPC 是否可用
+  const initWindowControls = async () => {
+    try {
+      // 如果 IPC 可用，先获取窗口状态
+      if (window.eulercopilot && window.eulercopilot.ipcRenderer) {
+        const maximized = await window.eulercopilot.ipcRenderer
+          .invoke('copilot:window-is-maximized')
+          .catch(() => false); // 获取失败时默认为非最大化状态
 
-  // 监听窗口最大化状态变化事件
-  if (window.eulercopilot && window.eulercopilot.ipcRenderer) {
-    // 首先获取当前窗口是否已经最大化
-    window.eulercopilot.ipcRenderer
-      .invoke('copilot:window-is-maximized')
-      .then((maximized) => {
+        // 更新窗口最大化状态
         updateMaximizedState(maximized);
 
-        // 创建控制按钮
-        createWindowControls();
-      })
-      .catch((error) => {
-        console.error('Failed to get window maximized state:', error);
+        // 监听窗口最大化状态变化
+        window.eulercopilot.ipcRenderer.on(
+          'window-maximized-change',
+          (maximized) => {
+            updateMaximizedState(maximized);
+          },
+        );
+      }
+    } catch (error) {
+      console.error('Failed to initialize window controls:', error);
+    } finally {
+      // 无论状态获取成功与否，都创建控制按钮
+      createWindowControls();
+    }
+  };
 
-        // 即使获取状态失败也创建控制按钮
-        createWindowControls();
-      });
-
-    // 监听窗口最大化状态变化
-    window.eulercopilot.ipcRenderer.on(
-      'window-maximized-change',
-      (maximized) => {
-        updateMaximizedState(maximized);
-      },
-    );
-  } else {
-    // 如果没有IPC通道，仍然创建控制按钮
-    createWindowControls();
-  }
+  // 执行初始化
+  initWindowControls();
 });
 
 // 组件卸载时移除事件监听器和覆盖层
