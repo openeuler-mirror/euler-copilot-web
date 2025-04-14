@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -34,8 +34,10 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
-
-const baseURL = import.meta.env.MODE === 'electron-production' ? import.meta.env.VITE_BASE_PROXY_URL : './';
+const baseURL =
+  import.meta.env.MODE === 'electron-production'
+    ? import.meta.env.VITE_BASE_PROXY_URL
+    : './';
 // 创建 axios 实例
 export const server = axios.create({
   baseURL,
