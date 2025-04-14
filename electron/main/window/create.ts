@@ -113,8 +113,6 @@ export function createChatWindow(): BrowserWindow {
 
   chatWindow = createWindow(chatWindowOptions, hash, 'chatWindow');
 
-  // 移除这里的快捷键注册，现在在应用启动时全局注册
-
   return chatWindow;
 }
 
