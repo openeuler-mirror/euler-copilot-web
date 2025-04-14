@@ -22,7 +22,7 @@ interface ICacheConf {
   theme: 'system' | 'light' | 'dark';
 }
 
-const commonCacheConf: Partial<ICacheConf> = {};
+let commonCacheConf: Partial<ICacheConf> = {};
 
 const osLocale = processZhLocale(
   (app.getPreferredSystemLanguages()?.[0] ?? 'en').toLowerCase(),
@@ -59,7 +59,7 @@ app.on('activate', () => {
 async function onReady() {
   try {
     await mkdirpIgnoreError(cachePath);
-    await getUserDefinedConf(commonCacheConfPath);
+    commonCacheConf = await getUserDefinedConf(commonCacheConfPath);
     const [nlsConfig, themeConfig] = await Promise.all([
       resolveNlsConfiguration(),
       resolveThemeConfiguration(),
@@ -166,6 +166,7 @@ function getUserDefinedConf(dir: string) {
     if (!fs.existsSync(dir)) {
       fs.writeFileSync(dir, JSON.stringify({}));
     }
+
     return JSON.parse(fs.readFileSync(dir, 'utf-8'));
   } catch (error) {
     // Ignore error

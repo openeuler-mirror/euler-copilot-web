@@ -11,6 +11,7 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 import NotFoundComponent from '@/views/404.vue';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { dynamicRoutes } from './route';
+import { isElectron } from '@/utils/electron';
 
 const staticRoutes: Array<RouteRecordRaw> = [
   {
@@ -74,7 +75,8 @@ const staticRoutes: Array<RouteRecordRaw> = [
   },
 ];
 
-const routes = [...staticRoutes, ...dynamicRoutes];
+const dynamic = isElectron ? dynamicRoutes : [];
+const routes = [...staticRoutes, ...dynamic];
 
 const router = createRouter({
   history: createWebHashHistory(

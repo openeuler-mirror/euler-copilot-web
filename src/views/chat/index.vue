@@ -9,6 +9,7 @@ import robotAvatar from '@/assets/svgs/robot.svg';
 import { computed, ref, onBeforeMount, onBeforeUnmount, h } from 'vue';
 import { fetchStream } from '@/utils/fetchStream';
 import marked from '@/utils/marked';
+import { useHistorySessionStore } from '@/store/historySession';
 
 const headerStyles = computed(() => {
   if (window.eulercopilot.process.platform === 'win32') {
@@ -125,13 +126,14 @@ function useConversations() {
 }
 
 function onSend(q: string) {
+  const { currentSelectedSession } = useHistorySessionStore();
   conversations.value.push({
     id: `user-${conversations.value.length / 2 + 1}`,
     content: q,
     role: 'user',
   });
   isStreaming.value = true;
-  queryStream(q, '1d190929-910d-49e7-8064-39f3bdbee695');
+  queryStream(q, currentSelectedSession);
 }
 
 const markedContent = computed(
