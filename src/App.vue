@@ -30,8 +30,8 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .eulercopilot-main {
-  width: 100vw;
-  height: 100vh;
+  width: 100% !important;
+  height: 100% !important;
   position: relative;
 }
 

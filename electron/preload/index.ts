@@ -9,6 +9,13 @@ import { ipcRenderer, contextBridge } from 'electron';
 
 function validateIPC(channel: string): true | never {
   if (!channel || !channel.startsWith('copilot:')) {
+    // 允许窗口状态变化事件通过验证
+    if (
+      channel === 'window-maximized-change' ||
+      channel === 'window-is-maximized'
+    ) {
+      return true;
+    }
     throw new Error(`Unsupported event IPC channel '${channel}'`);
   }
 
@@ -19,8 +26,31 @@ const globals = {
   ipcRenderer: {
     invoke(channel: string, ...args: any[]): Promise<any> {
       validateIPC(channel);
-
       return ipcRenderer.invoke(channel, ...args);
+    },
+
+    // 添加事件监听方法
+    on(channel: string, listener: (...args: any[]) => void): void {
+      validateIPC(channel);
+      ipcRenderer.on(channel, (event, ...args) => listener(...args));
+    },
+
+    // 添加一次性事件监听方法
+    once(channel: string, listener: (...args: any[]) => void): void {
+      validateIPC(channel);
+      ipcRenderer.once(channel, (event, ...args) => listener(...args));
+    },
+
+    // 添加移除特定事件监听器的方法
+    removeListener(channel: string, listener: (...args: any[]) => void): void {
+      validateIPC(channel);
+      ipcRenderer.removeListener(channel, listener);
+    },
+
+    // 添加移除所有事件监听器的方法
+    removeAllListeners(channel: string): void {
+      validateIPC(channel);
+      ipcRenderer.removeAllListeners(channel);
     },
   },
 
