@@ -113,12 +113,7 @@ export function createChatWindow(): BrowserWindow {
 
   chatWindow = createWindow(chatWindowOptions, hash, 'chatWindow');
 
-  const shortcutKey =
-    process.platform === 'darwin' ? 'Cmd+Option+O' : 'Ctrl+Alt+O';
-
-  globalShortcut.register(shortcutKey, () => {
-    chatWindow && chatWindow.show();
-  });
+  // 移除这里的快捷键注册，现在在应用启动时全局注册
 
   return chatWindow;
 }
