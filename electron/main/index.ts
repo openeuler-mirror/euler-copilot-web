@@ -1,3 +1,5 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
+// licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
 //      http://license.coscl.org.cn/MulanPSL2
@@ -12,8 +14,9 @@ import {
   globalShortcut,
   nativeTheme,
   BrowserWindow,
+  dialog,
 } from 'electron';
-import { createDefaultWindow, createTray, createChatWindow } from './window';
+import { createDefaultWindow, createChatWindow, createTray } from './window';
 import type { INLSConfiguration } from './common/nls';
 import { cachePath, commonCacheConfPath, updateConf } from './common/conf';
 
@@ -28,8 +31,70 @@ const osLocale = processZhLocale(
   (app.getPreferredSystemLanguages()?.[0] ?? 'en').toLowerCase(),
 );
 
+// 定义全局快捷键
+const CHAT_SHORTCUT_KEY =
+  process.platform === 'darwin' ? 'Cmd+Option+O' : 'Ctrl+Alt+O';
+
 // 添加表示应用是否正在退出的标志位
 let isQuitting = false;
+
+// 添加是否已注册快捷键的标志
+let isShortcutRegistered = false;
+
+// 在macOS上，检查是否已经获得辅助功能权限
+function checkAccessibilityPermission(): boolean {
+  if (process.platform !== 'darwin') return true;
+
+  try {
+    return app.isAccessibilitySupportEnabled();
+  } catch (err) {
+    console.error('Failed to check accessibility permission:', err);
+    return false;
+  }
+}
+
+// 注册全局快捷键
+function registerGlobalShortcut() {
+  // 如果已经注册了快捷键，先取消注册
+  if (isShortcutRegistered) {
+    globalShortcut.unregister(CHAT_SHORTCUT_KEY);
+  }
+
+  // 注册新的快捷键
+  const success = globalShortcut.register(CHAT_SHORTCUT_KEY, () => {
+    const chatWindow = BrowserWindow.getAllWindows().find((win) =>
+      win.webContents.getURL().includes('chat'),
+    );
+
+    if (chatWindow) {
+      if (chatWindow.isMinimized()) chatWindow.restore();
+      chatWindow.show();
+      chatWindow.focus();
+    } else {
+      // 如果没有找到聊天窗口，则创建一个新的
+      const newChatWindow = createChatWindow();
+      newChatWindow.show();
+      newChatWindow.focus();
+    }
+  });
+
+  isShortcutRegistered = success;
+
+  if (!success) {
+    console.error('Failed to register global shortcut');
+    // 在macOS上，提示用户需要授予辅助功能权限
+    if (process.platform === 'darwin' && !checkAccessibilityPermission()) {
+      dialog.showMessageBox({
+        type: 'info',
+        title: '需要辅助功能权限',
+        message: `要使用快捷键 ${CHAT_SHORTCUT_KEY} 功能，请在系统偏好设置中，授予应用辅助功能权限。`,
+        buttons: ['好的'],
+      });
+    }
+  }
+
+  return success;
+}
 
 app.once('ready', () => {
   onReady();
@@ -51,7 +116,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-// 在macOS上，当应用图标被点击时重置退出标志
+// 在macOS上，当应用图标被点击时重置退出标志和显示主窗口
 app.on('activate', () => {
   isQuitting = false;
 });
@@ -71,6 +136,27 @@ async function onReady() {
     process.env['EULERCOPILOT_CACHE_PATH'] = cachePath || '';
 
     await startup();
+
+    // 注册全局快捷键
+    registerGlobalShortcut();
+
+    // 在macOS上，监听辅助功能权限变化，重新注册快捷键
+    if (process.platform === 'darwin') {
+      app.accessibilitySupportEnabled = checkAccessibilityPermission();
+
+      app.on(
+        'accessibility-support-changed',
+        (event, accessibilitySupportEnabled) => {
+          console.log(
+            'Accessibility support changed:',
+            accessibilitySupportEnabled,
+          );
+          if (accessibilitySupportEnabled) {
+            registerGlobalShortcut();
+          }
+        },
+      );
+    }
   } catch (error) {}
 }
 
@@ -84,16 +170,21 @@ async function startup() {
 
   win = createDefaultWindow();
   chatWindow = createChatWindow();
+
   app.on('activate', () => {
+    isQuitting = false;
     if (BrowserWindow.getAllWindows().length === 0) {
+      // 如果没有窗口，则创建新窗口
       win = createDefaultWindow();
       chatWindow = createChatWindow();
+    } else {
+      // 如果窗口存在但被隐藏，则显示主窗口
+      if (win && !win.isDestroyed()) {
+        win.show();
+      }
     }
   });
 
-  tray.on('click', () => {
-    win.show();
-  });
   win.on('close', (event) => {
     // 如果应用正在退出（例如通过Cmd+Q触发），则允许窗口正常关闭
     if (isQuitting) {

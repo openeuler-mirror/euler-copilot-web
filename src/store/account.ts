@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -49,7 +49,7 @@ export const useAccountStore = defineStore('account', () => {
 
   async function getAuthUrl(action: string) {
     const [_, res] = await api.queryAuthUrl(action);
-    if (!_&&res) {
+    if (!_ && res) {
       return res.result.url;
     }
     return null;
