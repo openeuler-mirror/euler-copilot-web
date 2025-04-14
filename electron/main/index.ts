@@ -51,7 +51,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-// 在macOS上，当应用图标被点击时重置退出标志
+// 在macOS上，当应用图标被点击时重置退出标志和显示主窗口
 app.on('activate', () => {
   isQuitting = false;
 });
@@ -84,16 +84,21 @@ async function startup() {
 
   win = createDefaultWindow();
   chatWindow = createChatWindow();
+
   app.on('activate', () => {
+    isQuitting = false;
     if (BrowserWindow.getAllWindows().length === 0) {
+      // 如果没有窗口，则创建新窗口
       win = createDefaultWindow();
       chatWindow = createChatWindow();
+    } else {
+      // 如果窗口存在但被隐藏，则显示主窗口
+      if (win && !win.isDestroyed()) {
+        win.show();
+      }
     }
   });
 
-  tray.on('click', () => {
-    win.show();
-  });
   win.on('close', (event) => {
     // 如果应用正在退出（例如通过Cmd+Q触发），则允许窗口正常关闭
     if (isQuitting) {

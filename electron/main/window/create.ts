@@ -63,13 +63,6 @@ function setupWindowControls(win: BrowserWindow) {
       win.webContents.send('window-maximized-change', false);
     }
   });
-
-  // 添加关闭前确认
-  win.on('close', (e) => {
-    if (win === defaultWindow) {
-      // 可以在这里添加关闭确认逻辑
-    }
-  });
 }
 
 let defaultWindow: BrowserWindow | null = null;
