@@ -23,7 +23,7 @@ import { api } from '@/apis';
 import { useI18n } from 'vue-i18n';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-import appIcon from '@/assets/images/app.png';
+import appIcon from '@/assets/svgs/myApp.svg';
 import { IconChevronUp } from '@computing/opendesign-icons';
 import router from 'src/router';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());

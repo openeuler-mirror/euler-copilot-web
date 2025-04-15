@@ -70,7 +70,7 @@
                 <el-icon class="menu-icon">
                   <img
                     class="create-button__icon"
-                    src="@/assets/svgs/robot_icon.svg"
+                    src="@/assets/svgs/defaultIcon.svg"
                   />
                 </el-icon>
               </div>

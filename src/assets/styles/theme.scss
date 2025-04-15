@@ -1,8 +1,6 @@
 body[theme='dark'] {
   background-color: #000000;
-  --o-bg-image: url('../../assets/images/dark_background.png');
-  --o-sider: url('../../assets/images/dark_sider.png');
-  --o-sider-hover: url('../../assets/images/dark_sider-hover.png');
+  --o-bg-image: url('../../assets/svgs/dark_background.svg');
   --no-work-flow: url('../../assets/images/dark_no_flow.png');
   --o-button-color: #576372;
   --o-button-border-color: #576372;
@@ -77,9 +75,7 @@ body[theme='dark'] {
 
 body[theme='light'] {
   background-color: #ffffff;
-  --o-bg-image: url('../../assets/images/light_background.png');
-  --o-sider: url('../../assets/images/light_sider.png');
-  --o-sider-hover: url('../../assets/images/light_sider-hover.png');
+  --o-bg-image: url('../../assets/svgs/light_background.svg');
   --no-work-flow: url('../../assets/images/light_no_flow.png');
   --o-button-color: #c3cedf;
   --o-button-border-color: #d3dce9;
