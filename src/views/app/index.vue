@@ -150,7 +150,7 @@ import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
-import RobotIcon from '../../assets/svgs/robot_icon.svg';
+import DefaultAppIcon from '../../assets/svgs/defaultIcon.svg';
 import { storeToRefs } from 'pinia';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import CustomLoading from '../customLoading/index.vue';
@@ -177,7 +177,7 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
 };
 
 const getImgBg = (appItem) => {
-  return appItem.icon || RobotIcon;
+  return appItem.icon || DefaultAppIcon;
 };
 
 const handleCreateApp = () => {

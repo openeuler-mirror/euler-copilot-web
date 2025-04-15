@@ -18,13 +18,13 @@ import { watch } from 'vue';
 import i18n from 'src/i18n';
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import CopilotIcon from '@/assets/images/routerCopilot.png';
-import CopilotIconSelected from '@/assets/images/routerCopilotSelected.png';
-import WitchainDIcon from '@/assets/images/witChainD.png';
-import ApiIcon from '@/assets/images/routerApi.png';
+import CopilotIcon from '@/assets/svgs/routerCopilot.svg';
+import CopilotIconSelected from '@/assets/svgs/routerCopilotSelected.svg';
+import ApiIcon from '@/assets/svgs/routerApi.svg';
 import ApiIconSelected from '@/assets/svgs/routerApiSelected.svg';
-import AppIcon from '@/assets/images/routerApp.png';
+import AppIcon from '@/assets/svgs/routerApp.svg';
 import AppIconSelected from '@/assets/svgs/routerAppSelected.svg';
+import WitchainDIcon from '@/assets/svgs/witChainD.svg';
 import WitchainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
 import tools from '../tools/index.vue';
 

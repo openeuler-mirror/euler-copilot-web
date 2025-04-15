@@ -62,7 +62,7 @@
     </el-dropdown>
     <div class="dividerBox"></div>
     <div class="optimize" @click="layoutGraph('LR')">
-      <img src="@/assets/images/optimize.png" />
+      <img src="@/assets/svgs/optimize.svg" />
     </div>
   </div>
 </template>
