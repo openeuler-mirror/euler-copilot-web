@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=EulerCopilot
+Exec=/opt/EulerCopilot/euler-copilot-desktop %U
+Terminal=false
+Type=Application
+Icon=euler-copilot-desktop
+StartupWMClass=EulerCopilot
+Comment=openEuler 大模型智能系统
+Categories=Utility;
