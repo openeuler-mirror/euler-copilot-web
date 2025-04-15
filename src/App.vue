@@ -30,6 +30,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .eulercopilot-main {
+  background-color: var(--o-main-bg-color);
   width: 100% !important;
   height: 100% !important;
   position: relative;

@@ -122,42 +122,36 @@ const handleSubmit = () => {
 }
 
 .cancel_button_light:not(.is-disabled):focus {
-  // background-color: white !important;
   color: black !important;
   border-color: #4e5865 !important;
 }
 
 .cancel_button_light:not(.is-disabled):active {
-  // background-color: white !important;
   color: #6395fd !important;
   border-color: #6395fd !important;
 }
 
 .cancel_button_light:not(.is-disabled):hover {
-  // background-color: white !important;
   color: #7aa5ff !important;
   border-color: #7aa5ff !important;
 }
-//
+
 .cancel_button_dark:not(.is-disabled) {
   color: #4e5865 !important;
   border-color: black !important;
 }
 
 .cancel_button_dark:not(.is-disabled):focus {
-  // background-color: white !important;
   color: #4e5865 !important;
   border-color: black !important;
 }
 
 .cancel_button_dark:not(.is-disabled):active {
-  // background-color: white !important;
   color: #6395fd !important;
   border-color: #6395fd !important;
 }
 
 .ccancel_button_dark:not(.is-disabled):hover {
-  // background-color: white !important;
   color: #7aa5ff !important;
   border-color: #7aa5ff !important;
 }

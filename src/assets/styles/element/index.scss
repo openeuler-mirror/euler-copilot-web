@@ -17,25 +17,21 @@
 }
 
 .el-button:not(.is-disabled) {
-  // background-color: white !important;
   color: var(--o-button-color) !important;
   border-color: var(--o-button-border-color) !important;
 }
 
 .el-button:not(.is-disabled):focus {
-  // background-color: white !important;
   color: var(--o-button-color) !important;
   border-color: var(--o-button-border-color) !important;
 }
 
 .el-button:not(.is-disabled):active {
-  // background-color: white !important;
   color: #6395fd !important;
   border-color: #6395fd !important;
 }
 
 .el-button:not(.is-disabled):hover {
-  // background-color: white !important;
   color: #7aa5ff !important;
   border-color: #7aa5ff !important;
 }
