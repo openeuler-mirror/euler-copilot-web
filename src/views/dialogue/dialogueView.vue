@@ -529,8 +529,6 @@ watch(
     }
 
     &_main {
-      // background-color: pink;
-      // height: 336px;
       .main {
         display: flex;
         flex-direction: column;
@@ -604,7 +602,6 @@ watch(
 }
 
 #sun-icon {
-  // background-color: pink;
   &:hover {
     filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
       brightness(94%) contrast(83%);

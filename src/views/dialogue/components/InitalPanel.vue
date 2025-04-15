@@ -250,7 +250,6 @@ onMounted(() => {
 }
 
 .inital-panel {
-  // background-color: var(--o-bg-color-base);
   background-color: transparent;
   border-radius: 8px;
   padding-top: 48px;
