@@ -76,8 +76,6 @@ export default {
     beyond_openEuler_describe: '智能调优',
     openEuler_use_cases: 'AI容器栈智能助手',
     openEuler_use_cases_describe: 'AI容器栈',
-    command_generation: 'shell命令生成',
-    command_generation_describe: '帮助用户生成单条命令或复杂命令',
     question: '推荐问题',
     smart_shell_describe:
       '欢迎探索首款自然语言交互的智能操作系统：一句话，即享智能诊断与优化',

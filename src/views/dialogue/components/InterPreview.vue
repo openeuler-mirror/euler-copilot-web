@@ -2,7 +2,7 @@
   <div class="interPreviewBox">
     <div v-if="interPreviewInfo?.name?.length" class="preTop">
       <div class="preTopContent">
-        <img src="@/assets/images/preTitleIcon.png" class="preTitleIcon" />
+        <img src="@/assets/svgs/myApp.svg" class="preTitleIcon" />
         <div class="preMainAppName">
           {{ interPreviewInfo.name }}
         </div>
