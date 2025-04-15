@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -14,9 +14,17 @@ import type { FcResponse } from 'src/apis/server';
  * 验证用户信息
  * @returns
  */
-export const getApiKey = (): Promise<[any, FcResponse<{
-  api_key: string;
-}> | undefined]> => {
+export const getApiKey = (): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          api_key: string;
+        }>
+      | undefined
+    ),
+  ]
+> => {
   return get('/api/auth/key');
 };
 

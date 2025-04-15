@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 import { post, get, del, put } from 'src/apis/server';
 import type { FcResponse } from 'src/apis/server';
 import {

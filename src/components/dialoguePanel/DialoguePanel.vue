@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import marked from 'src/utils/marked.js';
+import marked from 'src/utils/marked';
 import { computed, ref, withDefaults } from 'vue';
 import { writeText } from 'src/utils';
 import {
@@ -399,7 +399,7 @@ const selectQuestion = (item: Suggest) => {
 };
 
 const popperSize = () => {
-  if (language.value == 'EN') {
+  if (language.value == 'en') {
     size.width = 418;
     size.height = 496;
     return size;
@@ -934,8 +934,6 @@ const searchAppName = (appId) => {
   }
 }
 .dialogue-panel {
-  // padding-right: 25px;
-  // padding: 0px 15%;
   width: 1000px;
   &__user {
     position: relative;

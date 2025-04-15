@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { defineStore } from 'pinia';
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import {
   AppShowType,
@@ -89,15 +89,15 @@ export const useSessionStore = defineStore('conversation', () => {
    **/
   function splitDataString(input) {
     if (input.includes('"data: ')) {
-        return [input];
+      return [input];
     }
-    const parts = input.split(/data: /g).filter(part => part.trim() !== '');
+    const parts = input.split(/data: /g).filter((part) => part.trim() !== '');
     if (input.startsWith('data: ')) {
-        return parts.map(part => 'data: ' + part);
+      return parts.map((part) => 'data: ' + part);
     } else {
-        return [parts[0], ...parts.slice(1).map(part => 'data: ' + part)];
+      return [parts[0], ...parts.slice(1).map((part) => 'data: ' + part)];
     }
-}
+  }
   /**
    * 请求流式数据
    * @param params
@@ -116,7 +116,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number,
   ): Promise<void> => {
-    const language = localStorage.getItem('localeLang') === 'EN' ? 'en' : 'zh';
+    const language = localStorage.getItem('localeLang');
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
     // 当前问答在整个问答记录中的索引 openouler有什么ai特性
@@ -881,11 +881,43 @@ export const useSessionStore = defineStore('conversation', () => {
   };
 });
 
+import { electronProcess } from '@/utils/electron';
 export const useChangeThemeStore = defineStore('theme', () => {
   const theme = ref('');
-  if (localStorage.getItem('theme')) {
-    theme.value = localStorage.getItem('theme') || 'dark';
+  // if (localStorage.getItem('theme')) {
+  //   theme.value = localStorage.getItem('theme') || 'dark';
+  // }
+
+  function updateTheme(t: 'dark' | 'light') {
+    theme.value = t;
   }
+
+  function storageListener(e: StorageEvent) {
+    if (e.key === 'theme') {
+      theme.value = e.newValue || 'light';
+      document.body.setAttribute('theme', theme.value);
+    }
+  }
+
+  watch(
+    () => theme.value,
+    (newVal) => {
+      localStorage.setItem('theme', newVal);
+      document.body.setAttribute('theme', newVal);
+    },
+  );
+
+  onMounted(() => {
+    if (electronProcess) {
+      electronProcess.env['EULERCOPILOT_THEME'] &&
+        updateTheme(electronProcess.env['EULERCOPILOT_THEME']);
+    }
+    window.addEventListener('storage', storageListener);
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('storage', storageListener);
+  });
   return {
     theme,
   };

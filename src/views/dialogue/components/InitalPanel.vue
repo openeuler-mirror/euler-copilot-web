@@ -3,7 +3,6 @@ import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
 import { IconLoad } from '@computing/opendesign-icons';
 import { useChangeThemeStore } from 'src/store';
-import 'xterm/css/xterm.css';
 import router from 'src/router';
 const themeStore = useChangeThemeStore();
 import { useRoute } from 'vue-router';
@@ -132,11 +131,6 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.dialogue-shell {
-  width: 100%;
-  height: 100%;
-}
-
 .sidenav {
   height: 100%;
   /* 100% 全高 */
@@ -155,7 +149,6 @@ onMounted(() => {
   /* 禁用水平滚动 */
   padding-top: 60px;
   /* 将内容从顶部放置 60px */
-  // transition: 0.5s; /* 0.5 秒过渡效果在侧导航中滑动 */
 }
 
 /* 导航菜单链接 */
