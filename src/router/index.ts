@@ -58,13 +58,6 @@ const staticRoutes: Array<RouteRecordRaw> = [
       import('src/views/dialogue/Copilot.vue'),
   },
   {
-    path: '/copilot',
-    name: 'copilot',
-    component: (): Promise<typeof import('src/views/dialogue/Copilot.vue')> =>
-      import('src/views/dialogue/Copilot.vue'),
-  },
-
-  {
     path: '/404',
     component: NotFoundComponent,
     name: 'NotFound',
