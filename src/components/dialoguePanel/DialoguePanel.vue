@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import marked from 'src/utils/marked';
-import { computed, ref, withDefaults } from 'vue';
-import { writeText } from 'src/utils';
+import './DialoguePanel.scss'
+import { useDialogueActions } from './hooks/useDialogueActions'
+import { useMarkdownParser } from './hooks/useMarkdownParser'
+import { ref, withDefaults, toRef } from 'vue';
 import {
   useSessionStore,
   useChangeThemeStore,
@@ -11,14 +12,11 @@ import {
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
-import xss from 'xss';
-import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import DialogueThought from './DialogueThought.vue';
 import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
-import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
@@ -36,9 +34,9 @@ export interface DialoguePanelProps {
   // 文本内容
   inputParams: object;
   // 文本内容
-  content?: string[] | string;
+  content: string[] | string;
   // 当前选中的第n次回答的索引，默认是最新回答
-  currentSelected?: number;
+  currentSelected: number;
   // 文本内容是否生成完毕
   isFinish?: boolean;
   // 是否在loading
@@ -91,7 +89,16 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   // currentSelected: 0,
   needRegernerate: false,
 });
-const thoughtContent = ref('');
+
+const { handleCopy, handleFeedback} = useDialogueActions(
+  toRef(props, 'content'),
+  toRef(props, 'currentSelected')
+);
+
+const { thoughtContent,contentAfterMark } = useMarkdownParser(
+  toRef(props, 'content'),
+  toRef(props, 'currentSelected')
+)
 const index = ref(0);
 const isLike = ref(props.isLikeList);
 const emits = defineEmits<{
@@ -114,7 +121,6 @@ const emits = defineEmits<{
 }>();
 
 // #region ----------------------------------------< pause and regenerate >--------------------------------------
-
 /**
  * 暂停和重新生成问答
  */
@@ -136,61 +142,6 @@ const handlePauseAndReGenerate = (cid?: number) => {
 
 // #endregion
 
-// 复制
-const handleCopy = (): void => {
-  if (!props.content || !Array.isArray(props.content)) {
-    errorMsg(i18n.global.t('feedback.copied_failed'));
-    return;
-  }
-  writeText(props.content[props.currentSelected]);
-  successMsg(i18n.global.t('feedback.copied_successfully'));
-  return;
-};
-/**
- * 赞同与反对
- */
-const handleSupport = async (
-  type: 'support' | 'against' | 'report',
-): Promise<void> => {
-  if (type === 'support') {
-    const qaRecordId = props.recordList[index.value];
-    emits('commont', type, props.cid, qaRecordId, index.value);
-    isLike.value[index.value] = 1;
-    handleIsLike();
-  } else if (type === 'against') {
-    isAgainstVisible.value = true;
-  } else {
-    isReportVisible.value = true;
-  }
-};
-
-/**
- * 反对
- * @param reason
- * @param reasionLink
- * @param reasonDescription
- */
-const handleAgainst = async (
-  reason: string,
-  reasionLink?: string,
-  reasonDescription?: string,
-): Promise<void> => {
-  const qaRecordId = props.recordList[index.value];
-  emits(
-    'commont',
-    'against',
-    props.cid,
-    qaRecordId,
-    index.value,
-    reason,
-    reasionLink,
-    reasonDescription,
-  );
-  isAgainstVisible.value = false;
-  isLike.value[index.value] = 0;
-  handleIsLike();
-};
-
 const handleOutsideClick = () => {
   isAgainstVisible.value = false;
 };
@@ -203,7 +154,7 @@ const unbindDocumentClick = () => {
   document.removeEventListener('click', handleOutsideClick);
 };
 
-// 举报功能
+// 举报功能 目前未实现
 const handleReport = async (reason: string): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   emits('report', qaRecordId, reason);
@@ -229,41 +180,6 @@ const isAgainstVisible = ref<boolean>(false);
 const isReportVisible = ref<boolean>(false);
 
 const txt2imgPathZoom = ref('');
-// 解析完成后的文本内容
-const contentAfterMark = computed(() => {
-  if (!props.content) {
-    return '';
-  }
-  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
-  let str = marked.parse(
-    xss(props.content[props.currentSelected])
-      .replace(/&gt;/g, '>')
-      .replace(/&lt;/g, '<'),
-  );
-  //将table提取出来中加一个<div>父节点控制溢出
-  let tableStart = str.indexOf('<table>');
-  if (tableStart !== -1) {
-    str =
-      str.slice(0, tableStart) +
-      '<div class="overflowTable">' +
-      str
-        .slice(tableStart, str.indexOf('</table>') + '</table>'.length)
-        .replace('</table>', '</table></div>') +
-      str.slice(str.indexOf('</table>') + '</table>'.length);
-  }
-  //仅获取第一个遇到的 think 标签
-  const startIndex = str.indexOf('<think>');
-  const endIndex = str.indexOf('</think>');
-  if (startIndex !== -1 && endIndex === -1) {
-    // 计算 <a> 之后的字符串
-    const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
-    thoughtContent.value = contentAfterA;
-    return '';
-  } else if (startIndex !== -1 && endIndex !== -1) {
-    thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
-  }
-  return str.replace(/<think>([\s\S]*?)<\/think>/g, '');
-});
 
 const prePageHandle = (cid: number) => {
   thoughtContent.value = '';
@@ -272,7 +188,7 @@ const prePageHandle = (cid: number) => {
     index.value = 0;
   } else {
     index.value--;
-    handleIsLike();
+    // handleIsLike();
   }
 };
 
@@ -283,49 +199,9 @@ const nextPageHandle = (cid: number) => {
     index.value = (props.isLikeList as number[]).length - 1;
   } else {
     index.value++;
-    handleIsLike();
+    // handleIsLike();
   }
 };
-
-const isSupport = ref();
-const isAgainst = ref();
-
-const handleIsLike = () => {
-  let a = 2;
-  if (isLike.value === undefined) {
-    return;
-  } else {
-    if (index.value <= isLike.value.length && isLike.value.length !== 0) {
-      a = isLike.value[index.value];
-    }
-    if (a !== 2) {
-      isSupport.value = Boolean(a);
-      isAgainst.value = !a;
-    } else {
-      isSupport.value = 0;
-      isAgainst.value = 0;
-    }
-  }
-};
-
-onMounted(() => {
-  isLike.value = props.isLikeList;
-  setTimeout(() => {
-    handleIsLike();
-  }, 200);
-});
-
-watch(
-  () => props.isLikeList,
-  () => {
-    if (isLike.value.length === props.isLikeList?.length) {
-      handleIsLike();
-    } else {
-      isLike.value = props.isLikeList;
-      handleIsLike();
-    }
-  },
-);
 
 watch(
   () => props.test,
@@ -596,19 +472,19 @@ const searchAppName = (appId) => {
               effect="light"
             >
               <img
-                class="button-icon simg"
+                class="button-icon"
                 v-if="!isSupport && themeStore.theme === 'dark'"
                 src="@/assets/svgs/dark_support.svg"
                 @click="handleSupport('support')"
               />
               <img
-                class="button-icon simg"
+                class="button-icon"
                 v-if="!isSupport && themeStore.theme === 'light'"
                 src="@/assets/svgs/light_support.svg"
                 @click="handleSupport('support')"
               />
               <img
-                class="button-icon simg"
+                class="button-icon"
                 v-if="isSupport"
                 src="@/assets/svgs/support_active.svg"
                 @click="handleSupport('support')"
@@ -715,636 +591,3 @@ const searchAppName = (appId) => {
     <img :src="txt2imgPathZoom" />
   </div>
 </template>
-
-<style lang="scss">
-.button-group {
-  text-align: center;
-  .confirm-button {
-    margin-top: 32px;
-    width: 64px;
-    height: 24px;
-    border-radius: 1;
-    font-size: 12px;
-  }
-}
-.overflowTable {
-  overflow-x: scroll;
-}
-
-.test {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 14px;
-  background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-  background-clip: text;
-  color: transparent;
-  line-height: 32px;
-}
-.answer_img_mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-
-  img {
-    max-width: 100%;
-    max-height: 100%;
-  }
-
-  span {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
-  }
-}
-
-.el-popper[role='tooltip'] {
-  max-width: 500px;
-}
-
-.el-popper {
-  border: none;
-
-  .against-popover-title {
-    color: var(--o-text-color-primary);
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-  }
-
-  .against-item .el-checkbox .el-checkbox__label {
-    font-size: 12px;
-    color: var(--o-text-color-secondary);
-    line-height: 16px;
-  }
-
-  .against-button button:first-child {
-    border: 1px solid var(--o-border-color-lighter);
-    width: 64px;
-    height: 24px;
-    color: var(--o-text-color-secondary);
-    font-size: 12px;
-    line-height: 16px;
-
-    &:hover {
-      color: #7aa5ff;
-      background-color: transparent;
-      border: 1px solid #7aa5ff;
-    }
-  }
-
-  .against-popover .against-button button:first-child:hover {
-    background-color: transparent;
-  }
-
-  .against-button button:last-child {
-    background-color: var(--o-color-primary);
-    border: none;
-    color: var(--o-color-white);
-
-    &:hover {
-      background-color: #7aa5ff;
-      color: #fff;
-    }
-  }
-
-  .is-disabled,
-  .is-disabled:hover {
-    background-color: #b3cbff !important;
-    color: #e1eaff;
-  }
-
-  .against-popover .error-input__link,
-  .against-popover .error-input__desc {
-    background-color: var(--o-bg-color-light);
-  }
-}
-
-.against-popover {
-  .radio {
-    width: 88px;
-    margin-bottom: 4px;
-  }
-
-  .radio_item,
-  .el-radio-button__inner {
-    min-width: 88px;
-    width: 100%;
-    height: 100%;
-    border: none;
-    background-color: var(--o-bg-color-light);
-    color: var(--o-text-color-primary);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    word-break: auto-phrase;
-  }
-
-  .el-radio-button__original-radio:checked + .el-radio-button__inner {
-    border: none;
-    background-color: transparent;
-    color: #6395fd;
-    background-image: linear-gradient(
-      to right,
-      rgba(109, 117, 250, 0.2),
-      rgba(90, 179, 255, 0.2)
-    );
-  }
-}
-
-.svg:hover {
-  filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
-    brightness(100%) contrast(103%);
-}
-
-.against-button {
-  height: 16px;
-  width: auto;
-  margin-left: 12px;
-  color: var(--o-text-color-secondary);
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.el-tooltip {
-  float: left; //解决整体右浮动.提示语位置偏差
-}
-
-::deep .el-popper .el-popper.is-customized {
-  float: right; //解决整体右浮动.提示语位置偏差
-  background-color: pink;
-}
-
-.el-popper.is-customized {
-  padding: 6px 12px;
-  background: #f4f6fa;
-  box-shadow: 0 4px 8px 0 rgba($color: #000000, $alpha: 0.2);
-}
-
-.el-popper.is-customized .el-popper__arrow::before {
-  background: #f4f6fa;
-  right: 0;
-}
-</style>
-<style lang="scss" scoped>
-.search-suggestions {
-  display: flex;
-  line-height: 24px;
-  margin-top: 16px;
-
-  &_value {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  .tip {
-    color: var(--o-text-color-secondary);
-    font-size: 12px;
-    height: 32px;
-    line-height: 32px;
-    align-self: center;
-    font-weight: 100;
-    flex-shrink: 0;
-  }
-  .value {
-    display: flex;
-    color: var(--o-text-color-secondary);
-    background-color: var(--o-bg-color-base);
-    border-radius: 8px;
-    padding: 8px 16px;
-    margin: 0 0 8px 8px;
-    font-size: 12px;
-    &:hover {
-      background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-      color: var(--o-text-color-fourth);
-    }
-    p {
-      align-content: center;
-      align-items: center;
-      line-height: 16px;
-    }
-  }
-}
-.dialogue-panel {
-  width: 1000px;
-  &__user {
-    position: relative;
-    margin-bottom: 24px;
-
-    &-time {
-      display: flex;
-      padding-left: calc(50% - 37px);
-      color: #8d98aa;
-      font-size: 12px;
-      margin-top: 16px;
-    }
-
-    p {
-      padding: 12px 16px;
-      font-size: 16px;
-      line-height: 24px;
-    }
-  }
-
-  &__content {
-    display: flex;
-    align-items: flex-start;
-    margin-top: 10px;
-    overflow-wrap: break-word;
-    word-break: break-all;
-
-    img {
-      width: 48px;
-      height: 48px;
-      position: absolute;
-      left: -10px;
-    }
-
-    .content {
-      //min-height: 48px;
-      border-radius: 8px;
-      border-top-left-radius: 0px;
-      padding: 12px;
-      // display: flex;
-      // align-items: center;
-      color: var(--o-text-color-primary);
-      margin-left: 45px;
-      background-image: linear-gradient(
-        to right,
-        rgba(109, 117, 250, 0.2),
-        rgba(90, 179, 255, 0.2)
-      );
-      .messaege {
-        top: 10px;
-        margin-top: 24px;
-        display: block;
-        width: 100%;
-      }
-    }
-  }
-
-  &__robot {
-    position: relative;
-    padding-left: 45px;
-    border-radius: 8px;
-
-    .loading {
-      display: flex;
-      // min-height: 72px;
-      // padding: 24px;
-      background-color: var(--o-bg-color-base);
-      border-radius: 8px;
-      border-top-left-radius: 0px;
-
-      @keyframes rotate-img {
-        from {
-          transform: rotate(0);
-        }
-
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0px;
-        width: 48px;
-        height: 48px;
-        left: -10px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
-
-      &-icon {
-        animation: rotate-img 1s infinite linear;
-      }
-
-      &-text {
-        font-size: 16px;
-        line-height: 24px;
-        padding-left: 12px;
-        color: var(--o-text-color-primary);
-      }
-    }
-
-    &-slot {
-      .dialog-panel__robot-time {
-        display: flex;
-        justify-content: center;
-        color: #8d98aa;
-        font-size: 12px;
-        margin-bottom: 10px;
-        margin-top: 16px;
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        left: -10px;
-        top: 30px;
-        width: 48px;
-        height: 48px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
-    }
-
-    &-content {
-      background-color: var(--o-bg-color-base);
-      padding: 24px 24px 16px 24px;
-      border-top-right-radius: 8px;
-      overflow-wrap: break-word;
-      text-align: justify;
-      line-height: 24px;
-      color: var(--o-text-color-primary);
-
-      &::before {
-        content: '';
-        position: absolute;
-        left: -10px;
-        top: 0px;
-        width: 48px;
-        height: 48px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
-    }
-
-    &-bottom {
-      background-color: var(--o-bg-color-base);
-      padding: 0px 24px;
-      border-radius: 0 0 8px 8px;
-
-      .action-buttons {
-        border-top: 1px dashed var(--o-border-color-light);
-        padding: 16px 0 20px 0px;
-        display: flex;
-        align-items: center;
-
-        .pagenation {
-          display: flex;
-
-          &-item {
-            margin-right: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            line-height: 16px;
-            color: var(--o-text-color-tertiary) !important;
-            letter-spacing: 0px;
-          }
-
-          img {
-            width: 16px;
-            height: 16px;
-          }
-
-          &-arror {
-            margin: 0;
-            cursor: pointer;
-          }
-          .ml-8 {
-            margin-left: 8px;
-          }
-          .mr-8 {
-            margin-right: 8px;
-          }
-
-          .pagenation-cur {
-            font-size: 12px;
-            line-height: 18px;
-            color: var(--o-text-color-tertiary) !important;
-          }
-
-          .pagenation-total {
-            font-size: 12px;
-            line-height: 18px;
-            color: var(--o-text-color-primary) !important;
-          }
-
-          letter-spacing: 2px;
-        }
-
-        .regenerate-button {
-          display: flex;
-          align-items: center;
-          margin-left: 8px;
-          color: var(--o-text-color-secondary);
-          font-size: 12px;
-          line-height: 16px;
-          cursor: pointer;
-          user-select: none;
-
-          img {
-            margin-right: 8px;
-          }
-
-          .paused-answer {
-            color: #c4c2c2;
-            cursor: text;
-          }
-        }
-
-        .button-group {
-          margin-left: auto;
-          display: flex;
-          align-items: center;
-          font-size: 12px;
-
-          .button-icon {
-            width: 24px;
-            height: 24px;
-            margin-left: 4px;
-          }
-
-          .copy {
-            width: 24px;
-            height: 24px;
-          }
-
-          .copy:hover {
-            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
-              brightness(100%) contrast(103%) contrast(99%);
-          }
-
-          .button-icon:hover {
-            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
-              brightness(100%) contrast(103%) contrast(99%);
-          }
-
-          img {
-            vertical-align: bottom;
-            cursor: pointer;
-            user-select: none;
-            width: 16px;
-            height: 16px;
-          }
-        }
-      }
-    }
-  }
-
-  &__stop {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 128px;
-    height: 40px;
-    border-radius: 8px;
-    border: 1px solid var(--o-border-color-extralight);
-    margin-top: 38px;
-    margin-left: auto;
-    margin-right: auto;
-    cursor: pointer;
-
-    img {
-      width: 16px;
-      height: 16px;
-      margin-right: 8px;
-    }
-
-    &-answer {
-      font-size: 16px;
-      color: var(--o-text-color-primary);
-      line-height: 24px;
-    }
-  }
-
-  :deep(.el-loading-spinner .circular) {
-    width: 20px;
-    height: 20px;
-  }
-}
-// 工作流调试抽屉样式
-.workFlowDebugStyle {
-  width: auto;
-  padding-right: 24px;
-  .loading {
-    display: none;
-  }
-  .dialogue-panel__content {
-    gap: 16px;
-    .userArea {
-      min-width: 48px;
-      height: 48px;
-      img {
-        left: 0px;
-      }
-    }
-    .content {
-      margin-left: 0px;
-      min-height: 48px;
-      .message {
-        white-space: pre-line;
-      }
-    }
-  }
-  .dialogue-panel__user-time {
-    height: 20px;
-    line-height: 20px;
-    .centerTimeStyle {
-      width: 136px;
-      padding: 0 8px;
-      background-color: var(--o-time-text);
-      border-radius: 12px;
-    }
-  }
-  .dialogue-panel__robot {
-    gap: 16px;
-    padding-left: 64px;
-    .dialogue-panel__robot-content {
-      border-radius: 8px;
-      // 工作流调试时控制显示
-      .dialogue-thought {
-        // ai思考无需显示
-        display: none;
-      }
-      ::v-deep(.demo-collapse) {
-        border-radius: 4px;
-        .title.el-collapse-item {
-          .loading-text {
-            display: flex;
-            text-align: left;
-            align-items: center;
-            .textTitle {
-              flex: 1;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-            .totalTime {
-              min-width: 54px;
-              width: fit-content;
-              padding: 0px 8px;
-              height: 16px;
-              line-height: 16px;
-              font-size: 12px;
-              border-radius: 4px;
-            }
-            .totalTime.errorBg {
-              background-color: rgba(227, 32, 32, 0.2);
-            }
-          }
-        }
-        .normal.el-collapse-item {
-          border-bottom: 1px dashed #dfe5ef;
-          .el-collapse-item__header {
-            background-color: var(--o-bg-color-base) !important;
-            color: var(--o-text-color-primary);
-            padding-right: 0px;
-            .o-collapse-icon {
-              width: 16px;
-              height: 16px;
-            }
-            .title {
-              flex: 1;
-              text-align: left;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-            .time {
-              min-width: 54px;
-              width: fit-content;
-              padding: 0px 8px;
-              height: 16px;
-              line-height: 16px;
-              border-radius: 4px;
-              font-size: 12px;
-            }
-            &::after {
-              background-color: transparent;
-            }
-          }
-          &:last-child {
-            border-bottom: 1px solid transparent !important;
-          }
-        }
-        .el-collapse-item__content {
-          margin: 0px 16px;
-        }
-      }
-      // 调试抽屉中echarts无需显示
-      .answer_img {
-        display: none;
-      }
-      .loading-echarts {
-        display: none;
-      }
-      &::before {
-        left: 0;
-      }
-    }
-  }
-  // 调试抽屉中不需要显示底部反对等功能图标
-  .dialogue-panel__robot-bottom {
-    display: none;
-  }
-}
-</style>
