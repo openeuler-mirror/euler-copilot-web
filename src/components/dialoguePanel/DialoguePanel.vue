@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import './DialoguePanel.scss'
 import { useDialogueActions } from './hooks/useDialogueActions'
 import { useMarkdownParser } from './hooks/useMarkdownParser'
 import { ref, withDefaults, toRef } from 'vue';
@@ -80,6 +79,8 @@ const size = reactive({
   width: 328,
   height: 416,
 });
+const isSupport = ref(false);
+const isAgainst = ref(false);
 const themeStore = useChangeThemeStore();
 var myChart;
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
@@ -318,7 +319,7 @@ const searchAppName = (appId) => {
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
         <div class="centerTimeStyle">
-          {{ dayjs(createdAt * 1000).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ dayjs(Number(createdAt) * 1000).format('YYYY-MM-DD HH:mm:ss')}}
         </div>
       </div>
       <div class="dialogue-panel__user-time" v-else>
@@ -475,19 +476,16 @@ const searchAppName = (appId) => {
                 class="button-icon"
                 v-if="!isSupport && themeStore.theme === 'dark'"
                 src="@/assets/svgs/dark_support.svg"
-                @click="handleSupport('support')"
               />
               <img
                 class="button-icon"
-                v-if="!isSupport && themeStore.theme === 'light'"
+                v-if="!isSupport && (themeStore.theme === 'light' || !themeStore.theme)"
                 src="@/assets/svgs/light_support.svg"
-                @click="handleSupport('support')"
               />
               <img
                 class="button-icon"
                 v-if="isSupport"
                 src="@/assets/svgs/support_active.svg"
-                @click="handleSupport('support')"
               />
             </el-tooltip>
             <el-tooltip
@@ -510,25 +508,21 @@ const searchAppName = (appId) => {
                     class="button-icon"
                     v-if="!isAgainst && themeStore.theme === 'dark'"
                     src="@/assets/svgs/dark_against.svg"
-                    @click="handleSupport('against')"
                   />
                   <img
                     class="button-icon"
-                    v-if="!isAgainst && themeStore.theme === 'light'"
+                    v-if="!isAgainst && (themeStore.theme === 'light' || !themeStore.theme)"
                     src="@/assets/svgs/light_against.svg"
-                    @click="handleSupport('against')"
                   />
                   <img
                     class="button-icon"
                     v-if="isAgainst"
                     src="@/assets/svgs/against_active.svg"
-                    @click="handleSupport('against')"
                   />
                 </template>
                 <AgainstPopover
                   @click.stop
                   @close="isAgainstVisible = false"
-                  @submit="handleAgainst"
                 />
               </el-popover>
             </el-tooltip>
@@ -552,13 +546,11 @@ const searchAppName = (appId) => {
                     v-if="themeStore.theme === 'dark'"
                     class="button-icon"
                     src="@/assets/svgs/dark_report.svg"
-                    @click="handleSupport('report')"
                   />
                   <img
-                    v-if="themeStore.theme === 'light'"
+                    v-if="(themeStore.theme === 'light' || !themeStore.theme)"
                     class="button-icon"
                     src="@/assets/svgs/light_report.svg"
-                    @click="handleSupport('report')"
                   />
                 </template>
                 <ReportPopover
@@ -591,3 +583,6 @@ const searchAppName = (appId) => {
     <img :src="txt2imgPathZoom" />
   </div>
 </template>
+<style lang="sass" scoped>
+@import './DialoguePanel.scss'
+</style>

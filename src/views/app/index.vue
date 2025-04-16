@@ -199,7 +199,7 @@ const routerToDetail = (appItem) => {
     return;
   }
   //获取appItem.id & appItem.name
-  router.push(`/copilot?appId=${appItem.appId}&name=${appItem.name}`);
+  router.push(`/?appId=${appItem.appId}&name=${appItem.name}`);
   //保证跳转后一定是一条选中的新会话
   currentSelectedSession.value = '';
 };
