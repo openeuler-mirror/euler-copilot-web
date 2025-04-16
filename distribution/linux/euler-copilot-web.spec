@@ -15,7 +15,7 @@ Group:         Applications/Utilities
 Summary:       openEuler 大模型智能系统
 Source0:       %{name}-%{version}.tar.gz
 
-URL:           https://gitee.com/openeuler/euler-copilot-framework
+URL:           https://gitee.com/openeuler/euler-copilot-web
 Vendor:        openEuler <contact@openeuler.org>
 Packager:      openEuler <contact@openeuler.org>
 
@@ -30,8 +30,47 @@ Requires:      libnotify
 Requires:      nss
 Requires:      xdg-utils
 
+BuildRequires: git
+BuildRequires: curl
+
 %description
 openEuler 大模型智能系统
+
+
+%prep
+%setup -q -c -T
+# Install Linuxbrew
+# https://mirrors.tuna.tsinghua.edu.cn/help/homebrew/
+export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
+export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
+export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
+export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+export HOMEBREW_PIP_INDEX_URL="https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+
+git clone --depth=1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/install.git brew-install
+/bin/bash brew-install/install.sh
+rm -rf brew-install
+
+test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+
+# Install nodejs@22 & pnpm
+brew install node@22
+corepack enable pnpm
+
+# Setup npm mirror
+npm config set registry https://registry.npmmirror.com
+npm config set electron_mirror https://npmmirror.com/mirrors/electron/
+npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
+
+# Install pnpm packages
+pnpm install
+
+
+%build
+# Build the app
+pnpm run package:linux
 
 
 %install
