@@ -13,7 +13,6 @@ import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
-import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
 const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
@@ -1177,17 +1176,6 @@ button[disabled]:hover {
         }
       }
     }
-  }
-}
-
-.dialogue-shell {
-  flex: 1;
-  height: calc(100% - 36px);
-  width: 500px;
-
-  :deep(.xterm) {
-    padding: 10px;
-    height: 100%;
   }
 }
 
