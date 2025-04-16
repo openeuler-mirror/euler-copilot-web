@@ -22,7 +22,7 @@
   </teleport>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits, watch } from 'vue';
+import { ref, watch } from 'vue';
 import UploadCard from 'src/components/uploadFile/UploadCard.vue';
 
 export type DropPostion = {

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import { useDialogueActions } from './hooks/useDialogueActions'
-import { useMarkdownParser } from './hooks/useMarkdownParser'
+import { useDialogueActions } from './hooks/useDialogueActions';
+import { useMarkdownParser } from './hooks/useMarkdownParser';
 import { ref, withDefaults, toRef } from 'vue';
 import {
   useSessionStore,
@@ -91,15 +91,15 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   needRegernerate: false,
 });
 
-const { handleCopy, handleFeedback} = useDialogueActions(
+const { handleCopy, handleFeedback } = useDialogueActions(
   toRef(props, 'content'),
-  toRef(props, 'currentSelected')
+  toRef(props, 'currentSelected'),
 );
 
-const { thoughtContent,contentAfterMark } = useMarkdownParser(
+const { thoughtContent, contentAfterMark } = useMarkdownParser(
   toRef(props, 'content'),
-  toRef(props, 'currentSelected')
-)
+  toRef(props, 'currentSelected'),
+);
 const index = ref(0);
 const isLike = ref(props.isLikeList);
 const emits = defineEmits<{
@@ -319,7 +319,7 @@ const searchAppName = (appId) => {
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
         <div class="centerTimeStyle">
-          {{ dayjs(Number(createdAt) * 1000).format('YYYY-MM-DD HH:mm:ss')}}
+          {{ dayjs(Number(createdAt) * 1000).format('YYYY-MM-DD HH:mm:ss') }}
         </div>
       </div>
       <div class="dialogue-panel__user-time" v-else>
@@ -479,7 +479,10 @@ const searchAppName = (appId) => {
               />
               <img
                 class="button-icon"
-                v-if="!isSupport && (themeStore.theme === 'light' || !themeStore.theme)"
+                v-if="
+                  !isSupport &&
+                  (themeStore.theme === 'light' || !themeStore.theme)
+                "
                 src="@/assets/svgs/light_support.svg"
               />
               <img
@@ -511,7 +514,10 @@ const searchAppName = (appId) => {
                   />
                   <img
                     class="button-icon"
-                    v-if="!isAgainst && (themeStore.theme === 'light' || !themeStore.theme)"
+                    v-if="
+                      !isAgainst &&
+                      (themeStore.theme === 'light' || !themeStore.theme)
+                    "
                     src="@/assets/svgs/light_against.svg"
                   />
                   <img
@@ -520,10 +526,7 @@ const searchAppName = (appId) => {
                     src="@/assets/svgs/against_active.svg"
                   />
                 </template>
-                <AgainstPopover
-                  @click.stop
-                  @close="isAgainstVisible = false"
-                />
+                <AgainstPopover @click.stop @close="isAgainstVisible = false" />
               </el-popover>
             </el-tooltip>
             <el-tooltip
@@ -548,7 +551,7 @@ const searchAppName = (appId) => {
                     src="@/assets/svgs/dark_report.svg"
                   />
                   <img
-                    v-if="(themeStore.theme === 'light' || !themeStore.theme)"
+                    v-if="themeStore.theme === 'light' || !themeStore.theme"
                     class="button-icon"
                     src="@/assets/svgs/light_report.svg"
                   />

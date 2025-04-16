@@ -87,7 +87,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch, defineProps } from 'vue';
+import { ref, watch } from 'vue';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
