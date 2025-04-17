@@ -9,6 +9,9 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # 构建输出目录
 RELEASE_DIR="${PROJECT_ROOT}/release"
 mkdir -p "${RELEASE_DIR}"
+# 清理上次构建残留
+rm -rf "${RELEASE_DIR}/rpmbuild"
+rm -f "${RELEASE_DIR}"/*.tar.gz
 
 # spec 文件路径
 SPEC="${PROJECT_ROOT}/distribution/linux/euler-copilot-web.spec"

@@ -4,6 +4,8 @@ AutoReq: no
 %define __spec_install_post %{nil}
 # Something that need for rpm-4.1
 %define _missing_doc_files_terminate_build 0
+# Disable debug package generation
+%define debug_package %{nil}
 
 %ifarch aarch64
 %define _electron_arch arm64
@@ -47,42 +49,47 @@ openEuler 大模型智能系统
 
 %prep
 %setup -q
-# Install Linuxbrew
-# https://mirrors.tuna.tsinghua.edu.cn/help/homebrew/
-export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
-export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
-export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
-export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
-export HOMEBREW_PIP_INDEX_URL="https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 
-git clone --depth=1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/install.git brew-install
-/bin/bash brew-install/install.sh
-rm -rf brew-install
 
-test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+%build
+# Extract Node.js version using grep+sed for compatibility
+NODE_VER=$(grep '"node":' package.json | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+NODE_LINK="https://registry.npmmirror.com/-/binary/node/v${NODE_VER}/node-v${NODE_VER}-linux-%{_electron_arch}.tar.xz"
+# Download and install Node.js into a subdirectory
+NODE_HOME=/usr/local/node-v${NODE_VER}
+mkdir -p "$NODE_HOME"
+curl -sSL "$NODE_LINK" | tar -xJ -C "$NODE_HOME" --strip-components=1
+# Set NODE_HOME and update PATH, then test Node.js installation
+export NODE_HOME
+export PATH="$NODE_HOME/bin:$PATH"
+node -v
 
-# Install nodejs@22 & pnpm
-brew install node@22
-corepack enable pnpm
+# Setup mirrors for Electron
+export ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
+export ELECTRON_BUILDER_BINARIES_MIRROR="https://npmmirror.com/mirrors/electron-builder-binaries/"
 
 # Setup npm mirror
 npm config set registry https://registry.npmmirror.com
-npm config set electron_mirror https://npmmirror.com/mirrors/electron/
-npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
+
+# Install pnpm globally
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm -v
 
 # Download Electron binaries to cache directory
 ELECTRON_VER=$(grep -Po '(?<="electron": ")[^"]+' package.json)
 PACKAGE_NAME="electron-v$ELECTRON_VER-linux-%{_electron_arch}.zip"
+# Electron cache directory
 CACHE_DIR="$HOME/.cache/electron"
 if [ ! -d "$CACHE_DIR" ]; then
     mkdir -p "$CACHE_DIR"
 fi
-curl -sSL "https://registry.npmmirror.com/-/binary/electron/$ELECTRON_VER/$PACKAGE_NAME" -o "$CACHE_DIR/$PACKAGE_NAME"
+# Only download if not already present
+if [ ! -f "$CACHE_DIR/$PACKAGE_NAME" ]; then
+    curl -sSL "https://registry.npmmirror.com/-/binary/electron/$ELECTRON_VER/$PACKAGE_NAME" \
+        -o "$CACHE_DIR/$PACKAGE_NAME"
+fi
 
-
-%build
 # Install pnpm packages
 pnpm install
 # Build the app
@@ -109,7 +116,7 @@ cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.p
 %dir /opt/EulerCopilot
 %attr(0755, root, root) /opt/EulerCopilot/*
 # 命令行链接
-%attr(0755, root, root) /usr/bin/euler-copilot-desktop
+/usr/bin/euler-copilot-desktop
 # 桌面与图标
 %attr(0644, root, root) /usr/share/applications/euler-copilot-desktop.desktop
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
@@ -194,5 +201,5 @@ fi
 
 
 %changelog
-* Wed Apr 17 2025 openEuler <contact@openeuler.org> - 0.9.6-1
+* Thu Apr 17 2025 openEuler <contact@openeuler.org> - 0.9.6-1
 - Initial release

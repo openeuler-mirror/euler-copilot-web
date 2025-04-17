@@ -21,6 +21,6 @@ output="${name}-${version}.tar.gz"
 
 # 打包当前 HEAD，忽略 .gitignore，且不包含 .git 目录
 # 输出到项目根 release 目录
-git archive --format=tar --prefix="${name}/" HEAD | gzip >"${RELEASE_DIR}/${output}"
+git archive --format=tar --prefix="${name}-${version}/" HEAD | gzip >"${RELEASE_DIR}/${output}"
 
 echo "打包完成：${RELEASE_DIR}/${output}"
