@@ -5,6 +5,14 @@ AutoReq: no
 # Something that need for rpm-4.1
 %define _missing_doc_files_terminate_build 0
 
+%ifarch aarch64
+%define _electron_arch arm64
+%define _electron_build_dir linux-arm64-unpacked
+%else
+%define _electron_arch x64
+%define _electron_build_dir linux-unpacked
+%endif
+
 
 BuildArch:     aarch64 x86_64
 Name:          euler-copilot-web
@@ -64,6 +72,15 @@ npm config set registry https://registry.npmmirror.com
 npm config set electron_mirror https://npmmirror.com/mirrors/electron/
 npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
 
+# Download Electron binaries to cache directory
+ELECTRON_VER=$(grep -Po '(?<="electron": ")[^"]+' package.json)
+PACKAGE_NAME="electron-v$ELECTRON_VER-linux-%{_electron_arch}.zip"
+CACHE_DIR="$HOME/.cache/electron"
+if [ ! -d "$CACHE_DIR" ]; then
+    mkdir -p "$CACHE_DIR"
+fi
+curl -sSL "https://registry.npmmirror.com/-/binary/electron/$ELECTRON_VER/$PACKAGE_NAME" -o "$CACHE_DIR/$PACKAGE_NAME"
+
 
 %build
 # Install pnpm packages
@@ -77,14 +94,11 @@ mkdir -p %{buildroot}/opt/EulerCopilot
 mkdir -p %{buildroot}/usr/share/applications
 mkdir -p %{buildroot}/usr/share/icons/hicolor/512x512/apps
 
-# 复制 x86_64 构件到目标目录
-cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/linux-unpacked/* %{buildroot}/opt/EulerCopilot/
-# 复制 aarch64 构件到目标目录
-cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/linux-arm64-unpacked/* %{buildroot}/opt/EulerCopilot/
+# 复制构件到目标目录
+cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/%{_electron_build_dir}/* %{buildroot}/opt/EulerCopilot/
 # 创建命令行链接
 mkdir -p %{buildroot}/usr/bin
 ln -sf '/opt/EulerCopilot/euler-copilot-desktop' %{buildroot}/usr/bin/euler-copilot-desktop
-
 # 拷贝桌面入口文件和图标
 cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
 cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/
