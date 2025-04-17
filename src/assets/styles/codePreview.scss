@@ -173,6 +173,7 @@
     white-space: pre-wrap; /* 保持缩进同时允许换行 */
     margin: 8px 0px;
     .code-toolbar {
+      user-select: none;
       background-color: var(--o-bash-bg);
       color: var(--o-text-color-primarys);
       display: flex;

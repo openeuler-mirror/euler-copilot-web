@@ -120,7 +120,6 @@ onMounted(() => {
 }
 .json-display {
   font-family: Arial, sans-serif;
-  /* max-width: 600px; */
   margin: 0 auto;
 }
 
@@ -181,9 +180,9 @@ pre {
   white-space: pre-wrap; /* 保持缩进同时允许换行 */
   margin: 8px 0px;
   border: 1px solid black;
-  /* max-height: 300px; */
   overflow-y: scroll;
   .code-toolbar {
+    user-select: none;
     background-color: var(--o-bash-bg);
     color: var(--o-text-color-primarys);
     display: flex;
