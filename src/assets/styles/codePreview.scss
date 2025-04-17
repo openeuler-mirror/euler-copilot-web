@@ -3,6 +3,7 @@
     color: var(--o-text-color-secondary);
     font-size: 14px;
     font-family:
+      SFMono-Regular,
       monospace,
       'Courier New',
       Courier,
@@ -53,6 +54,7 @@
   .hljs-function {
     font-size: 14px;
     font-family:
+      SFMono-Regular,
       monospace,
       'Courier New',
       Courier,
@@ -67,6 +69,31 @@
       'Source Code Pro',
       'Fira Mono',
       'IBM Plex Mono';
+  }
+
+  /* 支持行内代码渲染 */
+  .inline-code {
+    background-color: var(--o-bash-bg);
+    color: var(--o-text-color-secondary);
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-family:
+      SFMono-Regular,
+      monospace,
+      'Courier New',
+      Courier,
+      Consolas,
+      'Andale Mono WT',
+      'Andale Mono',
+      'Lucida Console',
+      'DejaVu Sans Mono',
+      'Bitstream Vera Sans Mono',
+      'Liberation Mono',
+      Monaco,
+      'Source Code Pro',
+      'Fira Mono',
+      'IBM Plex Mono';
+    font-size: 0.9em;
   }
 
   p {

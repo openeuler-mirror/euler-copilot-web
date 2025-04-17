@@ -49,6 +49,10 @@ renderer.code = function ({ text, lang }) {
   const id = `pre-${Date.now()}-${randomInt()}`;
   return `<pre><div class="code-toolbar"><span>${lang}</span><i class="pre-copy" onclick="onHtmlEventDispatch(this,'click',event,'copyPreCode','${id}')">${ICON_SVG}</i></div><code id="${id}" class="hljs language-${lang}">${text}</code></pre>`;
 };
+// 支持行内代码渲染
+renderer.codespan = function ({ text }) {
+  return `<code class="inline-code">${text}</code>`;
+};
 renderer.link = function ({ href, title, tokens }) {
   const text = this.parser.parseInline(tokens);
   if (href === title) {
