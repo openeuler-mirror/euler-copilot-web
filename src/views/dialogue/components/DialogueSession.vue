@@ -963,7 +963,8 @@ watch(
     line-height: 24px;
   }
 }
-::v-deep .el-input__inner {
+
+:deep(.el-input__inner) {
   border: none;
   box-shadow: none;
 }
@@ -1252,7 +1253,6 @@ button[disabled]:hover {
 
 .recognitionMode {
   width: calc(100% - 48px);
-  // min-width: 154px;
   margin-bottom: 8px;
   margin-top: 16px;
   border-radius: 8px;
@@ -1282,14 +1282,14 @@ button[disabled]:hover {
   height: 0;
 }
 
-::v-deep .el-input__wrapper {
+:deep(.el-input__wrapper) {
   border: none;
   box-shadow: none;
   height: 40px;
   width: 175px;
 }
 
-::v-deep .el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light {
+:deep(.el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light) {
   border-radius: 4px;
 }
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineEmits, computed, withDefaults } from 'vue';
+import { computed } from 'vue';
 import { useChangeThemeStore } from 'src/store';
 
 import type { UploadFileCard } from './type.ts';

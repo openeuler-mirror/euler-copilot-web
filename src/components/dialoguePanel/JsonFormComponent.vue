@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, withDefaults, watch } from 'vue';
+import { ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
 import { useHistorySessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';

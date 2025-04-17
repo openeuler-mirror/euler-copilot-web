@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  ref,
-  onMounted,
-  withDefaults,
-  watch,
-  shallowRef,
-} from 'vue';
+import { ref, onMounted, watch, shallowRef } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
