@@ -21,6 +21,7 @@ import opendesign2 from '@computing/opendesign2';
 import '@computing/opendesign2/themes/es/css';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { qiankunMounted } from './qiankun';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
 import App from './App.vue';
 import router from './router';
@@ -51,9 +52,10 @@ const render = (props: any = {}) => {
     const { container } = props;
     selector = (container && container.querySelector('#app')) || '#app';
   }
+  const pinia = createPinia().use(piniaPluginPersistedstate);
   app = createApp(App);
   app
-    .use(createPinia())
+    .use(pinia)
     .use(router)
     .use(ElementPlus, {
       locale: zhCn,
