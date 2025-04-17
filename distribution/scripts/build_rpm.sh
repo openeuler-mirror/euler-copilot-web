@@ -7,8 +7,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 项目根目录
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # 构建输出目录
-BUILD_DIR="${PROJECT_ROOT}/build"
-mkdir -p "${BUILD_DIR}"
+RELEASE_DIR="${PROJECT_ROOT}/release"
+mkdir -p "${RELEASE_DIR}"
 
 # spec 文件路径
 SPEC="${PROJECT_ROOT}/distribution/linux/euler-copilot-web.spec"
@@ -17,16 +17,16 @@ SPEC="${PROJECT_ROOT}/distribution/linux/euler-copilot-web.spec"
 name=$(grep -E '^Name:' "${SPEC}" | head -1 | awk '{print $2}')
 version=$(grep -E '^Version:' "${SPEC}" | head -1 | awk '{print $2}')
 tarball="${name}-${version}.tar.gz"
-tarball_path="${BUILD_DIR}/${tarball}"
+tarball_path="${RELEASE_DIR}/${tarball}"
 
-# 1. 生成源码包到 build 目录
+# 1. 生成源码包到 release 目录
 if [ ! -f "${tarball_path}" ]; then
-  echo "生成源码包 ${tarball_path}..."
-  bash "${SCRIPT_DIR}/package_repository.sh"
+    echo "生成源码包 ${tarball_path}..."
+    bash "${SCRIPT_DIR}/package_repository.sh"
 fi
 
-# 2. 初始化 rpmbuild 目录到 build 目录
-RPMBUILD_DIR="${BUILD_DIR}/rpmbuild"
+# 2. 初始化 rpmbuild 目录到 release 目录
+RPMBUILD_DIR="${RELEASE_DIR}/rpmbuild"
 mkdir -p "${RPMBUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
 # 3. 准备 SPEC 和 SOURCES

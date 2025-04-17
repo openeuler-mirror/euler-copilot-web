@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 项目根目录
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # 构建输出目录
-BUILD_DIR="${PROJECT_ROOT}/build"
-mkdir -p "${BUILD_DIR}"
+RELEASE_DIR="${PROJECT_ROOT}/release"
+mkdir -p "${RELEASE_DIR}"
 
 # spec 文件路径
 SPEC="${PROJECT_ROOT}/distribution/linux/euler-copilot-web.spec"
@@ -20,7 +20,7 @@ version=$(grep -E '^Version:' "${SPEC}" | head -1 | awk '{print $2}')
 output="${name}-${version}.tar.gz"
 
 # 打包当前 HEAD，忽略 .gitignore，且不包含 .git 目录
-# 输出到项目根 build 目录
-git archive --format=tar --prefix="${name}/" HEAD | gzip > "${BUILD_DIR}/${output}"
+# 输出到项目根 release 目录
+git archive --format=tar --prefix="${name}/" HEAD | gzip >"${RELEASE_DIR}/${output}"
 
-echo "打包完成：${BUILD_DIR}/${output}"
+echo "打包完成：${RELEASE_DIR}/${output}"
