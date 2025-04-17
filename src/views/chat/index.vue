@@ -9,7 +9,8 @@ import robotAvatar from '@/assets/svgs/robot.svg';
 import { computed, ref, onBeforeMount, onBeforeUnmount, h } from 'vue';
 import { fetchStream } from '@/utils/fetchStream';
 import marked from '@/utils/marked';
-import { useHistorySessionStore } from '@/store/historySession';
+import { useHistorySessionStore, useLangStore } from '@/store';
+import { storeToRefs } from 'pinia';
 
 const headerStyles = computed(() => {
   if (window.eulercopilot.process.platform === 'win32') {
@@ -26,6 +27,9 @@ function storageListener(e: StorageEvent) {
     document.body.setAttribute('theme', e.newValue || 'light');
   }
 }
+
+const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
+const { language } = storeToRefs(useLangStore());
 
 const { conversations, setConversations } = useConversations();
 
@@ -60,6 +64,13 @@ function useStream() {
       readableStream: resp.body!,
     })) {
       if (!chunk.data) {
+        break;
+      }
+      if (chunk.data.trim() === '[ERROR]') {
+        isStreaming.value = false;
+        const conversation =
+          conversations.value[conversations.value.length - 1];
+        conversation.content = '系统错误，请稍后再试';
         break;
       }
       if (chunk.data.trim() === '[DONE]') {
@@ -126,14 +137,13 @@ function useConversations() {
 }
 
 function onSend(q: string) {
-  const { currentSelectedSession } = useHistorySessionStore();
   conversations.value.push({
     id: `user-${conversations.value.length / 2 + 1}`,
     content: q,
     role: 'user',
   });
   isStreaming.value = true;
-  queryStream(q, currentSelectedSession);
+  queryStream(q, currentSelectedSession.value, language.value as 'zh' | 'en');
 }
 
 const markedContent = computed(
@@ -202,16 +212,22 @@ onBeforeUnmount(() => {
                         backgroundImage:
                           'linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2))',
                       }
-                    : {},
+                    : {
+                        width: '100%',
+                      },
               }"
             >
               <template v-if="role === 'assistant' && !isStreaming" #footer>
                 <div class="bubble-footer">
                   <div class="action-toolbar">
                     <div class="left">
-                      tokens:{{ metadata?.inputTokens }}↑|
-                      {{ metadata?.outputTokens }}‌↓|
-                      {{ Number(metadata?.timeCost).toFixed(2) }}
+                      tokens:{{ metadata?.inputTokens || 0 }}↑|
+                      {{ metadata?.outputTokens || 0 }}‌↓|
+                      {{
+                        metadata?.timeCost
+                          ? Number(metadata?.timeCost).toFixed(2)
+                          : '0.00'
+                      }}
                     </div>
                     <div class="button-group">
                       <el-tooltip
@@ -298,7 +314,6 @@ onBeforeUnmount(() => {
       flex: 1;
 
       .bubble-footer {
-        margin-top: 20px;
         .action-toolbar {
           border-top: 1px dashed var(--o-border-color-light);
           display: flex;
@@ -313,7 +328,6 @@ onBeforeUnmount(() => {
 
           .left {
             font-size: 12px;
-            line-height: 18px;
             color: var(--o-text-color-tertiary);
           }
 

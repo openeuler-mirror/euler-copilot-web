@@ -38,14 +38,12 @@ const props = withDefaults(defineProps<BubbleProps>(), {
         <img src="@/assets/images/loading.png" alt="" class="loading-icon" />
         <div class="loading-text">EulerCopilot正在生成回答...</div>
       </div>
-      <div v-else>
-        <div v-if="contentRender">
-          <component :is="contentRender(content)" />
-        </div>
+      <template v-else>
+        <component v-if="contentRender" :is="contentRender(content)" />
         <div v-else>
           {{ content }}
         </div>
-      </div>
+      </template>
 
       <slot name="footer" />
     </div>
@@ -72,15 +70,13 @@ const props = withDefaults(defineProps<BubbleProps>(), {
   }
 
   &-content {
+    background-color: var(--o-bg-color-base);
     color: var(--o-text-color-primary);
-    padding: 12px;
+    padding: 14px;
     border-radius: 8px;
     border-top-left-radius: 0px;
-    background-color: var(--o-bg-color-base);
-    line-height: 24px;
     white-space: pre-wrap;
     word-break: break-all;
-    overflow-wrap: break-all;
 
     .loading {
       display: flex;
@@ -104,7 +100,6 @@ const props = withDefaults(defineProps<BubbleProps>(), {
 
       &-text {
         font-size: 16px;
-        line-height: 24px;
         padding-left: 12px;
         color: var(--o-text-color-primary);
       }

@@ -1,31 +1,22 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ipcRenderer } from '@/utils/electron';
+import { useChangeThemeStore } from '@/store';
+import { storeToRefs } from 'pinia';
 
-const isDark = ref(localStorage.getItem('theme') === 'dark');
+const { theme } = storeToRefs(useChangeThemeStore());
 
 const changeTheme = (e: PointerEvent) => {
   if (!e.target) return;
-  isDark.value = !isDark.value;
-  const theme = isDark.value ? 'dark' : 'light';
-  if (ipcRenderer) {
-    ipcRenderer.invoke('copilot:theme', {
-      theme,
-      backgroundColor: isDark.value ? '#1f2329' : '#ffffff',
-    });
-  }
-
-  isDark.value
-    ? document.body.setAttribute('theme', 'dark')
-    : document.body.setAttribute('theme', 'light');
-  localStorage.setItem('theme', theme);
+  const { updateTheme } = useChangeThemeStore();
+  updateTheme(theme.value === 'light' ? 'dark' : 'light');
 };
 </script>
 
 <template>
   <div class="operations">
     <div class="theme" @click="changeTheme">
-      <div class="theme-icon" v-if="isDark">
+      <div class="theme-icon" v-if="theme === 'light'">
         <img id="sun-icon" src="@/assets/svgs/sun.svg" alt="" />
       </div>
       <div class="theme-icon" v-else>
