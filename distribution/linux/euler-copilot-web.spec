@@ -15,36 +15,39 @@ AutoReq: no
 %define _electron_build_dir linux-unpacked
 %endif
 
+BuildArch:      aarch64 x86_64
+Name:           euler-copilot-web
+Version:        0.9.6
+Release:        1%{?dist}
+License:        MulanPSL-2.0 
+Group:          Applications/Utilities
+Summary:        openEuler 大模型智能系统
+Source0:        %{name}-%{version}.tar.gz
 
-BuildArch:     aarch64 x86_64
-Name:          euler-copilot-web
-Version:       0.9.6
-Release:       1%{?dist}
-License:       MulanPSL-2.0 
-Group:         Applications/Utilities
-Summary:       openEuler 大模型智能系统
-Source0:       %{name}-%{version}.tar.gz
+URL:            https://gitee.com/openeuler/euler-copilot-web
+Vendor:         openEuler <contact@openeuler.org>
+Packager:       openEuler <contact@openeuler.org>
 
-URL:           https://gitee.com/openeuler/euler-copilot-web
-Vendor:        openEuler <contact@openeuler.org>
-Packager:      openEuler <contact@openeuler.org>
-
-Requires:      (libXtst or libXtst6)
-Requires:      (libuuid or libuuid1)
-Requires(post): /bin/sh
-Requires(postun): /bin/sh
-Requires:      at-spi2-core
-Requires:      gtk3
-Requires:      libXScrnSaver
-Requires:      libnotify
-Requires:      nss
-Requires:      xdg-utils
-
-BuildRequires: git
-BuildRequires: curl
+BuildRequires:  curl
 
 %description
 openEuler 大模型智能系统
+
+%package -n     euler-copilot-desktop
+Summary:        openEuler 大模型智能系统桌面客户端
+Requires:       at-spi2-core
+Requires:       gtk3
+Requires:       libXScrnSaver
+Requires:       libnotify
+Requires:       nss
+Requires:       xdg-utils
+Requires:       (libXtst or libXtst6)
+Requires:       (libuuid or libuuid1)
+Requires(post): /bin/sh
+Requires(postun): /bin/sh
+
+%description -n euler-copilot-desktop
+openEuler 大模型智能系统桌面客户端
 
 
 %prep
@@ -112,6 +115,10 @@ cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.p
 
 
 %files
+# 主包（暂时留空）
+
+
+%files -n euler-copilot-desktop
 # 应用安装目录及其所有内容
 %dir /opt/EulerCopilot
 %attr(0755, root, root) /opt/EulerCopilot/*
@@ -122,7 +129,7 @@ cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.p
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
 
 
-%post -p /bin/sh
+%post -n euler-copilot-desktop -p /bin/sh
 #!/bin/bash
 
 if type update-alternatives 2>/dev/null >&1; then
@@ -182,7 +189,7 @@ if apparmor_status --enabled > /dev/null 2>&1; then
 fi
 
 
-%postun -p /bin/sh
+%postun -n euler-copilot-desktop -p /bin/sh
 #!/bin/bash
 
 # Delete the link to the binary
