@@ -38,7 +38,7 @@ openEuler 大模型智能系统
 
 
 %prep
-%setup -q -c -T
+%setup -q
 # Install Linuxbrew
 # https://mirrors.tuna.tsinghua.edu.cn/help/homebrew/
 export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
@@ -64,25 +64,41 @@ npm config set registry https://registry.npmmirror.com
 npm config set electron_mirror https://npmmirror.com/mirrors/electron/
 npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
 
-# Install pnpm packages
-pnpm install
-
 
 %build
+# Install pnpm packages
+pnpm install
 # Build the app
 pnpm run package:linux
 
 
 %install
 mkdir -p %{buildroot}/opt/EulerCopilot
-mkdir -p %{buildroot}/opt/EulerCopilot/resources
 mkdir -p %{buildroot}/usr/share/applications
 mkdir -p %{buildroot}/usr/share/icons/hicolor/512x512/apps
 
+# 复制 x86_64 构件到目标目录
+cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/linux-unpacked/* %{buildroot}/opt/EulerCopilot/
+# 复制 aarch64 构件到目标目录
+cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/linux-arm64-unpacked/* %{buildroot}/opt/EulerCopilot/
+# 创建命令行链接
+mkdir -p %{buildroot}/usr/bin
+ln -sf '/opt/EulerCopilot/euler-copilot-desktop' %{buildroot}/usr/bin/euler-copilot-desktop
+
+# 拷贝桌面入口文件和图标
+cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
+cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/
+
 
 %files
-%attr(0644, root, root) "/usr/share/applications/euler-copilot-desktop.desktop"
-%attr(0644, root, root) "/usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png"
+# 应用安装目录及其所有内容
+%dir /opt/EulerCopilot
+%attr(0755, root, root) /opt/EulerCopilot/*
+# 命令行链接
+%attr(0755, root, root) /usr/bin/euler-copilot-desktop
+# 桌面与图标
+%attr(0644, root, root) /usr/share/applications/euler-copilot-desktop.desktop
+%attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
 
 
 %post -p /bin/sh
@@ -164,4 +180,5 @@ fi
 
 
 %changelog
-
+* Wed Apr 17 2025 openEuler <contact@openeuler.org> - 0.9.6-1
+- Initial release
