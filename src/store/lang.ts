@@ -5,7 +5,7 @@ import { electronProcess, ipcRenderer } from '@/utils/electron';
 
 export const useLangStore = defineStore('lang', () => {
   const i18n = useI18n();
-  const language = ref<string>(localStorage.getItem('localeLang') || 'en');
+  const language = ref<string>(localStorage.getItem('localeLang') || '');
   const changeLanguage = (lang: 'zh_cn' | 'en') => {
     language.value = lang;
     i18n.locale.value = language.value;
@@ -23,6 +23,8 @@ export const useLangStore = defineStore('lang', () => {
 
       electronProcess.env['EULERCOPILOT_NLS_CONFIG'] &&
         changeLanguage(nlsConfig.userLocale);
+    } else {
+      !language.value && changeLanguage('zh_cn');
     }
   });
   return {
