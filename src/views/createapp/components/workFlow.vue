@@ -15,7 +15,7 @@ import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore } from '@/store';
 import {
   IconSearch,
   IconCaretRight,
@@ -656,9 +656,9 @@ const saveFlow = (updateNodeParameter?) => {
           nodes: updateNodes,
           edges: updateEdges,
           focusPoint: {
-          x: 800,
-          y: 800,
-        },
+            x: 800,
+            y: 800,
+          },
         },
       },
     )
@@ -822,11 +822,17 @@ defineExpose({
 
         <!-- 开始结束节点 -->
         <template #node-start="nodeStartProps">
-          <CustomSaENode @updateConnectHandle="updateConnectHandle" v-bind="nodeStartProps"></CustomSaENode>
+          <CustomSaENode
+            @updateConnectHandle="updateConnectHandle"
+            v-bind="nodeStartProps"
+          ></CustomSaENode>
         </template>
 
         <template #node-end="nodeEndProps">
-          <CustomSaENode @updateConnectHandle="updateConnectHandle" v-bind="nodeEndProps"></CustomSaENode>
+          <CustomSaENode
+            @updateConnectHandle="updateConnectHandle"
+            v-bind="nodeEndProps"
+          ></CustomSaENode>
         </template>
 
         <!-- 自定义边线-连接后 -->

@@ -8,8 +8,19 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { defineStore } from 'pinia';
-import { ref, nextTick, watch, onMounted, onBeforeUnmount } from 'vue';
-import { useAccountStore, useHistorySessionStore } from 'src/store';
+import {
+  ref,
+  nextTick,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  reactive,
+} from 'vue';
+import {
+  useAccountStore,
+  useHistorySessionStore,
+  useLangStore,
+} from 'src/store';
 import {
   AppShowType,
   FlowDataType,
@@ -116,7 +127,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number,
   ): Promise<void> => {
-    const language = localStorage.getItem('localeLang');
+    const { language } = useLangStore();
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
     // 当前问答在整个问答记录中的索引 openouler有什么ai特性
@@ -878,47 +889,5 @@ export const useSessionStore = defineStore('conversation', () => {
     getConversation,
     comment,
     cancel,
-  };
-});
-
-import { electronProcess } from '@/utils/electron';
-export const useChangeThemeStore = defineStore('theme', () => {
-  const theme = ref('');
-  // if (localStorage.getItem('theme')) {
-  //   theme.value = localStorage.getItem('theme') || 'dark';
-  // }
-
-  function updateTheme(t: 'dark' | 'light') {
-    theme.value = t;
-  }
-
-  function storageListener(e: StorageEvent) {
-    if (e.key === 'theme') {
-      theme.value = e.newValue || 'light';
-      document.body.setAttribute('theme', theme.value);
-    }
-  }
-
-  watch(
-    () => theme.value,
-    (newVal) => {
-      localStorage.setItem('theme', newVal);
-      document.body.setAttribute('theme', newVal);
-    },
-  );
-
-  onMounted(() => {
-    if (electronProcess) {
-      electronProcess.env['EULERCOPILOT_THEME'] &&
-        updateTheme(electronProcess.env['EULERCOPILOT_THEME']);
-    }
-    window.addEventListener('storage', storageListener);
-  });
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('storage', storageListener);
-  });
-  return {
-    theme,
   };
 });
