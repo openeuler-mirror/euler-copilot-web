@@ -15,38 +15,38 @@ AutoReq: no
 %define _electron_build_dir linux-unpacked
 %endif
 
-BuildArch:      aarch64 x86_64
-Name:           euler-copilot-web
-Version:        0.9.6
-Release:        1%{?dist}
-License:        MulanPSL-2.0 
-Group:          Applications/Utilities
-Summary:        openEuler 大模型智能系统
-Source0:        %{name}-%{version}.tar.gz
+BuildArch:        aarch64 x86_64
+Name:             euler-copilot-web
+Version:          0.9.6
+Release:          1%{?dist}
+License:          MulanPSL-2.0 
+Group:            Applications/Utilities
+Summary:          openEuler 大模型智能系统 Web 前端
+Source0:          %{name}-%{version}.tar.gz
 
-URL:            https://gitee.com/openeuler/euler-copilot-web
-Vendor:         openEuler <contact@openeuler.org>
-Packager:       openEuler <contact@openeuler.org>
+URL:              https://gitee.com/openeuler/euler-copilot-web
+Vendor:           openEuler <contact@openeuler.org>
+Packager:         openEuler <contact@openeuler.org>
 
-BuildRequires:  curl
+BuildRequires:    curl
 
 %description
-openEuler 大模型智能系统
+openEuler 大模型智能系统 Web 前端
 
-%package -n     euler-copilot-desktop
-Summary:        openEuler 大模型智能系统桌面客户端
-Requires:       at-spi2-core
-Requires:       gtk3
-Requires:       libXScrnSaver
-Requires:       libnotify
-Requires:       nss
-Requires:       xdg-utils
-Requires:       (libXtst or libXtst6)
-Requires:       (libuuid or libuuid1)
-Requires(post): /bin/sh
+%package -n       euler-copilot-desktop
+Summary:          openEuler 大模型智能系统桌面客户端
+Requires:         at-spi2-core
+Requires:         gtk3
+Requires:         libXScrnSaver
+Requires:         libnotify
+Requires:         nss
+Requires:         xdg-utils
+Requires:         (libXtst or libXtst6)
+Requires:         (libuuid or libuuid1)
+Requires(post):   /bin/sh
 Requires(postun): /bin/sh
 
-%description -n euler-copilot-desktop
+%description -n   euler-copilot-desktop
 openEuler 大模型智能系统桌面客户端
 
 
