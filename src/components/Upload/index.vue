@@ -41,6 +41,8 @@ const handleCreateapi = async () => {
       errorMsg('创建失败');
     }
     loading.value = false;
+  } else {
+    loading.value = false;
   }
 };
 
