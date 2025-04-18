@@ -106,9 +106,6 @@ mkdir -p %{buildroot}/usr/share/icons/hicolor/512x512/apps
 
 # 复制构件到目标目录
 cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/%{_electron_build_dir}/* %{buildroot}/opt/EulerCopilot/
-# 创建命令行链接
-mkdir -p %{buildroot}/usr/bin
-ln -sf '/opt/EulerCopilot/euler-copilot-desktop' %{buildroot}/usr/bin/euler-copilot-desktop
 # 拷贝桌面入口文件和图标
 cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
 cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/
@@ -122,8 +119,6 @@ cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.png %{bu
 # 应用安装目录及其所有内容
 %dir /opt/EulerCopilot
 %attr(0755, root, root) /opt/EulerCopilot/*
-# 命令行链接
-/usr/bin/euler-copilot-desktop
 # 桌面与图标
 %attr(0644, root, root) /usr/share/applications/euler-copilot-desktop.desktop
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
