@@ -210,11 +210,6 @@ const addNewSession = async (routerName: string) => {
 };
 
 const initCopilot = async (): Promise<void> => {
-  if (localStorage.getItem('theme')) {
-    theme.value = localStorage.getItem('theme') || 'light';
-  } else {
-    localStorage.setItem('theme', 'light');
-  }
   const currRoute = router.currentRoute;
   if (currRoute.value.query.appId) {
     app.value = {

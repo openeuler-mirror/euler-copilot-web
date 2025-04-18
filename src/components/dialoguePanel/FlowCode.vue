@@ -3,9 +3,8 @@ import { ref, onMounted, watch, shallowRef } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { useHistorySessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore, useHistorySessionStore } from '@/store/';
 const { params } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
 const CODE_STYLE = {

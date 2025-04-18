@@ -8,12 +8,8 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { ElNotification, ElMessageBox } from 'element-plus';
-import {
-  CALLBACK_URL,
-  LOGOUT_CALLBACK_URL,
-} from 'src/views/dialogue/constants';
+import { LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
 import { useAccountStore } from 'src/store';
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 import type {
   AxiosError,
@@ -22,7 +18,6 @@ import type {
 } from 'axios';
 import { storeToRefs } from 'pinia';
 import i18n from 'src/i18n';
-import { errorMsg } from 'src/components/Message';
 
 function getCookie(name: string) {
   const matches = document.cookie.match(
@@ -46,45 +41,78 @@ export const handleChangeRequestHeader = (
   if (cookieValue) {
     config.headers['X-CSRF-Token'] = cookieValue;
   }
+  // TODO 请求携带token 字段待定
+  const token = localStorage.getItem('ECSESSION');
+  token && (config.headers.Authorization = `${token}`);
   return config;
 };
 
+async function toAuthorization() {
+  const store = useAccountStore();
+  const url = await store.getAuthUrl('login');
+  if (!url) return;
+  const w = 1000;
+  const h = 700;
+  const left = (screen.width - w) / 2;
+  const top = (screen.height - h) / 2;
+
+  const authWindow = window.open(
+    url,
+    'loginWindow',
+    `width=${w},height=${h},resizable=yes,scrollbars=yes,top=${top},left=${left}`,
+  );
+
+  const postMessageListener = (event: MessageEvent) => {
+    const { origin } = event.data;
+    const AUTH_SERVER_URL = import.meta.env.VITE_BASE_PROXY_URL;
+    // 校验域名，防止攻击， TODO 域名待定
+    if (origin === AUTH_SERVER_URL) {
+      const { data } = event;
+      if (data?.type === 'AUTH_SUCCESS') {
+        window.removeEventListener('message', postMessageListener);
+        // TODO 存储token信息，字段待定
+        localStorage.setItem('ECSESSION', data.token);
+        authWindow?.close();
+        window.location.reload();
+      }
+    }
+  };
+  if (authWindow) {
+    const loop = setInterval(() => {
+      if (authWindow && authWindow.closed) {
+        clearInterval(loop);
+        window.location.reload();
+      }
+    }, 500);
+  }
+
+  window.addEventListener('message', postMessageListener);
+}
+
+let isAuthorizing = false;
 export const handleAuthorize = async (errStatus: number): Promise<void> => {
   const type = import.meta.env.VITE_USER_TYPE;
   const store = useAccountStore();
   const { userinfo } = storeToRefs(store);
   userinfo.value.organization = type;
   if (errStatus === 401 || errStatus === 403) {
-    if (qiankunWindow.__POWERED_BY_QIANKUN__) {
-      const url = await store.getAuthUrl('login');
-      if (url) {
-        const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
-          ? `${url}&redirect_index=${location.href}`
-          : url;
-        if (redirectUrl) window.location.href = redirectUrl;
-      }
-    } else {
-      ElMessageBox.confirm(
-        i18n.global.t('Login.unauthorized'),
-        i18n.global.t('history.confirmation_message1'),
-        {
-          confirmButtonText: i18n.global.t('Login.login'),
-          showClose: false,
-          showCancelButton: false,
-          autofocus: false,
-          closeOnClickModal: false,
-          closeOnPressEscape: false,
-        },
-      ).then(async () => {
-        const url = await store.getAuthUrl('login');
-        if (url) {
-          const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
-            ? `${url}&redirect_index=${location.href}`
-            : url;
-          if (redirectUrl) window.location.href = redirectUrl;
-        }
-      });
-    }
+    if (isAuthorizing) return;
+    isAuthorizing = true;
+
+    ElMessageBox.confirm(
+      i18n.global.t('Login.unauthorized'),
+      i18n.global.t('history.confirmation_message1'),
+      {
+        confirmButtonText: i18n.global.t('Login.login'),
+        showClose: false,
+        showCancelButton: false,
+        autofocus: false,
+        closeOnClickModal: false,
+        closeOnPressEscape: false,
+      },
+    ).then(async () => {
+      toAuthorization();
+    });
   }
   if (errStatus === 460) {
     window.open(LOGOUT_CALLBACK_URL, '_self');
@@ -181,22 +209,6 @@ export const handleStatusError = async (
       handleAuthorize(status);
       return;
     }
-    const originalRequest = error.config;
-    if (originalRequest && originalRequest.url === '/api/auth/refresh_token') {
-      // 长token过期,需要重新登录
-      handleAuthorize(status);
-      return Promise.reject(error.response);
-    }
-    if (originalRequest && originalRequest.url === '/api/auth/user') {
-      handleAuthorize(status);
-      return;
-    }
-    //引入新的cookie后，会根据用户的请求重置token有效期，先删除重发逻辑，后期修改
-    // const suc = await refreshToken(originalRequest);
-    // if(!suc){
-    //   return Promise.reject(error.response);
-    // }
-    // return server(originalRequest);
   }
   return Promise.reject(error.response);
 };

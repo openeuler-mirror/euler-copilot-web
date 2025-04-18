@@ -31,20 +31,11 @@ const changeLanguagefun = (lang: 'zh_cn' | 'en') => {
   }
 };
 
-const theme = ref(localStorage.getItem('theme') || 'light');
+const { theme } = storeToRefs(useChangeThemeStore());
 
 const changeTheme = () => {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark';
-
-  document.body.setAttribute('theme', theme.value);
-  localStorage.setItem('theme', theme.value);
-  themeStore.theme = theme.value;
-  if (ipcRenderer) {
-    ipcRenderer.invoke('copilot:theme', {
-      theme: theme.value,
-      backgroundColor: theme.value === 'dark' ? '#1f2329' : '#ffffff',
-    });
-  }
+  const { updateTheme } = useChangeThemeStore();
+  updateTheme(theme.value === 'light' ? 'dark' : 'light');
 };
 
 const logoutHandler = () => {

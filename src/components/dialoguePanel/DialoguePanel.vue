@@ -2,12 +2,8 @@
 import type { DialoguePanelType } from './type';
 import { useDialogueActions } from './hooks/useDialogueActions';
 import { useMarkdownParser } from './hooks/useMarkdownParser';
-import { ref, withDefaults, toRef } from 'vue';
-import {
-  useSessionStore,
-  useChangeThemeStore,
-  echartsObj,
-} from 'src/store/conversation';
+import { ref, toRef } from 'vue';
+import { echartsObj } from 'src/store/conversation';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
@@ -17,7 +13,7 @@ import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
 import { storeToRefs } from 'pinia';
-import { useLangStore } from 'src/store';
+import { useLangStore, useChangeThemeStore, useSessionStore } from '@/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggest } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());

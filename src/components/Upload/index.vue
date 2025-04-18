@@ -18,7 +18,7 @@ import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { yaml } from '@codemirror/lang-yaml';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore } from '@/store';
 import CustomLoading from 'src/views/customLoading/index.vue';
 
 const loading = ref(false);
@@ -34,7 +34,9 @@ const handleCreateapi = async () => {
     if (res.code === 200) {
       getServiceJson.value = res?.result?.apis;
       getServiceName.value = res?.result?.name;
-      activeServiceNameList.value = getServiceJson.value.map((item) => item.name);
+      activeServiceNameList.value = getServiceJson.value.map(
+        (item) => item.name,
+      );
       uploadtype.value = 'get';
       successMsg('创建成功');
     } else {
@@ -199,7 +201,9 @@ watch(
     getServiceYaml.value = props.getServiceYaml;
     getServiceName.value = props.getServiceName;
     if (getServiceJson.value?.length) {
-      activeServiceNameList.value = getServiceJson.value.map((item) => item.name);
+      activeServiceNameList.value = getServiceJson.value.map(
+        (item) => item.name,
+      );
     }
     if (props.type === 'edit' && props) {
       getServiceYamlFun(props.serviceId);
