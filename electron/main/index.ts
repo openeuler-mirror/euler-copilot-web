@@ -15,6 +15,7 @@ import {
   nativeTheme,
   BrowserWindow,
   dialog,
+  Menu,
 } from 'electron';
 import { createDefaultWindow, createChatWindow, createTray } from './window';
 import type { INLSConfiguration } from './common/nls';
@@ -96,6 +97,126 @@ function registerGlobalShortcut() {
   return success;
 }
 
+// 构建原生应用菜单，支持中英文
+function buildAppMenu(nlsConfig: { resolvedLanguage: string }) {
+  const isZh = nlsConfig.resolvedLanguage.startsWith('zh');
+  const isMac = process.platform === 'darwin';
+  const template = [
+    // macOS App 菜单
+    ...(isMac
+      ? [
+          {
+            role: 'appMenu',
+            label: app.name,
+            submenu: [
+              {
+                role: 'about',
+                label: isZh ? `关于 ${app.name}` : `About ${app.name}`,
+              },
+              { type: 'separator' },
+              { role: 'services', label: isZh ? '服务' : 'Services' },
+              { type: 'separator' },
+              {
+                role: 'hide',
+                label: isZh ? `隐藏 ${app.name}` : `Hide ${app.name}`,
+              },
+              { role: 'hideOthers', label: isZh ? '隐藏其他' : 'Hide Others' },
+              { role: 'unhide', label: isZh ? '显示全部' : 'Show All' },
+              { type: 'separator' },
+              {
+                role: 'quit',
+                label: isZh ? `退出 ${app.name}` : `Quit ${app.name}`,
+              },
+            ],
+          },
+        ]
+      : []),
+    // File 菜单
+    {
+      role: 'fileMenu',
+      label: isZh ? '文件' : 'File',
+      submenu: [{ role: 'close', label: isZh ? '关闭窗口' : 'Close Window' }],
+    },
+    // Edit 菜单
+    {
+      role: 'editMenu',
+      label: isZh ? '编辑' : 'Edit',
+      submenu: [
+        { role: 'undo', label: isZh ? '撤销' : 'Undo' },
+        { role: 'redo', label: isZh ? '重做' : 'Redo' },
+        { type: 'separator' },
+        { role: 'cut', label: isZh ? '剪切' : 'Cut' },
+        { role: 'copy', label: isZh ? '复制' : 'Copy' },
+        { role: 'paste', label: isZh ? '粘贴' : 'Paste' },
+        { role: 'selectAll', label: isZh ? '全选' : 'Select All' },
+      ],
+    },
+    // View 菜单
+    {
+      role: 'viewMenu',
+      label: isZh ? '显示' : 'View',
+      submenu: [
+        { role: 'reload', label: isZh ? '重新加载' : 'Reload' },
+        {
+          role: 'forcereload',
+          label: isZh ? '强制重新加载' : 'Force Reload',
+        },
+        {
+          role: 'toggleDevTools',
+          label: isZh ? '切换开发者工具' : 'Toggle Developer Tools',
+        },
+        { type: 'separator' },
+        { role: 'resetZoom', label: isZh ? '重置缩放' : 'Reset Zoom' },
+        { role: 'zoomIn', label: isZh ? '放大' : 'Zoom In' },
+        { role: 'zoomOut', label: isZh ? '缩小' : 'Zoom Out' },
+        { type: 'separator' },
+        {
+          role: 'togglefullscreen',
+          label: isZh ? '切换全屏' : 'Toggle Fullscreen',
+        },
+      ],
+    },
+    // Window 菜单
+    {
+      role: 'windowMenu',
+      label: isZh ? '窗口' : 'Window',
+      submenu: [
+        { role: 'minimize', label: isZh ? '最小化' : 'Minimize' },
+        { role: 'zoom', label: isZh ? '缩放' : 'Zoom' },
+        { type: 'separator' },
+        {
+          label: isZh ? '打开快捷问答' : 'Open Quick Chat',
+          click: () => {
+            const chat = BrowserWindow.getAllWindows().find((win) =>
+              win.webContents.getURL().includes('chat'),
+            );
+            if (chat) {
+              if (chat.isMinimized()) chat.restore();
+              chat.show();
+              chat.focus();
+            } else {
+              createChatWindow().show();
+            }
+          },
+        },
+      ],
+    },
+    // Help 菜单
+    {
+      role: 'help',
+      label: isZh ? '帮助' : 'Help',
+      submenu: [
+        { label: isZh ? '文档' : 'Documentation', click: () => {} },
+        { label: isZh ? '社区' : 'Community Discussions', click: () => {} },
+        { label: isZh ? '搜索问题' : 'Search Issues', click: () => {} },
+      ],
+    },
+  ];
+  return Menu.buildFromTemplate(
+    template as Electron.MenuItemConstructorOptions[],
+  );
+}
+
 app.once('ready', () => {
   onReady();
 });
@@ -136,6 +257,9 @@ async function onReady() {
     process.env['EULERCOPILOT_CACHE_PATH'] = cachePath || '';
 
     await startup();
+
+    // 设置原生应用菜单
+    Menu.setApplicationMenu(buildAppMenu(nlsConfig));
 
     // 注册全局快捷键
     registerGlobalShortcut();
