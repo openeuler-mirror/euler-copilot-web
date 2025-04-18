@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import path from 'node:path';
 import * as electron from 'electron';
-import { BrowserWindow, app, globalShortcut, ipcMain } from 'electron';
+import { BrowserWindow, app, ipcMain, Menu } from 'electron';
 import { options as allWindow } from './options';
 import { updateConf } from '../common/conf';
 import { isLinux } from '../common/platform';
@@ -46,6 +46,9 @@ export function createWindow(
   // 这样确保即使在其他平台添加自定义标题栏也能工作
   setupWindowControls(win);
 
+  // 设置右键上下文菜单
+  setupContextMenu(win);
+
   return win;
 }
 
@@ -64,6 +67,38 @@ function setupWindowControls(win: BrowserWindow) {
     if (win.webContents) {
       win.webContents.send('window-maximized-change', false);
     }
+  });
+}
+
+/**
+ * 设置右键上下文菜单，支持中英文
+ */
+function setupContextMenu(win: BrowserWindow) {
+  win.webContents.on('context-menu', (_event, params) => {
+    const nlsEnv = process.env.EULERCOPILOT_NLS_CONFIG;
+    let resolved = 'en';
+    try {
+      const cfg = JSON.parse(nlsEnv || '{}');
+      resolved = cfg.resolvedLanguage || 'en';
+    } catch {
+      resolved = 'en';
+    }
+    const isZh = resolved.startsWith('zh');
+    const template: Electron.MenuItemConstructorOptions[] = [
+      {
+        role: 'copy',
+        label: isZh ? '复制' : 'Copy',
+        enabled: params.selectionText.length > 0,
+      },
+      {
+        role: 'paste',
+        label: isZh ? '粘贴' : 'Paste',
+        enabled: params.editFlags.canPaste,
+      },
+      { type: 'separator' },
+      { role: 'selectAll', label: isZh ? '全选' : 'Select All' },
+    ];
+    Menu.buildFromTemplate(template).popup({ window: win });
   });
 }
 
