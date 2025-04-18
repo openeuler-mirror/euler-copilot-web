@@ -22,15 +22,14 @@
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
     "type-check": "tsc --noEmit",
-    "dev:desktop": "concurrently -n=R,P,M -c=green,yellow,blue \"pnpm run dev:render\" \"pnpm run dev:preload\" \"pnpm run dev:main\"",
     "dev:render": "vite",
     "dev:preload": "node -r ts-node/register scripts/build-preload --env=development --watch",
     "dev:main": "node -r ts-node/register scripts/build-main --env=development --watch",
+    "dev:desktop": "concurrently -n=R,P,M -c=green,yellow,blue \"pnpm run dev:render\" \"pnpm run dev:preload\" \"pnpm run dev:main\"",
     "build:render": "vite build --mode electron-production",
     "build:preload": "node -r ts-node/register scripts/build-preload --env=production",
     "build:main": "node -r ts-node/register scripts/build-main --env=production",
     "build:desktop": "rimraf dist && pnpm run build:render && pnpm run build:preload && pnpm run build:main",
-    "package:win32": "pnpm run build:desktop && electron-builder --win --ia32",
     "package:win64": "pnpm run build:desktop && electron-builder --win --x64",
     "package:mac": "pnpm run build:desktop && electron-builder --mac",
     "package:linux": "pnpm run build:desktop && electron-builder --linux"
@@ -47,7 +46,10 @@
     "win": {
       "target": [
         {
-          "target": "nsis"
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -62,9 +64,7 @@
       "executableName": "euler-copilot-desktop",
       "category": "Utility",
       "target": [
-        "deb",
-        "rpm",
-        "AppImage"
+        "dir"
       ]
     },
     "nsis": {
