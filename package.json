@@ -37,8 +37,12 @@
   "build": {
     "appId": "org.openeuler.eulercopilot",
     "productName": "EulerCopilot",
+    "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.",
+    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "release/${name}-${version}"
+    },
     "asar": true,
-    "afterSign": "build/scripts/notarize.js",
     "files": [
       "dist/**/*",
       "!dist/**/*.map",
@@ -52,11 +56,7 @@
       "!**/{appveyor.yml,.travis.yml,circle.yml,.github,.gitlab-ci.yml}",
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
     ],
-    "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.",
-    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
-    "directories": {
-      "output": "release/${name}-${version}"
-    },
+    "afterSign": "build/scripts/notarize.js",
     "win": {
       "target": [
         {
