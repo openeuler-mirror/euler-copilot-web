@@ -14,7 +14,7 @@ rm -rf "${RELEASE_DIR}/rpmbuild"
 rm -f "${RELEASE_DIR}"/*.tar.gz
 
 # spec 文件路径
-SPEC="${PROJECT_ROOT}/distribution/linux/euler-copilot-web.spec"
+SPEC="${PROJECT_ROOT}/build/linux/euler-copilot-web.spec"
 
 # 从 spec 文件获取 Name 和 Version
 name=$(grep -E '^Name:' "${SPEC}" | head -1 | awk '{print $2}')

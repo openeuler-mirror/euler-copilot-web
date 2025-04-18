@@ -110,8 +110,8 @@ cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/%{_electr
 mkdir -p %{buildroot}/usr/bin
 ln -sf '/opt/EulerCopilot/euler-copilot-desktop' %{buildroot}/usr/bin/euler-copilot-desktop
 # 拷贝桌面入口文件和图标
-cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
-cp -a %{_builddir}/%{name}-%{version}/distribution/linux/euler-copilot-desktop.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/
+cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
+cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/
 
 
 %files
