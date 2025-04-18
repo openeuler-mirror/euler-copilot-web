@@ -75,7 +75,6 @@ const props = withDefaults(defineProps<BubbleProps>(), {
     padding: 14px;
     border-radius: 8px;
     border-top-left-radius: 0px;
-    white-space: pre-wrap;
     word-break: break-all;
 
     .loading {
