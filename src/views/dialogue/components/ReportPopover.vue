@@ -45,20 +45,17 @@ const descText = ref<string>('');
 const isErrorInputVisiable = computed(() => list.value[2].isChecked);
 
 const emits = defineEmits<{
-  (e: 'report', reason: string): void;
+  (e: 'report', reason_type: string,reason: string): void;
   (e: 'close'): void;
 }>();
 
 /** 举报 */
 const handleComplaint = () => {
-  const str = descText.value.length
-    ? radio.value + ';' + descText.value
-    : radio.value;
   if (!isErrorInputVisiable.value) {
-    emits('report', str);
+    emits('report', radio.value, descText.value);
     return;
   }
-  emits('report', str);
+  emits('report', radio.value, descText.value);
 };
 </script>
 

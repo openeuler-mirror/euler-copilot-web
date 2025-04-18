@@ -743,7 +743,8 @@ export const useSessionStore = defineStore('conversation', () => {
             re?.messageList.addItem(
               record.content.answer,
               record.id,
-              typeof record.is_like === 'object' ? 2 : Number(record.is_like),
+              // is_like字段改为 comment = "liked", "disliked", "none"
+              record.comment
             );
             if (re?.currentInd !== undefined) {
               re.currentInd = re.currentInd + 1;
@@ -755,7 +756,8 @@ export const useSessionStore = defineStore('conversation', () => {
         a.addItem(
           record.content.answer,
           record.id,
-          typeof record.is_like === 'object' ? 2 : Number(record.is_like),
+          // is_like字段改为 comment = "liked", "disliked", "none"
+          record.comment
         );
         conversationList.value.unshift(
           {

@@ -56,7 +56,7 @@ export interface ConversationRecord {
   flow: Flow;
   content: Content;
   metadata: Metadata;
-  is_like?: boolean;
+  comment: string;
   created_at: string;
 }
 

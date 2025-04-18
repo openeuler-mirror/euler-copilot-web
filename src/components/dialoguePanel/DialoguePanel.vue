@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, ref, withDefaults } from 'vue';
+import { computed, ref, withDefaults, toRefs } from 'vue';
 import { writeText } from 'src/utils';
 import {
   useSessionStore,
@@ -31,6 +31,8 @@ export interface DialoguePanelProps {
   key: number;
   //
   cid: number;
+  // groupid
+  groupId: string;
   // 用来区分是用户还是ai的输入
   type: DialoguePanelType;
   // 文本内容
@@ -54,7 +56,7 @@ export interface DialoguePanelProps {
   //
   recordList?: string[] | undefined;
   //
-  isLikeList?: number[] | undefined;
+  isCommentList?: string[] | undefined;
   //
   search_suggestions?: any;
   //
@@ -75,7 +77,6 @@ export interface DialoguePanelProps {
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
-
 var option = ref();
 var show = ref(false);
 const size = reactive({
@@ -91,14 +92,16 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   // currentSelected: 0,
   needRegernerate: false,
 });
+const { groupId } = toRefs(props);
 const thoughtContent = ref('');
 const index = ref(0);
-const isLike = ref(props.isLikeList);
+const isComment = ref(props.isCommentList);
 const emits = defineEmits<{
   (
-    e: 'commont',
-    type: 'support' | 'against',
+    e: 'comment',
+    type: 'liked' | 'disliked' | 'none',
     qaRecordId: string,
+    groupId: string | undefined,
     reason?: string,
     reasion_link?: string,
     reason_description?: string,
@@ -149,15 +152,15 @@ const handleCopy = (): void => {
 /**
  * 赞同与反对
  */
-const handleSupport = async (
-  type: 'support' | 'against' | 'report',
+const handleLike = async (
+  type: 'liked' | 'disliked' | 'report',
 ): Promise<void> => {
-  if (type === 'support') {
+  if (type === 'liked') {
     const qaRecordId = props.recordList[index.value];
-    emits('commont', type, props.cid, qaRecordId, index.value);
-    isLike.value[index.value] = 1;
-    handleIsLike();
-  } else if (type === 'against') {
+    emits('comment', type, props.cid,qaRecordId,index.value,props.groupId);
+    isComment.value[index.value] = 'liked';
+    // handleIsLike();
+  } else if (type === 'disliked') {
     isAgainstVisible.value = true;
   } else {
     isReportVisible.value = true;
@@ -170,25 +173,26 @@ const handleSupport = async (
  * @param reasionLink
  * @param reasonDescription
  */
-const handleAgainst = async (
+const handleDislike = async (
   reason: string,
   reasionLink?: string,
   reasonDescription?: string,
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   emits(
-    'commont',
-    'against',
+    'comment',
+    'disliked',
     props.cid,
     qaRecordId,
     index.value,
+    props.groupId,
     reason,
     reasionLink,
     reasonDescription,
   );
   isAgainstVisible.value = false;
-  isLike.value[index.value] = 0;
-  handleIsLike();
+  isComment.value[index.value] = 0;
+  // handleIsLike();
 };
 
 const handleOutsideClick = () => {
@@ -204,9 +208,9 @@ const unbindDocumentClick = () => {
 };
 
 // 举报功能
-const handleReport = async (reason: string): Promise<void> => {
+const handleReport = async (reason_type:string,reason: string): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  emits('report', qaRecordId, reason);
+  emits('report', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
 };
 
@@ -272,56 +276,54 @@ const prePageHandle = (cid: number) => {
     index.value = 0;
   } else {
     index.value--;
-    handleIsLike();
+    // handleIsLike();
   }
 };
 
 const nextPageHandle = (cid: number) => {
   thoughtContent.value = '';
   nextPage(cid);
-  if (index.value === (props.isLikeList as number[]).length - 1) {
-    index.value = (props.isLikeList as number[]).length - 1;
+  if (index.value === (props.isCommentList as number[]).length - 1) {
+    index.value = (props.isCommentList as number[]).length - 1;
   } else {
     index.value++;
-    handleIsLike();
+    // handleIsLike();
   }
 };
 
-const isSupport = ref();
-const isAgainst = ref();
-
+const isSupport = ref(false);
+const isAgainst = ref(false);
 const handleIsLike = () => {
-  let a = 2;
-  if (isLike.value === undefined) {
+  if (isComment.value === undefined) {
     return;
   } else {
-    if (index.value <= isLike.value.length && isLike.value.length !== 0) {
-      a = isLike.value[index.value];
-    }
-    if (a !== 2) {
-      isSupport.value = Boolean(a);
-      isAgainst.value = !a;
+    if (index.value <= isComment.value.length && isComment.value.length !== 0) {
+    let comment = isComment.value[index.value];
+    if (comment !== "none") {
+      isSupport.value = (comment === 'liked');
+      isAgainst.value = !isSupport.value;
     } else {
       isSupport.value = 0;
       isAgainst.value = 0;
     }
   }
+  }
 };
 
 onMounted(() => {
-  isLike.value = props.isLikeList;
+  isComment.value = props.isCommentList;
   setTimeout(() => {
     handleIsLike();
   }, 200);
 });
 
 watch(
-  () => props.isLikeList,
+  () => props.isCommentList,
   () => {
-    if (isLike.value.length === props.isLikeList?.length) {
+    if (isComment.value.length === props.isCommentList?.length) {
       handleIsLike();
     } else {
-      isLike.value = props.isLikeList;
+      isComment.value = props.isCommentList;
       handleIsLike();
     }
   },
@@ -373,7 +375,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
-  isLike.value = undefined;
+  isComment.value = undefined;
   index.value = 0;
 });
 
@@ -599,19 +601,19 @@ const searchAppName = (appId) => {
                 class="button-icon simg"
                 v-if="!isSupport && themeStore.theme === 'dark'"
                 src="@/assets/svgs/dark_support.svg"
-                @click="handleSupport('support')"
+                @click="handleLike('liked')"
               />
               <img
                 class="button-icon simg"
                 v-if="!isSupport && themeStore.theme === 'light'"
                 src="@/assets/svgs/light_support.svg"
-                @click="handleSupport('support')"
+                @click="handleLike('liked')"
               />
               <img
                 class="button-icon simg"
                 v-if="isSupport"
                 src="@/assets/svgs/support_active.svg"
-                @click="handleSupport('support')"
+                @click="handleLike('liked')"
               />
             </el-tooltip>
             <el-tooltip
@@ -622,7 +624,7 @@ const searchAppName = (appId) => {
             >
               <el-popover
                 placement="bottom-end"
-                class="against-button"
+                class="disliked-button"
                 :visible="isAgainstVisible"
                 width="328"
                 height="328"
@@ -634,25 +636,25 @@ const searchAppName = (appId) => {
                     class="button-icon"
                     v-if="!isAgainst && themeStore.theme === 'dark'"
                     src="@/assets/svgs/dark_against.svg"
-                    @click="handleSupport('against')"
+                    @click="handleLike('disliked')"
                   />
                   <img
                     class="button-icon"
                     v-if="!isAgainst && themeStore.theme === 'light'"
                     src="@/assets/svgs/light_against.svg"
-                    @click="handleSupport('against')"
+                    @click="handleLike('disliked')"
                   />
                   <img
                     class="button-icon"
                     v-if="isAgainst"
                     src="@/assets/svgs/against_active.svg"
-                    @click="handleSupport('against')"
+                    @click="handleLike('disliked')"
                   />
                 </template>
                 <AgainstPopover
                   @click.stop
                   @close="isAgainstVisible = false"
-                  @submit="handleAgainst"
+                  @submit="handleDislike"
                 />
               </el-popover>
             </el-tooltip>
@@ -664,7 +666,7 @@ const searchAppName = (appId) => {
             >
               <el-popover
                 placement="bottom-end"
-                class="against-button"
+                class="disliked-button"
                 :visible="isReportVisible"
                 :width="size.width"
                 :height="size.height"
@@ -676,13 +678,13 @@ const searchAppName = (appId) => {
                     v-if="themeStore.theme === 'dark'"
                     class="button-icon"
                     src="@/assets/svgs/dark_report.svg"
-                    @click="handleSupport('report')"
+                    @click="handleLike('report')"
                   />
                   <img
                     v-if="themeStore.theme === 'light'"
                     class="button-icon"
                     src="@/assets/svgs/light_report.svg"
-                    @click="handleSupport('report')"
+                    @click="handleLike('report')"
                   />
                 </template>
                 <ReportPopover
@@ -772,20 +774,20 @@ const searchAppName = (appId) => {
 .el-popper {
   border: none;
 
-  .against-popover-title {
+  .disliked-popover-title {
     color: var(--o-text-color-primary);
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
   }
 
-  .against-item .el-checkbox .el-checkbox__label {
+  .disliked-item .el-checkbox .el-checkbox__label {
     font-size: 12px;
     color: var(--o-text-color-secondary);
     line-height: 16px;
   }
 
-  .against-button button:first-child {
+  .disliked-button button:first-child {
     border: 1px solid var(--o-border-color-lighter);
     width: 64px;
     height: 24px;
@@ -800,11 +802,11 @@ const searchAppName = (appId) => {
     }
   }
 
-  .against-popover .against-button button:first-child:hover {
+  .disliked-popover .disliked-button button:first-child:hover {
     background-color: transparent;
   }
 
-  .against-button button:last-child {
+  .disliked-button button:last-child {
     background-color: var(--o-color-primary);
     border: none;
     color: var(--o-color-white);
@@ -821,13 +823,13 @@ const searchAppName = (appId) => {
     color: #e1eaff;
   }
 
-  .against-popover .error-input__link,
-  .against-popover .error-input__desc {
+  .disliked-popover .error-input__link,
+  .disliked-popover .error-input__desc {
     background-color: var(--o-bg-color-light);
   }
 }
 
-.against-popover {
+.disliked-popover {
   .radio {
     width: 88px;
     margin-bottom: 4px;
@@ -863,7 +865,7 @@ const searchAppName = (appId) => {
     brightness(100%) contrast(103%);
 }
 
-.against-button {
+.disliked-button {
   height: 16px;
   width: auto;
   margin-left: 12px;
