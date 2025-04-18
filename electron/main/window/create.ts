@@ -133,6 +133,11 @@ export function createDefaultWindow(): BrowserWindow {
 
   defaultWindow = createWindow(defaultWindowOptions, hash, 'mainWindow');
 
+  // 设置窗口标题
+  defaultWindow.webContents.on('did-finish-load', () => {
+    defaultWindow?.setTitle('openEuler 大模型智能系统');
+  });
+
   return defaultWindow;
 }
 
@@ -149,6 +154,11 @@ export function createChatWindow(): BrowserWindow {
   }
 
   chatWindow = createWindow(chatWindowOptions, hash, 'chatWindow');
+
+  // 设置窗口标题
+  chatWindow.webContents.on('did-finish-load', () => {
+    chatWindow?.setTitle('快捷问答');
+  });
 
   return chatWindow;
 }
