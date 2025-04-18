@@ -24,10 +24,6 @@ export interface DialogueSession {
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
 
-enum SupportMap {
-  support = 1,
-  against = 0,
-}
 const Form = ref(props.createAppForm);
 const AppForm = ref(props.createAppForm);
 const { pausedStream } = useSessionStore();
@@ -240,30 +236,34 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
  * @param type
  * @param cid
  */
-const handleCommont = async (
-  type: 'support' | 'against',
+const handlecomment  = async (
+  type: 'liked' | 'disliked' | 'none',
   cid: number,
   qaRecordId: number,
   index: number,
+  groupId: string | undefined,
   reason?: string,
   reasonLink?: string,
   reasonDescription?: string,
 ) => {
   const params: {
+    type: 'liked' | 'disliked' | 'none';
     qaRecordId: string;
-    isLike: number;
+    comment: string;
     dislikeReason?: string;
     reasonLink?: string;
     reasonDescription?: string;
+    groupId: string | undefined;
   } = {
+    type,
     qaRecordId: qaRecordId,
-    isLike: SupportMap[type],
+    comment: type,
     dislikeReason: reason,
     reasonLink: reasonLink,
     reasonDescription: reasonDescription,
+    groupId: groupId,
   };
-
-  const [_, res] = await api.commentConversation(params);
+  const [_, res] = await api.comment(params);
   if (!_ && res) {
     successMsg(i18n.global.t('feedback.feedbackSuccesful'));
   }
@@ -274,11 +274,13 @@ const handleCommont = async (
  * @param type
  * @param cid
  */
-const handleReport = async (qaRecordId: string, reason: string) => {
+const handleReport = async (qaRecordId: string,reason_type:string,reason: string) => {
   const params: {
     qaRecordId: string;
+    reason_type:string;
     reason: string;
   } = {
+    reason_type: reason_type,
     record_id: qaRecordId,
     reason: reason,
   };
@@ -781,6 +783,7 @@ watch(
           v-for="(item, index) in conversationList"
           :cid="item.cid"
           :key="index"
+          :groupId="getItem(item, 'groupId')"
           :type="item.belong"
           :inputParams="item.params"
           :content="item.message"
@@ -788,12 +791,10 @@ watch(
           :recordList="
             item.belong === 'robot' ? item.messageList.getRecordIdList() : ''
           "
-          :isLikeList="
-            item.belong === 'robot' ? item.messageList.getIslikeList() : ''
+          :isCommentList="
+            item.belong === 'robot' ? item.messageList.getCommentList() : ''
           "
           :is-finish="getItem(item, 'isFinish')"
-          :is-support="getItem(item, 'isSupport')"
-          :is-against="getItem(item, 'isAgainst')"
           :test="getItem(item, 'test')"
           :metadata="getItem(item, 'metadata')"
           :flowdata="getItem(item, 'flowdata')"
@@ -804,7 +805,7 @@ watch(
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :modeOptions="modeOptions"
-          @commont="handleCommont"
+          @comment ="handlecomment "
           @report="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"

@@ -89,6 +89,7 @@ export interface RobotConversationItem {
   // 当前选中第n次回答的索引值
   currentInd: number;
   isFinish?: boolean;
+  comment?: string;
   isSupport?: boolean;
   isAgainst?: boolean;
   createdAt?: string | Date;
@@ -103,16 +104,16 @@ export interface RobotConversationItem {
 export interface MessageRecord {
   message: string;
   record_id: string;
-  is_like: number | undefined;
+  comment: string;
 }
 
 export class MessageArray {
   private items: MessageRecord[] = [];
-  addItem(message: string, record_id: string, is_like: number): void {
+  addItem(message: string, record_id: string, comment: string): void {
     const newItem: MessageRecord = {
       message,
       record_id,
-      is_like,
+      comment,
     };
     this.items.push(newItem);
   }
@@ -137,9 +138,9 @@ export class MessageArray {
     return this.items.map((item) => item.record_id);
   }
 
-  getIslikeList(): number[] {
+  getCommentList(): string[] {
     //类型断言，将undefined转换为0。
-    return this.items.map((item) => item.is_like ?? 0);
+    return this.items.map((item) => item.comment);
   }
 
   getisLikeByIndex(index: number): number {

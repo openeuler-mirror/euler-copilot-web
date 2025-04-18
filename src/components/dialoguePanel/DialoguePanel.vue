@@ -24,6 +24,8 @@ export interface DialoguePanelProps {
   key: number;
   //
   cid: number;
+  // groupid
+  groupId: string;
   // 用来区分是用户还是ai的输入
   type: DialoguePanelType;
   // 文本内容
@@ -47,7 +49,7 @@ export interface DialoguePanelProps {
   //
   recordList?: string[] | undefined;
   //
-  isLikeList?: number[] | undefined;
+  isCommentList?: string[] | undefined;
   //
   search_suggestions?: any;
   //
@@ -68,7 +70,6 @@ export interface DialoguePanelProps {
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
-
 var option = ref();
 var show = ref(false);
 const size = reactive({
@@ -97,12 +98,13 @@ const { thoughtContent, contentAfterMark } = useMarkdownParser(
   toRef(props, 'currentSelected'),
 );
 const index = ref(0);
-const isLike = ref(props.isLikeList);
+const isComment = ref(props.isCommentList);
 const emits = defineEmits<{
   (
-    e: 'commont',
-    type: 'support' | 'against',
+    e: 'comment',
+    type: 'liked' | 'disliked' | 'none',
     qaRecordId: string,
+    groupId: string | undefined,
     reason?: string,
     reasion_link?: string,
     reason_description?: string,
@@ -154,7 +156,7 @@ const unbindDocumentClick = () => {
 // 举报功能 目前未实现
 const handleReport = async (reason: string): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  emits('report', qaRecordId, reason);
+  emits('report', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
 };
 
@@ -186,14 +188,15 @@ const prePageHandle = (cid: number) => {
   } else {
     index.value--;
     // handleIsLike();
+    // handleIsLike();
   }
 };
 
 const nextPageHandle = (cid: number) => {
   thoughtContent.value = '';
   nextPage(cid);
-  if (index.value === (props.isLikeList as number[]).length - 1) {
-    index.value = (props.isLikeList as number[]).length - 1;
+  if (index.value === (props.isCommentList as number[]).length - 1) {
+    index.value = (props.isCommentList as number[]).length - 1;
   } else {
     index.value++;
     // handleIsLike();
@@ -246,7 +249,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
-  isLike.value = undefined;
+  isComment.value = undefined;
   index.value = 0;
 });
 
@@ -495,7 +498,7 @@ const searchAppName = (appId) => {
             >
               <el-popover
                 placement="bottom-end"
-                class="against-button"
+                class="disliked-button"
                 :visible="isAgainstVisible"
                 width="328"
                 height="328"
@@ -533,7 +536,7 @@ const searchAppName = (appId) => {
             >
               <el-popover
                 placement="bottom-end"
-                class="against-button"
+                class="disliked-button"
                 :visible="isReportVisible"
                 :width="size.width"
                 :height="size.height"
