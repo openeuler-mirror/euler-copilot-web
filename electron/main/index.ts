@@ -148,7 +148,20 @@ function buildAppMenu(nlsConfig: { resolvedLanguage: string }) {
         { role: 'cut', label: isZh ? '剪切' : 'Cut' },
         { role: 'copy', label: isZh ? '复制' : 'Copy' },
         { role: 'paste', label: isZh ? '粘贴' : 'Paste' },
-        { role: 'selectAll', label: isZh ? '全选' : 'Select All' },
+        ...(isMac
+          ? [
+              {
+                role: 'pasteAndMatchStyle',
+                label: isZh ? '粘贴并匹配样式' : 'Paste and Match Style',
+              },
+              { role: 'delete', label: isZh ? '删除' : 'Delete' },
+              { role: 'selectAll', label: isZh ? '全选' : 'Select All' },
+            ]
+          : [
+              { role: 'delete', label: isZh ? '删除' : 'Delete' },
+              { type: 'separator' },
+              { role: 'selectAll', label: isZh ? '全选' : 'Select All' },
+            ]),
       ],
     },
     // View 菜单
@@ -186,6 +199,7 @@ function buildAppMenu(nlsConfig: { resolvedLanguage: string }) {
         { type: 'separator' },
         {
           label: isZh ? '打开快捷问答' : 'Open Quick Chat',
+          accelerator: CHAT_SHORTCUT_KEY,
           click: () => {
             const chat = BrowserWindow.getAllWindows().find((win) =>
               win.webContents.getURL().includes('chat'),
@@ -199,6 +213,15 @@ function buildAppMenu(nlsConfig: { resolvedLanguage: string }) {
             }
           },
         },
+        { type: 'separator' },
+        ...(isMac
+          ? [
+              {
+                role: 'front',
+                label: isZh ? '前置全部窗口' : 'Bring All to Front',
+              },
+            ]
+          : []),
       ],
     },
     // Help 菜单
