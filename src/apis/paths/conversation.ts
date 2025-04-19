@@ -18,13 +18,7 @@ const BASE_URL = '/api/conversation';
  * @returns
  */
 export const stopGeneration = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<object>
-      | undefined
-    ),
-  ]
+  [any, FcResponse<object> | undefined]
 > => {
   return post(`/api/stop`);
 };
@@ -135,16 +129,23 @@ export const getHistoryConversation = (
 export const commentConversation = (params: {
   type: string;
   qaRecordId: string;
-  comment : string;
+  comment: string;
   dislikeReason?: string;
   reasonLink?: string;
   reasonDescription?: string;
   groupId: string | undefined;
 }): Promise<[any, FcResponse<Record<string, unknown>> | undefined]> => {
-  const { qaRecordId, comment , dislikeReason, reasonLink, reasonDescription, groupId,type} =
-    params;
-    if(type === 'disliked'){
-      return post(`/api/comment`, {
+  const {
+    qaRecordId,
+    comment,
+    dislikeReason,
+    reasonLink,
+    reasonDescription,
+    groupId,
+    type,
+  } = params;
+  if (type === 'disliked') {
+    return post(`/api/comment`, {
       record_id: qaRecordId,
       comment: comment,
       group_id: groupId,
@@ -152,11 +153,11 @@ export const commentConversation = (params: {
       reason_link: reasonLink,
       reason_description: reasonDescription,
     });
-    }else{
+  } else {
     return post(`/api/comment`, {
-    record_id: qaRecordId,
-    group_id: groupId,
-    comment : comment,
+      record_id: qaRecordId,
+      group_id: groupId,
+      comment: comment,
     });
   }
 };

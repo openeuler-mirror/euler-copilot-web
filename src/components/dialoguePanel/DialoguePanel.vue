@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, ref, withDefaults, toRefs } from 'vue';
+import { computed, ref, withDefaults } from 'vue';
 import { writeText } from 'src/utils';
 import {
   useSessionStore,
@@ -77,6 +77,7 @@ export interface DialoguePanelProps {
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
+import { api } from 'src/apis';
 var option = ref();
 var show = ref(false);
 const size = reactive({
@@ -96,15 +97,6 @@ const thoughtContent = ref('');
 const index = ref(0);
 const isComment = ref(props.isCommentList);
 const emits = defineEmits<{
-  (
-    e: 'handleComment',
-    type: 'liked' | 'disliked' | 'none',
-    qaRecordId: string,
-    groupId: string | undefined,
-    reason?: string,
-    reasion_link?: string,
-    reason_description?: string,
-  ): void;
   (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
     e: 'handleSendMessage',
@@ -156,10 +148,17 @@ const handleLike = async (
 ): Promise<void> => {
   if (type === 'liked') {
     const qaRecordId = props.recordList[index.value];
-    emits('handleComment',!isSupport.value ? 'liked' : 'none', props.cid,qaRecordId,index.value,props.groupId).then((res) => {
-      isComment.value[index.value] = 'liked';
-      handleIsLike();
-    });
+    await api.commentConversation({
+      type: !isSupport.value ? 'liked' : 'none',
+      qaRecordId: qaRecordId,
+      comment: !isSupport.value ? 'liked' : 'none',
+      groupId: props.groupId,
+    }).then((res) => {
+      if(res[0].status === 200){
+        isComment.value[index.value] = 'liked';
+        handleIsLike();
+      }
+    })
   } else if (type === 'disliked') {
     isAgainstVisible.value = true;
   } else {
@@ -179,20 +178,22 @@ const handleDislike = async (
   reasonDescription?: string,
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  emits(
-    'handleComment',
-    !isAgainst.value ? 'disliked' : 'none',
-    props.cid,
-    qaRecordId,
-    index.value,
-    props.groupId,
-    reason,
-    reasionLink,
-    reasonDescription,
+  await api.commentConversation(
+    {
+      type: 'disliked',
+      qaRecordId: qaRecordId,
+      comment: reason,
+      groupId: props.groupId,
+      reasonLink: reasionLink,
+      reasonDescription: reasonDescription,
+    }
   ).then((res) => {
-    isAgainstVisible.value = false;
-    isComment.value[index.value] = 'disliked';
-    handleIsLike();
+    if(res[0].status === 200){
+      console.log('handleDislike');
+      isAgainstVisible.value = false;
+      isComment.value[index.value] = 'disliked';
+      handleIsLike();
+    };
   });
 };
 
@@ -209,7 +210,10 @@ const unbindDocumentClick = () => {
 };
 
 // 举报功能
-const handleReport = async (reason_type:string,reason: string): Promise<void> => {
+const handleReport = async (
+  reason_type: string,
+  reason: string,
+): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   emits('handleReport', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
@@ -300,15 +304,15 @@ const handleIsLike = () => {
     return;
   } else {
     if (index.value <= isComment.value.length && isComment.value.length !== 0) {
-    let comment = isComment.value[index.value];
-    if (comment !== "none") {
-      isSupport.value = (comment === 'liked');
-      isAgainst.value = !isSupport.value;
-    } else {
-      isSupport.value = false;
-      isAgainst.value = false;
+      let comment = isComment.value[index.value];
+      if (comment !== 'none') {
+        isSupport.value = comment === 'liked';
+        isAgainst.value = !isSupport.value;
+      } else {
+        isSupport.value = false;
+        isAgainst.value = false;
+      }
     }
-  }
   }
 };
 

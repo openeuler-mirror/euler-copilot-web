@@ -89,15 +89,15 @@ export const useSessionStore = defineStore('conversation', () => {
    **/
   function splitDataString(input) {
     if (input.includes('"data: ')) {
-        return [input];
+      return [input];
     }
-    const parts = input.split(/data: /g).filter(part => part.trim() !== '');
+    const parts = input.split(/data: /g).filter((part) => part.trim() !== '');
     if (input.startsWith('data: ')) {
-        return parts.map(part => 'data: ' + part);
+      return parts.map((part) => 'data: ' + part);
     } else {
-        return [parts[0], ...parts.slice(1).map(part => 'data: ' + part)];
+      return [parts[0], ...parts.slice(1).map((part) => 'data: ' + part)];
     }
-}
+  }
   /**
    * 请求流式数据
    * @param params
@@ -744,7 +744,7 @@ export const useSessionStore = defineStore('conversation', () => {
               record.content.answer,
               record.id,
               // is_like字段改为 comment = "liked", "disliked", "none"
-              record.comment
+              record.comment,
             );
             if (re?.currentInd !== undefined) {
               re.currentInd = re.currentInd + 1;
@@ -757,7 +757,7 @@ export const useSessionStore = defineStore('conversation', () => {
           record.content.answer,
           record.id,
           // is_like字段改为 comment = "liked", "disliked", "none"
-          record.comment
+          record.comment,
         );
         conversationList.value.unshift(
           {

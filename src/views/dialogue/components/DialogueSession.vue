@@ -233,44 +233,6 @@ const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 
 /**
- * 支持、反对 更改逻辑的钩子函数。
- * @param type
- * @param cid
- */
-const handlecomment  = async (
-  type: 'liked' | 'disliked' | 'none',
-  cid: number,
-  qaRecordId: number,
-  index: number,
-  groupId: string | undefined,
-  reason?: string,
-  reasonLink?: string,
-  reasonDescription?: string,
-) => {
-  const params: {
-    type: 'liked' | 'disliked' | 'none';
-    qaRecordId: string;
-    comment: string;
-    dislikeReason?: string;
-    reasonLink?: string;
-    reasonDescription?: string;
-    groupId: string | undefined;
-  } = {
-    type,
-    qaRecordId: qaRecordId,
-    comment: type,
-    dislikeReason: reason,
-    reasonLink: reasonLink,
-    reasonDescription: reasonDescription,
-    groupId: groupId,
-  };
-  const [_, res] = await api.commentConversation(params);
-  if (!_ && res) {
-    successMsg(i18n.global.t('feedback.feedbackSuccesful'));
-  }
-};
-
-/**
  * 举报逻辑的钩子函数。
  * @param type
  * @param cid
@@ -806,7 +768,6 @@ watch(
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :modeOptions="modeOptions"
-          @handleComment ="handlecomment "
           @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
