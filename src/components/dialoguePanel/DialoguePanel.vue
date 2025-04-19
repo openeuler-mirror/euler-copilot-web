@@ -432,14 +432,6 @@ const chatWithParams = async () => {
   );
 };
 
-const searchAppName = (appId) => {
-  for (let item in props.modeOptions) {
-    if (props.modeOptions[item].value == appId) {
-      return props.modeOptions[item].label;
-    }
-  }
-  return '';
-};
 </script>
 <template>
   <div
@@ -708,7 +700,7 @@ const searchAppName = (appId) => {
           <li class="value" v-for="(item, index) in props.search_suggestions">
             <div @click="selectQuestion(item)">
               <p class="test" v-if="item.flowName">
-                #{{ searchAppName(item.flowName) }}
+                #{{item.flowName }}
               </p>
               {{ item.question }}
             </div>
