@@ -192,7 +192,6 @@ const handleDislike = async (
     }
   ).then((res) => {
     if(res[0].status === 200){
-      console.log('handleDislike');
       isAgainstVisible.value = false;
       isComment.value[index.value] = 'disliked';
       handleIsLike();

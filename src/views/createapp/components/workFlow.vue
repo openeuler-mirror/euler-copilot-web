@@ -908,7 +908,6 @@ defineExpose({
         >
           <div
             class="debugBtn isDebugDis"
-            @click="handleDebugDialogOps(true)"
           ></div>
         </el-tooltip>
         <div
