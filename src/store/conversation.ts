@@ -57,29 +57,15 @@ function getCookie(name: string) {
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
+import { useScrollBottom } from '@/hooks/useScrollBottom';
 export const useSessionStore = defineStore('conversation', () => {
   // #region ----------------------------------------< scroll >--------------------------------------
   // 会话窗口容器
   const dialogueRef = ref<HTMLDivElement | null>(null);
-  /**
-   * 滚动到底部
-   */
-  const scrollBottom = (action: 'smooth' | 'auto' = 'smooth'): void => {
-    nextTick(() => {
-      if (!dialogueRef.value) {
-        return;
-      }
-      //完成所有渲染再执行
-      setTimeout(() => {
-        if (dialogueRef.value) {
-          dialogueRef.value.scrollTo({
-            top: dialogueRef.value.scrollHeight,
-            behavior: action,
-          });
-        }
-      }, 0);
-    });
-  };
+
+  const { scrollToBottom } = useScrollBottom(dialogueRef, {
+    threshold: 15,
+  });
 
   // #endregion
   // 是否暂停回答
@@ -298,7 +284,7 @@ export const useSessionStore = defineStore('conversation', () => {
           if ('event' in message) {
             if (message['event'] === 'text.add') {
               // conversationItem.message[conversationItem.currentInd] += message.content;
-              scrollBottom();
+              scrollToBottom();
               conversationItem.message[conversationItem.currentInd] +=
                 message.content.text;
             } else if (message['event'] === 'heartbeat') {
@@ -537,10 +523,10 @@ export const useSessionStore = defineStore('conversation', () => {
       ] = errorMsg;
       (conversationList.value[ind] as RobotConversationItem).isFinish = true;
       isAnswerGenerating.value = false;
-      scrollBottom();
+      scrollToBottom();
       return false;
     }
-    scrollBottom();
+    scrollToBottom();
     return true;
   };
   /**
@@ -604,7 +590,7 @@ export const useSessionStore = defineStore('conversation', () => {
       );
     }
     isAnswerGenerating.value = true;
-    scrollBottom();
+    scrollToBottom(true);
     if (user_selected_flow && user_selected_app) {
       await getStream(
         {
@@ -801,7 +787,7 @@ export const useSessionStore = defineStore('conversation', () => {
               : undefined,
           },
         );
-        scrollBottom('auto');
+        scrollToBottom();
       });
     }
   };

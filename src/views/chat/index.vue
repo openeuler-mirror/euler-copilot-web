@@ -6,11 +6,20 @@ import Sender from './Sender.vue';
 import Welcome from './Welcome.vue';
 import userAvatar from '@/assets/svgs/dark_user.svg';
 import robotAvatar from '@/assets/svgs/robot.svg';
-import { computed, ref, onBeforeMount, onBeforeUnmount, h } from 'vue';
+import {
+  computed,
+  ref,
+  onBeforeMount,
+  onBeforeUnmount,
+  h,
+  nextTick,
+} from 'vue';
 import { fetchStream } from '@/utils/fetchStream';
 import marked from '@/utils/marked';
 import { useHistorySessionStore, useLangStore } from '@/store';
 import { storeToRefs } from 'pinia';
+
+import { useScrollBottom } from '@/hooks/useScrollBottom';
 
 const headerStyles = computed(() => {
   if (window.eulercopilot.process.platform === 'win32') {
@@ -34,6 +43,12 @@ const { language } = storeToRefs(useLangStore());
 const { conversations, setConversations } = useConversations();
 
 const { isStreaming, queryStream } = useStream();
+
+const chatContainerRef = ref<HTMLElement | null>(null);
+
+const { scrollToBottom } = useScrollBottom(chatContainerRef, {
+  threshold: 15,
+});
 
 function useStream() {
   const isStreaming = ref(false);
@@ -75,6 +90,9 @@ function useStream() {
       }
       if (chunk.data.trim() === '[DONE]') {
         isStreaming.value = false;
+        setTimeout(() => {
+          scrollToBottom(true);
+        }, 100);
         break;
       }
       setConversations(chunk.data);
@@ -116,7 +134,6 @@ function useConversations() {
   const conversations = ref<Conversation[]>([]);
 
   const setConversations = (data: string) => {
-    console.log(JSON.parse(data));
     const conversation = conversations.value[conversations.value.length - 1];
     const { id, event, content, metadata } = JSON.parse(data) as StreamChunk;
     if (event === 'init') {
@@ -131,6 +148,7 @@ function useConversations() {
       conversation.content += content.text;
       conversation.metadata = metadata;
     }
+    scrollToBottom();
   };
 
   return { conversations, setConversations };
@@ -143,6 +161,7 @@ function onSend(q: string) {
     role: 'user',
   });
   isStreaming.value = true;
+  scrollToBottom(true);
   queryStream(q, currentSelectedSession.value, language.value as 'zh' | 'en');
 }
 
@@ -189,7 +208,11 @@ onBeforeUnmount(() => {
 
     <div class="chat-container">
       <div class="chat-container-main">
-        <div class="chat-container-bubble" v-if="conversations.length">
+        <div
+          ref="chatContainerRef"
+          class="chat-container-bubble"
+          v-if="conversations.length"
+        >
           <div
             v-for="({ id, role, content, metadata }, idx) in conversations"
             :key="id"
@@ -314,6 +337,7 @@ onBeforeUnmount(() => {
       flex: 1;
 
       .bubble-footer {
+        margin-top: 20px;
         .action-toolbar {
           border-top: 1px dashed var(--o-border-color-light);
           display: flex;
