@@ -22,7 +22,7 @@ import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
-import { Suggest } from 'src/apis/paths/type';
+import { Suggestion } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
 const { language } = storeToRefs(useLangStore());
 const echartsDraw = ref();
@@ -395,7 +395,7 @@ const zoom_out = () => {
   answer_zoom.value = false;
 };
 
-const selectQuestion = (item: Suggest) => {
+const selectQuestion = (item: Suggestion) => {
   let question = item.question;
   let user_selected_flow = item.flowId;
   if (user_selected_flow) {
