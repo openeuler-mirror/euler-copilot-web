@@ -72,7 +72,7 @@ export interface ConversationRecordList {
  *  "question": "查询机器192.168.10.1的CVE信息", //推荐问题的内容
  */
 export interface Suggestion {
-  appId: string;
+  flowName: string;
   flowId: string;
   flowDescription: string;
   question: string;

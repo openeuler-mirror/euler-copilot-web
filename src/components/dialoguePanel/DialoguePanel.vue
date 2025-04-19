@@ -707,8 +707,8 @@ const searchAppName = (appId) => {
         <ul class="search-suggestions_value">
           <li class="value" v-for="(item, index) in props.search_suggestions">
             <div @click="selectQuestion(item)">
-              <p class="test" v-if="item.appId">
-                #{{ searchAppName(item.appId) }}
+              <p class="test" v-if="item.flowName">
+                #{{ searchAppName(item.flowName) }}
               </p>
               {{ item.question }}
             </div>
