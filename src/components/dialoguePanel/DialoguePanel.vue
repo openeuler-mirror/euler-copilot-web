@@ -156,9 +156,10 @@ const handleLike = async (
 ): Promise<void> => {
   if (type === 'liked') {
     const qaRecordId = props.recordList[index.value];
-    emits('handleComment', type, props.cid,qaRecordId,index.value,props.groupId);
-    isComment.value[index.value] = 'liked';
-    handleIsLike();
+    emits('handleComment',!isSupport.value ? 'liked' : 'none', props.cid,qaRecordId,index.value,props.groupId).then((res) => {
+      isComment.value[index.value] = 'liked';
+      handleIsLike();
+    });
   } else if (type === 'disliked') {
     isAgainstVisible.value = true;
   } else {
@@ -180,7 +181,7 @@ const handleDislike = async (
   const qaRecordId = props.recordList[index.value];
   emits(
     'handleComment',
-    'disliked',
+    !isAgainst.value ? 'disliked' : 'none',
     props.cid,
     qaRecordId,
     index.value,
@@ -188,10 +189,11 @@ const handleDislike = async (
     reason,
     reasionLink,
     reasonDescription,
-  );
-  isAgainstVisible.value = false;
-  isComment.value[index.value] = 0;
-  handleIsLike();
+  ).then((res) => {
+    isAgainstVisible.value = false;
+    isComment.value[index.value] = 'disliked';
+    handleIsLike();
+  });
 };
 
 const handleOutsideClick = () => {
