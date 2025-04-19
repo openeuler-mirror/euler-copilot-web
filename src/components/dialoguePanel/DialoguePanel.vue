@@ -141,6 +141,64 @@ const handlePauseAndReGenerate = (cid?: number) => {
 
 // #endregion
 
+// 复制
+const handleCopy = (): void => {
+  if (!props.content || !Array.isArray(props.content)) {
+    errorMsg(i18n.global.t('feedback.copied_failed'));
+    return;
+  }
+  writeText(props.content[props.currentSelected]);
+  successMsg(i18n.global.t('feedback.copied_successfully'));
+  return;
+};
+/**
+ * 赞同与反对
+ */
+const handleLike = async (
+  type: 'liked' | 'disliked' | 'report',
+): Promise<void> => {
+  if (type === 'liked') {
+    const qaRecordId = props.recordList[index.value];
+    emits('handleComment',!isSupport.value ? 'liked' : 'none', props.cid,qaRecordId,index.value,props.groupId).then((res) => {
+      isComment.value[index.value] = 'liked';
+      handleIsLike();
+    });
+  } else if (type === 'disliked') {
+    isAgainstVisible.value = true;
+  } else {
+    isReportVisible.value = true;
+  }
+};
+
+/**
+ * 反对
+ * @param reason
+ * @param reasionLink
+ * @param reasonDescription
+ */
+const handleDislike = async (
+  reason: string,
+  reasionLink?: string,
+  reasonDescription?: string,
+): Promise<void> => {
+  const qaRecordId = props.recordList[index.value];
+  emits(
+    'handleComment',
+    !isAgainst.value ? 'disliked' : 'none',
+    props.cid,
+    qaRecordId,
+    index.value,
+    props.groupId,
+    reason,
+    reasionLink,
+    reasonDescription,
+  ).then((res) => {
+    isAgainstVisible.value = false;
+    isComment.value[index.value] = 'disliked';
+    handleIsLike();
+  });
+};
+
 const handleOutsideClick = () => {
   isAgainstVisible.value = false;
 };
