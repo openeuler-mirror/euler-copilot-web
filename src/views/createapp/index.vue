@@ -42,7 +42,8 @@ onUnmounted(() => {
 // 需要界面配置校验与工作流校验同时通过
 const handlePulishApp = () => {
   loading.value = true;
-  // 发布接口
+  // 发布接口前，先保存界面配置与工作流
+  saveConfigOrFlow();
   api
     .releaseSingleAppData({
       id: route.query?.appId as string,
