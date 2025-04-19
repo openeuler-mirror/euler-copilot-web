@@ -300,7 +300,7 @@ export const useSessionStore = defineStore('conversation', () => {
                 ...conversationItem.files,
                 message.content,
               ];
-            } else if (message['event'] === 'suggest') {
+            } else if (message['event'] === 'Suggestion') {
               if (conversationItem.search_suggestions) {
                 conversationItem.search_suggestions.push(
                   Object(message.content),
