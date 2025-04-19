@@ -305,7 +305,6 @@ onMounted(() => {
 });
 
 onMounted(() => {
-  console.log(router.currentRoute.value.query);
   if (router.currentRoute.value.query.to === 'createdByMe') {
     handleSearchAppList('createdByMe');
   }
