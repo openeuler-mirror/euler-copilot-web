@@ -11,7 +11,7 @@ import type {
   UserDialoguePanelType,
   RobotDialoguePanelType,
 } from 'src/components/dialoguePanel/type';
-import { Metadata } from 'src/apis/paths/type';
+import { Metadata, Suggestion } from 'src/apis/paths/type';
 
 // 工具类型
 export type LinkType = 'redirect' | 'action';
@@ -94,7 +94,7 @@ export interface RobotConversationItem {
   isAgainst?: boolean;
   createdAt?: string | Date;
   groupId: string | undefined;
-  search_suggestions?: string[];
+  search_suggestions?: Suggestion[];
   echartsObj?: any;
   metadata?: undefined | Metadata;
   flowdata?: FlowType | undefined;
