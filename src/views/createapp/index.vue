@@ -40,11 +40,10 @@ onUnmounted(() => {
 });
 
 // 需要界面配置校验与工作流校验同时通过
-const handlePulishApp = () => {
-  loading.value = true;
+const handlePulishApp = async() => {
   // 发布接口前，先保存界面配置与工作流
-  saveConfigOrFlow();
-  api
+    await handleCreateOrUpdateApp().then((res) => {
+    api
     .releaseSingleAppData({
       id: route.query?.appId as string,
     })
@@ -55,6 +54,10 @@ const handlePulishApp = () => {
         loading.value = false;
       }
     });
+  }).catch((error) => {
+    ElMessage.error(`发布失败: ${error.message}`);
+  })
+  ;
 };
 
 const handleValidateContent = (valid) => {
@@ -92,10 +95,9 @@ const judgeAppFlowsDebug = (flowDataList) => {
   // 初始化时，获取发布的校验结果---必须有工作流且所有工作流必须debug通过
   publishValidate.value = flowDataList?.length > 0 && flowsDebug;
 };
-
-// 保存按钮
-const saveConfigOrFlow = () => {
-  if (createAppType.value === 'appConfig') {
+// 保存功能
+const handleCreateOrUpdateApp = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
     loading.value = true;
     let appFormValue = appConfigRef.value.createAppForm;
     if (appFormValue) {
@@ -123,8 +125,19 @@ const saveConfigOrFlow = () => {
             });
           }
           loading.value = false;
+          resolve();
         });
+    }else{
+      loading.value = false;
+      reject();
     }
+  })
+}
+
+// 保存按钮处理方法
+const saveConfigOrFlow = async () => {
+  if (createAppType.value === 'appConfig') {
+    await handleCreateOrUpdateApp();
   } else {
     // 工作流页面保存当前的工作流
     workFlowRef.value.saveFlow();
