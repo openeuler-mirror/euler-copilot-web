@@ -128,36 +128,11 @@ export const getHistoryConversation = (
 };
 
 /**
- * 点赞对话
- * @param params
- * @returns
- */
-export const commentConversation = (params: {
-  qaRecordId: string;
-  comment : string;
-  dislikeReason?: string;
-  reasonLink?: string;
-  reasonDescription?: string;
-  groupId: string | undefined;
-}): Promise<[any, FcResponse<Record<string, unknown>> | undefined]> => {
-  const { qaRecordId, comment , dislikeReason, reasonLink, reasonDescription, groupId} =
-    params;
-    return post(`/api/comment`, {
-    record_id: qaRecordId,
-    group_id: groupId,
-    comment : comment,
-    dislike_reason: dislikeReason,
-    reason_link: reasonLink,
-    reason_description: reasonDescription,
-  });
-};
-
-/**
  * 点踩
  * @param params
  * @returns
  */
-export const comment = (params: {
+export const commentConversation = (params: {
   type: string;
   qaRecordId: string;
   comment : string;
@@ -171,6 +146,7 @@ export const comment = (params: {
     if(type === 'disliked'){
       return post(`/api/comment`, {
       record_id: qaRecordId,
+      comment: comment,
       group_id: groupId,
       dislike_reason: dislikeReason,
       reason_link: reasonLink,
@@ -183,7 +159,6 @@ export const comment = (params: {
     comment : comment,
     });
   }
-
 };
 
 export const getRecognitionMode = (): Promise<
@@ -286,5 +261,4 @@ export const sessionApi = {
   getUploadFiles,
   uploadFiles,
   deleteUploadedFile,
-  comment
 };

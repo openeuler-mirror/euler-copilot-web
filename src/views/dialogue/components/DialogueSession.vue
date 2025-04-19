@@ -264,7 +264,7 @@ const handlecomment  = async (
     reasonDescription: reasonDescription,
     groupId: groupId,
   };
-  const [_, res] = await api.comment(params);
+  const [_, res] = await api.commentConversation(params);
   if (!_ && res) {
     successMsg(i18n.global.t('feedback.feedbackSuccesful'));
   }
@@ -806,8 +806,8 @@ watch(
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :modeOptions="modeOptions"
-          @comment ="handlecomment "
-          @report="handleReport"
+          @handleComment ="handlecomment "
+          @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />

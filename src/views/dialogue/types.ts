@@ -140,18 +140,18 @@ export class MessageArray {
 
   getCommentList(): string[] {
     //类型断言，将undefined转换为0。
-    return this.items.map((item) => item.comment);
+    return this.items.map((item) => item.comment ? item.comment : 'none');
   }
 
-  getisLikeByIndex(index: number): number {
-    return this.items.map((item) => item.is_like ?? 0)[index];
+  getCommentyIndex(index: number): string {
+    return this.items.map((item) => item.comment ? item.comment : 'none')[index];
   }
 
-  changeisLikeByCidAndIndex(
+  changeCommentByCidAndIndex(
     cid: number,
     index: number,
-    islike: number | boolean,
+    comment: string,
   ): void {
-    this.getisLikeByIndex(index)[cid] = islike;
+    
   }
 }

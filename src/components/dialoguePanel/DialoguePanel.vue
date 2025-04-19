@@ -92,13 +92,12 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   // currentSelected: 0,
   needRegernerate: false,
 });
-const { groupId } = toRefs(props);
 const thoughtContent = ref('');
 const index = ref(0);
 const isComment = ref(props.isCommentList);
 const emits = defineEmits<{
   (
-    e: 'comment',
+    e: 'handleComment',
     type: 'liked' | 'disliked' | 'none',
     qaRecordId: string,
     groupId: string | undefined,
@@ -106,7 +105,7 @@ const emits = defineEmits<{
     reasion_link?: string,
     reason_description?: string,
   ): void;
-  (e: 'report', qaRecordId: string, reason?: string): void;
+  (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
     e: 'handleSendMessage',
     groupId: string | undefined,
@@ -157,9 +156,9 @@ const handleLike = async (
 ): Promise<void> => {
   if (type === 'liked') {
     const qaRecordId = props.recordList[index.value];
-    emits('comment', type, props.cid,qaRecordId,index.value,props.groupId);
+    emits('handleComment', type, props.cid,qaRecordId,index.value,props.groupId);
     isComment.value[index.value] = 'liked';
-    // handleIsLike();
+    handleIsLike();
   } else if (type === 'disliked') {
     isAgainstVisible.value = true;
   } else {
@@ -180,7 +179,7 @@ const handleDislike = async (
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   emits(
-    'comment',
+    'handleComment',
     'disliked',
     props.cid,
     qaRecordId,
@@ -192,7 +191,7 @@ const handleDislike = async (
   );
   isAgainstVisible.value = false;
   isComment.value[index.value] = 0;
-  // handleIsLike();
+  handleIsLike();
 };
 
 const handleOutsideClick = () => {
@@ -210,7 +209,7 @@ const unbindDocumentClick = () => {
 // 举报功能
 const handleReport = async (reason_type:string,reason: string): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  emits('report', qaRecordId, reason_type, reason);
+  emits('handleReport', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
 };
 
@@ -276,7 +275,7 @@ const prePageHandle = (cid: number) => {
     index.value = 0;
   } else {
     index.value--;
-    // handleIsLike();
+    handleIsLike();
   }
 };
 
@@ -287,12 +286,13 @@ const nextPageHandle = (cid: number) => {
     index.value = (props.isCommentList as number[]).length - 1;
   } else {
     index.value++;
-    // handleIsLike();
+    handleIsLike();
   }
 };
 
 const isSupport = ref(false);
 const isAgainst = ref(false);
+
 const handleIsLike = () => {
   if (isComment.value === undefined) {
     return;
@@ -303,8 +303,8 @@ const handleIsLike = () => {
       isSupport.value = (comment === 'liked');
       isAgainst.value = !isSupport.value;
     } else {
-      isSupport.value = 0;
-      isAgainst.value = 0;
+      isSupport.value = false;
+      isAgainst.value = false;
     }
   }
   }
