@@ -31,18 +31,32 @@
     "build:main": "node -r ts-node/register scripts/build-main --env=production",
     "build:desktop": "rimraf dist && pnpm run build:render && pnpm run build:preload && pnpm run build:main",
     "package:win64": "pnpm run build:desktop && electron-builder --win --x64",
-    "package:mac": "pnpm run build:desktop && electron-builder --mac",
+    "package:mac": "pnpm run build:desktop && electron-builder --mac --universal",
     "package:linux": "pnpm run build:desktop && electron-builder --linux"
   },
   "build": {
     "appId": "org.openeuler.eulercopilot",
     "productName": "EulerCopilot",
-    "asar": true,
     "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.",
     "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "release/${name}-${version}"
     },
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "!dist/**/*.map",
+      "!dist/**/*.d.ts",
+      "!**/node_modules/**/*",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml,.github,.gitlab-ci.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "afterSign": "build/scripts/notarize.js",
     "win": {
       "target": [
         {
@@ -58,7 +72,8 @@
       "category": "public.app-category.utilities",
       "target": [
         "dmg"
-      ]
+      ],
+      "notarize": true
     },
     "linux": {
       "executableName": "euler-copilot-desktop",
@@ -114,6 +129,7 @@
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-runtime": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
+    "@electron/notarize": "^3.0.1",
     "@eslint/js": "9.16.0",
     "@rollup/plugin-alias": "^5.1.1",
     "@rollup/plugin-commonjs": "^28.0.3",

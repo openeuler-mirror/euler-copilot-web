@@ -7,95 +7,31 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import fs from 'node:fs';
-import {
-  app,
-  ipcMain,
-  globalShortcut,
-  nativeTheme,
-  BrowserWindow,
-  dialog,
-} from 'electron';
+import { app, ipcMain, Menu, BrowserWindow } from 'electron';
 import { createDefaultWindow, createChatWindow, createTray } from './window';
-import type { INLSConfiguration } from './common/nls';
-import { cachePath, commonCacheConfPath, updateConf } from './common/conf';
+import { cachePath, commonCacheConfPath } from './common/conf';
+import { mkdirpIgnoreError, getUserDefinedConf } from './common/fs-utils';
+import { getOsLocale, resolveNlsConfiguration } from './common/locale';
+import { resolveThemeConfiguration, setApplicationTheme } from './common/theme';
+import { productObj } from './common/product';
+import {
+  registerGlobalShortcut,
+  checkAccessibilityPermission,
+  unregisterAllShortcuts,
+} from './common/shortcuts';
+import { buildAppMenu } from './common/menu';
+import { registerIpcListeners } from './common/ipc';
 
-interface ICacheConf {
-  userLocale: string;
-  theme: 'system' | 'light' | 'dark';
-}
-
-let commonCacheConf: Partial<ICacheConf> = {};
-
-const osLocale = processZhLocale(
-  (app.getPreferredSystemLanguages()?.[0] ?? 'en').toLowerCase(),
-);
-
-// 定义全局快捷键
-const CHAT_SHORTCUT_KEY =
-  process.platform === 'darwin' ? 'Cmd+Option+O' : 'Ctrl+Alt+O';
+// 确保应用名称使用productName而不是package.json中的name
+app.name = productObj.name;
 
 // 添加表示应用是否正在退出的标志位
 let isQuitting = false;
 
-// 添加是否已注册快捷键的标志
-let isShortcutRegistered = false;
+// 获取系统语言环境
+const osLocale = getOsLocale();
 
-// 在macOS上，检查是否已经获得辅助功能权限
-function checkAccessibilityPermission(): boolean {
-  if (process.platform !== 'darwin') return true;
-
-  try {
-    return app.isAccessibilitySupportEnabled();
-  } catch (err) {
-    console.error('Failed to check accessibility permission:', err);
-    return false;
-  }
-}
-
-// 注册全局快捷键
-function registerGlobalShortcut() {
-  // 如果已经注册了快捷键，先取消注册
-  if (isShortcutRegistered) {
-    globalShortcut.unregister(CHAT_SHORTCUT_KEY);
-  }
-
-  // 注册新的快捷键
-  const success = globalShortcut.register(CHAT_SHORTCUT_KEY, () => {
-    const chatWindow = BrowserWindow.getAllWindows().find((win) =>
-      win.webContents.getURL().includes('chat'),
-    );
-
-    if (chatWindow) {
-      if (chatWindow.isMinimized()) chatWindow.restore();
-      chatWindow.show();
-      chatWindow.focus();
-    } else {
-      // 如果没有找到聊天窗口，则创建一个新的
-      const newChatWindow = createChatWindow();
-      newChatWindow.show();
-      newChatWindow.focus();
-    }
-  });
-
-  isShortcutRegistered = success;
-
-  if (!success) {
-    console.error('Failed to register global shortcut');
-    // 在macOS上，提示用户需要授予辅助功能权限
-    if (process.platform === 'darwin' && !checkAccessibilityPermission()) {
-      dialog.showMessageBox({
-        type: 'info',
-        title: '需要辅助功能权限',
-        message: `要使用快捷键 ${CHAT_SHORTCUT_KEY} 功能，请在系统偏好设置中，授予应用辅助功能权限。`,
-        buttons: ['好的'],
-      });
-    }
-  }
-
-  return success;
-}
-
+// 应用初始化
 app.once('ready', () => {
   onReady();
 });
@@ -106,7 +42,7 @@ app.on('before-quit', () => {
 });
 
 app.on('will-quit', () => {
-  globalShortcut.unregisterAll();
+  unregisterAllShortcuts();
 });
 
 app.on('window-all-closed', () => {
@@ -121,21 +57,31 @@ app.on('activate', () => {
   isQuitting = false;
 });
 
+/**
+ * 应用准备好时的处理函数
+ */
 async function onReady() {
   try {
+    // 初始化缓存目录和配置
     await mkdirpIgnoreError(cachePath);
-    commonCacheConf = await getUserDefinedConf(commonCacheConfPath);
+    const commonCacheConf = await getUserDefinedConf(commonCacheConfPath);
+
+    // 解析国际化和主题配置
     const [nlsConfig, themeConfig] = await Promise.all([
-      resolveNlsConfiguration(),
-      resolveThemeConfiguration(),
+      resolveNlsConfiguration(commonCacheConf, osLocale),
+      resolveThemeConfiguration(commonCacheConf),
     ]);
 
-    nativeTheme.themeSource = themeConfig.theme || 'light';
-    process.env['EULERCOPILOT_THEME'] = themeConfig.theme || 'light';
+    // 设置主题和环境变量
+    setApplicationTheme(themeConfig.theme || 'light');
     process.env['EULERCOPILOT_NLS_CONFIG'] = JSON.stringify(nlsConfig);
     process.env['EULERCOPILOT_CACHE_PATH'] = cachePath || '';
 
+    // 启动应用
     await startup();
+
+    // 设置原生应用菜单
+    Menu.setApplicationMenu(buildAppMenu(nlsConfig));
 
     // 注册全局快捷键
     registerGlobalShortcut();
@@ -157,20 +103,26 @@ async function onReady() {
         },
       );
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error('Application startup error:', error);
+  }
 }
 
+/**
+ * 启动应用
+ */
 async function startup() {
-  registerIpcListener();
+  // 注册IPC通信监听器
+  registerIpcListeners();
 
+  // 创建系统托盘
   const tray = createTray();
 
-  let win: BrowserWindow;
-  let chatWindow: BrowserWindow;
+  // 创建应用窗口
+  let win = createDefaultWindow();
+  let chatWindow = createChatWindow();
 
-  win = createDefaultWindow();
-  chatWindow = createChatWindow();
-
+  // 处理窗口激活
   app.on('activate', () => {
     isQuitting = false;
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -185,6 +137,7 @@ async function startup() {
     }
   });
 
+  // 设置主窗口的关闭行为
   win.on('close', (event) => {
     // 如果应用正在退出（例如通过Cmd+Q触发），则允许窗口正常关闭
     if (isQuitting) {
@@ -195,6 +148,7 @@ async function startup() {
     win.hide();
   });
 
+  // 设置聊天窗口的关闭行为
   chatWindow.on('close', (event) => {
     // 如果应用正在退出（例如通过Cmd+Q触发），则允许窗口正常关闭
     if (isQuitting) {
@@ -204,151 +158,4 @@ async function startup() {
     event.preventDefault();
     chatWindow.hide();
   });
-}
-
-function registerIpcListener() {
-  ipcMain.handle('copilot:toggle', () => {
-    if (nativeTheme.shouldUseDarkColors) {
-      nativeTheme.themeSource = 'light';
-    } else {
-      nativeTheme.themeSource = 'dark';
-    }
-    return nativeTheme.shouldUseDarkColors;
-  });
-
-  ipcMain.handle('copilot:system', () => {
-    nativeTheme.themeSource = 'system';
-  });
-
-  // 添加窗口控制命令处理程序
-  ipcMain.handle('copilot:window-control', (event, command) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return;
-
-    switch (command) {
-      case 'minimize':
-        win.minimize();
-        break;
-      case 'maximize':
-        if (win.isMaximized()) {
-          win.unmaximize();
-        } else {
-          win.maximize();
-        }
-        break;
-      case 'close':
-        win.close();
-        break;
-    }
-  });
-
-  // 添加获取窗口最大化状态的处理程序
-  ipcMain.handle('copilot:window-is-maximized', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) {
-      return win.isMaximized();
-    }
-    return false;
-  });
-}
-
-function getUserDefinedConf(dir: string) {
-  try {
-    if (!fs.existsSync(dir)) {
-      fs.writeFileSync(dir, JSON.stringify({}));
-    }
-
-    return JSON.parse(fs.readFileSync(dir, 'utf-8'));
-  } catch (error) {
-    // Ignore error
-    return {};
-  }
-}
-
-function processZhLocale(appLocale: string): string {
-  if (appLocale.startsWith('zh')) {
-    const region = appLocale.split('-')[1];
-
-    // On Windows and macOS, Chinese languages returned by
-    // app.getPreferredSystemLanguages() start with zh-hans
-    // for Simplified Chinese or zh-hant for Traditional Chinese,
-    // so we can easily determine whether to use Simplified or Traditional.
-    // However, on Linux, Chinese languages returned by that same API
-    // are of the form zh-XY, where XY is a country code.
-    // For China (CN), Singapore (SG), and Malaysia (MY)
-    // country codes, assume they use Simplified Chinese.
-    // For other cases, assume they use Traditional.
-    if (['hans', 'cn', 'sg', 'my'].includes(region)) {
-      return 'zh_cn';
-    }
-
-    return 'zh_tw';
-  }
-
-  return appLocale;
-}
-
-async function resolveThemeConfiguration(): Promise<any> {
-  if (commonCacheConf.theme) {
-    return {
-      theme: commonCacheConf.theme,
-    };
-  }
-  const isDarkMode = nativeTheme.shouldUseDarkColors;
-  updateConf({ theme: isDarkMode ? 'dark' : 'light' });
-  return {
-    theme: isDarkMode ? 'dark' : 'light',
-  };
-}
-
-/**
- * 国际化支持
- * @returns
- */
-async function resolveNlsConfiguration(): Promise<INLSConfiguration> {
-  if (commonCacheConf.userLocale) {
-    return {
-      userLocale: commonCacheConf.userLocale,
-      osLocale,
-      resolvedLanguage: commonCacheConf.userLocale,
-    };
-  }
-
-  let userLocale = app.getLocale();
-
-  if (!userLocale) {
-    updateConf({ userLocale: 'en' });
-    return {
-      userLocale: 'en',
-      osLocale,
-      resolvedLanguage: 'en',
-    };
-  }
-
-  userLocale = processZhLocale(userLocale.toLowerCase());
-  updateConf({ userLocale: 'en' });
-  return {
-    userLocale,
-    osLocale,
-    resolvedLanguage: osLocale,
-  };
-}
-
-async function mkdirpIgnoreError(
-  dir: string | undefined,
-): Promise<string | undefined> {
-  if (typeof dir === 'string') {
-    try {
-      if (fs.existsSync(dir)) {
-        return dir;
-      }
-      await fs.promises.mkdir(dir, { recursive: true });
-
-      return dir;
-    } catch (error) {
-      // ignore
-    }
-  }
-
-  return undefined;
 }
