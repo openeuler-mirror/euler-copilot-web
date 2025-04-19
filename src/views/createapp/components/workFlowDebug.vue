@@ -26,7 +26,6 @@
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :isWorkFlowDebug="true"
-          @comment ="handlecomment "
           @report="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"

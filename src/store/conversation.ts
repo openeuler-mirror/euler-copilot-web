@@ -741,7 +741,7 @@ export const useSessionStore = defineStore('conversation', () => {
               record.content.answer,
               record.id,
               // is_like字段改为 comment = "liked", "disliked", "none"
-              record.comment
+              record.comment,
             );
             if (re?.currentInd !== undefined) {
               re.currentInd = re.currentInd + 1;
@@ -754,7 +754,7 @@ export const useSessionStore = defineStore('conversation', () => {
           record.content.answer,
           record.id,
           // is_like字段改为 comment = "liked", "disliked", "none"
-          record.comment
+          record.comment,
         );
         conversationList.value.unshift(
           {
