@@ -2,6 +2,9 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch } from 'vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
+import { CopyDocument, WarnTriangleFilled } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { IconSuccess } from '@computing/opendesign-icons';
 import { nodeTypeToIcon, getSrcIcon, getNodeClass } from '../types';
 const props = defineProps({
   id: {
@@ -28,7 +31,7 @@ const props = defineProps({
 const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle']);
 
 const statusList = ref(['running', 'success', 'error']);
-
+const nodeDescription = ref<string[]>([]);
 // 当前节点状态-工作流调试结果-成功/失败/运行中
 const curStatus = ref('');
 
@@ -48,6 +51,7 @@ const inputAndOutput = ref({
 watch(
   () => props.data,
   () => {
+    nodeDescription.value = props.data.description.split('\n\n') || [];
     const isInclude = statusList.value.includes(props.data?.status);
     // 设置节点的状态-默认以及成功、失败、运行中
     if (!isInclude) {
@@ -94,6 +98,22 @@ const setConnectStatus = (type) => {
   // 更新当前节点handle连接状态
   emits('updateConnectHandle', props.id);
 };
+
+const handleCopyTextToclipboard = (text) => {
+  const input = document.createElement('input');
+  input.value = text;
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand('copy');
+  ElMessage({
+    showClose: true,
+    message: '复制成功',
+    icon: IconSuccess,
+    customClass: 'o-message--success',
+    duration: 2000,
+  });
+  document.body.removeChild(input);
+};
 </script>
 
 <template>
@@ -106,8 +126,31 @@ const setConnectStatus = (type) => {
     ></Handle>
     <div class="nodeBox" :class="getNodeClass(props.data)">
       <div class="title" v-if="props.data.name">
-        <img class="iconStyle" :src="getSrcIcon(props.data)" />
-        <div class="label">{{ props.data.name }}</div>
+        <div class="iconLabel">
+          <img
+            class="iconStyle"
+            v-if="props.data.nodeId"
+            :src="getSrcIcon(props.data)"
+          />
+          <el-icon v-else class="warnTiangleIcon">
+            <WarnTriangleFilled />
+          </el-icon>
+          <div class="label">{{ props.data.name }}</div>
+        </div>
+        <div class="nodeIdShow" v-if="props.id">
+          <div class="nodeIdText">
+            <span>ID:</span>
+            <span>
+              {{ props.id }}
+            </span>
+          </div>
+          <el-icon
+            class="copydocument"
+            @click="handleCopyTextToclipboard(props.id)"
+          >
+            <CopyDocument />
+          </el-icon>
+        </div>
         <div class="moreTip" :class="{ notAllow: props.disabled }">
           <el-popover
             :disabled="props.disabled"
@@ -142,7 +185,12 @@ const setConnectStatus = (type) => {
         </div>
       </div>
       <div class="desc" v-if="props.data.description">
-        {{ props.data.description }}
+        <div
+          v-for="(desc, index) in nodeDescription"
+          :class="{ descSign: nodeDescription.length > 1 && !index }"
+        >
+          {{ desc }}
+        </div>
       </div>
     </div>
     <Handle
