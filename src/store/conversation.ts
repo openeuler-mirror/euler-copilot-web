@@ -567,7 +567,7 @@ export const useSessionStore = defineStore('conversation', () => {
       // 初次生成 ，创建一个问题和一个回答
       const ind = conversationList.value.length - 1;
       const a = new MessageArray();
-      a.addItem('', '', 2);
+      a.addItem('', '', 'none');
       conversationList.value.push(
         {
           cid: ind + 1,
