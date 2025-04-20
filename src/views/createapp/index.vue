@@ -40,24 +40,25 @@ onUnmounted(() => {
 });
 
 // 需要界面配置校验与工作流校验同时通过
-const handlePulishApp = async() => {
+const handlePulishApp = async () => {
   // 发布接口前，先保存界面配置与工作流
-    await handleCreateOrUpdateApp().then((res) => {
-    api
-    .releaseSingleAppData({
-      id: route.query?.appId as string,
-    })
+  await handleCreateOrUpdateApp()
     .then((res) => {
-      if (res[1]?.result) {
-        ElMessage.success('发布成功');
-        router.push(`/app`);
-        loading.value = false;
-      }
+      api
+        .releaseSingleAppData({
+          id: route.query?.appId as string,
+        })
+        .then((res) => {
+          if (res[1]?.result) {
+            ElMessage.success('发布成功');
+            router.push(`/app`);
+            loading.value = false;
+          }
+        });
+    })
+    .catch((error) => {
+      ElMessage.error(`发布失败: ${error.message}`);
     });
-  }).catch((error) => {
-    ElMessage.error(`发布失败: ${error.message}`);
-  })
-  ;
 };
 
 const handleValidateContent = (valid) => {
@@ -115,33 +116,27 @@ const handleCreateOrUpdateApp = (): Promise<void> => {
           permission: appFormValue.permission,
         })
         .then((res) => {
-          if (res[1]) {
-            ElMessage({
-              showClose: true,
-              message: '更新成功',
-              icon: IconSuccess,
-              customClass: 'o-message--success',
-              duration: 2000,
-            });
-          }
           loading.value = false;
           resolve();
         });
-    }else{
+    } else {
       loading.value = false;
       reject();
     }
-  })
-}
+  });
+};
 
 // 保存按钮处理方法
 const saveConfigOrFlow = async () => {
-  if (createAppType.value === 'appConfig') {
-    await handleCreateOrUpdateApp();
-  } else {
-    // 工作流页面保存当前的工作流
-    workFlowRef.value.saveFlow();
-  }
+  await handleCreateOrUpdateApp();
+  await workFlowRef.value.saveFlow();
+  ElMessage({
+    showClose: true,
+    message: '更新成功',
+    icon: IconSuccess,
+    customClass: 'o-message--success',
+    duration: 2000,
+  });
 };
 
 const getPublishStatus = (status) => {

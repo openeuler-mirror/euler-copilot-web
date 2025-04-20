@@ -664,7 +664,6 @@ const saveFlow = (updateNodeParameter?) => {
     )
     .then((res) => {
       if (res[1]?.result) {
-        ElMessage.success('工作流更新成功');
         queryFlow('update');
         const updatedCurFlow = res[1].result.flow;
         console.log(res[1].result);
