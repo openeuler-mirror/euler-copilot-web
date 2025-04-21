@@ -36,6 +36,7 @@ import { ElMessageBox } from 'element-plus';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { Application } from 'src/apis/paths/type';
 import $bus from 'src/bus/index';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 const STREAM_URL = '/api/chat';
 const newStreamUrl = 'api/chat';
 let controller = new AbortController();
@@ -43,6 +44,7 @@ export var txt2imgPath = ref('');
 export var echartsObj = ref({});
 export var echartsHas = ref(false);
 const excelPath = ref('');
+const resp = ref();
 const features = {
   max_tokens: 2048,
   context_num: 2,
@@ -128,7 +130,6 @@ export const useSessionStore = defineStore('conversation', () => {
     headers['Content-Type'] = 'application/json; charset=UTF-8';
     headers['X-CSRF-Token'] = getCookie('_csrf_tk');
     try {
-      let resp;
       let pp = {};
       if (params.params && typeof params.params === 'object') {
         pp = params.params;
@@ -137,13 +138,156 @@ export const useSessionStore = defineStore('conversation', () => {
       } else {
         pp = {};
       }
+      isPaused.value = false;
+      excelPath.value = '';
+      echartsObj.value = {};
+      txt2imgPath.value = '';
+      const handelMsgDataShow = (msgData) => {
+        if (isPaused.value) {
+          // 手动暂停输出
+          isAnswerGenerating.value = false;
+          return;
+        }
+        if (msgData.data === '[DONE]') {
+          if (excelPath.value.length > 0) {
+            conversationItem.message[conversationItem.currentInd] +=
+              `</p><p>下载地址：${excelPath.value}`;
+          }
+          conversationItem.isFinish = true;
+          isAnswerGenerating.value = false;
+          // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
+          if (params.type) {
+            $bus.emit('debugChatEnd');
+          }
+          return;
+        }
+
+        // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
+        // 这里json解析
+        const message = JSON.parse(msgData.data || '{}');
+        if ('metadata' in message) {
+          conversationItem.metadata = message.metadata;
+        }
+        if ('event' in message) {
+          if (message['event'] === 'text.add') {
+            scrollBottom();
+            conversationItem.message[conversationItem.currentInd] +=
+              message.content.text;
+          } else if (message['event'] === 'heartbeat') {
+            // 不处理
+          } else if (message['event'] === 'graph') {
+            //echarts处理 待验证
+            conversationItem.echartsObj = message.content.option;
+          } else if (message['event'] == 'ducument.add') {
+            conversationItem.message[conversationItem.currentInd] +=
+              message.content;
+            conversationItem.files = [
+              ...conversationItem.files,
+              message.content,
+            ];
+          } else if (message['event'] === 'Suggestion') {
+            if (conversationItem.search_suggestions) {
+              conversationItem.search_suggestions.push(Object(message.content));
+            } else {
+              conversationItem.search_suggestions = [Object(message.content)];
+            }
+          } else if (message['event'] === 'init') {
+            //初始化获取 metadata
+            conversationItem.metadata = message.metadata;
+            conversationItem.createdAt = message.content.created_at;
+            conversationItem.groupId = message.groupId;
+          } else if (message['event'] === 'flow.start') {
+            //事件流开始--后续验证对话无下拉连接后则完全替换
+            const flow = message.flow;
+            conversationItem.flowdata = {
+              id: flow?.stepId || '',
+              title: i18n.global.t('flow.flow_start'),
+              // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
+              progress: flow?.stepProgress || '',
+              status: 'running',
+              display: true,
+              flowId: flow?.flowId || '',
+              data: [[]],
+            };
+          } else if (message['event'] === 'step.input') {
+            conversationItem.flowdata?.data[0].push({
+              id: message.flow?.stepId,
+              title: message.flow?.stepName,
+              status: message.flow?.stepStatus,
+              data: {
+                input: message.content,
+              },
+            });
+            if (conversationItem.flowdata) {
+              conversationItem.flowdata.progress = message.flow?.stepProgress;
+              conversationItem.flowdata.status = message.flow?.stepStatus;
+            }
+          } else if (message['event'] === 'step.output') {
+            const target = conversationItem.flowdata?.data[0].find(
+              (item) => item.id === message.flow?.stepId,
+            );
+            if (target) {
+              target.data.output = message.content;
+              target.status = message.flow?.stepStatus;
+              // 工作流添加每阶段的时间耗时
+              target['costTime'] = message.metadata?.timeCost;
+              if (
+                message.flow.step_status === 'error' &&
+                conversationItem.flowdata
+              ) {
+                conversationItem.flowdata.status = message.flow?.stepStatus;
+              }
+            }
+          } else if (message['event'] === 'flow.stop') {
+            //时间流结束
+            const flow = message.content.flow;
+            if (params.type) {
+              // 如果是工作流的调试功能-添加status/data
+              conversationItem.flowdata = {
+                id: flow?.stepId,
+                title: i18n.global.t('flow.flow_end'),
+                progress: flow?.stepProgress,
+                status: message.flow?.stepStatus,
+                display: true,
+                data: conversationItem?.flowdata?.data,
+              };
+            } else if (
+              message.content.type !== 'schema' &&
+              conversationItem.flowdata
+            ) {
+              // 删除 end 逻辑
+              conversationItem.flowdata = {
+                id: flow?.stepId,
+                title: i18n.global.t('flow.flow_end'),
+                progress: flow?.stepProgress,
+                status: 'success',
+                display: true,
+                data: conversationItem.flowdata.data,
+              };
+            } else {
+              conversationItem.paramsList = message.content.data;
+              if (conversationItem.flowdata) {
+                conversationItem.flowdata.title = i18n.global.t(
+                  'flow.flow_params_error',
+                );
+                conversationItem.flowdata.status = 'error';
+                conversationItem.paramsList = message.content.data;
+              }
+            }
+          }
+        }
+        // 将lines传递给workflow-以更新工作流节点的状态
+        if (params.user_selected_flow && params.user_selected_app) {
+          $bus.emit('getNodesStatue', { data: message });
+        }
+      };
       if (params.user_selected_flow) {
         // 之前的对话历史记录
         if (!params.type) {
-          resp = await fetch(STREAM_URL, {
+          await fetchEventSource(STREAM_URL, {
             signal: controller.signal,
-            method: 'POST',
             keepalive: true,
+            method: 'POST',
             headers: headers,
             body: JSON.stringify({
               question: params.question,
@@ -159,13 +303,19 @@ export const useSessionStore = defineStore('conversation', () => {
               },
               features: features,
             }),
+            async onopen(response) {
+              resp.value = response;
+            },
+            async onmessage(ev) {
+              handelMsgDataShow(ev);
+            },
           });
         } else {
           // 新的工作流调试记录
-          resp = await fetch(newStreamUrl, {
+          await fetchEventSource(newStreamUrl, {
             signal: controller.signal,
-            method: 'POST',
             keepalive: true,
+            method: 'POST',
             headers: headers,
             body: JSON.stringify({
               app: {
@@ -177,13 +327,20 @@ export const useSessionStore = defineStore('conversation', () => {
               conversationId: params.conversationId,
               debug: true,
             }),
+            async onopen(response) {
+              resp.value = response;
+            },
+            async onmessage(ev) {
+              handelMsgDataShow(ev);
+            },
           });
         }
       } else if (params.user_selected_app) {
-        resp = await fetch(STREAM_URL, {
+        // 新的工作流调试记录
+        await fetchEventSource(STREAM_URL, {
           signal: controller.signal,
-          method: 'POST',
           keepalive: true,
+          method: 'POST',
           headers: headers,
           body: JSON.stringify({
             question: params.question,
@@ -200,11 +357,18 @@ export const useSessionStore = defineStore('conversation', () => {
             },
             features: features,
           }),
+          async onopen(response) {
+            resp.value = response;
+          },
+          async onmessage(ev) {
+            handelMsgDataShow(ev);
+          },
         });
       } else if (false) {
         //写传参数情况
       } else {
-        resp = await fetch(STREAM_URL, {
+         
+        await fetchEventSource(STREAM_URL, {
           signal: controller.signal,
           keepalive: true,
           method: 'POST',
@@ -224,180 +388,27 @@ export const useSessionStore = defineStore('conversation', () => {
             },
             features: features,
           }),
+          async onopen(response) {
+            resp.value = response;
+          },
+          async onmessage(ev) {
+            handelMsgDataShow(ev);
+          },
         });
       }
-
-      const isServiceOk = await handleServiceStatus(resp.status, params, ind);
+      const isServiceOk = await handleServiceStatus(
+        resp.value.status,
+        params,
+        ind,
+      );
       if (!isServiceOk) {
         return;
       }
-      if (!resp.ok) {
-        throw new Error(`HTTP error! status: ${resp.status}`);
+      if (!resp.value.ok) {
+        throw new Error(`HTTP error! status: ${resp.value.status}`);
       }
-      if (!resp.body) {
+      if (!resp.value.body) {
         throw new Error(`HTTP error, body not exits`);
-      }
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let isEnd = true;
-      isPaused.value = false;
-      excelPath.value = '';
-      echartsObj.value = {};
-      txt2imgPath.value = '';
-      let addItem = '';
-      while (isEnd) {
-        if (isPaused.value) {
-          // 手动暂停输出
-          isAnswerGenerating.value = false;
-          break;
-        }
-        const { done, value } = await reader.read();
-        const decodedValue = addItem + decoder.decode(value, { stream: true });
-        if (done) {
-          if (excelPath.value.length > 0) {
-            conversationItem.message[conversationItem.currentInd] +=
-              `</p><p>下载地址：${excelPath.value}`;
-          }
-          conversationItem.isFinish = true;
-          isEnd = false;
-          isAnswerGenerating.value = false;
-          // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
-          if (params.type) {
-            $bus.emit('debugChatEnd');
-          }
-          break;
-        }
-        if (decodedValue.includes('data: [DONE]')) {
-          isEnd = true;
-          continue;
-        }
-        // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
-        const lines = splitDataString(decodedValue);
-        lines.forEach((line) => {
-          // 这里json解析
-          const message = Object(
-            JSON.parse(line.replace(/^data:\s*/, '').trim()),
-          );
-          if ('metadata' in message) {
-            conversationItem.metadata = message.metadata;
-          }
-          if ('event' in message) {
-            if (message['event'] === 'text.add') {
-              // conversationItem.message[conversationItem.currentInd] += message.content;
-              scrollToBottom();
-              conversationItem.message[conversationItem.currentInd] +=
-                message.content.text;
-            } else if (message['event'] === 'heartbeat') {
-              // conversationItem.files = [...conversationItem.files, message.content];
-              // 不处理
-            } else if (message['event'] === 'graph') {
-              //echarts处理 待验证
-              conversationItem.echartsObj = message.content.option;
-            } else if (message['event'] == 'ducument.add') {
-              conversationItem.message[conversationItem.currentInd] +=
-                message.content;
-              conversationItem.files = [
-                ...conversationItem.files,
-                message.content,
-              ];
-            } else if (message['event'] === 'Suggestion') {
-              if (conversationItem.search_suggestions) {
-                conversationItem.search_suggestions.push(
-                  Object(message.content),
-                );
-              } else {
-                conversationItem.search_suggestions = [Object(message.content)];
-              }
-            } else if (message['event'] === 'init') {
-              //初始化获取 metadata
-              conversationItem.metadata = message.metadata;
-              conversationItem.createdAt = message.content.created_at;
-              conversationItem.groupId = message.groupId;
-            } else if (message['event'] === 'flow.start') {
-              //事件流开始--后续验证对话无下拉连接后则完全替换
-              const flow = message.flow;
-              conversationItem.flowdata = {
-                id: flow?.stepId || '',
-                title: i18n.global.t('flow.flow_start'),
-                // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
-                progress: flow?.stepProgress || '',
-                status: 'running',
-                display: true,
-                flowId: flow?.flowId || '',
-                data: [[]],
-              };
-            } else if (message['event'] === 'step.input') {
-              conversationItem.flowdata?.data[0].push({
-                id: message.flow?.stepId,
-                title: message.flow?.stepName,
-                status: message.flow?.stepStatus,
-                data: {
-                  input: message.content,
-                },
-              });
-              if (conversationItem.flowdata) {
-                conversationItem.flowdata.progress = message.flow?.stepProgress;
-                conversationItem.flowdata.status = message.flow?.stepStatus;
-              }
-            } else if (message['event'] === 'step.output') {
-              const target = conversationItem.flowdata?.data[0].find(
-                (item) => item.id === message.flow?.stepId,
-              );
-              if (target) {
-                target.data.output = message.content;
-                target.status = message.flow?.stepStatus;
-                // 工作流添加每阶段的时间耗时
-                target['costTime'] = message.metadata?.timeCost;
-                if (
-                  message.flow.step_status === 'error' &&
-                  conversationItem.flowdata
-                ) {
-                  conversationItem.flowdata.status = message.flow?.stepStatus;
-                }
-              }
-            } else if (message['event'] === 'flow.stop') {
-              //时间流结束
-              const flow = message.content.flow;
-              if (params.type) {
-                // 如果是工作流的调试功能-添加status/data
-                conversationItem.flowdata = {
-                  id: flow?.stepId,
-                  title: i18n.global.t('flow.flow_end'),
-                  progress: flow?.stepProgress,
-                  status: message.flow?.stepStatus,
-                  display: true,
-                  data: conversationItem?.flowdata?.data,
-                };
-              } else if (
-                message.content.type !== 'schema' &&
-                conversationItem.flowdata
-              ) {
-                // 删除 end 逻辑
-                conversationItem.flowdata = {
-                  id: flow?.stepId,
-                  title: i18n.global.t('flow.flow_end'),
-                  progress: flow?.stepProgress,
-                  status: 'success',
-                  display: true,
-                  data: conversationItem.flowdata.data,
-                };
-              } else {
-                conversationItem.paramsList = message.content.data;
-                if (conversationItem.flowdata) {
-                  conversationItem.flowdata.title = i18n.global.t(
-                    'flow.flow_params_error',
-                  );
-                  conversationItem.flowdata.status = 'error';
-                  conversationItem.paramsList = message.content.data;
-                }
-              }
-            }
-          }
-        });
-        // 将lines传递给workflow-以更新工作流节点的状态
-        if (params.user_selected_flow && params.user_selected_app) {
-          $bus.emit('getNodesStatue', lines);
-        }
       }
     } catch (err: any) {
       isPaused.value = true;

@@ -466,62 +466,60 @@ const redrageFlow = (nodesList, edgesList) => {
 };
 
 // 接受工作流调试时获取的相应的数据
-$bus.on('getNodesStatue', (lines) => {
+$bus.on('getNodesStatue', (item:any) => {
   // 对相应节点修改状态--此处需要分为开始/结束,分支,普通三种节点修改
   try {
-    lines?.forEach((item) => {
-      const newLines = yaml.load(item);
-      // 工作流开始时更新debugResult
-      if (newLines?.data?.event === 'flow.start') {
-        totalTime.value = 0;
-        debugTime.value = '';
-        debugStatus.value = newLines.data.flow?.stepStatus;
-        updateNodeFunc('start', 'success', '');
-      }
+    const newLines = item;
+    // 工作流开始时更新debugResult
+    if (newLines?.data?.event === 'flow.start') {
+      totalTime.value = 0;
+      debugTime.value = '';
+      debugStatus.value = newLines.data.flow?.stepStatus;
+      updateNodeFunc('start', 'success', '');
+    }
 
-      // 这里判断是否有调试状态的值，无值不处理
-      if (!debugStatus.value) {
-        return;
-      }
-      // step.input和step.output对应的节点状态需要修改
-      if (
-        newLines?.data?.event === 'step.input' ||
-        newLines?.data?.event === 'step.output'
-      ) {
-        // output-节点运行结束时，获取节点运行的耗时
-        let constTime = '';
-        if (newLines.data.event === 'step.output') {
-          totalTime.value += newLines.data?.metadata?.timeCost;
-          constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`;
-          // 此处获取output的数据，并将此数据传给节点显示
-          updateNodeFunc(
-            newLines.data.flow.stepId,
-            newLines.data.flow?.stepStatus,
-            constTime,
-            {
-              params: newLines.data?.content,
-              type: 'output',
-            },
-          );
-        } else {
-          updateNodeFunc(
-            newLines.data.flow.stepId,
-            newLines.data.flow?.stepStatus,
-            constTime,
-            {
-              params: newLines.data?.content,
-              type: 'input',
-            },
-          );
-        }
-      } else if (newLines?.data?.event === 'flow.stop') {
-        debugStatus.value = newLines.data.flow?.stepStatus;
-        debugTime.value = `${totalTime.value.toFixed(3)}s`;
-        // 最后更新-调用一下接口
+    // 这里判断是否有调试状态的值，无值不处理
+    if (!debugStatus.value) {
+      return;
+    }
+    // step.input和step.output对应的节点状态需要修改
+    if (
+      newLines?.data?.event === 'step.input' ||
+      newLines?.data?.event === 'step.output'
+    ) {
+      // output-节点运行结束时，获取节点运行的耗时
+      let constTime = '';
+      if (newLines.data.event === 'step.output') {
+        totalTime.value += newLines.data?.metadata?.timeCost;
+        constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`;
+        // 此处获取output的数据，并将此数据传给节点显示
+        updateNodeFunc(
+          newLines.data.flow.stepId,
+          newLines.data.flow?.stepStatus,
+          constTime,
+          {
+            params: newLines.data?.content,
+            type: 'output',
+          },
+        );
       } else {
-        // do nothing
+        updateNodeFunc(
+          newLines.data.flow.stepId,
+          newLines.data.flow?.stepStatus,
+          constTime,
+          {
+            params: newLines.data?.content,
+            type: 'input',
+          },
+        );
       }
-    });
+    } else if (newLines?.data?.event === 'flow.stop') {
+      debugStatus.value = newLines.data.flow?.stepStatus;
+      debugTime.value = `${totalTime.value.toFixed(3)}s`;
+      // 最后更新-调用一下接口
+    } else {
+      // do nothing
+    }
   } catch (error) {
     ElMessage.error('请检查格式是否正确');
   }
@@ -905,9 +903,7 @@ defineExpose({
           content="节点连接完成才能进行调试"
           placement="top"
         >
-          <div
-            class="debugBtn isDebugDis"
-          ></div>
+          <div class="debugBtn isDebugDis"></div>
         </el-tooltip>
         <div
           v-else

@@ -20,6 +20,7 @@ import { yaml } from '@codemirror/lang-yaml';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useChangeThemeStore } from '@/store';
 import CustomLoading from 'src/views/customLoading/index.vue';
+import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
 
 const loading = ref(false);
 const themeStore = useChangeThemeStore();
@@ -190,9 +191,6 @@ const getServiceYamlFun = async (id: string) => {
 };
 const handleChange = (payload) => {
   yamlToJsonContent.value = jsYaml.load(payload);
-  setTimeout(() => {
-    payload.view.scrollDOM.scrollTop = 0;
-  }, 100);
 };
 watch(
   () => props,
@@ -297,7 +295,7 @@ onMounted(() => {
   </el-upload>
   <div class="code-container" v-if="uploadtype === 'edit'">
     <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
-    <Codemirror
+    <!-- <Codemirror
       v-model="getServiceYaml"
       placeholder="Code goes here..."
       :autofocus="true"
@@ -308,6 +306,13 @@ onMounted(() => {
       @ready="handleReady"
       @update="updateFunc"
       @change="handleChange"
+    /> -->
+    <MonacoEditor
+      v-if="uploadtype === 'edit'"
+      :yamlContent="getServiceYaml"
+      placeholder="Code goes here..."
+      :readOnly="!editable"
+      :handleQueryYamlValue="handleChange"
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">

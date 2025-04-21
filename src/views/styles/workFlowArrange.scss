@@ -363,6 +363,7 @@
           align-items: center;
         }
         .label {
+          max-width: 64px !important;
           flex: 1;
           height: 24px;
           line-height: 24px;
