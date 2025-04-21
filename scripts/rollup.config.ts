@@ -44,11 +44,7 @@ export default function (opts: ConfigOptions) {
         },
       }),
       copy({
-        // 复制 favicon.ico 到指定目录
-        targets: [
-          { src: 'public/app_favicon.ico', dest: 'dist' },
-          { src: 'public/favicon.ico', dest: 'dist' },
-        ],
+        targets: [{ src: 'build/icon.png', dest: 'dist' }],
       }),
       replace({
         ...Object.entries({ ...getEnv(), NODE_ENV: opts.env }).reduce(

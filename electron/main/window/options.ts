@@ -48,9 +48,6 @@ const adjustWindowSize = (
   return result;
 };
 
-export const iconPath = electron.app.isPackaged
-  ? 'dist/favicon.ico'
-  : path.join(__dirname, '../../public/app_favicon.ico');
 export const options: allWindowType = {
   mainWindow: {
     id: 'mainWindow',
@@ -64,7 +61,7 @@ export const options: allWindowType = {
       show: true,
       alwaysOnTop: false,
       useContentSize: true,
-      icon: iconPath,
+      icon: 'dist/icon.png',
       ...getLinuxSpecificOptions(),
     }),
     hash: '/',
@@ -82,7 +79,7 @@ export const options: allWindowType = {
       alwaysOnTop: true,
       useContentSize: true,
       titleBarStyle: 'hidden',
-      icon: iconPath,
+      icon: 'dist/icon.png',
       ...getLinuxSpecificOptions(),
     }),
     hash: '/chat',
