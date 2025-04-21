@@ -44,7 +44,10 @@ export default function (opts: ConfigOptions) {
         },
       }),
       copy({
-        targets: [{ src: 'build/icon.png', dest: 'dist' }],
+        targets: [
+          { src: 'build/trayTemplate.png', dest: 'dist' },
+          { src: 'build/icon.png', dest: 'dist' },
+        ],
       }),
       replace({
         ...Object.entries({ ...getEnv(), NODE_ENV: opts.env }).reduce(

@@ -120,7 +120,6 @@ function setupWindowOpenHandler(win: BrowserWindow) {
           width,
           height,
           autoHideMenuBar: true,
-          icon: 'dist/icon.png',
           x,
           y,
           resizable: true,
