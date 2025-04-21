@@ -52,7 +52,7 @@ async function toAuthorization() {
   const url = await store.getAuthUrl('login');
   if (!url) return;
   const w = 1000;
-  const h = 700;
+  const h = 750;
   const left = (screen.width - w) / 2;
   const top = (screen.height - h) / 2;
 
