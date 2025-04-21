@@ -133,14 +133,14 @@
       :before-close="handleClose"
     >
       <div class="drawerContent">
-        <div v-if="actions === 'upload'">
+        <div v-if="actions === 'upload'" class="monacoEditorBox">
           <Upload
             type="upload"
             @closeDrawer="handleClose"
             :serviceId="selectedServiceId"
           />
         </div>
-        <div v-if="actions === 'get'">
+        <div v-if="actions === 'get'" class="monacoEditorBox">
           <Upload
             type="get"
             @closeDrawer="handleClose"
@@ -149,7 +149,7 @@
             :getServiceName="getServiceName"
           />
         </div>
-        <div v-if="actions === 'edit'">
+        <div v-if="actions === 'edit'" class="monacoEditorBox">
           <Upload
             type="edit"
             @closeDrawer="handleClose"
@@ -377,8 +377,10 @@ onMounted(() => {
   margin-bottom: 0px !important;
 }
 .drawerContent {
-  overflow-y: auto;
   height: calc(100% - 32px);
+}
+.monacoEditorBox{
+  height: 100%;
 }
 .el-drawer {
   margin: 0px;
@@ -441,6 +443,7 @@ img {
   }
 }
 :deep(.el-drawer__body) {
+  overflow: unset !important;
   padding: 8px 24px 16px !important;
   .drawerBody {
     height: 100%;
