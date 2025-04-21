@@ -7,9 +7,7 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import path from 'path';
 import { isLinux } from '../common/platform';
-import electron from 'electron';
 
 export interface allWindowType {
   [propName: string]: {
@@ -48,9 +46,6 @@ const adjustWindowSize = (
   return result;
 };
 
-export const iconPath = electron.app.isPackaged
-  ? 'dist/favicon.ico'
-  : path.join(__dirname, '../../public/app_favicon.ico');
 export const options: allWindowType = {
   mainWindow: {
     id: 'mainWindow',
@@ -64,7 +59,6 @@ export const options: allWindowType = {
       show: true,
       alwaysOnTop: false,
       useContentSize: true,
-      icon: iconPath,
       ...getLinuxSpecificOptions(),
     }),
     hash: '/',
@@ -82,7 +76,6 @@ export const options: allWindowType = {
       alwaysOnTop: true,
       useContentSize: true,
       titleBarStyle: 'hidden',
-      icon: iconPath,
       ...getLinuxSpecificOptions(),
     }),
     hash: '/chat',

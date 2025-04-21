@@ -44,10 +44,9 @@ export default function (opts: ConfigOptions) {
         },
       }),
       copy({
-        // 复制 favicon.ico 到指定目录
         targets: [
-          { src: 'public/app_favicon.ico', dest: 'dist' },
-          { src: 'public/favicon.ico', dest: 'dist' },
+          { src: 'build/trayTemplate.png', dest: 'dist' },
+          { src: 'build/icon.png', dest: 'dist' },
         ],
       }),
       replace({
