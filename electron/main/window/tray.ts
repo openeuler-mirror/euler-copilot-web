@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import path from 'node:path';
-import { app, Tray, Menu, BrowserWindow } from 'electron';
+import { app, Tray, Menu, BrowserWindow, nativeImage } from 'electron';
 import type { MenuItemConstructorOptions } from 'electron';
 import { createDefaultWindow, createChatWindow } from './create';
 
@@ -79,6 +79,22 @@ export function createTray(): Tray {
       ? path.join(__dirname, '../trayTemplate.png')
       : path.join(__dirname, '../icon.png');
   appTray = new Tray(iconPath);
+  // 根据平台处理图标
+  if (process.platform === 'win32') {
+    // Windows平台直接设置图标
+    appTray.setImage(iconPath);
+  } else if (process.platform === 'darwin') {
+    // macOS 平台需要调整尺寸并设置为模板图像
+    const image = nativeImage.createFromPath(iconPath);
+    const resizedImage = image.resize({ width: 18, height: 18 });
+    resizedImage.setTemplateImage(true);
+    appTray.setImage(resizedImage);
+  } else if (process.platform === 'linux') {
+    // Linux 平台需要调整尺寸
+    const image = nativeImage.createFromPath(iconPath);
+    const resizedImage = image.resize({ width: 18, height: 18 });
+    appTray.setImage(resizedImage);
+  }
   const contextMenu = Menu.buildFromTemplate(trayMenus);
   appTray.setToolTip('EulerCopilot');
 
