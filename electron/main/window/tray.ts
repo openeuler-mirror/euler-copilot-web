@@ -77,7 +77,7 @@ export function createTray(): Tray {
   const iconPath =
     process.platform === 'darwin'
       ? path.join(__dirname, '../trayTemplate.png')
-      : path.join(__dirname, '../icon.png');
+      : path.join(__dirname, '../tray.png');
   appTray = new Tray(iconPath);
   // 根据平台处理图标
   if (process.platform === 'win32') {

@@ -46,7 +46,7 @@ export default function (opts: ConfigOptions) {
       copy({
         targets: [
           { src: 'build/trayTemplate.png', dest: 'dist' },
-          { src: 'build/icon.png', dest: 'dist' },
+          { src: 'build/tray.png', dest: 'dist' },
         ],
       }),
       replace({
