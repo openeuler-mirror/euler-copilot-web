@@ -102,13 +102,30 @@ pnpm run package:linux
 %install
 mkdir -p %{buildroot}/opt/EulerCopilot
 mkdir -p %{buildroot}/usr/share/applications
+# 创建图标目录
+mkdir -p %{buildroot}/usr/share/icons/hicolor/16x16/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/24x24/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/32x32/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/48x48/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/64x64/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/128x128/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/256x256/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/256x256@2/apps
 mkdir -p %{buildroot}/usr/share/icons/hicolor/512x512/apps
 
 # 复制构件到目标目录
 cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/%{_electron_build_dir}/* %{buildroot}/opt/EulerCopilot/
 # 拷贝桌面入口文件和图标
 cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
-cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/
+cp -a %{_builddir}/%{name}-%{version}/build/icons/16x16.png %{buildroot}/usr/share/icons/hicolor/16x16/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/24x24.png %{buildroot}/usr/share/icons/hicolor/24x24/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/32x32.png %{buildroot}/usr/share/icons/hicolor/32x32/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/48x48.png %{buildroot}/usr/share/icons/hicolor/48x48/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/64x64.png %{buildroot}/usr/share/icons/hicolor/64x64/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/128x128.png %{buildroot}/usr/share/icons/hicolor/128x128/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/256x256.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/256x256@2x.png %{buildroot}/usr/share/icons/hicolor/256x256@2/apps/euler-copilot-desktop.png
+cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
 
 
 %files
@@ -121,6 +138,14 @@ cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.png %{bu
 %attr(0755, root, root) /opt/EulerCopilot/*
 # 桌面与图标
 %attr(0644, root, root) /usr/share/applications/euler-copilot-desktop.desktop
+%attr(0644, root, root) /usr/share/icons/hicolor/16x16/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/24x24/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/32x32/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/48x48/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/64x64/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/128x128/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/256x256/apps/euler-copilot-desktop.png
+%attr(0644, root, root) /usr/share/icons/hicolor/256x256@2/apps/euler-copilot-desktop.png
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
 
 
