@@ -7,10 +7,12 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
+import { build } from '../../../package.json';
+
 export interface IProductConfiguration {
   readonly name: string;
 }
 
 export const productObj: IProductConfiguration = {
-  name: 'EulerCopilot',
+  name: build.productName,
 };

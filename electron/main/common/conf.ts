@@ -14,7 +14,7 @@ import { productObj } from './product';
 
 interface ICacheConf {
   theme: 'system' | 'light' | 'dark';
-  userLocale;
+  userLocale: string;
 }
 
 export const userDataPath = getUserDataPath(productObj.name);

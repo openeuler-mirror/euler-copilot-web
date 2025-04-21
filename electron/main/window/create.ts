@@ -13,6 +13,7 @@ import { BrowserWindow, app, ipcMain, Menu } from 'electron';
 import { options as allWindow } from './options';
 import { updateConf } from '../common/conf';
 import { isLinux } from '../common/platform';
+import { iconPath } from './options';
 
 // 存储所有创建的窗口实例，用于全局访问
 const windowInstances: Map<string, BrowserWindow> = new Map();
@@ -48,6 +49,9 @@ export function createWindow(
 
   // 设置右键上下文菜单
   setupContextMenu(win);
+
+  // 设置窗口打开处理程序
+  setupWindowOpenHandler(win);
 
   return win;
 }
@@ -99,6 +103,38 @@ function setupContextMenu(win: BrowserWindow) {
       { role: 'selectAll', label: isZh ? '全选' : 'Select All' },
     ];
     Menu.buildFromTemplate(template).popup({ window: win });
+  });
+}
+
+function setupWindowOpenHandler(win: BrowserWindow) {
+  win.webContents.setWindowOpenHandler((details: Electron.HandlerDetails) => {
+    if (details.url) {
+      const features = details.features || '';
+      const width = parseInt(features.split('width=')[1] || '800', 10);
+      const height = parseInt(features.split('height=')[1] || '600', 10);
+      const x = parseInt(features.split('left=')[1] || '0', 10);
+      const y = parseInt(features.split('top=')[1] || '0', 10);
+
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width,
+          height,
+          autoHideMenuBar: true,
+          icon: iconPath,
+          x,
+          y,
+          resizable: true,
+          webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            webSecurity: false,
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+          },
+        },
+      };
+    }
+    return { action: 'deny' };
   });
 }
 

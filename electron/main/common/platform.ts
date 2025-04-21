@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import * as nls from './nls';
 
-export const LANGUAGE_DEFAULT = 'en';
+export const LANGUAGE_DEFAULT = 'zh_cn';
 
 let _isWindows = false;
 let _isMacintosh = false;
@@ -53,7 +53,7 @@ if (typeof nodeProcess === 'object') {
   _isElectron = isElectronProcess;
   _locale = LANGUAGE_DEFAULT;
   _language = LANGUAGE_DEFAULT;
-  const rawNlsConfig = nodeProcess.env['VSCODE_NLS_CONFIG'];
+  const rawNlsConfig = nodeProcess.env['EULERCOPILOT_NLS_CONFIG'];
   if (rawNlsConfig) {
     try {
       const nlsConfig: nls.INLSConfiguration = JSON.parse(rawNlsConfig);
