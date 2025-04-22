@@ -1,74 +1,74 @@
 <script setup>
-import * as monaco from 'monaco-editor'
-import { onMounted, ref, toRaw, watch } from 'vue'
-import { configureMonacoYaml } from 'monaco-yaml'
-import YamlWorker from './yaml.worker.js?worker'
-import { useChangeThemeStore } from 'src/store/conversation'
-const editorContainer = ref()
-const editor = ref()
-const themeStore = useChangeThemeStore()
+import * as monaco from 'monaco-editor';
+import { onMounted, ref, toRaw, watch } from 'vue';
+import { configureMonacoYaml } from 'monaco-yaml';
+import YamlWorker from './yaml.worker.js?worker';
+import { useChangeThemeStore } from 'src/store/conversation';
+const editorContainer = ref();
+const editor = ref();
+const themeStore = useChangeThemeStore();
 
 const props = defineProps({
   readOnly: {
     type: Boolean,
-    default: true
+    default: true,
   },
   yamlContent: {
     type: String,
-    default: ''
+    default: '',
   },
   handleQueryYamlValue: {
     type: Function,
-    default: () => {}
-  }
-})
+    default: () => {},
+  },
+});
 
 watch(
   () => props.readOnly,
   (oldVal, newVal) => {
     editor.value.updateOptions({
-      readOnly: !newVal
-    })
-  }
-)
+      readOnly: !newVal,
+    });
+  },
+);
 
 watch(
   () => themeStore.theme,
   () => {
     if (editor.value) {
       editor.value.updateOptions({
-        theme: themeStore.theme === 'dark' ? 'vs-dark' : 'vs'
-      })
+        theme: themeStore.theme === 'dark' ? 'vs-dark' : 'vs',
+      });
     }
   },
   {
     deep: true,
-    immediate: true
-  }
-)
-let prettierc = null
+    immediate: true,
+  },
+);
+let prettierc = null;
 onMounted(() => {
   if (editorContainer.value) {
     window.MonacoEnvironment = {
       getWorker(moduleId, label) {
         switch (label) {
           case 'yaml':
-            return new YamlWorker()
+            return new YamlWorker();
           default:
-            throw new Error(`Unknown label ${label}`)
+            throw new Error(`Unknown label ${label}`);
         }
-      }
-    }
+      },
+    };
     configureMonacoYaml(monaco, {
       enableSchemaRequest: true,
-      isKubernetes: true
-    })
-    monaco.editor.getModels().forEach((model) => model.dispose())
+      isKubernetes: true,
+    });
+    monaco.editor.getModels().forEach((model) => model.dispose());
     const prettierc = monaco.editor.createModel(
       props.yamlContent,
+      'yaml',
       undefined,
-      monaco.Uri.parse('file://././.prettierrc.yaml')
-    )
+    );
     editor.value = monaco.editor.create(editorContainer.value, {
       value: props.yamlContent || '',
       language: 'yaml',
@@ -87,17 +87,16 @@ onMounted(() => {
       quickSuggestions: {
         other: true,
         comments: false,
-        strings: true
+        strings: true,
       },
-      readOnly: props.readOnly
-    })
-
+      readOnly: props.readOnly,
+    });
   }
 
   editor.value.onDidChangeModelContent(() => {
-    props.handleQueryYamlValue(toRaw(editor.value).getValue())
-  })
-})
+    props.handleQueryYamlValue(toRaw(editor.value).getValue());
+  });
+});
 </script>
 
 <template>
@@ -110,6 +109,13 @@ onMounted(() => {
 
 .line-numbers {
   text-align: center !important;
+}
+
+.inputarea {
+  position: absolute !important;
+  left: unset !important;
+  height: 1px !important;
+  opacity: 0;
 }
 </style>
 <style scoped>
