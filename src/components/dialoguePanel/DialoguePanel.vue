@@ -68,8 +68,6 @@ export interface DialoguePanelProps {
   modeOptions: any;
   // 新增是否是工作流调试的-用于修改调试抽屉样式
   isWorkFlowDebug: boolean;
-
-  changeCommentByIndex: (index: number) => void;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
@@ -105,7 +103,7 @@ const { thoughtContent, contentAfterMark } = useMarkdownParser(
   toRef(props, 'currentSelected'),
 );
 const index = ref(0);
-const isComment = ref(undefined);
+const isComment = ref("none");
 const emits = defineEmits<{
   (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
