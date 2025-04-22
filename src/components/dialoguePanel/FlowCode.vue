@@ -41,9 +41,6 @@ const codeMirrorView = shallowRef();
 const extensions = ref([json()]);
 const handleReady = (payload) => {
   codeMirrorView.value = payload.view;
-  setTimeout(() => {
-    payload.view.scrollDOM.scrollTop = 0;
-  }, 100);
 };
 const handleChange = (payload) => {
   params.value = payload;

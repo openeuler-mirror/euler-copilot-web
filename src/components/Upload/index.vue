@@ -20,6 +20,7 @@ import { yaml } from '@codemirror/lang-yaml';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useChangeThemeStore } from 'src/store/conversation';
 import CustomLoading from 'src/views/customLoading/index.vue';
+import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
 
 const loading = ref(false);
 const themeStore = useChangeThemeStore();
@@ -34,7 +35,9 @@ const handleCreateapi = async () => {
     if (res.code === 200) {
       getServiceJson.value = res?.result?.apis;
       getServiceName.value = res?.result?.name;
-      activeServiceNameList.value = getServiceJson.value.map((item) => item.name);
+      activeServiceNameList.value = getServiceJson.value.map(
+        (item) => item.name,
+      );
       uploadtype.value = 'get';
       successMsg('创建成功');
     } else {
@@ -188,9 +191,6 @@ const getServiceYamlFun = async (id: string) => {
 };
 const handleChange = (payload) => {
   yamlToJsonContent.value = jsYaml.load(payload);
-  setTimeout(() => {
-    payload.view.scrollDOM.scrollTop = 0;
-  }, 100);
 };
 watch(
   () => props,
@@ -199,7 +199,9 @@ watch(
     getServiceYaml.value = props.getServiceYaml;
     getServiceName.value = props.getServiceName;
     if (getServiceJson.value?.length) {
-      activeServiceNameList.value = getServiceJson.value.map((item) => item.name);
+      activeServiceNameList.value = getServiceJson.value.map(
+        (item) => item.name,
+      );
     }
     if (props.type === 'edit' && props) {
       getServiceYamlFun(props.serviceId);
@@ -293,7 +295,7 @@ onMounted(() => {
   </el-upload>
   <div class="code-container" v-if="uploadtype === 'edit'">
     <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
-    <Codemirror
+    <!-- <Codemirror
       v-model="getServiceYaml"
       placeholder="Code goes here..."
       :autofocus="true"
@@ -304,6 +306,13 @@ onMounted(() => {
       @ready="handleReady"
       @update="updateFunc"
       @change="handleChange"
+    /> -->
+    <MonacoEditor
+      v-if="uploadtype === 'edit'"
+      :yamlContent="getServiceYaml"
+      placeholder="Code goes here..."
+      :readOnly="!editable"
+      :handleQueryYamlValue="handleChange"
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
