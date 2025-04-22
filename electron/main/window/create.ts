@@ -42,8 +42,7 @@ export function createWindow(
     win.loadURL(`http://localhost:${process.env.PORT}/#${hash}`);
   }
 
-  // 无论平台如何，都设置窗口控制事件处理
-  // 这样确保即使在其他平台添加自定义标题栏也能工作
+  // 设置窗口控制事件处理
   setupWindowControls(win);
 
   // 设置右键上下文菜单
@@ -133,6 +132,11 @@ function setupWindowOpenHandler(win: BrowserWindow) {
       };
     }
     return { action: 'deny' };
+  });
+
+  // 为新窗口设置右键菜单
+  win.webContents.on('did-create-window', (childWindow) => {
+    setupContextMenu(childWindow);
   });
 }
 
