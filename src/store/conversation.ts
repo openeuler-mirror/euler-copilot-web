@@ -177,8 +177,12 @@ export const useSessionStore = defineStore('conversation', () => {
             case 'text.add':
               {
                 scrollBottom();
+                //向message添加值
                 conversationItem.message[conversationItem.currentInd] +=
-                  message.content.text;
+                message.content.text;
+                //向messageList添加值
+                conversationItem.messageList.getAllItems()[conversationItem.currentInd].message +=
+                message.content.text;
               }
               break;
             case 'heartbeat':
@@ -606,6 +610,14 @@ export const useSessionStore = defineStore('conversation', () => {
       (
         conversationList.value[regenerateInd] as RobotConversationItem
       ).message.push(''); //123
+      // 重新生成，指定某个回答，修改默认索引
+      (
+        conversationList.value[regenerateInd] as RobotConversationItem
+      ).messageList.push({
+        message:"",
+        record_id:qaRecordId,
+        comment:"none",
+      }); 
       (
         conversationList.value[regenerateInd] as RobotConversationItem
       ).currentInd =
@@ -772,9 +784,6 @@ export const useSessionStore = defineStore('conversation', () => {
    */
   const getConversation = async (conversationId: string): Promise<void> => {
     const [_, res] = await api.getHistoryConversation(conversationId);
-    //解析读取 records字段得到对话数组列表
-    // const [_, res] = await api.getHistoryConversation(conversationId).records;
-
     if (!_ && res) {
       conversationList.value = [];
       res.result.records.forEach((record) => {
