@@ -128,7 +128,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
     thoughtContent.value = '';
     reGenerateAnswer(cid, user_selected_app.value);
     index.value = messageArray.value.getAllItems().length - 1;
-    isComment.value = undefined;
+    isComment.value = "none";
   } else {
     // 停止生成
     pausedStream(cid);
@@ -395,6 +395,13 @@ watch(
     popperSize();
   },
 );
+
+watch(
+  () => index.value, 
+  () => {
+    handleIsLike();
+  }
+)
 
 onBeforeUnmount(() => {
   isComment.value = undefined;
