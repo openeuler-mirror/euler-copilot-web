@@ -117,11 +117,15 @@ export class MessageArray {
     };
     this.items.push(newItem);
   }
-
+  push(item: MessageRecord): void {
+    this.items.push(item);
+  }
   getItem(index: number): MessageRecord | undefined {
     return this.items[index];
   }
-
+  getContentbyIndex(index: number): string | undefined {
+    return this.items[index]?.message;
+  }
   getLength(): number {
     return this.items.length;
   }
@@ -139,19 +143,16 @@ export class MessageArray {
   }
 
   getCommentList(): string[] {
-    //类型断言，将undefined转换为0。
     return this.items.map((item) => item.comment ? item.comment : 'none');
   }
 
-  getCommentyIndex(index: number): string {
+  getCommentbyIndex(index: number): string {
     return this.items.map((item) => item.comment ? item.comment : 'none')[index];
   }
-
-  changeCommentByCidAndIndex(
-    cid: number,
+  changeCommentByIndex(
     index: number,
     comment: string,
   ): void {
-    
+    this.items[index].comment = comment;
   }
 }

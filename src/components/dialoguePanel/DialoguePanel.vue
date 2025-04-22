@@ -48,6 +48,8 @@ export interface DialoguePanelProps {
   userSelectedApp?: any;
   //
   recordList?: string[] | undefined;
+  // MessageList 结构
+  messageArray?: MessageArray[] | undefined;
   //
   isCommentList?: string[] | undefined;
   //
@@ -66,11 +68,14 @@ export interface DialoguePanelProps {
   modeOptions: any;
   // 新增是否是工作流调试的-用于修改调试抽屉样式
   isWorkFlowDebug: boolean;
+
+  changeCommentByIndex: (index: number) => void;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
 import { api } from 'src/apis';
+import { MessageArray } from 'src/views/dialogue/types';
 var option = ref();
 var show = ref(false);
 const size = reactive({
@@ -88,6 +93,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   // currentSelected: 0,
   needRegernerate: false,
 });
+const messageArray = ref<MessageArray>(props.messageArray);
 
 const { handleCopy, handleFeedback } = useDialogueActions(
   toRef(props, 'content'),
@@ -99,7 +105,7 @@ const { thoughtContent, contentAfterMark } = useMarkdownParser(
   toRef(props, 'currentSelected'),
 );
 const index = ref(0);
-const isComment = ref(props.isCommentList);
+const isComment = ref(undefined);
 const emits = defineEmits<{
   (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
@@ -119,12 +125,13 @@ const handlePauseAndReGenerate = (cid?: number) => {
   if (!cid) {
     return;
   }
-
   emits('clearSuggestion', props.key);
   if (props.isFinish) {
     // 重新生成
     thoughtContent.value = '';
     reGenerateAnswer(cid, user_selected_app.value);
+    index.value = messageArray.value.getAllItems().length - 1;
+    isComment.value = undefined;
   } else {
     // 停止生成
     pausedStream(cid);
@@ -157,9 +164,10 @@ const handleLike = async (
       comment: !isSupport.value ? 'liked' : 'none',
       groupId: props.groupId,
     }).then((res) => {
-      if(res[0].status === 200){
-        isComment.value[index.value] = 'liked';
-        handleIsLike();
+      if(res[1].code === 200){
+        isSupport.value = isSupport.value ? false : true;
+        isAgainst.value = false;
+        messageArray.value.getAllItems()[index.value].comment = isSupport.value ? 'liked' : 'none';
       }
     })
   } else if (type === 'disliked') {
@@ -185,7 +193,8 @@ const handleDislike = async (
     {
       type: 'disliked',
       qaRecordId: qaRecordId,
-      comment: reason,
+      comment: !isAgainst.value ? 'disliked' : 'none',
+      dislikeReason: reason,
       groupId: props.groupId,
       reasonLink: reasionLink,
       reasonDescription: reasonDescription,
@@ -193,8 +202,9 @@ const handleDislike = async (
   ).then((res) => {
     if(res[0].status === 200){
       isAgainstVisible.value = false;
-      isComment.value[index.value] = 'disliked';
-      handleIsLike();
+      isAgainst.value = isAgainst.value ? false : true;
+      isSupport.value = false;
+      messageArray.value.getAllItems()[index.value].comment = isAgainst.value ? 'disliked' : 'none';
     };
   });
 };
@@ -245,21 +255,63 @@ const prePageHandle = (cid: number) => {
     index.value = 0;
   } else {
     index.value--;
-    // handleIsLike();
-    // handleIsLike();
+    isComment.value = messageArray.value.getAllItems()[index.value].comment;
+    handleIsLike();
   }
 };
 
 const nextPageHandle = (cid: number) => {
   thoughtContent.value = '';
   nextPage(cid);
-  if (index.value === (props.isCommentList as number[]).length - 1) {
-    index.value = (props.isCommentList as number[]).length - 1;
+  if (index.value === (props.content as string[]).length - 1) {
+    index.value = (props.content as string[]).length - 1;
   } else {
     index.value++;
+    isComment.value = messageArray.value.getAllItems()[index.value].comment;
     handleIsLike();
   }
 };
+
+const isSupport = ref(false);
+const isAgainst = ref(false);
+
+const handleIsLike = () => {
+  if (isComment.value === undefined) {
+    isSupport.value = false;
+    isAgainst.value = false;
+  } else {
+      if (isComment.value !== 'none') {
+        isSupport.value = isComment.value === 'liked';
+        isAgainst.value = !isSupport.value;
+      } else {
+        isSupport.value = false;
+        isAgainst.value = false;
+      }
+  }
+};
+
+onMounted(() => {
+  if(props.messageArray?.value){
+    isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
+  }
+  setTimeout(() => {
+    handleIsLike();
+  }, 200);
+});
+
+watch(
+  () => props.messageArray,
+  () => {
+      index.value = 0;
+      messageArray.value = props.messageArray;
+      if(props.messageArray){
+        isComment.value = props.messageArray.getAllItems()[index.value].comment;
+      }
+      handleIsLike();
+  },{
+    immediate: true,
+  }
+);
 
 watch(
   () => props.test,
@@ -475,7 +527,7 @@ const chatWithParams = async () => {
               @click="prePageHandle(Number(cid))"
               src="@/assets/svgs/arror_left.svg"
             />
-            <span class="pagenation-cur">{{ currentSelected! + 1 }}</span>
+            <span class="pagenation-cur">{{ index! + 1 }}</span>
             <span class="pagenation-total">{{ `/${content?.length}` }}</span>
             <img
               class="pagenation-arror ml-8"
