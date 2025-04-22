@@ -2,6 +2,12 @@
 # Exit on error and unset vars
 set -euo pipefail
 
+# 检查是否以 root 身份运行
+if [ "$(id -u)" -ne 0 ]; then
+    echo "错误: 此脚本必须以 root 身份运行" >&2
+    exit 1
+fi
+
 # 脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 项目根目录
