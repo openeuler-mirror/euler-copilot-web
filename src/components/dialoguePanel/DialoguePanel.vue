@@ -303,6 +303,9 @@ watch(
   () => props.messageArray,
   () => {
       index.value = 0;
+      if(props.messageArray){
+        index.value = props.messageArray?.getAllItems().length - 1;
+      }
       messageArray.value = props.messageArray;
       if(props.messageArray){
         isComment.value = props.messageArray.getAllItems()[index.value].comment;
