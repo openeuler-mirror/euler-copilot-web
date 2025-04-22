@@ -165,115 +165,150 @@ export const useSessionStore = defineStore('conversation', () => {
         // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
         // 这里json解析
         const message = JSON.parse(msgData.data || '{}');
+        const eventType = message['event'];
         if ('metadata' in message) {
           conversationItem.metadata = message.metadata;
         }
         if ('event' in message) {
-          if (message['event'] === 'text.add') {
-            scrollBottom();
-            conversationItem.message[conversationItem.currentInd] +=
-              message.content.text;
-          } else if (message['event'] === 'heartbeat') {
-            // 不处理
-          } else if (message['event'] === 'graph') {
-            //echarts处理 待验证
-            conversationItem.echartsObj = message.content.option;
-          } else if (message['event'] == 'ducument.add') {
-            conversationItem.message[conversationItem.currentInd] +=
-              message.content;
-            conversationItem.files = [
-              ...conversationItem.files,
-              message.content,
-            ];
-          } else if (message['event'] === 'Suggestion') {
-            if (conversationItem.search_suggestions) {
-              conversationItem.search_suggestions.push(Object(message.content));
-            } else {
-              conversationItem.search_suggestions = [Object(message.content)];
-            }
-          } else if (message['event'] === 'init') {
-            //初始化获取 metadata
-            conversationItem.metadata = message.metadata;
-            conversationItem.createdAt = message.content.created_at;
-            conversationItem.groupId = message.groupId;
-          } else if (message['event'] === 'flow.start') {
-            //事件流开始--后续验证对话无下拉连接后则完全替换
-            const flow = message.flow;
-            conversationItem.flowdata = {
-              id: flow?.stepId || '',
-              title: i18n.global.t('flow.flow_start'),
-              // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
-              progress: flow?.stepProgress || '',
-              status: 'running',
-              display: true,
-              flowId: flow?.flowId || '',
-              data: [[]],
-            };
-          } else if (message['event'] === 'step.input') {
-            conversationItem.flowdata?.data[0].push({
-              id: message.flow?.stepId,
-              title: message.flow?.stepName,
-              status: message.flow?.stepStatus,
-              data: {
-                input: message.content,
-              },
-            });
-            if (conversationItem.flowdata) {
-              conversationItem.flowdata.progress = message.flow?.stepProgress;
-              conversationItem.flowdata.status = message.flow?.stepStatus;
-            }
-          } else if (message['event'] === 'step.output') {
-            const target = conversationItem.flowdata?.data[0].find(
-              (item) => item.id === message.flow?.stepId,
-            );
-            if (target) {
-              target.data.output = message.content;
-              target.status = message.flow?.stepStatus;
-              // 工作流添加每阶段的时间耗时
-              target['costTime'] = message.metadata?.timeCost;
-              if (
-                message.flow.step_status === 'error' &&
-                conversationItem.flowdata
-              ) {
-                conversationItem.flowdata.status = message.flow?.stepStatus;
+          switch (eventType) {
+            case 'text.add':
+              {
+                scrollBottom();
+                conversationItem.message[conversationItem.currentInd] +=
+                  message.content.text;
               }
-            }
-          } else if (message['event'] === 'flow.stop') {
-            //时间流结束
-            const flow = message.content.flow;
-            if (params.type) {
-              // 如果是工作流的调试功能-添加status/data
-              conversationItem.flowdata = {
-                id: flow?.stepId,
-                title: i18n.global.t('flow.flow_end'),
-                progress: flow?.stepProgress,
-                status: message.flow?.stepStatus,
-                display: true,
-                data: conversationItem?.flowdata?.data,
-              };
-            } else if (
-              message.content.type !== 'schema' &&
-              conversationItem.flowdata
-            ) {
-              // 删除 end 逻辑
-              conversationItem.flowdata = {
-                id: flow?.stepId,
-                title: i18n.global.t('flow.flow_end'),
-                progress: flow?.stepProgress,
-                status: 'success',
-                display: true,
-                data: conversationItem.flowdata.data,
-              };
-            } else {
-              conversationItem.paramsList = message.content.data;
-              if (conversationItem.flowdata) {
-                conversationItem.flowdata.title = i18n.global.t(
-                  'flow.flow_params_error',
+              break;
+            case 'heartbeat':
+              break;
+            case 'graph':
+              {
+                conversationItem.echartsObj = message.content.option;
+              }
+              break;
+            case 'ducument.add':
+              {
+                conversationItem.message[conversationItem.currentInd] +=
+                  message.content;
+                conversationItem.files = [
+                  ...conversationItem.files,
+                  message.content,
+                ];
+              }
+              break;
+            case 'Suggestion':
+              {
+                if (conversationItem.search_suggestions) {
+                  conversationItem.search_suggestions.push(
+                    Object(message.content),
+                  );
+                } else {
+                  conversationItem.search_suggestions = [
+                    Object(message.content),
+                  ];
+                }
+              }
+              break;
+            case 'init':
+              {
+                //初始化获取 metadata
+                conversationItem.metadata = message.metadata;
+                conversationItem.createdAt = message.content.created_at;
+                conversationItem.groupId = message.groupId;
+              }
+              break;
+            case 'flow.start':
+              {
+                //事件流开始--后续验证对话无下拉连接后则完全替换
+                const flow = message.flow;
+                conversationItem.flowdata = {
+                  id: flow?.stepId || '',
+                  title: i18n.global.t('flow.flow_start'),
+                  // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
+                  progress: flow?.stepProgress || '',
+                  status: 'running',
+                  display: true,
+                  flowId: flow?.flowId || '',
+                  data: [[]],
+                };
+              }
+              break;
+            case 'step.input':
+              {
+                conversationItem.flowdata?.data[0].push({
+                  id: message.flow?.stepId,
+                  title: message.flow?.stepName,
+                  status: message.flow?.stepStatus,
+                  data: {
+                    input: message.content,
+                  },
+                });
+                if (conversationItem.flowdata) {
+                  conversationItem.flowdata.progress =
+                    message.flow?.stepProgress;
+                  conversationItem.flowdata.status = message.flow?.stepStatus;
+                }
+              }
+              break;
+            case 'step.output':
+              {
+                const target = conversationItem.flowdata?.data[0].find(
+                  (item) => item.id === message.flow?.stepId,
                 );
-                conversationItem.flowdata.status = 'error';
-                conversationItem.paramsList = message.content.data;
+                if (target) {
+                  target.data.output = message.content;
+                  target.status = message.flow?.stepStatus;
+                  // 工作流添加每阶段的时间耗时
+                  target['costTime'] = message.metadata?.timeCost;
+                  if (
+                    message.flow.step_status === 'error' &&
+                    conversationItem.flowdata
+                  ) {
+                    conversationItem.flowdata.status = message.flow?.stepStatus;
+                  }
+                }
               }
-            }
+              break;
+            case 'flow.stop':
+              //时间流结束
+              {
+                const flow = message.content.flow;
+                if (params.type) {
+                  // 如果是工作流的调试功能-添加status/data
+                  conversationItem.flowdata = {
+                    id: flow?.stepId,
+                    title: i18n.global.t('flow.flow_end'),
+                    progress: flow?.stepProgress,
+                    status: message.flow?.stepStatus,
+                    display: true,
+                    data: conversationItem?.flowdata?.data,
+                  };
+                } else if (
+                  message.content.type !== 'schema' &&
+                  conversationItem.flowdata
+                ) {
+                  // 删除 end 逻辑
+                  conversationItem.flowdata = {
+                    id: flow?.stepId,
+                    title: i18n.global.t('flow.flow_end'),
+                    progress: flow?.stepProgress,
+                    status: 'success',
+                    display: true,
+                    data: conversationItem.flowdata.data,
+                  };
+                } else {
+                  conversationItem.paramsList = message.content.data;
+                  if (conversationItem.flowdata) {
+                    conversationItem.flowdata.title = i18n.global.t(
+                      'flow.flow_params_error',
+                    );
+                    conversationItem.flowdata.status = 'error';
+                    conversationItem.paramsList = message.content.data;
+                  }
+                }
+              }
+              break;
+            default:
+              break;
           }
         }
         // 将lines传递给workflow-以更新工作流节点的状态
@@ -367,7 +402,6 @@ export const useSessionStore = defineStore('conversation', () => {
       } else if (false) {
         //写传参数情况
       } else {
-         
         await fetchEventSource(STREAM_URL, {
           signal: controller.signal,
           keepalive: true,
@@ -651,7 +685,10 @@ export const useSessionStore = defineStore('conversation', () => {
     (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
       true;
     cancel();
-    await api.stopGeneration();
+    const resp = await api.stopGeneration();
+    if (resp?.[1]?.code === 200) {
+      isAnswerGenerating.value = false;
+    }
   };
   /**
    * 重新生成回答
@@ -844,7 +881,10 @@ export const useSessionStore = defineStore('conversation', () => {
       ] as RobotConversationItem
     ).isFinish = true;
     cancel();
-    await api.stopGeneration();
+    const resp = await api.stopGeneration();
+    if (resp?.[1]?.code === 200) {
+      isAnswerGenerating.value = false;
+    }
   };
 
   // 判断string是否是json对象
