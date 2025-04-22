@@ -757,6 +757,9 @@ watch(
           :isCommentList="
             item.belong === 'robot' ? item.messageList.getCommentList() : ''
           "
+          :messageArray="
+            item.belong === 'robot' ? item.messageList : ''
+          "
           :is-finish="getItem(item, 'isFinish')"
           :test="getItem(item, 'test')"
           :metadata="getItem(item, 'metadata')"
