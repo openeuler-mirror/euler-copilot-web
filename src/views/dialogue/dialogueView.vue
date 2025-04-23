@@ -161,6 +161,17 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
   }
 };
 
+const changeLanguagefun = (lang: 'CN' | 'EN') => {
+  changeLanguage(lang);
+  // 同步语言到iframe
+  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
+  if (iframe?.contentWindow) {
+    const data = { lang: localStorage.getItem('localeLang') ?? 'CN' };
+    let target = `${window.location.origin}/witchaind`;
+    iframe.contentWindow.postMessage(data, target);
+  }
+};
+
 const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
   formValidateStatus.value[prop] = isValid;
 };
@@ -273,10 +284,10 @@ watch(
         </router-link>
       </div>
       <div class="dialogue-content">
-        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
+        <KeepAlive v-show="router.currentRoute.value.path === '/witchainD'">
           <tools />
         </KeepAlive>
-        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
+        <RouterView v-show="router.currentRoute.value.path !== '/witchainD'" />
       </div>
     </div>
     <el-dialog
