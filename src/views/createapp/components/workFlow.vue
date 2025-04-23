@@ -895,7 +895,7 @@ defineExpose({
               @click="choiceFlowId(item)"
             >
               <div class="flowName">{{ item.name }}</div>
-              <div class="dealIcon editIcon" @click="editFlow(item)"></div>
+              <!-- <div class="dealIcon editIcon" @click="editFlow(item)"></div> -->
               <div class="dealIcon delIcon" @click.stop="delFlow(item)"></div>
             </el-option>
             <template #footer class="selectFooter">
