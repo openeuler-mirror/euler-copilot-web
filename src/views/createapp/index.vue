@@ -70,6 +70,8 @@ const updateFlowsDebug = (status?) => {
   // 如果status为false,直接置为False不再调接口
   if (status === false) {
     publishValidate.value = false;
+    //在修改工作流以及界面配置时，需要重新校验工作流，状态置为未发布
+    publishStatus.value = "未发布";
     return;
   }
   api
