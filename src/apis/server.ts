@@ -17,6 +17,7 @@ import type {
   AxiosHeaders,
 } from 'axios';
 import { ElMessage } from 'element-plus';
+import { successMsg } from 'src/components/Message';
 
 export interface FcResponse<T> {
   error: string;
@@ -75,7 +76,7 @@ server.interceptors.response.use(
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
-    if (error.status !== 401 && error.status !== 403) {
+    if (error.status !== 401 && error.status !== 403 && error.status !== 409) {
       ElMessage({
         showClose: true,
         message:
@@ -84,6 +85,11 @@ server.interceptors.response.use(
         customClass: 'o-message--error',
         duration: 3000,
       });
+    }
+    if (error.status === 409) {
+      // 处理错误码为409的情况
+      successMsg('已是最新对话');
+      return Promise.reject(error as any);
     }
     return await handleStatusError(error);
   },
