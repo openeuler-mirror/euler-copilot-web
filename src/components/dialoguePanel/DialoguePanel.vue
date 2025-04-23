@@ -151,8 +151,8 @@ const handleCopy = (): void => {
 const handleLike = async (
   type: 'liked' | 'disliked' | 'report',
 ): Promise<void> => {
+  const qaRecordId = props.recordList[index.value];
   if (type === 'liked') {
-    const qaRecordId = props.recordList[index.value];
     await api.commentConversation({
       type: !isSupport.value ? 'liked' : 'none',
       qaRecordId: qaRecordId,
@@ -166,7 +166,22 @@ const handleLike = async (
       }
     })
   } else if (type === 'disliked') {
-    isAgainstVisible.value = true;
+    if(isAgainst.value){
+      await api.commentConversation({
+      type: 'none',
+      qaRecordId: qaRecordId,
+      comment: 'none',
+      groupId: props.groupId,
+    }).then((res) => {
+      if(res[1].code === 200){
+        isAgainst.value = false;
+        isSupport.value = false;
+        messageArray.value.getAllItems()[index.value].comment = 'none';
+      }
+    })
+    }else{
+      isAgainstVisible.value = true;
+    }
   } else {
     isReportVisible.value = true;
   }
@@ -186,7 +201,7 @@ const handleDislike = async (
   const qaRecordId = props.recordList[index.value];
   await api.commentConversation(
     {
-      type: 'disliked',
+      type: !isAgainst.value ? 'disliked' : 'none',
       qaRecordId: qaRecordId,
       comment: !isAgainst.value ? 'disliked' : 'none',
       dislikeReason: reason,
@@ -195,7 +210,7 @@ const handleDislike = async (
       reasonDescription: reasonDescription,
     }
   ).then((res) => {
-    if(res[1].status === 200){
+    if(res[1].code === 200){
       isAgainstVisible.value = false;
       isAgainst.value = isAgainst.value ? false : true;
       isSupport.value = false;
