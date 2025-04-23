@@ -116,6 +116,7 @@ onMounted(() => {
   left: unset !important;
   height: 1px !important;
   opacity: 0;
+  margin-top: 20px;
 }
 </style>
 <style scoped>

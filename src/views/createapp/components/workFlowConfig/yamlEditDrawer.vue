@@ -29,10 +29,18 @@
                 </el-icon>
                 <span>{{ item.title }}</span>
               </template>
+              <div class="yamlMonacoEditor" v-if="item.type && index === 1">
+                <MonacoEditor
+                  :yamlContent="item.yamlCode"
+                  placeholder="Code goes here..."
+                  :handleQueryYamlValue="handleChange"
+                  :readOnly="false"
+                />
+              </div>
               <MirrorText
-                v-if="item.type"
+                v-else-if="item.type && index !== 1"
                 ref="textarea"
-                :class="{ outputYaml: index !== 1 }"
+                class="outputYaml"
                 v-model:updateVal="item.yamlCode"
                 :yamlCode="item.yamlCode"
                 :disabled="item.disabled"
@@ -92,6 +100,7 @@ import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
 import { ElMessage } from 'element-plus';
+import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
 const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
@@ -166,6 +175,11 @@ watch(
   },
   { deep: true, immediate: true },
 );
+
+const handleChange = (payload) => {
+  yamlExpress.value[1].yamlCode = payload;
+};
+
 const closeDrawer = () => {
   emits('closeDrawer');
 };
@@ -190,6 +204,9 @@ const updateNodeYaml = () => {
 </script>
 
 <style lang="scss">
+.yamlMonacoEditor{
+  height:500px;
+}
 .flowDrawer.el-drawer {
   padding: 0px;
   background-color: var(--o-bg-color-base);
