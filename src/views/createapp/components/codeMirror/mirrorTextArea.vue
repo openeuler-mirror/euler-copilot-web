@@ -50,7 +50,7 @@ const updateFunc = () => {
   });
 };
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 .v-codemirror {
   height: 100%;
   width: 100%;
