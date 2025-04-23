@@ -70,6 +70,7 @@ const loading = ref(false);
 const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
 const connectHandleNodeId = ref('');
+const updateFlowsDebugStatus = ref(false);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -281,6 +282,10 @@ const searchApiList = () => {
 const handleDebugDialogOps = (visible) => {
   // 这里将对应的保存
   if (!debugDialogVisible.value) {
+    //在点击调试时，默认该
+    if(!updateFlowsDebugStatus.value){
+      flowObj.value.debug = false;
+    }
     saveFlow();
   }
   if (typeof visible === 'boolean') {
@@ -306,6 +311,7 @@ const edgesChange = (edges) => {
   // 边增加删除时直接将工作流debug状态置为false
   if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
     emits('updateFlowsDebug', false);
+    updateFlowsDebugStatus.value = false;
     nodeAndLineConnection();
   }
 };
@@ -326,6 +332,8 @@ const nodesChange = (nodes) => {
     emits('updateFlowsDebug', false);
     nodeAndLineConnection();
   }
+  updateFlowsDebugStatus.value = false;
+
 };
 
 // 子组件获取的flow
@@ -363,6 +371,7 @@ const queryFlow = (deal: string) => {
           }
           // 更新当前publish状态
           emits('updateFlowsDebug');
+          updateFlowsDebugStatus.value = true;
         }
         loading.value = false;
       });
@@ -530,6 +539,7 @@ $bus.on('getNodesStatue', (item:any) => {
 $bus.on('debugChatEnd', () => {
   // 更新发布按钮状态
   emits('updateFlowsDebug');
+  updateFlowsDebugStatus.value = true;
 });
 
 // 更新节点状态--调试到对应节点id，根据id设置节点与边状态
