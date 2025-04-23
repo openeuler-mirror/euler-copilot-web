@@ -198,7 +198,7 @@ const handleDislike = async (
       reasonDescription: reasonDescription,
     }
   ).then((res) => {
-    if(res[0].status === 200){
+    if(res[1].status === 200){
       isAgainstVisible.value = false;
       isAgainst.value = isAgainst.value ? false : true;
       isSupport.value = false;
