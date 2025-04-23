@@ -29,16 +29,20 @@
                 </el-icon>
                 <span>{{ item.title }}</span>
               </template>
-              <div class="yamlMonacoEditor" v-if="item.type && index === 1">
+              <div
+                class="yamlMonacoEditor"
+                :class="{ monacoEditorMask: index === 2 }"
+                v-if="item.type && index"
+              >
                 <MonacoEditor
                   :yamlContent="item.yamlCode"
                   placeholder="Code goes here..."
                   :handleQueryYamlValue="handleChange"
-                  :readOnly="false"
+                  :readOnly="item.disabled"
                 />
               </div>
               <MirrorText
-                v-else-if="item.type && index !== 1"
+                v-else-if="item.type && !index"
                 ref="textarea"
                 class="outputYaml"
                 v-model:updateVal="item.yamlCode"
@@ -204,8 +208,28 @@ const updateNodeYaml = () => {
 </script>
 
 <style lang="scss">
-.yamlMonacoEditor{
-  height:500px;
+.yamlMonacoEditor {
+  height: 400px;
+}
+
+.monacoEditorMask{
+  .view-lines{
+    position: relative;
+  }
+  .view-lines{
+    pointer-events: none;
+
+  }
+  .view-lines::after{
+    content: '';
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #c3cedf;
+    opacity: 0.3;
+    pointer-events: none;
+  }
 }
 .flowDrawer.el-drawer {
   padding: 0px;
