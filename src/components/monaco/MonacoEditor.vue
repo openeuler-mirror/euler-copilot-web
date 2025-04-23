@@ -63,12 +63,7 @@ onMounted(() => {
       enableSchemaRequest: true,
       isKubernetes: true,
     });
-    monaco.editor.getModels().forEach((model) => model.dispose());
-    const prettierc = monaco.editor.createModel(
-      props.yamlContent,
-      'yaml',
-      undefined,
-    );
+     
     editor.value = monaco.editor.create(editorContainer.value, {
       value: props.yamlContent || '',
       language: 'yaml',
@@ -81,7 +76,6 @@ onMounted(() => {
       tabSize: 2, // 设置Tab大小为2
       insertSpaces: true, // 使用空格进行缩进
       automaticLayout: true,
-      model: prettierc,
       lineNumbersMinChars: 2, // 设置行号的最小字符数，间接影响宽度
       lineDecorationsWidth: 10,
       quickSuggestions: {
