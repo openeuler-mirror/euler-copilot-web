@@ -321,7 +321,7 @@ watch(currentSelectedSession, async (newVal) => {
           isNewSession ? uploadFilesView.value.push(item as any) : null;
         }
       });
-    isNewSession ? curPolling.startPolling() : null;
+    // isNewSession ? curPolling.startPolling() : null;
     uploadFilesView.value.sort((pre, cur) => {
       return cur.created_at - pre.created_at;
     });
