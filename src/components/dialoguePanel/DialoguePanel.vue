@@ -154,8 +154,8 @@ const handleCopy = (): void => {
 const handleLike = async (
   type: 'liked' | 'disliked' | 'report',
 ): Promise<void> => {
+  const qaRecordId = props.recordList[index.value];
   if (type === 'liked') {
-    const qaRecordId = props.recordList[index.value];
     await api.commentConversation({
       type: !isSupport.value ? 'liked' : 'none',
       qaRecordId: qaRecordId,
