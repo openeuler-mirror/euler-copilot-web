@@ -295,20 +295,14 @@ const handleEditApp = (e, item) => {
 watch(
   () => [appSearchValue, appSearchType],
   () => {
-    handleParmasQueryAppList();
+    if (router.currentRoute.value.query.to === 'createdByMe') {
+      handleSearchAppList('createdByMe');
+    } else {
+      handleParmasQueryAppList();
+    }
   },
-  { deep: true },
+  { deep: true, immediate: true },
 );
-
-onMounted(() => {
-  handleQueryAppList();
-});
-
-onMounted(() => {
-  if (router.currentRoute.value.query.to === 'createdByMe') {
-    handleSearchAppList('createdByMe');
-  }
-});
 </script>
 <style lang="scss" scoped>
 .create-button__icon {
