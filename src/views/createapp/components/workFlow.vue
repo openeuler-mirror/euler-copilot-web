@@ -210,6 +210,8 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
   nodeDesc.value = desc;
   isEditYaml.value = true;
   nodeYamlId.value = nodeId;
+  // 编辑 yaml 时，需要debug 后才可发布
+  emits('updateFlowsDebug', false);
 };
 // 关闭抽屉
 const closeDrawer = () => {
@@ -333,7 +335,6 @@ const nodesChange = (nodes) => {
     nodeAndLineConnection();
   }
   updateFlowsDebugStatus.value = false;
-
 };
 
 // 子组件获取的flow
