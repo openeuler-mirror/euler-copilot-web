@@ -40,6 +40,7 @@
           class="o-dlg-btn"
           type="primary"
           size="small"
+          :disabled="isDisabled"
           @click="handleSubmit(workFlowForm)"
         >
           确定
@@ -54,10 +55,9 @@
 <script lang="ts" setup>
 import { ref, watch} from 'vue';
 import { api } from 'src/apis';
-import { useRoute } from 'vue-router';
 import { ElMessage, FormInstance } from 'element-plus';
 const workFlowDiaVisible = ref(true);
-const route = useRoute();
+const isDisabled = ref(false);
 const props = defineProps({
   diaType: {
     type: String,
@@ -68,8 +68,13 @@ const props = defineProps({
   flowObj: {
     type: Object,
   },
+  appId: {
+    type: String,
+  }
 });
-const emits = defineEmits(['handleClose']);
+const emits = defineEmits<{
+  (e: 'handleClose', flowId?: string): void;
+}>();
 const workFlowForm = ref();
 const workFlowData = ref({
   name: '',
@@ -83,7 +88,8 @@ const workFlowRules = ref({
 });
 const flow = ref(props.flowObj);
 const onCancel = () => {
-  emits('handleClose');
+  isDisabled.value = false;
+  emits('handleClose',flow.value.flowId);
 };
 watch(() => props.flowObj,
   (val) => {
@@ -95,6 +101,7 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
   // 校验必填项是否填写
   formEl?.validate((valid) => {
     if (valid) {
+      isDisabled.value = true;
       // 判断是否有重复的工作流名称
       let isMultNameFlag = false;
       props.workFlowList?.forEach((flowItem) => {
@@ -109,10 +116,15 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
       }
       flow.value.name = workFlowData.value.name;
       flow.value.description = workFlowData.value.description;
-      api.createOrUpdateApp(flow.value).then((res) => {
-        console.log(res);
+      api.createOrUpdateFlowTopology({
+        appId : props.appId,
+        flowId: flow.value.flowId,
+      },{
+        flow: flow.value
+      }).then((res) => {
         if (res[1].code === 200) {
-          emits('handleClose');
+          emits('handleClose',flow.value.flowId);
+          isDisabled.value = false;
         }
       })
     }
