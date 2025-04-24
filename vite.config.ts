@@ -40,6 +40,7 @@ export default ({ mode }): UserConfigExport => {
       })
     ],
     build: {
+      minify: "esbuild",
       rollupOptions: {
         output: {
           manualChunks(id) {
