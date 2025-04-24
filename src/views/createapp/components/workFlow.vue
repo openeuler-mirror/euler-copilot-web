@@ -35,6 +35,7 @@ import {
 import yaml from 'js-yaml';
 import $bus from 'src/bus/index';
 import CustomLoading from '../../customLoading/index.vue';
+import EditFlowName from './workFlowConfig/editFlowName.vue';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -44,6 +45,8 @@ const activeNames = ref([]);
 const activeName = ref();
 const workFlowItemName = ref();
 const isAddWorkFlow = ref(false);
+const isEditFlowName = ref(false);
+const editFlowNameId = ref();
 const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
@@ -159,6 +162,7 @@ const addWorkFlow = () => {
 };
 // 关闭工作流弹出
 const handleClose = () => {
+  isEditFlowName.value = false;
   isAddWorkFlow.value = false;
 };
 // 删除节点
@@ -378,6 +382,13 @@ const queryFlow = (deal: string) => {
       });
   }
 };
+const openEditFlowDialog = (item) => {
+  console.log(item);
+  isEditFlowName.value = true;
+  console.log(item.id);
+  editFlowNameId.value = item.id;
+  editFlow(item);
+}
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
 const editFlow = (item) => {
   loading.value = true;
@@ -895,7 +906,11 @@ defineExpose({
               @click="choiceFlowId(item)"
             >
               <div class="flowName">{{ item.name }}</div>
+<<<<<<< Updated upstream
               <!-- <div class="dealIcon editIcon" @click="editFlow(item)"></div> -->
+=======
+              <div class="dealIcon editIcon" @click="openEditFlowDialog(item)"></div>
+>>>>>>> Stashed changes
               <div class="dealIcon delIcon" @click.stop="delFlow(item)"></div>
             </el-option>
             <template #footer class="selectFooter">
@@ -945,6 +960,12 @@ defineExpose({
         </el-button>
       </div>
     </div>
+    <EditFlowName 
+      v-model="isEditFlowName" 
+      :flowObj="flowObj"
+      :editFlowNameId="editFlowNameId"
+      @handleClose="handleClose"
+      ></EditFlowName>
     <!-- 工作流新建弹窗 -->
     <WorkFlowDialog
       v-if="isAddWorkFlow"
