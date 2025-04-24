@@ -150,7 +150,7 @@ import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
-import DefaultAppIcon from '../../assets/svgs/defaultIcon.svg';
+import DefaultAppIcon from '../../assets/svgs/defaultIcon.webp';
 import { storeToRefs } from 'pinia';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import CustomLoading from '../customLoading/index.vue';

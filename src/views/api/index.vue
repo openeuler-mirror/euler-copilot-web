@@ -70,7 +70,7 @@
                 <el-icon class="menu-icon">
                   <img
                     class="create-button__icon"
-                    src="@/assets/svgs/defaultIcon.svg"
+                    src="@/assets/svgs/defaultIcon.webp"
                   />
                 </el-icon>
               </div>
