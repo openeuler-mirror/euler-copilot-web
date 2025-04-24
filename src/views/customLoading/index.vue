@@ -22,7 +22,7 @@ const props = defineProps({
   right: 0;
   top: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 99;
 }
 .loadingNone {
   display: none;
