@@ -166,7 +166,6 @@ watch(
       props.yamlContent.input_parameters,
     );
     yamlExpress.value[2].yamlCode = props.yamlContent.output_parameters;
-    console.log(yamlExpress.value,'kjkjk')
   },
   { deep: true, immediate: true },
 );
