@@ -67,7 +67,7 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  getServiceYaml: {
+  ServiceYaml: {
     type: String,
     default: '',
   },
@@ -182,7 +182,7 @@ const getServiceYamlFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id, edit: true }).then((res) => {
     if (res) {
       getServiceYaml.value = jsYaml.dump(res[1].result.data);
-      getServiceName.value = res[1].result.data.name;
+      getServiceName.value = res[1].result.data.info.title;
     }
   });
 };
@@ -193,7 +193,7 @@ watch(
   () => props,
   () => {
     getServiceJson.value = props.getServiceJson;
-    getServiceYaml.value = props.getServiceYaml;
+    getServiceYaml.value = props.ServiceYaml;
     getServiceName.value = props.getServiceName;
     if (getServiceJson.value?.length) {
       activeServiceNameList.value = getServiceJson.value.map(
@@ -313,7 +313,7 @@ onMounted(() => {
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
-    <span class="serviceName">{{ getServiceName }}</span>
+    <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
     <el-collapse
       v-model="activeServiceNameList"
       class="o-hpc-collapse"
@@ -372,6 +372,9 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.code-container{
+  height: calc(100% - 48px);
+}
 .serviceName {
   display: block;
   font-size: 14px;
