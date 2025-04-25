@@ -9,11 +9,8 @@ import {
   IconCaretRight,
 } from '@computing/opendesign-icons';
 import type {
-  UploadFile,
-  ElUploadProgressEvent,
   ElFile,
 } from 'element-plus/es/components/upload/src/upload.type';
-import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { yaml } from '@codemirror/lang-yaml';
@@ -184,8 +181,8 @@ const doPreview = (e: Event) => {
 const getServiceYamlFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id, edit: true }).then((res) => {
     if (res) {
-      getServiceYaml.value = jsYaml.dump(res?.result.data);
-      getServiceName.value = res?.result.name;
+      getServiceYaml.value = jsYaml.dump(res[1].result.data);
+      getServiceName.value = res[1].result.data.name;
     }
   });
 };
@@ -308,7 +305,7 @@ onMounted(() => {
       @change="handleChange"
     /> -->
     <MonacoEditor
-      v-if="uploadtype === 'edit'"
+      v-if="uploadtype === 'edit' && getServiceYaml"
       :yamlContent="getServiceYaml"
       placeholder="Code goes here..."
       :readOnly="!editable"
