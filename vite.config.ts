@@ -9,6 +9,8 @@
 // See the Mulan PSL v2 for more details.
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+
 import Qiankun from 'vite-plugin-qiankun';
 
 import { resolve } from 'path';
@@ -33,6 +35,7 @@ export default ({ mode }): UserConfigExport => {
     },
     plugins: [
       vue(),
+      vueJsx(),
       Qiankun('copilot', {
         useDevMode: mode === 'development',
       }),
