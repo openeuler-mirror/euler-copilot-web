@@ -331,10 +331,10 @@ watch(
         </router-link>
       </div>
       <div class="dialogue-content">
-        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
+        <KeepAlive v-if="router.currentRoute.value.name === 'witchainD'">
           <tools />
         </KeepAlive>
-        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
+        <RouterView v-if="router.currentRoute.value.name !== 'witchainD'" />
       </div>
     </div>
     <el-dialog
