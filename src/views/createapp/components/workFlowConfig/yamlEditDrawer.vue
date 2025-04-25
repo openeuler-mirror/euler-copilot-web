@@ -31,8 +31,7 @@
               </template>
               <div
                 class="yamlMonacoEditor"
-                :class="{ monacoEditorMask: index === 2 }"
-                v-if="item.type && index"
+                v-if="item.type && index === 1"
               >
                 <MonacoEditor
                   :yamlContent="item.yamlCode"
@@ -40,6 +39,9 @@
                   :handleQueryYamlValue="handleChange"
                   :readOnly="item.disabled"
                 />
+              </div>
+              <div v-else-if="item.type && index === 2">
+                <YamlContentOutput :yamlOutPutContent="item.yamlCode"/>
               </div>
               <MirrorText
                 v-else-if="item.type && !index"
@@ -105,6 +107,7 @@ import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
 import { ElMessage } from 'element-plus';
 import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
+import YamlContentOutput  from 'src/components/yamloutput/yamlContentOutput.jsx';
 const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
@@ -162,9 +165,8 @@ watch(
     yamlExpress.value[1].yamlCode = yaml.dump(
       props.yamlContent.input_parameters,
     );
-    yamlExpress.value[2].yamlCode = yaml.dump(
-      props.yamlContent.output_parameters,
-    );
+    yamlExpress.value[2].yamlCode = props.yamlContent.output_parameters;
+    console.log(yamlExpress.value,'kjkjk')
   },
   { deep: true, immediate: true },
 );
