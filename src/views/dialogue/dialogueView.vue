@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ComputedRef, onMounted, ref } from 'vue';
+import { computed, ComputedRef, nextTick, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import {
@@ -284,10 +284,10 @@ watch(
         </router-link>
       </div>
       <div class="dialogue-content">
-        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
-          <tools />
-        </KeepAlive>
-        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
+          <RouterView v-show="router.currentRoute.value.name !== 'witchainD'"/>
+          <KeepAlive :style="router.currentRoute.value.name === 'witchainD'?{visibility:'visible'}:{ visibility: 'hidden' }">
+            <tools />
+          </KeepAlive>
       </div>
     </div>
     <el-dialog
