@@ -306,6 +306,7 @@ onMounted(() => {
     /> -->
     <MonacoEditor
       v-if="uploadtype === 'edit' && getServiceYaml"
+      v-if="uploadtype === 'edit' && getServiceYaml"
       :yamlContent="getServiceYaml"
       placeholder="Code goes here..."
       :readOnly="!editable"
