@@ -1,6 +1,6 @@
 <template>
   <KeepAlive>
-    <div class="container" v-show="isActive">
+    <div class="container">
       <iframe
         id="my-iframe"
         ref="iframeRef"
