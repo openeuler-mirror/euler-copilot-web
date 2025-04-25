@@ -55,8 +55,8 @@ const router = createRouter({
     {
       path: '/witchainD',
       name: 'witchainD',
-      component: null,
-      children:[]
+      component: (): Promise<typeof import('src/views/tools/index.vue')> =>
+        import('src/views/tools/index.vue'),
     },
     {
       path: '/404',
