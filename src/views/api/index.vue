@@ -154,7 +154,7 @@
             type="edit"
             @closeDrawer="handleClose"
             :serviceId="selectedServiceId"
-            :getServiceYaml="getServiceYaml"
+            :ServiceYaml="getServiceYaml"
             :getServiceName="getServiceName"
           />
         </div>
