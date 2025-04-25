@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ComputedRef, nextTick, onMounted, ref } from 'vue';
+import { computed, ComputedRef, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import {
@@ -305,53 +305,6 @@ watch(
   },
   { deep: true, immediate: true },
 );
-// 生产环境URL处理
-const iframeTarget = (() => {
-  const origin = window.location.origin;
-  const target = origin.includes('localhost') ? 'http://localhost:3002/witchaind/' : `${origin}/witchaind/`;
-  console.log('iframe target URL:', target);
-  return target;
-})();
-
-// 发送消息到iframe
-const sendMessageToIframe = (stopActive: boolean) => {
-  const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
-  if (!iframe?.contentWindow) {
-    console.warn('iframe或contentWindow不可用，当前状态:', {
-      iframeExists: !!iframe,
-      hasContentWindow: !!iframe?.contentWindow
-    });
-    return;
-  }
-  console.log('iframe?.contentWindow----',iframe?.contentWindow)
-  
-  try {
-    const message = { StopActive: stopActive };
-    console.log('发送消息到iframe:', message);
-    
-    iframe.contentWindow.postMessage(message, iframeTarget);
-  } catch (error) {
-    console.error('发送消息到iframe失败:', error);
-  }
-};
-
-// 监听路由变化来控制iframe的活动状态
-watch(
-  () => router.currentRoute.value.path,
-  async (newPath) => {
-    console.log('路由变化:', newPath);
-    const isWitchaindRoute = newPath === '/witchainD';
-    
-    // 等待DOM更新完成
-    await nextTick();
-
-    setTimeout(() => {
-      sendMessageToIframe(!isWitchaindRoute);
-    },300)
-    
-  },
-  { immediate: true }
-);
 </script>
 
 <template>
@@ -445,10 +398,10 @@ watch(
         </router-link>
       </div>
       <div class="dialogue-content">
-        <KeepAlive v-if="router.currentRoute.value.name === 'witchainD'">
+        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
           <tools />
         </KeepAlive>
-        <RouterView v-if="router.currentRoute.value.name !== 'witchainD'" />
+        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
       </div>
     </div>
     <el-dialog
