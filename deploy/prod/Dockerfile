@@ -1,14 +1,13 @@
-FROM node:18.18.2-alpine
+FROM node:18.20.6-alpine
 WORKDIR /opt/eulerCopilot-web
 
 COPY . .
-RUN sed -i 's/qa-robot-openeuler/euler-copilot-master/g' .env && \
-    npm install pnpm -g --registry=https://registry.npmmirror.com && \
+RUN npm install pnpm -g --registry=https://registry.npmmirror.com && \
     pnpm install --registry=https://registry.npmmirror.com && \
     pnpm run build
 
 
-FROM openeuler/openeuler:22.03-lts-sp1
+FROM hub.oepkgs.net/openeuler/openeuler:22.03-lts-sp4
 
 ENV TZ Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -43,7 +42,7 @@ RUN sed -i 's/umask 002/umask 027/g' /etc/bashrc && \
     find /var/log/nginx -type f -exec chmod 400 {} +
 
 RUN yum remove -y gdb-gdbserver && \
-    sh -c "find /usr /etc \( -name *yum* -o -name *dnf* -o -name *vi* -o -name *sqlite* -o -name *python* \) -exec rm -rf {} + || true" && \
+    sh -c "find /usr /etc \( -name *yum* -o -name *dnf* -o -name *sqlite* -o -name *python* \) -exec rm -rf {} + || true" && \
     sh -c "find /usr /etc \( -name ps -o -name top \) -exec rm -rf {} + || true"
 
 EXPOSE 8080

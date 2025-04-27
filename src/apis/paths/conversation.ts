@@ -18,15 +18,7 @@ const BASE_URL = '/api/conversation';
  * @returns
  */
 export const stopGeneration = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<{
-          // conversation_id: string;
-        }>
-      | undefined
-    )
-  ]
+  [any, FcResponse<object> | undefined]
 > => {
   return post(`/api/stop`);
 };
@@ -36,13 +28,7 @@ export const stopGeneration = (): Promise<
  * @returns
  */
 export const getSessionRecord = (): Promise<
-  [
-    any,
-    (
-      | FcResponse<ConversationList>
-      | undefined
-    )
-  ]
+  [any, FcResponse<ConversationList> | undefined]
 > => {
   return get(BASE_URL);
 };
@@ -56,46 +42,57 @@ export const createSession = (): Promise<
     any,
     (
       | FcResponse<{
-          conversation_id: string;
+          conversationId: string;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
   return post(BASE_URL);
+};
+
+/**
+ * 创建工作流debug会话
+ * @param params
+ * @returns
+ */
+export const createSessionDebug = (params: any): Promise<[any, any]> => {
+  return post(`/api/conversation?debug=${params.debug}`);
 };
 /**
  * 更新会话标题
  * @param params
  * {
- *    conversation_id:（number）会话id
+ *    conversationId:（number）会话id
  *    title：（string）会话标题
  * }
  * @returns
  */
-export const updateSession = (
-  params: {
-    conversation_id: string,
-    title: string,
-  },
-): Promise<
+export const updateSession = (params: {
+  conversationId: string;
+  title: string;
+}): Promise<
   [
     any,
     (
       | FcResponse<
           Array<{
-            conversation_id: string;
+            conversationId: string;
           }>
         >
       | undefined
-    )
+    ),
   ]
 > => {
-  return put(BASE_URL, {
-    title: params.title,
-  }, {
-    conversation_id: params.conversation_id,
-  });
+  return put(
+    BASE_URL,
+    {
+      title: params.title,
+    },
+    {
+      conversationId: params.conversationId,
+    },
+  );
 };
 
 /**
@@ -104,53 +101,65 @@ export const updateSession = (
  * @returns
  */
 export const deleteSession = (data: {
-  conversation_list: string[];
-}): Promise<[any, FcResponse<Array<{ conversation_list: string[] }>> | undefined]> => {
+  conversationList: string[];
+}): Promise<
+  [any, FcResponse<Array<{ conversationList: string[] }>> | undefined]
+> => {
   return del(`${BASE_URL}`, data);
 };
 
 /**
  * 获取会话历史对话记录
- * @param conversation_id 
+ * @param conversationId
  * GET /api/record/eccb08c3-0621-4602-a4d2-4eaada892557
  */
 export const getHistoryConversation = (
-  conversation_id: string
-): Promise<
-  [
-    any,
-    (
-      | FcResponse<ConversationRecordList>
-      | undefined
-    )
-  ]
-> => {
-  // return get('/api/record', { conversation_id: conversation_id });
-  return get('/api/record/'+ conversation_id);
+  conversationId: string,
+): Promise<[any, FcResponse<ConversationRecordList> | undefined]> => {
+  // return get('/api/record', { conversationId: conversationId });
+  return get('/api/record/' + conversationId);
   // 修改 chat 格式
-
 };
 
 /**
- * 评论对话
+ * 点踩
  * @param params
  * @returns
  */
 export const commentConversation = (params: {
+  type: string;
   qaRecordId: string;
-  isLike: number;
+  comment: string;
   dislikeReason?: string;
   reasonLink?: string;
   reasonDescription?: string;
+  groupId: string | undefined;
 }): Promise<[any, FcResponse<Record<string, unknown>> | undefined]> => {
-  const { qaRecordId, isLike, dislikeReason, reasonLink, reasonDescription } = params;
-  return post(`/api/comment`, {
-    record_id: qaRecordId,
-    is_like: isLike,
-    dislike_reason: dislikeReason,
-    reason_link: reasonLink,
-    reason_description: reasonDescription,
-  });
+  const {
+    qaRecordId,
+    comment,
+    dislikeReason,
+    reasonLink,
+    reasonDescription,
+    groupId,
+    type,
+  } = params;
+  if (type === 'disliked') {
+    return post(`/api/comment`, {
+      record_id: qaRecordId,
+      comment: comment,
+      group_id: groupId,
+      dislike_reason: dislikeReason,
+      reason_link: reasonLink,
+      reason_description: reasonDescription,
+    });
+  } else {
+    return post(`/api/comment`, {
+      record_id: qaRecordId,
+      group_id: groupId,
+      comment: comment,
+    });
+  }
 };
 
 export const getRecognitionMode = (): Promise<
@@ -162,11 +171,11 @@ export const getRecognitionMode = (): Promise<
             id: string;
             name: string;
             description: string;
-            auth:any;
+            auth: any;
           }>
         >
       | undefined
-    )
+    ),
   ]
 > => {
   return get('/api/plugin');
@@ -184,7 +193,7 @@ export enum UploadStatus {
 export const getUploadFiles = (
   sessionId: string,
   used = true,
-  unused = true
+  unused = true,
 ): Promise<
   [
     any,
@@ -195,12 +204,16 @@ export const getUploadFiles = (
             name: string;
             type: string;
             size: number;
-            status: UploadStatus.USED | UploadStatus.UNUSED | UploadStatus.RESOLVING | UploadStatus.RESOLVEFAIL;
+            status:
+              | UploadStatus.USED
+              | UploadStatus.UNUSED
+              | UploadStatus.RESOLVING
+              | UploadStatus.RESOLVEFAIL;
             created_at: number;
           }>;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
   return get(`/api/document/${sessionId}`, { used, unused });
@@ -208,7 +221,7 @@ export const getUploadFiles = (
 
 export const uploadFiles = (
   formData,
-  sessionId
+  sessionId,
 ): Promise<
   [
     any,
@@ -217,22 +230,28 @@ export const uploadFiles = (
           documents: Array<any>;
         }>
       | undefined
-    )
+    ),
   ]
 > => {
-  return post(`/api/document/${sessionId}`, formData, {}, {
-    'Content-Type': 'multipart/form-data',
-  });
+  return post(
+    `/api/document/${sessionId}`,
+    formData,
+    {},
+    {
+      'Content-Type': 'multipart/form-data',
+    },
+  );
 };
 
 export const deleteUploadedFile = (
-  documentId: any
+  documentId: any,
 ): Promise<[any, FcResponse<any> | undefined]> => {
   return del(`/api/document/${documentId}`);
 };
 
 export const sessionApi = {
   createSession,
+  createSessionDebug,
   updateSession,
   deleteSession,
   getSessionRecord,

@@ -41,7 +41,7 @@ export const onHtmlEventDispatch = (
     if (code) {
       writeText(code.innerText);
     }
-    successMsg(i18n.global.t('feedback.copied_successfully'))
+    successMsg(i18n.global.t('feedback.copied_successfully'));
   }
 };
 

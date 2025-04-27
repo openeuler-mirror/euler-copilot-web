@@ -9,6 +9,8 @@
 // See the Mulan PSL v2 for more details.
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
+import vueJsx from '@vitejs/plugin-vue-jsx';
+
 import Qiankun from 'vite-plugin-qiankun'
 
 import { resolve } from "path";
@@ -35,16 +37,21 @@ export default ({ mode }): UserConfigExport => {
     },
     plugins: [
       vue(),
+      vueJsx(),
       Qiankun("copilot", {
         useDevMode: mode === 'development'
       })
     ],
     build: {
+      minify: "esbuild",
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (/\/opendesign2\/themes\/es\/(.*?)\//.test(id)) {
               return "opendesign2";
+            }
+            if (/\/opendesign-icons\/themes\/es\/(.*?)\//.test(id)) {
+              return "opendesign-icons";
             }
             if (/\/element-plus\/es\/components\/(.*?)\/(.*)\/?style/.test(id)) {
               return "element-plus";

@@ -17,7 +17,7 @@ import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 
 export interface HistorySessionItem {
-  conversation_id: string;
+  conversationId: string;
   title: string;
   createdTime: string | Date;
   docCount: number;
@@ -27,24 +27,24 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   // 历史会话列表
   const historySession = ref<HistorySessionItem[]>([]);
   const params = ref();
-  const user_selected_plugins = ref([]);
-  const selectMode = ref([])
+  const user_selected_app = ref([]);
+  const selectMode = ref([]);
   const currentSelectedSession = ref<string>('');
   /**
    * 选择历史会话
-   * @param conversation_id 会话id
+   * @param conversationId 会话id
    */
-  const changeSession = async (conversation_id: string): Promise<void> => {
+  const changeSession = async (conversationId: string): Promise<void> => {
     const { isAnswerGenerating } = useSessionStore();
-    if (currentSelectedSession.value === conversation_id || isAnswerGenerating) {
+    if (currentSelectedSession.value === conversationId || isAnswerGenerating) {
       return;
     }
-    currentSelectedSession.value = conversation_id;
+    currentSelectedSession.value = conversationId;
     const { getConversation } = useSessionStore();
-    await getConversation(currentSelectedSession.value).then(()=> {
+    await getConversation(currentSelectedSession.value).then(() => {
       const a = document.getElementsByClassName('draw');
-      for(let i of a){
-        i.style.display = 'none' ;
+      for (const i of a) {
+        (i as HTMLElement).style.display = 'none';
       }
     });
   };
@@ -58,27 +58,31 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   const indeterminate = computed(() =>
     selectedSessionIds.value.length === 0
       ? false
-      : selectedSessionIds.value.length !== historySession.value.length
+      : selectedSessionIds.value.length !== historySession.value.length,
   );
   /**
    * 全选
    */
   const selectAllSession = (): void => {
     if (isSelectedAll.value) {
-      selectedSessionIds.value = historySession.value.map((item) => item.conversation_id);
+      selectedSessionIds.value = historySession.value.map(
+        (item) => item.conversationId,
+      );
     } else {
       selectedSessionIds.value = [];
     }
   };
   /**
    * 选中某个会话
-   * @param conversation_id 会话id
+   * @param conversationId 会话id
    */
-  const selectSession = (conversation_id: string): void => {
-    if (selectedSessionIds.value.includes(conversation_id)) {
-      selectedSessionIds.value = selectedSessionIds.value.filter((val) => val !== conversation_id);
+  const selectSession = (conversationId: string): void => {
+    if (selectedSessionIds.value.includes(conversationId)) {
+      selectedSessionIds.value = selectedSessionIds.value.filter(
+        (val) => val !== conversationId,
+      );
     } else {
-      selectedSessionIds.value.push(conversation_id);
+      selectedSessionIds.value.push(conversationId);
     }
     // 更新isSelectedAll的值
     if (selectedSessionIds.value.length === historySession.value.length) {
@@ -91,7 +95,7 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
 
   /**
    * 清空选择会话列表
-   * @param conversation_id 会话id
+   * @param conversationId 会话id
    */
   const initSessionList = (): void => {
     selectedSessionIds.value = [];
@@ -105,16 +109,17 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     const { conversationList } = storeToRefs(useSessionStore());
     if (!err && res) {
       historySession.value = res.result.conversations.reverse().map((item) => ({
-        conversation_id: item.conversation_id,
-        createdTime: item.created_time,
+        conversationId: item.conversationId,
+        createdTime: item.createdTime,
         title: item.title,
-        docCount: item.doc_count || 0,
+        docCount: item.docCount || 0,
       }));
-      if(res.result.conversations.length === 0){
+      if (res.result.conversations.length === 0) {
         await generateSession();
       }
       if (!currentSelectedSession.value) {
-        currentSelectedSession.value = res.result.conversations[0]?.conversation_id;
+        currentSelectedSession.value =
+          res.result.conversations[0]?.conversationId;
       }
       if (currentSelectedSession.value) {
         const { getConversation, isAnswerGenerating } = useSessionStore();
@@ -135,13 +140,13 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    * @param conversation
    * @returns
    */
-  const updateSessionTitle = async (conversation: SessionItem): Promise<boolean> => {
-    const [_] = await api.updateSession(
-      {
-        conversation_id: conversation.conversation_id,
-        title: conversation.title,
-      }
-    );
+  const updateSessionTitle = async (
+    conversation: SessionItem,
+  ): Promise<boolean> => {
+    const [_] = await api.updateSession({
+      conversationId: conversation.conversationId,
+      title: conversation.title,
+    });
     if (_) {
       return false;
     }
@@ -153,7 +158,10 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
    * 创建新会话
    */
   const createNewSession = async (): Promise<void> => {
-    const sId = historySession.value.length === 0 ? null : historySession.value[0]?.conversation_id;
+    const sId =
+      historySession.value.length === 0
+        ? null
+        : historySession.value[0]?.conversationId;
     if (sId) {
       const [, cov] = await api.getHistoryConversation(sId);
       if (cov && cov.result.records.length === 0) {
@@ -175,8 +183,20 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
   const generateSession = async (): Promise<void> => {
     const [_, res] = await api.createSession();
     if (!_ && res) {
-      currentSelectedSession.value = res.result.conversation_id;
+      currentSelectedSession.value = res.result.conversationId;
       await getHistorySession();
+    }
+  };
+
+  /**
+   * 创建一个新的会话-debug工作流会话-需要一个传参
+   */
+  const generateSessionDebug = async (debug: any): Promise<any> => {
+    const [_, res] = await api.createSessionDebug(debug);
+    if (!_ && res) {
+      currentSelectedSession.value = res.result.conversationId;
+      await getHistorySession();
+      return res.result.conversationId;
     }
   };
 
@@ -195,7 +215,8 @@ export const useHistorySessionStore = defineStore('sessionStore', () => {
     createNewSession,
     initSessionList,
     generateSession,
-    user_selected_plugins,
+    generateSessionDebug,
+    user_selected_app,
     selectMode,
   };
 });

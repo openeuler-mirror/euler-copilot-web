@@ -11,6 +11,7 @@ import type {
   UserDialoguePanelType,
   RobotDialoguePanelType,
 } from 'src/components/dialoguePanel/type';
+import { Metadata, Suggestion } from 'src/apis/paths/type';
 
 // 工具类型
 export type LinkType = 'redirect' | 'action';
@@ -30,7 +31,7 @@ export interface EgItem {
   insertMessage: string;
   style?: string;
   title: string;
-  des?:string;
+  des?: string;
 }
 
 export interface ChainItem {
@@ -51,105 +52,107 @@ export interface UserConversationItem {
   params?: any;
 }
 
-// "input_tokens": 200, //prompt的token数量
-// "output_tokens": 50, //大模型生成的token数量
-// "time": 0.5 //运行时间，单位秒，最多2位小数
-export interface Metatype {
-  input_tokens: number;
-  output_tokens: number;
-  time: number;
-}
-
 export interface FlowType {
-  id:number
-  title:string,
-  status:string,
-  data:any,
-  display:boolean,
-  progress:string,
-  flow_id?:string,
+  id: number;
+  title: string;
+  status: string;
+  data: any;
+  display: boolean;
+  progress: string;
+  flowId?: string;
 }
 
 export interface FlowDataType {
-  id: string,
-  stauts:string,
-  // title: '',
-  data: any|undefined,
+  id: string;
+  status: string;
+  title?: string;
+  display?: boolean;
+  flowId?: string;
+  data: any | undefined;
 }
 
+export interface AppShowType {
+  appId: string;
+  name: string;
+}
 
 export interface RobotConversationItem {
-  files?:any;
-  flow?:any;
+  files?: any;
+  flow?: any;
   cid: number;
-  conversation_id: string;
+  conversationId: string;
   recordId: string;
-  extraData?:any;
+  extraData?: any;
   belong: RobotDialoguePanelType;
   message: string[];
-  messageList:MessageArray;
+  messageList: MessageArray;
   // 当前选中第n次回答的索引值
   currentInd: number;
   isFinish?: boolean;
+  comment?: string;
   isSupport?: boolean;
   isAgainst?: boolean;
   createdAt?: string | Date;
-  groupId:string|undefined;
-  search_suggestions?:string[];
-  echartsObj?:any,
-  metadata?:undefined | Metatype;
-  flowdata?:FlowType;
-  paramsList?:any;
+  groupId: string | undefined;
+  search_suggestions?: Suggestion[];
+  echartsObj?: any;
+  metadata?: undefined | Metadata;
+  flowdata?: FlowType | undefined;
+  paramsList?: any;
 }
 
 export interface MessageRecord {
-  message:string;
-  record_id:string;
-  is_like:number|undefined;
+  message: string;
+  record_id: string;
+  comment: string;
 }
 
 export class MessageArray {
-  private items:MessageRecord[] = [];
-  addItem(message: string,record_id:string,is_like:number):void {
+  private items: MessageRecord[] = [];
+  addItem(message: string, record_id: string, comment: string): void {
     const newItem: MessageRecord = {
       message,
       record_id,
-      is_like,
+      comment,
     };
     this.items.push(newItem);
   }
-
-  getItem(index: number):MessageRecord|undefined {
+  push(item: MessageRecord): void {
+    this.items.push(item);
+  }
+  getItem(index: number): MessageRecord | undefined {
     return this.items[index];
   }
-
-  getLength():number {
+  getContentbyIndex(index: number): string | undefined {
+    return this.items[index]?.message;
+  }
+  getLength(): number {
     return this.items.length;
   }
 
-  getAllItems():MessageRecord[]{
+  getAllItems(): MessageRecord[] {
     return this.items;
   }
 
-  getMessageList(): string[] {   
-    return this.items.map(item => item.message);  
-  }  
-
-  getRecordIdList(): string[] {    
-    return this.items.map(item => item.record_id);  
-  }  
-  
-  getIslikeList(): number[] {   
-    return this.items.map(item => item.is_like);  
-  }  
-
-  getisLikeByIndex(index:number): number {
-    return this.items.map(item => item.is_like)[index];
+  getMessageList(): string[] {
+    return this.items.map((item) => item.message);
   }
 
-  changeisLikeByCidAndIndex(cid:number,index:number,islike:number|boolean):void {
-    const a = this.getisLikeByIndex(index)[cid];
-    this.getisLikeByIndex(index)[cid] = islike;
+  getRecordIdList(): string[] {
+    return this.items.map((item) => item.record_id);
   }
 
+  getCommentList(): string[] {
+    return this.items.map((item) => item.comment ? item.comment : 'none');
+  }
+
+  getCommentbyIndex(index: number): string {
+    return this.items.map((item) => item.comment ? item.comment : 'none')[index];
+  }
+  changeCommentByIndex(
+    index: number,
+    comment: string,
+  ): void {
+    this.items[index].comment = comment;
+  }
 }

@@ -44,7 +44,7 @@ withDefaults(
   {
     dir: 'right',
     fill: '#8D98AA',
-  }
+  },
 );
 </script>
 <style lang="scss" scoped>

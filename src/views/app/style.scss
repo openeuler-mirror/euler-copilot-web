@@ -1,0 +1,247 @@
+.appCenterBox {
+  display: flex;
+  justify-content: center;
+  min-width: 1032px;
+  .appCenterMain {
+    color: var(--o-text-color-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 48px;
+    .appCenterTitle {
+      color: var(--o-text-color-primary);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 36px;
+      margin-bottom: 16px;
+    }
+    .appCenterSearch {
+      margin-bottom: 32px;
+      :first-of-type .el-input__wrapper {
+        width: 280px;
+        border-radius: 0px 4px 4px 0px;
+      }
+      .el-input-group__prepend {
+        border-radius: 4px 0px 0px 4px;
+        .el-input__wrapper {
+          border-radius: 4px 0px 0px 4px;
+        }
+      }
+      .el-input {
+        > .el-input__wrapper {
+          padding: 0 8px;
+        }
+      }
+
+      .createApp {
+        margin-left: 16px;
+        border-radius: 4px;
+      }
+    }
+
+    .appCenterType {
+      display: flex;
+      width: 400px;
+      height: 32px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2px;
+      border-radius: 4px;
+      background-color: var(--o-border-color-base);
+      .appCenterBtn {
+        width: 130px;
+        height: 28px;
+        display: flex;
+        font-size: 12px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--o-text-color-primary);
+      }
+    }
+    .appCenterCardContainer {
+      margin-top: 12px;
+      padding-top: 4px;
+      width: 1340px;
+      max-height: calc(100vh - 370px);
+      min-height: calc(100vh - 370px);
+      overflow-y: auto;
+      .appCenterCardBox {
+        width: fit-content;
+        display: flex;
+        flex-wrap: wrap;
+        box-sizing: border-box;
+        gap: 16px;
+        .appCenterCardSingle {
+          box-sizing: border-box;
+          border: 1px solid transparent;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          border-radius: 8px;
+          width: 320px;
+          height: 136px;
+          padding: 16px;
+          background-color: var(--o-bg-color-base);
+          .appCenterCardTop {
+            cursor: pointer;
+            display: flex;
+            max-height: 66px;
+            .appCenterCardIcon {
+              width: 80px;
+              height: 50px;
+              display: flex;
+              align-items: center;
+              .menu-icon {
+                width: 40px;
+              }
+            }
+            .appCenterCardContent {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              flex-shrink: 0;
+              min-width: 0;
+              .appCenterCardContentTop {
+                display: flex;
+                justify-content: space-between;
+                .appCenterCardContentTitle {
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                  width: 80%;
+                  color: var(--o-text-color-primary);
+                  font-size: 16px;
+                  line-height: 24px;
+                }
+                .appCenterCardContentCollect {
+                  width: 24px;
+                  height: 24px;
+                  background-color: var(--o-bg-color-light);
+                  border-radius: 8px;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  svg {
+                    width: 16px;
+                    height: 16px;
+                    path {
+                      fill: var(--o-text-color-tertiary);
+                    }
+                  }
+                  .appFavorite {
+                    path {
+                      fill: rgb(99, 149, 253);
+                    }
+                  }
+                }
+              }
+              .appCenterCardContentDes {
+                .vue-text{
+                  cursor: pointer !important;
+                  color: var(--o-api-description);
+                }
+                font-size: 14px;
+                line-height: 22px;
+              }
+            }
+          }
+          .appCenterCardBottom {
+            cursor: pointer;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            .appCenterCardUser {
+              font-size: 12px;
+              line-height: 16px;
+            }
+            .appCenterCardOps {
+              .el-button span {
+                color: #6395fd;
+                font-size: 12px;
+              }
+            }
+          }
+        }
+        .appCenterCardSingle:hover {
+          box-sizing: border-box;
+          border: 1px solid #7aa5ff;
+          box-shadow: 0px 3px 9px 0px rgba(0, 0, 0, 0.2) !important;
+          background: linear-gradient(
+            127deg,
+            rgba(109, 117, 250, 0.07) 1.003%,
+            rgba(90, 179, 255, 0.07) 98.421%
+          ) !important;
+        }
+      }
+      .appCenterNoData {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        margin-top: 16px;
+        .noDataIcon {
+          width: 320px;
+          height: 130px;
+          background: var(--no-work-flow) center center no-repeat;
+          background-size: contain;
+        }
+        .desc {
+          height: 16px;
+          font-size: 12px;
+          color: var(--o-text-color-primary);
+        }
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 8px;
+      background: transparent;
+    }
+    @media screen and (width <= 1400px) {
+      .appCenterCardContainer {
+        width: 1004px;
+      }
+    }
+
+    .el-pagination {
+      margin-top: 16px;
+      .el-select__wrapper {
+        background-color: transparent;
+      }
+    }
+  }
+  .appCenterBtnActive {
+    background-color: var(--o-color-primary) !important;
+    border-color: var(--o-color-primary) !important;
+    color: var(--o-color-white) !important;
+  }
+}
+// 应用中心删除二次提示样式
+.el-message-box {
+  min-width: 400px;
+  padding: 0px !important;
+  border-radius: 8px;
+  .el-message-box__headerbtn {
+    width: 16px;
+    height: 16px;
+    right: 20px;
+  }
+  .el-message-box__status {
+    top: 0px;
+  }
+  .el-message-box__message {
+    padding-left: 4px;
+  }
+  .el-message-box__btns {
+    flex-direction: row;
+    .el-button {
+      width: 64px;
+      height: 24px;
+    }
+  }
+}

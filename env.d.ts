@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 /// <reference types="vite/client" />
 declare interface Window {
-  onHtmlEventDispatch: <any>();
+  onHtmlEventDispatch: any;
 }
 
 declare interface ImportMetaEnv {

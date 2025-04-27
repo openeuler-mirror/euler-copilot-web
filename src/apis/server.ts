@@ -7,10 +7,17 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import axios from "axios";
-
-import { handleChangeRequestHeader, handleStatusError } from "./tools";
-import type { AxiosResponse, InternalAxiosRequestConfig, AxiosError, AxiosHeaders } from "axios";
+import axios from 'axios';
+import { IconError } from '@computing/opendesign-icons';
+import { handleChangeRequestHeader, handleStatusError } from './tools';
+import type {
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  AxiosError,
+  AxiosHeaders,
+} from 'axios';
+import { ElMessage } from 'element-plus';
+import { successMsg } from 'src/components/Message';
 
 export interface FcResponse<T> {
   error: string;
@@ -37,27 +44,50 @@ export const server = axios.create({
 // request interceptor
 server.interceptors.request.use(
   (
-    config: InternalAxiosRequestConfig<any>
-  ): InternalAxiosRequestConfig<any> | Promise<InternalAxiosRequestConfig<any>> => {
+    config: InternalAxiosRequestConfig<any>,
+  ):
+    | InternalAxiosRequestConfig<any>
+    | Promise<InternalAxiosRequestConfig<any>> => {
     return handleChangeRequestHeader(config);
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // response interceptor
 server.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
     if (response.status !== 200) {
+      ElMessage({
+        showClose: true,
+        message: response.statusText,
+        icon: IconError,
+        customClass: 'o-message--error',
+        duration: 3000,
+      });
       return Promise.reject(new Error(response.statusText));
     }
-
     return Promise.resolve(response);
   },
   async (error: AxiosError) => {
+    if (error.status !== 401 && error.status !== 403 && error.status !== 409) {
+      ElMessage({
+        showClose: true,
+        message:
+          ((error as any)?.response?.data?.message as string) || error.message,
+        icon: IconError,
+        customClass: 'o-message--error',
+        duration: 3000,
+      });
+    }
+    if (error.status === 409) {
+      // 处理错误码为409的情况
+      successMsg('已是最新对话');
+      return Promise.reject(error as any);
+    }
     return await handleStatusError(error);
-  }
+  },
 );
 
 /**
@@ -68,7 +98,7 @@ server.interceptors.response.use(
  */
 export const get = async <T>(
   url: string,
-  params: IAnyObj = {}
+  params: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.get(url, { params: params });
@@ -89,10 +119,13 @@ export const post = async <T>(
   url: string,
   data: IAnyObj = {},
   params: IAnyObj = {},
-  headers: IAnyObj = {}
+  headers: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
-    const result = await server.post(url, data, { params: params, headers: headers as AxiosHeaders });
+    const result = await server.post(url, data, {
+      params: params,
+      headers: headers as AxiosHeaders,
+    });
     return [null, result.data as FcResponse<T>];
   } catch (error) {
     return [error as IError, undefined];
@@ -109,7 +142,7 @@ export const post = async <T>(
 export const put = async <T>(
   url: string,
   data: IAnyObj = {},
-  params: IAnyObj = {}
+  params: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.put(url, data, { params: params });
@@ -128,7 +161,7 @@ export const put = async <T>(
 export const del = async <T>(
   url: string,
   data: IAnyObj = {},
-  params: IAnyObj = {}
+  params: IAnyObj = {},
 ): Promise<[IError, FcResponse<T> | undefined]> => {
   try {
     const result = await server.delete(url, { data: data, params: params });

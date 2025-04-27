@@ -32,7 +32,7 @@ const props = withDefaults(
   {
     deletable: true,
     mode: 'common',
-  }
+  },
 );
 
 // 声明emits
@@ -112,7 +112,10 @@ const handleDelete = async () => {
   if (status === UploadStatus.UPLOADING) {
     return;
   }
-  if (status !== UploadStatus.UPLOADFAIL && status !== UploadStatus.RESOLVEFAIL) {
+  if (
+    status !== UploadStatus.UPLOADFAIL &&
+    status !== UploadStatus.RESOLVEFAIL
+  ) {
     // 调用删除接口
     const [_, response] = await api.deleteUploadedFile(ducumentId);
     if (!_ && response) {
@@ -133,34 +136,57 @@ const handleDelete = async () => {
 };
 </script>
 <template>
-    <div>
-      <div v-if="props.mode === 'common'" class="filecard-wrapper-common">
-        <img :src="svgUrl" alt="" />
-        <div class="file-info">
-          <div class="name">{{ props.fileParams.name }}</div>
-          <div class="size">
-            <span v-if="props.fileParams.status === UploadStatus.UNUSED || props.fileParams.status === UploadStatus.USED">{{ props.fileParams.size }}</span>
-            <div v-else class="status">
-              <img :src="currentStatusItem.iconSrc" :class="currentStatusItem.isRotating ? 'icon-rotate' : ''" alt="" />
-              <span :class="currentStatusItem.color">{{ $t(currentStatusItem.content) }}</span>
-            </div>
+  <div>
+    <div v-if="props.mode === 'common'" class="filecard-wrapper-common">
+      <img :src="svgUrl" alt="" />
+      <div class="file-info">
+        <div class="name">{{ props.fileParams.name }}</div>
+        <div class="size">
+          <span
+            v-if="
+              props.fileParams.status === UploadStatus.UNUSED ||
+              props.fileParams.status === UploadStatus.USED
+            "
+          >
+            {{ props.fileParams.size }}
+          </span>
+          <div v-else class="status">
+            <img
+              :src="currentStatusItem.iconSrc"
+              :class="currentStatusItem.isRotating ? 'icon-rotate' : ''"
+              alt=""
+            />
+            <span :class="currentStatusItem.color">
+              {{ $t(currentStatusItem.content) }}
+            </span>
           </div>
         </div>
-        <div v-if="props.deletable && !isDeleteDisable" class="file-delete">
-          <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/dark_delete.svg" @click="handleDelete" />
-          <img v-else src="@/assets/svgs/delete.svg" @click="handleDelete" />
-        </div>
-        <div v-if="props.deletable && isDeleteDisable" class="file-delete-disable">
-          <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/dark_delete.svg"/>
-          <img v-else src="@/assets/svgs/delete.svg"/>
-        </div>
       </div>
-
-      <div v-if="props.mode === 'mini'" class="filecard-wrapper-mini">
-        <img :src="svgUrl" alt="" />
-        <span>{{ props.fileParams.name }}</span>
+      <div v-if="props.deletable && !isDeleteDisable" class="file-delete">
+        <img
+          v-if="themeStore.theme === 'dark'"
+          src="@/assets/svgs/dark_delete.svg"
+          @click="handleDelete"
+        />
+        <img v-else src="@/assets/svgs/delete.svg" @click="handleDelete" />
+      </div>
+      <div
+        v-if="props.deletable && isDeleteDisable"
+        class="file-delete-disable"
+      >
+        <img
+          v-if="themeStore.theme === 'dark'"
+          src="@/assets/svgs/dark_delete.svg"
+        />
+        <img v-else src="@/assets/svgs/delete.svg" />
       </div>
     </div>
+
+    <div v-if="props.mode === 'mini'" class="filecard-wrapper-mini">
+      <img :src="svgUrl" alt="" />
+      <span>{{ props.fileParams.name }}</span>
+    </div>
+  </div>
 </template>
 
 <style lang="scss">
@@ -230,11 +256,13 @@ const handleDelete = async () => {
     cursor: pointer;
 
     img:hover {
-      filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg) brightness(100%) contrast(103%);
+      filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
+        brightness(100%) contrast(103%);
     }
   }
 
-  .file-delete, .file-delete-disable {
+  .file-delete,
+  .file-delete-disable {
     flex: 1;
     width: 16px;
     height: 16px;

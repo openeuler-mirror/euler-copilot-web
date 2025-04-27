@@ -13,7 +13,7 @@ import { api } from 'src/apis';
 import { useRouter } from 'vue-router';
 import { LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
 import { successMsg } from 'src/components/Message';
-import i18n from 'src/i18n'
+import i18n from 'src/i18n';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 export const useAccountStore = defineStore('account', () => {
@@ -24,10 +24,12 @@ export const useAccountStore = defineStore('account', () => {
     username: string;
     revsionNumber: string | null;
     organization: string;
+    user_sub: string;
   }>({
     username: '',
     revsionNumber: null,
     organization: '',
+    user_sub: '', // 用户唯一标识
   });
 
   /**
@@ -47,10 +49,10 @@ export const useAccountStore = defineStore('account', () => {
 
   async function getAuthUrl(action: string) {
     const [_, res] = await api.queryAuthUrl(action);
-    if (res) {
-      return res.result.url
+    if (!_&&res) {
+      return res.result.url;
     }
-    return null
+    return null;
   }
 
   /**
@@ -58,7 +60,10 @@ export const useAccountStore = defineStore('account', () => {
    * @param user password
    * @returns csrftk
    */
-  const userLogin = async (passwd: string, account: string): Promise<boolean> => {
+  const userLogin = async (
+    passwd: string,
+    account: string,
+  ): Promise<boolean> => {
     const [_, res] = await api.userLogin(passwd, account);
     if (!_ && res) {
       sessionStorage.setItem('csrftk', res.result.csrf_token);
@@ -78,13 +83,12 @@ export const useAccountStore = defineStore('account', () => {
       userinfo.organization = '';
       userinfo.revsionNumber = null;
       sessionStorage.removeItem('csrftk');
-      successMsg(i18n.global.t('Login.logout'))
+      successMsg(i18n.global.t('Login.logout'));
       if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
         setTimeout(() => {
           window.open(LOGOUT_CALLBACK_URL, '_self');
-        }, 500)
+        }, 500);
       }
-      ;
     }
   };
   /**
@@ -93,8 +97,9 @@ export const useAccountStore = defineStore('account', () => {
   const getUserInfo = async (): Promise<boolean> => {
     const [_, res] = await api.authorizeUser();
     if (!_ && res) {
-      const { organization, username, revision_number } = res.result;
+      const { organization, username, revision_number, user_sub } = res.result;
       userinfo.username = username;
+      userinfo.user_sub = user_sub;
       userinfo.organization = organization;
       userinfo.revsionNumber = revision_number;
       return true;
@@ -128,6 +133,6 @@ export const useAccountStore = defineStore('account', () => {
     getUserInfo,
     refreshAccessToken,
     updateAgreement,
-    getAuthUrl
+    getAuthUrl,
   };
 });

@@ -2,36 +2,38 @@
 import { computed, ref } from 'vue';
 import { warningMsg } from 'src/components/Message';
 import { useChangeThemeStore } from 'src/store';
-import i18n from 'src/i18n'
+import i18n from 'src/i18n';
 const themeStore = useChangeThemeStore();
 
 const list = ref<
   {
     label: string;
-    name:string;
+    name: string;
     isChecked: boolean;
   }[]
 >([
   {
-    label: i18n.global.t('feedback.the_information_is_inappropriate_or_illegal'),
-    name:'the_information_is_inappropriate_or_illegal',
+    label: i18n.global.t(
+      'feedback.the_information_is_inappropriate_or_illegal',
+    ),
+    name: 'the_information_is_inappropriate_or_illegal',
     isChecked: false,
   },
   {
     label: i18n.global.t('feedback.the_answer_is_not_helpful'),
-    name:'the_answer_is_not_helpful',
+    name: 'the_answer_is_not_helpful',
     isChecked: false,
   },
   {
     label: i18n.global.t('feedback.i_found_an_error'),
-    name:'i_found_an_error',
+    name: 'i_found_an_error',
     isChecked: false,
   },
 ]);
 const checkedValue = computed(() =>
   list.value.reduce((accVal, currVal) => {
     return currVal.isChecked ? `${accVal}${currVal.label};` : accVal;
-  }, '')
+  }, ''),
 );
 // 参考链接
 const referLink = ref<string>('');
@@ -41,7 +43,12 @@ const isErrorInputVisiable = computed(() => list.value[2].isChecked);
 
 const emits = defineEmits<{
   (e: 'close'): void;
-  (e: 'submit', reason: string, reasionLink?: string, reason_description?: string): void;
+  (
+    e: 'submit',
+    reason: string,
+    reasionLink?: string,
+    reason_description?: string,
+  ): void;
 }>();
 
 /** 提交 */
@@ -60,10 +67,14 @@ const handleSubmit = () => {
 
 <template>
   <div class="against-popover">
-    <p class="against-popover-title">{{$t('feedback.your_feedback_helps_us_improve')}}</p>
+    <p class="against-popover-title">
+      {{ $t('feedback.your_feedback_helps_us_improve') }}
+    </p>
     <ul class="against-list">
       <li class="against-item" v-for="(item, index) in list" :key="index">
-        <el-checkbox id="against-checkbox" v-model="item.isChecked"> {{ $t('feedback.'+item.name) }}</el-checkbox>
+        <el-checkbox id="against-checkbox" v-model="item.isChecked">
+          {{ $t('feedback.' + item.name) }}
+        </el-checkbox>
       </li>
     </ul>
     <div class="error-input" v-if="isErrorInputVisiable">
@@ -82,72 +93,84 @@ const handleSubmit = () => {
       />
     </div>
     <div class="against-button">
-      <el-button :class="[themeStore.theme === 'dark' ? 'cancel_button_light' : 'cancel_button_dark',]" @click="emits('close')">{{$t('history.cancel')}}</el-button>
-      <el-button class='comment_button' color="#0077ff" :disabled="!checkedValue" @click="handleSubmit">{{$t('feedback.submit')}}</el-button>
+      <el-button
+        :class="[
+          themeStore.theme === 'dark'
+            ? 'cancel_button_light'
+            : 'cancel_button_dark',
+        ]"
+        @click="emits('close')"
+      >
+        {{ $t('history.cancel') }}
+      </el-button>
+      <el-button
+        class="comment_button"
+        color="#0077ff"
+        :disabled="!checkedValue"
+        @click="handleSubmit"
+      >
+        {{ $t('feedback.submit') }}
+      </el-button>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-
-.cancel_button_light:not(.is-disabled){
+.cancel_button_light:not(.is-disabled) {
   color: black !important;
-  border-color: #4E5865 !important;
+  border-color: #4e5865 !important;
 }
 
-.cancel_button_light:not(.is-disabled):focus{
+.cancel_button_light:not(.is-disabled):focus {
   // background-color: white !important;
   color: black !important;
-  border-color: #4E5865 !important;
+  border-color: #4e5865 !important;
 }
 
-.cancel_button_light:not(.is-disabled):active{
+.cancel_button_light:not(.is-disabled):active {
   // background-color: white !important;
-  color: #6395FD !important;
-  border-color: #6395FD !important;
+  color: #6395fd !important;
+  border-color: #6395fd !important;
 }
 
-.cancel_button_light:not(.is-disabled):hover{
+.cancel_button_light:not(.is-disabled):hover {
   // background-color: white !important;
-  color: #7AA5FF !important;
-  border-color: #7AA5FF !important;
+  color: #7aa5ff !important;
+  border-color: #7aa5ff !important;
 }
 //
-.cancel_button_dark:not(.is-disabled){
-  color: #4E5865 !important;
+.cancel_button_dark:not(.is-disabled) {
+  color: #4e5865 !important;
   border-color: black !important;
 }
 
-.cancel_button_dark:not(.is-disabled):focus{
+.cancel_button_dark:not(.is-disabled):focus {
   // background-color: white !important;
-  color: #4E5865 !important;
+  color: #4e5865 !important;
   border-color: black !important;
 }
 
-.cancel_button_dark:not(.is-disabled):active{
+.cancel_button_dark:not(.is-disabled):active {
   // background-color: white !important;
-  color: #6395FD !important;
-  border-color: #6395FD !important;
+  color: #6395fd !important;
+  border-color: #6395fd !important;
 }
 
-.ccancel_button_dark:not(.is-disabled):hover{
+.ccancel_button_dark:not(.is-disabled):hover {
   // background-color: white !important;
-  color: #7AA5FF !important;
-  border-color: #7AA5FF !important;
+  color: #7aa5ff !important;
+  border-color: #7aa5ff !important;
 }
 
-
-
-
-.is-disabled{
-    color:white;
-    background-color: #B8D9FF;
-    border-color:#B8D9FF;
-    &:hover{
-        color:white;
-    background-color: #B8D9FF;
-    border-color:#B8D9FF;
-    }
+.is-disabled {
+  color: white;
+  background-color: #b8d9ff;
+  border-color: #b8d9ff;
+  &:hover {
+    color: white;
+    background-color: #b8d9ff;
+    border-color: #b8d9ff;
+  }
 }
 :deep(.against-item .el-checkbox .el-checkbox__label) {
   color: #4e5865;
@@ -159,11 +182,11 @@ const handleSubmit = () => {
   margin-left: 8px;
 }
 
-:deep(.against-popover .radio_item, .against-popover .el-radio-button__inner){
+:deep(.against-popover .radio_item, .against-popover .el-radio-button__inner) {
   font-weight: 100 !important;
 }
 
-:deep(.el-radio-button__inner){
+:deep(.el-radio-button__inner) {
   font-weight: 100;
 }
 
@@ -197,7 +220,7 @@ const handleSubmit = () => {
       color: var(--o-text-color-primary);
       border: none;
       background-color: #f4f6fa;
-      display:block;
+      display: block;
       border-radius: 4px;
       padding: 5px 0 5px 16px;
       font-size: 12px;
@@ -210,24 +233,24 @@ const handleSubmit = () => {
       }
       margin-bottom: 8px;
     }
-  input::placeholder {
-    color: #8d98aa;
-    font-size: 12px;
-    font-weight: 100;
+    input::placeholder {
+      color: #8d98aa;
+      font-size: 12px;
+      font-weight: 100;
+    }
+    textarea::placeholder {
+      color: #8d98aa;
+      font-size: 12px;
+      font-weight: 100;
+    }
+    &__link {
+      height: 32px;
+      margin: 0px 0px 5px 0px;
+    }
+    &__desc {
+      height: 88px;
+    }
   }
-  textarea::placeholder {
-    color: #8d98aa;
-    font-size: 12px;
-    font-weight: 100;
-  }
-  &__link {
-    height: 32px;
-    margin: 0px 0px 5px 0px;
-  }
-  &__desc {
-    height: 88px;
-  }
-}
 }
 .against-button {
   width: 100%;
@@ -262,7 +285,7 @@ const handleSubmit = () => {
   }
   button:first-child {
     border: 1px solid #c3cedf;
-    &:hover{
+    &:hover {
       background-color: white;
     }
   }

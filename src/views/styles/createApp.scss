@@ -1,0 +1,470 @@
+.createAppContainer {
+  width: 100%;
+  color: var(--o-text-color-secondary);
+  padding: 16px 24px 24px;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  .createAppContainerTop {
+    width: 100%;
+    height: 32px;
+    display: flex;
+    position: relative;
+    align-items: center;
+    .createAppContainerMenu {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      .createAppContainerMenuLeft {
+        display: flex;
+        gap: 4px;
+        .createAppContainerMenuCenter {
+          color: #6395fd;
+          cursor: pointer;
+        }
+        .createAppContainerMenuText {
+          color: var(--o-text-color-primary);
+          font-weight: 500;
+        }
+      }
+      .createAppContainerStatus {
+        width: 52px;
+        height: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        background-color: var(--o-text-color-tertiary);
+        color: var(--o-color-white);
+        font-size: 12px;
+      }
+    }
+    .createAppContainerType {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-200px);
+      display: flex;
+      width: 400px;
+      height: 32px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2px;
+      border-radius: 4px;
+      background-color: var(--o-border-color-base);
+      .createAppBtn {
+        width: 200px;
+        height: 28px;
+        display: flex;
+        font-size: 12px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--o-text-color-primary);
+        gap: 8px;
+        .el-icon,
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+        .warningRemind svg path {
+          &:first-child {
+            fill: #ebaf00;
+          }
+          &:last-child {
+            fill: #fff;
+          }
+        }
+      }
+    }
+  }
+
+  .createAppContainerMain {
+    margin-top: 16px;
+    padding: 24px 24px 24px 16px;
+    display: flex;
+    flex: 1;
+    max-height: calc(100% - 112px);
+    background-color: var(--o-bg-color-base);
+  }
+
+  .createWorkFlowContainerMain {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+    max-height: calc(100% - 112px);
+    margin-top: 16px;
+  }
+
+  .createAppContainerMainBox {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    .previewTitle {
+      line-height: 24px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--o-text-color-primary);
+    }
+  }
+
+  .createAppContainerMainRight {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: calc(100% - 32px);
+    border-radius: 8px;
+    background-image: var(--o-bg-image);
+    background-position: -520px -200px;
+    overflow: auto;
+    .copilot-footer {
+      margin-bottom: 12px;
+    }
+  }
+  .createAppContainerMainRight.dark {
+    background: var(--o-bg-image) center center no-repeat;
+    background-size: cover;
+  }
+  .appConfig {
+    height: 100%;
+    .baseInfoTitle {
+      height: 24px;
+      margin-bottom: 8px;
+      margin-left: 8px;
+      font-weight: bolder;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+    }
+    .activeCollapse.baseInfoTitle {
+      color: var(--o-text-color-primary);
+    }
+      
+    .el-collapse-item__arrow {
+      color: #8d98aa;
+      margin-left: 8px;
+    }
+  }
+  // 外面多套了一层appConfig[上方]，用以调整滚动条样式
+  .createAppContainerMainLeft {
+    width: 560px;
+    height: calc(100% - 32px);
+    margin-top: 0px;
+    --o-owndefine-del-hover: #7aa5ff;
+    --o-owndefine-del-active: #6395fd;
+    overflow-y: auto;
+    overflow-x: hidden;
+    .el-collapse-item__header {
+      padding: 0px;
+      margin-left: 8px;
+      height: 24px;
+      line-height: 24px;
+      font-size: 16px;
+      font-weight: bolder;
+      margin-bottom: 8px;
+    }
+    .el-collapse-item__content {
+      margin-left: 0px;
+      .uploadArea {
+        color: #8d98aa;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        .placeIcon {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          cursor: pointer;
+        }
+
+        .avatar-uploader .el-upload {
+          border-radius: 6px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          width: 48px;
+          height: 48px;
+          img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+          }
+          .defaultIcon {
+            width: 100%;
+            height: 100%;
+            background: url('@/assets/svgs/app_upload.svg');
+            &:hover {
+              background: url('@/assets/svgs/app_upload_hover.svg');
+            }
+          }
+          .uploadIcon {
+            display: block;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 16px;
+            height: 16px;
+            background: url('@/assets/svgs/upload_icon.svg');
+          }
+        }
+        .avatar-uploader-icon {
+          font-size: 28px;
+          color: #8c939d;
+          text-align: center;
+        }
+        .avatar {
+          width: 178px;
+          height: 178px;
+          display: block;
+        }
+
+        .text {
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+      .el-textarea__inner {
+        height: 80px;
+      }
+
+      .linkLine {
+        height: 32px;
+        display: flex;
+        align-items: center;
+        .linkText {
+          margin-left: 8px;
+          color: var(--o-text-color-tertiary);
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+      .linkArea {
+        display: flex;
+        margin-top: 8px;
+        gap: 8px;
+        height: 32px;
+        width: 100%;
+        align-items: center;
+        .delIcon,
+        svg {
+          height: 16px;
+          width: 16px;
+          color: var(--o-text-color-tertiary);
+          &:hover {
+            color: var(--o-owndefine-del-hover);
+          }
+          &:active {
+            color: var(--o-owndefine-del-active);
+          }
+        }
+      }
+      .permissionItem {
+        .el-form-item__label,
+        .el-form-item__content {
+          padding: 0px;
+          min-height: 16px;
+        }
+        .el-form-item__label {
+          height: 16px;
+          &::before {
+            content: '*';
+            margin-right: 4px;
+            color: var(--el-color-danger);
+          }
+        }
+        .el-radio-group {
+          display: flex;
+          gap: 24px;
+          .el-radio {
+            margin-right: 0px;
+            height: 16px;
+          }
+        }
+        .partPermissionPerson {
+          width: 420px;
+          height: 252px;
+          padding: 8px 0px 0px;
+          margin-top: 4px;
+          display: flex;
+          gap: 4px;
+          .permissionChoice {
+            background-color: var(--o-bash-bg);
+            width: 208px;
+            padding: 16px 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-radius: 4px;
+            .perimissionChoiceTitle {
+              height: 16px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-weight: bolder;
+              > div {
+                height: 16px;
+                line-height: 16px;
+              }
+              .choiceNum {
+                padding: 0 4px;
+                min-width: 28px;
+                background-color: var(--o-time-text);
+                border-radius: 8px;
+                text-align: center;
+              }
+            }
+            .permissionInputSearch {
+              width: 176px;
+            }
+          }
+          .addUserBtn {
+            width: 104px;
+          }
+          .personList {
+            max-height: 204px;
+            overflow: auto;
+            padding-bottom: 12px;
+            .el-checkbox-group {
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+              .el-checkbox {
+                height: 16px;
+                display: flex;
+                align-items: center;
+                .el-checkbox__input {
+                  display: flex;
+                  width: 16px;
+                  height: 16px;
+                  align-items: center;
+                  justify-content: center;
+                }
+                .el-checkbox__label {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  .circle {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background-color: var(--o-button-color);
+                  }
+                }
+              }
+            }
+          }
+        }
+        .o-style-search.el-input {
+          .el-input__suffix {
+            &::after {
+              margin-top: 6px;
+            }
+          }
+        }
+      }
+      .multiSessionItem {
+        display: flex;
+        gap: 8px;
+        .sessionUnit {
+          width: 56px;
+          text-align: center;
+          color: var(--o-text-color-tertiary);
+        }
+      }
+
+      .notRequired {
+        .el-form-item__label {
+          padding-left: 8px;
+          &::before {
+            display: none;
+          }
+        }
+        .el-form-item__content {
+          .validUrl {
+            .el-input__wrapper {
+              background-color: var(--o-input-bg-color);
+              box-shadow: 0 0 0 1px inset var(--o-input-border-color);
+              &:hover {
+                box-shadow: var(--o-input-border_hover);
+              }
+              &:focus {
+                box-shadow: var(--o-input-border_focus);
+              }
+            }
+          }
+        }
+      }
+    }
+    .el-collapse-item {
+      &:first-child {
+        .el-collapse-item__header {
+          display: none;
+        }
+      }
+    }
+    .chatsCollapse.el-collapse-item {
+      margin-top: 0px;
+    }
+  }
+
+  .createAppContainerMainBox {
+    .dialogue-conversation {
+      display: flex;
+      flex-direction: column;
+    }
+    .createApp-demo {
+      flex: 1;
+    }
+  }
+
+  .createAppContainerFooter {
+    margin-top: 16px;
+    height: 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 24px;
+    gap: 16px;
+    border-radius: 8px;
+    background-color: var(--o-bg-color-base);
+    .el-button {
+      border-radius: 4px;
+      margin-left: 0px;
+    }
+  }
+
+  .createAppBtnActive {
+    background-color: var(--o-color-primary) !important;
+    border-color: var(--o-color-primary) !important;
+    color: var(--o-color-white) !important;
+  }
+  // 成功失败样式
+  .successBg {
+    background-color: rgba(36, 171, 54, 0.2);
+    color: #24ab36;
+  }
+  .errorBg {
+    background-color: #fbdede;
+    color: #e32020;
+  }
+  .debugSuccess {
+    background-color: var(--o-color-success) !important;
+    color: var(--o-bg-color-base) !important;
+  }
+}
+
+.w320 {
+  width: 320px;
+}
+
+.w96 {
+  width: 96px;
+}
+
+.workFlowDesc {
+  .el-textarea__inner {
+    height: 56px;
+  }
+}

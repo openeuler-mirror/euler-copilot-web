@@ -1,7 +1,13 @@
 <template>
   <teleport to="body">
     <transition name="drop">
-      <div class="document-list" ref="documents" v-show="isVisible" @mouseover="handleHover" @mouseleave="handleLeave">
+      <div
+        class="document-list"
+        ref="documents"
+        v-show="isVisible"
+        @mouseover="handleHover"
+        @mouseleave="handleLeave"
+      >
         <div class="document-wrapper" ref="documentsWrapper">
           <upload-card
             class="document"
@@ -29,13 +35,11 @@ const props = defineProps<{
   // 下拉文件列表
   fileList: Array<any>;
   // dropdown 挂载位置
-  dropPostion: DropPostion;
+  dropPostion: DropPostion | undefined;
   // 是否可见
   isFileVisible: boolean;
 }>();
 
-// 创建emit
-const emit = defineEmits(['deleteFile']);
 // 偏移量
 const offset = {
   x: 30,
@@ -55,7 +59,7 @@ watch(
   (newVal: DropPostion) => {
     documents.value.style.left = `${newVal.x + offset.x}px`;
     documents.value.style.top = `${newVal.y + offset.y}px`;
-  }
+  },
 );
 
 watch(
@@ -66,7 +70,7 @@ watch(
       return;
     }
     isVisible.value = newVal;
-  }
+  },
 );
 
 const scrollTop = () => {

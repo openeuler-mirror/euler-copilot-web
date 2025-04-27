@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, withDefaults, watch,shallowRef, reactive } from 'vue';
+import {
+  ref,
+  onMounted,
+  withDefaults,
+  watch,
+  shallowRef,
+} from 'vue';
 import { Codemirror } from 'vue-codemirror';
-import { StreamLanguage } from '@codemirror/language';
 import { json } from '@codemirror/lang-json';
-import { oneDark } from '@codemirror/theme-one-dark'
+import { oneDark } from '@codemirror/theme-one-dark';
 import { useHistorySessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';
-import { useChangeThemeStore } from "src/store/conversation";
+import { useChangeThemeStore } from 'src/store/conversation';
 const { params } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
 const CODE_STYLE = {
@@ -16,7 +21,7 @@ const CODE_STYLE = {
   overflowY: 'auto',
   // backgroundColor: '#f4f6fa',
   fontSize: '14px',
-  lineHeight: '16px'
+  lineHeight: '16px',
 };
 const props = withDefaults(
   defineProps<{
@@ -26,55 +31,58 @@ const props = withDefaults(
   }>(),
   {
     needCheck: true,
-  }
+  },
 );
 
-const code =ref(JSON.stringify(props.code, null, 2))
+const code = ref(JSON.stringify(props.code, null, 2));
 
 const codeMirrorView = shallowRef();
 // const extensions = [StreamLanguage.define(json)];
 const extensions = ref([json()]);
 const handleReady = (payload) => {
   codeMirrorView.value = payload.view;
-  setTimeout(() => {
-    payload.view.scrollDOM.scrollTop = 0;
-  }, 100);
 };
 const handleChange = (payload) => {
   params.value = payload;
 };
 
 const copy = () => {
-      if (codeMirrorView.value) {
-        navigator.clipboard.writeText(code.value)
-          .then(() => {
-            console.log('文本已复制到剪切板');
-          })
-          .catch(err => {
-            console.error('复制文本时出错:', err);
-          });
-      }
-    };
-
-watch(() => code, (newVal) => {
-  params.value = code;
-})
-
-watch(() => themeStore.theme, (newVal) => {
-  if(themeStore.theme === 'dark') {
-    extensions.value = [json(),oneDark]
-  }else{
-    extensions.value = [json()];
+  if (codeMirrorView.value) {
+    navigator.clipboard
+      .writeText(code.value)
+      .then(() => {
+        console.log('文本已复制到剪切板');
+      })
+      .catch((err) => {
+        console.error('复制文本时出错:', err);
+      });
   }
-})
+};
+
+watch(
+  () => code,
+  () => {
+    params.value = code;
+  },
+);
+
+watch(
+  () => themeStore.theme,
+  () => {
+    if (themeStore.theme === 'dark') {
+      extensions.value = [json(), oneDark];
+    } else {
+      extensions.value = [json()];
+    }
+  },
+);
 onMounted(() => {
-  if(themeStore.theme === 'dark') {
-    extensions.value = [json(),oneDark]
-  }else{
+  if (themeStore.theme === 'dark') {
+    extensions.value = [json(), oneDark];
+  } else {
     extensions.value = [json()];
   }
-})
-
+});
 </script>
 
 <template>
@@ -83,24 +91,27 @@ onMounted(() => {
       <span v-if="props.title === 'input'">输入</span>
       <span v-else-if="props.title === 'output'">输出</span>
       <span v-else-if="props.title === 'params'">参数</span>
-      <span v-else>补充参数</span>
-      <span @click="copy()">copy</span>
+      <span v-else>补充参数 {{ props.title }}</span>
+      <span
+        @click="copy()"
+        class="copyIcon"
+        :class="themeStore.theme === 'light' ? 'lightCopy' : 'darkCopy'"
+      ></span>
     </div>
     <div class="code-container">
       <Codemirror
-      v-model="code"
-      placeholder="Code goes here..."
-      :style="CODE_STYLE"
-      :autofocus="true"
-      :indent-with-tab="true"
-      :tab-size="2"
-      :extensions="extensions"
-      :disabled="disabled"
-      @ready="handleReady"
-      @change="handleChange"
-    />
+        v-model="code"
+        placeholder="Code goes here..."
+        :style="CODE_STYLE"
+        :autofocus="true"
+        :indent-with-tab="true"
+        :tab-size="2"
+        :extensions="extensions"
+        :disabled="disabled"
+        @ready="handleReady"
+        @change="handleChange"
+      />
     </div>
-
   </div>
   <div></div>
 </template>
@@ -114,6 +125,17 @@ onMounted(() => {
   font-family: Arial, sans-serif;
   /* max-width: 600px; */
   margin: 0 auto;
+}
+
+.copyIcon {
+  width: 16px;
+  cursor: pointer;
+}
+.lightCopy {
+  background: url(@/assets/svgs/light_copy.svg) center center no-repeat;
+}
+.darkCopy {
+  background: url(@/assets/svgs/light_copy.svg) center center no-repeat;
 }
 
 h2 {
@@ -142,15 +164,15 @@ h2 {
   display: flex;
   position: relative;
   justify-content: space-between;
-  background-color: var(--o-flow-code-bg);
+  background-color: var(--o-bg-color-light2) !important;
   border: var(--o-flow-code-border) 1px solid;
   border-radius: 4px 4px 0px 0px;
   margin-top: 12px;
   bottom: -2px;
   padding: 0px 16px;
   height: 32px;
-  span{
-    color:var(--o-text-color-primarys);
+  span {
+    color: var(--o-text-color-primarys);
     height: 32px;
     align-items: center;
     align-content: center;
@@ -172,8 +194,19 @@ pre {
     align-items: center;
     border-radius: 8px 8px 0 0;
     padding: 8px 12px 0 12px;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans',
-      'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-family:
+      Inter,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      'Fira Sans',
+      'Droid Sans',
+      'Helvetica Neue',
+      sans-serif;
     .pre-copy {
       cursor: pointer;
       svg {

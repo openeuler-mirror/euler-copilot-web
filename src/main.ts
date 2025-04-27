@@ -19,7 +19,8 @@ import 'src/assets/styles/main.scss';
 import 'src/assets/styles/element/index.scss';
 import opendesign2 from '@computing/opendesign2';
 import '@computing/opendesign2/themes/es/css';
-import {qiankunMounted} from './qiankun'
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import { qiankunMounted } from './qiankun';
 
 import App from './App.vue';
 import router from './router';
@@ -27,43 +28,48 @@ import router from './router';
 import {
   renderWithQiankun,
   qiankunWindow,
-  QiankunProps
-} from "vite-plugin-qiankun/dist/helper";
+  QiankunProps,
+} from 'vite-plugin-qiankun/dist/helper';
 
-
-let app: AppInstance<Element> | null = null
+let app: AppInstance<Element> | null = null;
 
 const render = (props: any = {}) => {
-  let selector: string = "#app"
+  let selector: string = '#app';
   if (props && props.container) {
-    const { container } = props
-    selector = container && container.querySelector("#app") || "#app"
+    const { container } = props;
+    selector = (container && container.querySelector('#app')) || '#app';
   }
-  app = createApp(App)
-  app.use(createPinia()).use(router).use(ElementPlus).use(opendesign2).use(i18n).mount(selector)
-}
+  app = createApp(App);
+  app
+    .use(createPinia())
+    .use(router)
+    .use(ElementPlus, {
+      locale: zhCn,
+    })
+    .use(opendesign2)
+    .use(i18n)
+    .mount(selector);
+};
 
 const initQianKun = () => {
   renderWithQiankun({
-    bootstrap() {
-    },
-    mount(props:QiankunProps) {
-      render(props)
+    bootstrap() {},
+    mount(props: QiankunProps) {
+      render(props);
       if (props) {
-        qiankunMounted(props)
+        qiankunMounted(props);
       }
     },
-    unmount(props) {
+    unmount() {
       if (app) {
-        app.unmount()
-        const appContainer = app._container as HTMLElement
-        appContainer.innerHTML = ""
-        app = null
+        app.unmount();
+        const appContainer = app._container as HTMLElement;
+        appContainer.innerHTML = '';
+        app = null;
       }
     },
-    update(props) {
-    }
-  })
-}
+    update() {},
+  });
+};
 
 qiankunWindow.__POWERED_BY_QIANKUN__ ? initQianKun() : render();

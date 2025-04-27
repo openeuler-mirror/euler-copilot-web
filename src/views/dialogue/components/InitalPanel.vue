@@ -1,135 +1,128 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
+import { IconLoad } from '@computing/opendesign-icons';
 import { useChangeThemeStore } from 'src/store';
-import 'xterm/css/xterm.css';
-import { Terminal } from 'xterm';
-import {FitAddon} from 'xterm-addon-fit';
-import { AttachAddon } from 'xterm-addon-attach';
-import { successMsg } from 'src/components/Message';
+import router from 'src/router';
 const themeStore = useChangeThemeStore();
-const openShell = () => {
-  isTermShow.value = true;
-  fnChangeShellBox(true);
-  document.getElementById("shellView").style.width = "calc(100% - 48px)";
-  document.getElementById("shellView").style.height = "calc(100% - 104px)";
-  document.getElementById("shellView").style.margin = "64px 24px 40px 24px";
-  document.getElementById("shellView").style.borderRadius = "8px";
-}
+import { useRoute } from 'vue-router';
+import { api } from 'src/apis';
 
-const closeShell = () => {
-  isTermShow.value = false;
-  fnChangeShellBox(false);
-  // document.getElementById("shellView").style.width = "0%";
-}
+const route = useRoute();
+const appName = ref();
+const questions = [
+  {
+    groupId: 0,
+    id: 1,
+    question: 'open_euler_community_edition_categories',
+  },
+  {
+    groupId: 0,
+    id: 2,
+    question: 'lts_release_cycle_and_support',
+  },
+  {
+    groupId: 0,
+    id: 3,
+    question: 'open_euler_pkgship',
+  },
+  {
+    groupId: 0,
+    id: 4,
+    question: 'container_cloud_platform_solution',
+  },
+  {
+    groupId: 1,
+    id: 5,
+    question: 'sec_gear_main_functions',
+  },
+  {
+    groupId: 1,
+    id: 6,
+    question: 'dde_description',
+  },
+];
 
-let socket = ref(null);
-const terminal = ref(null);  //绑定dom组件
-const fitAddon = new FitAddon();
+const emit = defineEmits(['selectQuestion']);
 
-let term = ref(null);
-let termLoading = ref(false);
-let isTermShow = ref(false);
-const activePane = ref('shell');
-const fnChangeShellBox = (isShow) => {
-  if (isShow) {
-    if (!socket.value){
-      termLoading.value = true;
-      createWs();
-    }
-  }else {
-    // 关闭连接
-    if (socket.value) {
-      socket.value.close();
-      socket.value = null;
-    }
-    if (term.value) {
-      term.value.dispose();
-    }
+const selectQuestions = (event) => {
+  emit('selectQuestion', event.target.innerText);
+};
+const routerToAppCenter = () => {
+  router.push('/app');
+};
+
+onMounted(() => {
+  if (route.query?.id) {
+    api
+      .querySingleAppData({
+        id: route.query?.id as string,
+      })
+      .then((res) => {
+        if (res?.[1]?.result?.name) {
+          appName.value = res?.[1]?.result?.name;
+        }
+      });
   }
-
-}
-
-
-const createWs = () => {
-  const hostname = window.location.host;
-  socket.value = new WebSocket(`wss://${hostname}/api/shell/ws/0`);
-  socket.value.onopen = () => {
-    termLoading.value = false;
-    // socket.value.send(JSON.stringify({
-    //   ctrl: 'resize',
-    //   data: {
-    //     width: 500,
-    //   }
-    // }));
-  }
-  socket.value.onclose = () => {
-    // console.log('close');
-  }
-  socket.value.onerror = (e) => {
-    term.value.write(`\x1b[31m${e}\x1b[m\r\n`);
-    termLoading.value = false;
-  }
-  initTerm();
-}
-
-const initTerm = () => {
-  term.value = new Terminal({
-    fontSize: 14,
-    cursorBlink: true,
-  })
-  const attachAddon = new AttachAddon(socket.value);
-  term.value.open(terminal.value);
-  fitAddon.activate(term.value) // 自适应尺寸
-  attachAddon.activate(term.value);
-
-  setTimeout(() => {
-    fitAddon.fit();
-  }, 5);
-  term.value.focus();
-  window.onresize = () => {
-    fitAddon.fit();
-  }
-}
+});
 </script>
 
 <template>
   <div class="dialogue-panel">
     <div class="inital-panel">
-      <div class="introduction">{{$t('main.describe1')}}
-        <img src="@/assets/images/logo-euler-copilot.png" alt="">
-        {{$t('main.describe2')}}
+      <div class="introduction">
+        {{ $t('main.describe1') }}
+        <img
+          src="@/assets/images/logo-euler-copilot.png"
+          alt=""
+          v-if="!appName?.length"
+        />
+        <div class="appNameTitle">{{ appName }}</div>
+        {{ $t('main.describe2') }}
       </div>
-      <p class="inital-panel-tips">
-      </p>
-      <div class='container'>
+      <p class="inital-panel-tips"></p>
+      <div class="container">
         <div class="eg">
-          <p>{{$t('main.left_describe')}}</p>
+          <p>{{ $t('main.left_describe') }}</p>
           <ul class="eg-list">
-            <li class="eg-list-item" v-for="item in EG_LIST" :key="item.key" :style="item.style">
+            <li
+              class="eg-list-item"
+              v-for="item in EG_LIST"
+              :key="item.key"
+              :style="item.style"
+            >
               <img v-if="themeStore.theme === 'dark'" :src="item.iconDark" />
-              <img v-else :src="item.icon" alt="">
+              <img v-else :src="item.icon" alt="" />
               <div class="eg-list-item__text">
-                <p>{{ $t('main.'+item.key) }}</p>
-                <span class="eg-list-item__text-desc">{{
-                  $t('main.'+item.insertMessage)
-                }}</span>
+                <p>{{ $t('main.' + item.key) }}</p>
+                <span class="eg-list-item__text-desc">
+                  {{ $t('main.' + item.insertMessage) }}
+                </span>
               </div>
             </li>
           </ul>
-        </div>
-        <div class='shell'>
-          <p class='title'>{{$t('main.smart_shell')}}</p>
-          <div class='dse'>
-            {{$t('main.smart_shell_describe')}}
+          <div class="eg-btn">
+            <p @click="routerToAppCenter()">{{ $t('main.try_app') }}</p>
           </div>
         </div>
-        <div id='shellView' class='sidenav'>
-          <a href='' class='closebtn' @click='closeShell()'>x</a>
-          <div v-show="isTermShow" class="dialogue-shell">
-            <div style="height: 100%; width: 100%" ref="terminal" v-loading="termLoading">
+        <div class="question">
+          <div class="question-title">
+            <p class="title">{{ $t('main.question') }}</p>
+            <div class="change">
+              <el-icon><IconLoad /></el-icon>
+              {{ $t('main.refresh') }}
             </div>
           </div>
+          <ul class="question-list">
+            <li class="question-item" v-for="item in questions" :key="item.id">
+              <span class="question-number" :class="{ blue: item.id <= 3 }">
+                {{ item.id }}
+              </span>
+              <span class="question-des" @click="selectQuestions">
+                {{ $t('question.' + item.question) }}
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -137,8 +130,7 @@ const initTerm = () => {
 </template>
 
 <style lang="scss" scoped>
-
-.dialogue-shell{
+.dialogue-shell {
   width: 100%;
   height: 100%;
 }
@@ -188,62 +180,76 @@ const initTerm = () => {
   margin-left: 50px;
 }
 
+.appNameTitle {
+  color: #6c77fa;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.question-list {
+  margin-top: 16px;
+  li {
+    margin-bottom: 16px;
+    .blue {
+      color: #5ab3ff;
+    }
+  }
+  .question-number {
+    margin-right: 8px;
+    color: var(--o-text-color-secondary);
+  }
+  .question-des {
+    color: var(--o-text-color-secondary);
+  }
+}
 
 .container {
   display: flex;
   justify-content: center;
 
-  .shell {
+  .question {
     // display: block;
-    width: 264px;
+    width: 492px;
     height: auto;
-    // background-color: var(--o-bg-color-base);
-    background: var(--o-shell-image) no-repeat;
+    box-shadow: 0px 5.18px 20.72px 0px var(--question-shadow);
+    background: var(--question-bg);
+    background-blend-mode: overlay;
+    // opacity: 0.5;
+    border-radius: 8px;
     background-size: 100% 100%;
-    margin-left: 12px;
+    margin-left: 16px;
     padding: 24px;
     flex-direction: column;
     justify-content: space-between;
-
-    .title {
-      width: 263px;
-      font-size: 18px;
-      color: var(--o-text-color-primary);
-      font-weight: bold;
+    .question-title {
+      display: flex;
+      justify-content: space-between;
+      .title {
+        width: 263px;
+        font-size: 18px;
+        color: var(--o-text-color-primary);
+        font-weight: bold;
+      }
+      .change {
+        display: flex;
+        align-items: center;
+        color: var(--o-text-color-secondary);
+        font-family: HarmonyOS_Sans_SC_Regular;
+        font-size: 12px;
+        line-height: 16px;
+        cursor: pointer;
+        & .el-icon {
+          margin-right: 4px;
+          height: 14px;
+          width: 14px;
+        }
+      }
     }
 
     .dse {
       margin-top: 12px;
       font-size: 14px;
       color: var(--o-text-color-secondary);
-    }
-
-    &-btn {
-      display: flex;
-      height: 100%;
-      position: relative;
-
-      // align-items: center;
-      p {
-        display: block;
-        align-self: center;
-        position: absolute;
-        width: 96px;
-        line-height: 32px;
-        border-radius: 100px;
-        height: 32px;
-        background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-        height: 32px;
-        align-self: center;
-        // margin: 0px 0px 12px 12px;
-        color: white;
-        bottom: 0px;
-
-        p {
-          text-align: center;
-          font-size: 14px;
-        }
-      }
     }
   }
 }
@@ -252,7 +258,7 @@ const initTerm = () => {
   // background-color: var(--o-bg-color-base);
   background-color: transparent;
   border-radius: 8px;
-  padding-top: 64px;
+  padding-top: 48px;
   display: block;
   width: 1000px;
 
@@ -271,7 +277,7 @@ const initTerm = () => {
   }
 
   &-tips {
-    margin-top: 24px;
+    margin-top: 32px;
     color: var(--o-text-color-secondary);
     font-size: 20px;
     line-height: 28px;
@@ -285,74 +291,89 @@ const initTerm = () => {
     background-color: var(--o-bg-color-base);
     padding: 24px;
     border-radius: 8px;
-    min-width: 640px;
-
+    width: 492px;
+    height: 320px;
     p {
       font-size: 16px;
       color: var(--o-text-color-secondary);
     }
-  }
-
-  .eg-list {
-    display: flex;
-    width: auto;
-    background-color: var(--o-bg-color-base);
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-
-    li {
-      cursor: text;
-    }
-
-    &-item {
+    &-btn {
       display: flex;
+      position: relative;
+      top: 53px;
+      cursor: pointer;
+      p {
+        display: block;
+        align-self: center;
+        position: absolute;
+        min-width: 120px;
+        padding: 0 15px;
+        line-height: 32px;
+        border-radius: 100px;
+        height: 32px;
+        background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
+        height: 32px;
+        color: white;
+        text-align: center;
+        font-size: 14px;
+      }
+    }
+    .eg-list {
+      display: flex;
+      width: auto;
+      background-color: var(--o-bg-color-base);
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
-      width: calc(50% - 8px);
-      height: 64px;
-      background-color: transparent;
-      margin-top: 20px;
-      overflow: hidden;
-
-      @media screen and (max-width: 1368px) {
-        width: calc(50% - 4px);
-        padding: 10px;
-      }
-
-      @media screen and (max-height: 768px) {
-        width: calc(50% - 4px);
-        padding: 10px;
-      }
-
-      img {
-        width: 37px;
-        height: 37px;
-        // align-self: baseline;
-        margin-right: 6px;
-      }
-
-
-      &__text {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        // margin-left: -12px;
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--o-text-color-primary);
-        line-height: 24px;
-
-        &-desc {
-          font-size: 12px;
-          color: var(--o-text-color-secondary);
-          font-weight: 400;
+      margin-top: 16px;
+      li {
+        cursor: text;
+        background: var(--o-bg-color-light);
+        &:hover {
+          background: var(--o-bg-color-base);
+          box-shadow: 0px 5.18px 20.72px 0px var(--o-bg-color-dark);
         }
       }
+      &-item {
+        display: flex;
+        align-items: center;
+        width: calc(50% - 8px);
+        height: 80px;
+        background: var(--o-bg-color-base);
+        overflow: hidden;
+        border-radius: 8px;
 
-      p {
-        font-size: 16px;
-        color: var(--o-text-color-primary);
+        &:hover {
+          cursor: pointer;
+        }
+
+        img {
+          width: 37px;
+          height: 37px;
+          margin: 0 6px 0 8px;
+        }
+
+        &__text {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--o-text-color-primary);
+          line-height: 24px;
+
+          &-desc {
+            font-size: 12px;
+            color: var(--o-text-color-secondary);
+            font-weight: 400;
+          }
+        }
+
+        p {
+          font-size: 16px;
+          color: var(--o-text-color-primary);
+        }
       }
     }
   }

@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { useHistorySessionStore, useSessionStore, useChangeThemeStore } from 'src/store';
+import {
+  useHistorySessionStore,
+  useSessionStore,
+  useChangeThemeStore,
+} from 'src/store';
 import type { SessionItem } from './type';
-import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { dayjs } from 'element-plus';
 import i18n from 'src/i18n';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { api } from 'src/apis';
 import SessionDropDown from './SessionDropDown.vue';
-const { currentSelectedSession, selectedSessionIds } = storeToRefs(useHistorySessionStore());
-const { changeSession, selectSession, getHistorySession, updateSessionTitle } = useHistorySessionStore();
+const { currentSelectedSession, selectedSessionIds } = storeToRefs(
+  useHistorySessionStore(),
+);
+const { changeSession, selectSession, getHistorySession, updateSessionTitle } =
+  useHistorySessionStore();
 const { isAnswerGenerating } = storeToRefs(useSessionStore());
 interface SessionCardProps {
   conversation: SessionItem;
@@ -37,17 +43,21 @@ const iconRef = ref<HTMLInputElement | null>();
 
 const dropdownPosition = ref();
 
-const hoverFiles = ref();
+const hoverFiles = ref([]);
 
 const isFileVisible = ref<boolean>(false);
 
 const isImageVisible = computed(() => {
-  return props.conversation.docCount && props.conversation.docCount > 0 
+  return props.conversation.docCount && props.conversation.docCount > 0;
 });
 
 const handleHover = async () => {
   // 接口获取列表数据
-  const [_, response] = await api.getUploadFiles(props.conversation.conversation_id, true, false);
+  const [_, response] = await api.getUploadFiles(
+    props.conversation.conversationId,
+    true,
+    false,
+  );
   if (!_ && response) {
     hoverFiles.value = response.result.documents;
     hoverFiles.value.sort((pre, cur) => pre.created_at - cur.created_at);
@@ -57,7 +67,6 @@ const handleHover = async () => {
       x: rect?.x,
       y: rect?.y,
     };
-  } else {
   }
 };
 
@@ -98,9 +107,9 @@ const cancelChangeTitle = (): void => {
 };
 
 const bool = ref(false);
-const select = (conversation_id: string) => {
-  bool.value = selectedSessionIds.value.includes(conversation_id);
-  return selectedSessionIds.value.includes(conversation_id);
+const select = (conversationId: string) => {
+  bool.value = selectedSessionIds.value.includes(conversationId);
+  return selectedSessionIds.value.includes(conversationId);
 };
 
 const deleteOne = (name: string, list: string[]) => {
@@ -119,30 +128,40 @@ const deleteOne = (name: string, list: string[]) => {
         class="checkbox"
         v-if="deletion"
         v-model="bool"
-        @change="selectSession(conversation.conversation_id)"
-        :checked="select(conversation.conversation_id)"
+        @change="selectSession(conversation.conversationId)"
+        :checked="select(conversation.conversationId)"
       />
       <div
         class="conversation-card-item__box"
         :class="{
-          'conversation-card-item__box--selected': currentSelectedSession === conversation.conversation_id,
+          'conversation-card-item__box--selected':
+            currentSelectedSession === conversation.conversationId,
         }"
-        @click="changeSession(conversation.conversation_id)"
+        @click="changeSession(conversation.conversationId)"
       >
         <div class="conversation-title">
           <div class="conversation-title__text">
             <input
               ref="inputRef"
               class="conversation-title__text-input"
-              v-if="isResetTitle && currentSelectedSession === conversation.conversation_id"
+              v-if="
+                isResetTitle &&
+                currentSelectedSession === conversation.conversationId
+              "
               type="text"
               v-model="inputValue"
               @keyup.enter="confirmChangeTitle(conversation)"
             />
-            <span class="conversation-title__text-span" v-else>{{ conversation.title }}</span>
+            <span class="conversation-title__text-span" v-else>
+              {{ conversation.title }}
+            </span>
           </div>
           <div class="conversation-title__button" v-if="!isResetTitle">
-            <el-tooltip placement="top" :content="$t('history.rename')" effect="light">
+            <el-tooltip
+              placement="top"
+              :content="$t('history.rename')"
+              effect="light"
+            >
               <img
                 v-if="themeStore.theme === 'dark'"
                 class="conversation-title__svg"
@@ -156,44 +175,72 @@ const deleteOne = (name: string, list: string[]) => {
                 @click="handleResetName"
               />
             </el-tooltip>
-            <el-tooltip placement="top" :content="$t('history.delete')" effect="light">
+            <el-tooltip
+              placement="top"
+              :content="$t('history.delete')"
+              effect="light"
+            >
               <img
                 v-if="themeStore.theme === 'dark'"
                 class="conversation-title__svg"
                 src="@/assets/svgs/dark_delete.svg"
-                @click="deleteOne(conversation.title, [conversation.conversation_id])"
+                @click="
+                  deleteOne(conversation.title, [conversation.conversationId])
+                "
               />
               <img
                 v-else
                 class="conversation-title__svg"
                 src="@/assets/svgs/light_delete.svg"
-                @click="deleteOne(conversation.title, [conversation.conversation_id])"
+                @click="
+                  deleteOne(conversation.title, [conversation.conversationId])
+                "
               />
             </el-tooltip>
           </div>
           <div class="conversation-title__button" v-else>
-            <el-tooltip placement="top" :content="$t('history.ok')" effect="light">
+            <el-tooltip
+              placement="top"
+              :content="$t('history.ok')"
+              effect="light"
+            >
               <img
                 class="conversation-title__svg"
                 src="@/assets/svgs/yes.svg"
                 @click="confirmChangeTitle(conversation)"
               />
             </el-tooltip>
-            <el-tooltip placement="top" :content="$t('history.cancel')" effect="light">
-              <img class="conversation-title__svg" src="@/assets/svgs/wrong.svg" @click="cancelChangeTitle()" />
+            <el-tooltip
+              placement="top"
+              :content="$t('history.cancel')"
+              effect="light"
+            >
+              <img
+                class="conversation-title__svg"
+                src="@/assets/svgs/wrong.svg"
+                @click="cancelChangeTitle()"
+              />
             </el-tooltip>
           </div>
         </div>
         <div class="ducments" v-if="isImageVisible">
           <div>
-            <img ref="iconRef" @mouseover="handleHover" src="../../assets/svgs/files.svg" alt="" />
+            <img
+              ref="iconRef"
+              @mouseover="handleHover"
+              src="../../assets/svgs/files.svg"
+              alt=""
+            />
           </div>
           <div>
-            {{ $t('upload.aside_session_file_count_front') }}<span>{{ documentCount }}</span
-            >{{ $t('upload.aside_session_file_count_back') }}
+            {{ $t('upload.aside_session_file_count_front') }}
+            <span>{{ documentCount }}</span>
+            {{ $t('upload.aside_session_file_count_back') }}
           </div>
         </div>
-        <span class="conversation-time">{{ dayjs(conversation.createdTime).format('YYYY-MM-DD HH:mm:ss') }}</span>
+        <span class="conversation-time">
+          {{ dayjs(conversation.createdTime).format('YYYY-MM-DD HH:mm:ss') }}
+        </span>
       </div>
     </div>
   </div>
@@ -206,7 +253,8 @@ const deleteOne = (name: string, list: string[]) => {
 
 <style lang="scss" scoped>
 .conversation-title__svg:hover {
-  filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg) brightness(100%) contrast(103%);
+  filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
+    brightness(100%) contrast(103%);
 }
 
 .rename:hover {
@@ -220,6 +268,9 @@ const deleteOne = (name: string, list: string[]) => {
 
 .conversation-card {
   width: calc(100% - 18px);
+  &:last-child .conversation-card-item {
+    margin-bottom: 0px;
+  }
   &-item {
     margin-bottom: 8px;
     display: flex;
@@ -245,7 +296,11 @@ const deleteOne = (name: string, list: string[]) => {
       flex-direction: column;
 
       &:hover {
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 0.1), rgba(90, 179, 255, 0.1));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.1),
+          rgba(90, 179, 255, 0.1)
+        );
         outline: 1px solid #7aa5ff;
         // border: -1px solid transparent;
         .conversation-title__button {
@@ -298,7 +353,11 @@ const deleteOne = (name: string, list: string[]) => {
       }
 
       &--selected {
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.2),
+          rgba(90, 179, 255, 0.2)
+        );
       }
     }
 
