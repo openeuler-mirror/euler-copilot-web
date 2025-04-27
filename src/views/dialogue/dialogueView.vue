@@ -215,8 +215,8 @@ const changeLanguagefun = (lang: 'CN' | 'EN') => {
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
   if (iframe?.contentWindow) {
-    const data = { lang: localStorage.getItem('localeLang') ?? 'CN' };
-    let target = `${window.location.origin}/witchaind`;
+    const data = { lang: localStorage.getItem('localeLang') ?? 'CN' ,type: 'changeLanguage'};
+    let target = window.location.origin.includes('localhost')?'http://localhost:3002/witchaind/' : `${window.location.origin}/witchaind/`;
     iframe.contentWindow.postMessage(data, target);
   }
 };
@@ -235,14 +235,13 @@ onMounted(() => {
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
-  console.log('onMounted', window.location.host);
   initCopilot();
   const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
   if (iframe) {
     if (window.location.origin === 'http://localhost:3000') {
-      iframe.src = `http://localhost:3002`;
+      iframe.src = `http://localhost:3002/witchaind/`;
     } else {
-      iframe.src = `${window.location.origin}/witchaind`;
+      iframe.src = `${window.location.origin}/witchaind/`;
     }
   }
 });
@@ -398,10 +397,10 @@ watch(
         </router-link>
       </div>
       <div class="dialogue-content">
+        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
+          <tools />
+        </KeepAlive>
           <RouterView v-show="router.currentRoute.value.name !== 'witchainD'"/>
-          <KeepAlive :style="router.currentRoute.value.name === 'witchainD'?{visibility:'visible'}:{ visibility: 'hidden' }">
-            <tools />
-          </KeepAlive>
       </div>
     </div>
     <el-dialog
