@@ -8,24 +8,36 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { ElNotification, ElMessageBox } from 'element-plus';
-import { CALLBACK_URL, LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
+import {
+  CALLBACK_URL,
+  LOGOUT_CALLBACK_URL,
+} from 'src/views/dialogue/constants';
 import { useAccountStore } from 'src/store';
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
+import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
-import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { storeToRefs } from 'pinia';
-import i18n from 'src/i18n'
+import i18n from 'src/i18n';
+import { errorMsg } from 'src/components/Message';
 
 function getCookie(name: string) {
-  let matches = document.cookie.match(new RegExp(
-    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-  ));
+  const matches = document.cookie.match(
+    new RegExp(
+      '(?:^|; )' +
+        name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') +
+        '=([^;]*)',
+    ),
+  );
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
 // 修改请求头
 export const handleChangeRequestHeader = (
-  config: InternalAxiosRequestConfig<any>
+  config: InternalAxiosRequestConfig<any>,
 ): InternalAxiosRequestConfig<any> => {
   if (config.headers['Content-Type'] !== 'multipart/form-data') {
     config.headers['Content-Type'] = 'application/json; charset=UTF-8';
@@ -37,45 +49,49 @@ export const handleChangeRequestHeader = (
   return config;
 };
 
-
 export const handleAuthorize = async (errStatus: number): Promise<void> => {
   const type = import.meta.env.VITE_USER_TYPE;
-  const store = useAccountStore()
+  const store = useAccountStore();
   const { userinfo } = storeToRefs(store);
   userinfo.value.organization = type;
-  if ((errStatus === 401 || errStatus === 403)) {
+  if (errStatus === 401 || errStatus === 403) {
     if (qiankunWindow.__POWERED_BY_QIANKUN__) {
-      const url = await store.getAuthUrl('login')
+      const url = await store.getAuthUrl('login');
       if (url) {
-        const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__ ? `${url}&redirect_index=${location.href}` : url
-        if (redirectUrl)
-          window.location.href = redirectUrl
+        const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
+          ? `${url}&redirect_index=${location.href}`
+          : url;
+        if (redirectUrl) window.location.href = redirectUrl;
       }
     } else {
-      ElMessageBox.confirm(i18n.global.t('Login.unauthorized'), i18n.global.t('history.confirmation_message1'), {
-        confirmButtonText: i18n.global.t('Login.login'),
-        showClose: false,
-        showCancelButton: false,
-        autofocus: false,
-        closeOnClickModal: false,
-        closeOnPressEscape: false,
-      }).then(async () => {
-        const url = await store.getAuthUrl('login')
+      ElMessageBox.confirm(
+        i18n.global.t('Login.unauthorized'),
+        i18n.global.t('history.confirmation_message1'),
+        {
+          confirmButtonText: i18n.global.t('Login.login'),
+          showClose: false,
+          showCancelButton: false,
+          autofocus: false,
+          closeOnClickModal: false,
+          closeOnPressEscape: false,
+        },
+      ).then(async () => {
+        const url = await store.getAuthUrl('login');
         if (url) {
-          const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__ ? `${url}&redirect_index=${location.href}` : url
-          if (redirectUrl)
-            window.location.href = redirectUrl
+          const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
+            ? `${url}&redirect_index=${location.href}`
+            : url;
+          if (redirectUrl) window.location.href = redirectUrl;
         }
-      }
-      );
+      });
     }
-
   }
   if (errStatus === 460) {
     window.open(LOGOUT_CALLBACK_URL, '_self');
+  } else {
+    // errorMsg(`${errStatus} is error`);
   }
 };
-
 
 export const handleNetworkError = (errStatus: number): void => {
   let errMessage: string;
@@ -130,9 +146,15 @@ export const handleNetworkError = (errStatus: number): void => {
 export const handleGeneralError = (
   errno: number,
   errorLabel: string = 'Fail',
-  errMessage: string = 'request error'
+  errMessage: string = 'request error',
 ): boolean => {
-  if (Number(errno) !== 200 && Number(errno) !== 401 && Number(errno) !== 403 && Number(errno) !== 302 && Number(errno) !== 2001) {
+  if (
+    Number(errno) !== 200 &&
+    Number(errno) !== 401 &&
+    Number(errno) !== 403 &&
+    Number(errno) !== 302 &&
+    Number(errno) !== 2001
+  ) {
     ElNotification.error({
       title: errorLabel,
       message: errMessage,
@@ -142,17 +164,14 @@ export const handleGeneralError = (
   return true;
 };
 
-
-
-
 /**
  * 处理状态码错误
  */
 export const handleStatusError = async (
-  error: AxiosError<any>
+  error: AxiosError<any>,
 ): Promise<AxiosResponse<any, any>[] | undefined> => {
   if (!error.response) {
-    // 如果没有响应，可能是网络问题或其他非HTTP错误，直接返回错误  
+    // 如果没有响应，可能是网络问题或其他非HTTP错误，直接返回错误
     return Promise.reject(error);
   }
 
@@ -163,12 +182,12 @@ export const handleStatusError = async (
       return;
     }
     const originalRequest = error.config;
-    if (originalRequest.url === '/api/auth/refresh_token') {
+    if (originalRequest && originalRequest.url === '/api/auth/refresh_token') {
       // 长token过期,需要重新登录
       handleAuthorize(status);
       return Promise.reject(error.response);
     }
-    if (originalRequest.url === '/api/auth/user') {
+    if (originalRequest && originalRequest.url === '/api/auth/user') {
       handleAuthorize(status);
       return;
     }
@@ -180,4 +199,4 @@ export const handleStatusError = async (
     // return server(originalRequest);
   }
   return Promise.reject(error.response);
-};  
+};

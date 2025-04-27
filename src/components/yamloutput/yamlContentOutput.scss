@@ -1,0 +1,79 @@
+.outputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+  .el-collapse-item__header {
+    width: fit-content !important;
+    display: flex;
+    flex-direction: row-reverse;
+    text-align: left;
+    padding: 0 !important;
+    height: 16px;
+  }
+  .el-collapse-item__header {
+    .el-icon {
+      display: none;
+    }
+
+    .yamlTitle .el-icon {
+      display: inline-block;
+      font-size: 16px;
+      top: 2px;
+    }
+  }
+
+  .el-collapse-item__header.is-active {
+    .yamlTitle {
+      .el-icon {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .yamlKey {
+    color: var(--o-text-color-primary);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .yamlTitle {
+    display: flex;
+    align-items: center;
+    
+  }
+
+  .yamlBox,.yamlTitle{
+    padding: 0 !important;
+    height: 16px;
+    display: flex;
+    align-items: center;
+  }
+
+  .yamlBox {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .yamlKey{
+    height: 16px;
+    line-height: 16px;
+  }
+
+  .yamlKeyType {
+    display: inline-block;
+    height: 16px;
+    line-height: 16px;
+    border-radius: 2px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--o-text-color-secondary);
+    background-color: var(--o-border-color-lighter);
+  }
+  .el-collapse-item__content{
+    margin-bottom: 0 !important;
+  }
+}

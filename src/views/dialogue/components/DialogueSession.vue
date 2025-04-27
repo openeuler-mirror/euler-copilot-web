@@ -2,39 +2,35 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
-import InitalPanel from './InitalPanel.vue';
+import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
+import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
 import { storeToRefs } from 'pinia';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
-
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
-import { UploadTypeName, UploadStatus, UploadType } from 'src/components/uploadFile/type';
+import { UploadTypeName, UploadStatus } from 'src/components/uploadFile/type';
+import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
-import { FitAddon } from 'xterm-addon-fit';
-import { AttachAddon } from 'xterm-addon-attach';
-import { Terminal } from 'xterm';
-import 'xterm/css/xterm.css';
 import i18n from 'src/i18n';
-const { user_selected_plugins, selectMode } = storeToRefs(useHistorySessionStore());
+const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
-const session = useSessionStore();
 
 export interface DialogueSession {
-  modeOptions: any;
+  isCreateApp: any;
+  createAppForm: any;
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
 
-enum SupportMap {
-  support = 1,
-  against = 0,
-}
-// const dialogueRef = ref();
-const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
+const Form = ref(props.createAppForm);
+const AppForm = ref(props.createAppForm);
+const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
-const modeOptions = ref(props.modeOptions);
+const isCreateApp = ref(props?.isCreateApp);
+// const isCreateApp = ref(true);
+const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
     groupId: 0,
@@ -147,25 +143,35 @@ let groupid = ref(0);
 
 const tagNum = ref(3);
 
-let filterQuestions = computed(() => questions.filter(item => item.groupId === groupid.value % 6));
+let filterQuestions = computed(() =>
+  questions.filter((item) => item.groupId === groupid.value % 6),
+);
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
 // 对话列表
 const { sendQuestion } = useSessionStore();
-const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(useSessionStore());
+const { conversationList, isAnswerGenerating, dialogueRef } =
+  storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 /**
  * 发送消息
  */
-const handleSendMessage = async (groupId:string|undefined,question: string, user_selected_flow?: string) => {
-  console.log('发送消息', groupId, question, user_selected_flow);
+const handleSendMessage = async (
+  groupId: string | undefined,
+  question: string,
+  user_selected_flow?: string[],
+) => {
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
   const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
-  if (len > 0 && !(conversationList.value[len - 1] as RobotConversationItem).isFinish) return;
+  if (
+    len > 0 &&
+    !(conversationList.value[len - 1] as RobotConversationItem).isFinish
+  )
+    return;
   dialogueInput.value = '';
   if (uploadFilesView.value.length > 0) {
     // 发送文件则刷新左侧会话列表
@@ -177,10 +183,25 @@ const handleSendMessage = async (groupId:string|undefined,question: string, user
     await generateSession();
   }
   if (user_selected_flow) {
-    //也传一下 plugins.value
-    await sendQuestion(groupId,question, user_selected_plugins.value||undefined, undefined, undefined, user_selected_flow,undefined);
+    await sendQuestion(
+      groupId,
+      question,
+      user_selected_app.value,
+      undefined,
+      undefined,
+      user_selected_flow,
+      undefined,
+    );
   } else {
-    await sendQuestion(groupId,question, user_selected_plugins.value, undefined, undefined, undefined,undefined);
+    await sendQuestion(
+      groupId,
+      question,
+      user_selected_app.value,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
   }
 };
 
@@ -192,7 +213,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     if (dialogueInput.value !== '' && isAllowToSend.value) {
-      handleSendMessage(undefined,dialogueInput.value);
+      handleSendMessage(undefined, dialogueInput.value);
     }
   }
 };
@@ -201,7 +222,7 @@ const handleKeydown = (event: KeyboardEvent) => {
  *
  * @param item
  */
-const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
+const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
   if (field in item) {
     return (item as RobotConversationItem)[field] as T;
   }
@@ -212,49 +233,17 @@ const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 
 /**
- * 支持、反对 更改逻辑的钩子函数。
- * @param type
- * @param cid
- */
-const handleCommont = async (
-  type: 'support' | 'against',
-  cid: number,
-  qaRecordId: number,
-  index: number,
-  reason?: string,
-  reasonLink?: string,
-  reasonDescription?: string
-) => {
-  const params: {
-    qaRecordId: string;
-    isLike: number;
-    dislikeReason?: string;
-    reasonLink?: string;
-    reasonDescription?: string;
-  } = {
-    qaRecordId: qaRecordId,
-    isLike: SupportMap[type],
-    dislikeReason: reason,
-    reasonLink: reasonLink,
-    reasonDescription: reasonDescription,
-  };
-
-  const [_, res] = await api.commentConversation(params);
-  if (!_ && res) {
-    successMsg(i18n.global.t('feedback.feedbackSuccesful'));
-  }
-};
-
-/**
  * 举报逻辑的钩子函数。
  * @param type
  * @param cid
  */
-const handleReport = async (qaRecordId: string, reason: string) => {
+const handleReport = async (qaRecordId: string,reason_type:string,reason: string) => {
   const params: {
     qaRecordId: string;
+    reason_type:string;
     reason: string;
   } = {
+    reason_type: reason_type,
     record_id: qaRecordId,
     reason: reason,
   };
@@ -262,118 +251,6 @@ const handleReport = async (qaRecordId: string, reason: string) => {
   if (!_ && res) {
     successMsg(i18n.global.t('feedback.feedbackSuccesful'));
   }
-};
-
-const changeProblem = () => {
-  groupid.value++;
-};
-
-const selectQuestion = event => {
-  dialogueInput.value = event.target.innerText;
-};
-
-const getMode = async () => {
-  if (modeOptions.value.length === 1) {
-    const [_, res] = await api.getRecognitionMode();
-    if (!_ && res) {
-      res.result.forEach(item => {
-        const opt = {
-          label: item.plugin_name,
-          value: item.plugin_name,
-          disabled: false,
-        };
-        opt ? modeOptions.value.push(opt) : '';
-      });
-    }
-  } else {
-    return;
-  }
-};
-
-const setOptionDisabled = () => {
-  if (selectMode.value.length === 0) {
-    modeOptions.value.map(item => {
-      item.disabled = false;
-      return item;
-    });
-  } else {
-    const isAuto = selectMode.value.some(item => item === 'auto');
-    let first = true;
-    modeOptions.value.map(item => {
-      if (!first) {
-        item.disabled = isAuto ? true : false;
-      } else {
-        item.disabled = isAuto ? false : true;
-      }
-      first = false;
-      return item;
-    });
-  }
-};
-
-let socket = ref(null);
-const terminal = ref(null);
-const fitAddon = new FitAddon();
-
-let term = ref(null);
-let termLoading = ref(false);
-let isTermShow = ref(false);
-const activePane = ref('shell');
-
-const fnChangeShellBox = isShow => {
-  if (isShow) {
-    if (!socket.value) {
-      termLoading.value = true;
-      createWs();
-    }
-  } else {
-    // 关闭连接
-    if (socket.value) {
-      socket.value.close();
-      socket.value = null;
-    }
-    if (term.value) {
-      term.value.dispose();
-    }
-  }
-};
-
-// 创建WebSocket
-const createWs = () => {
-  socket.value = new WebSocket('ws://10.24.107.18:8002/shell/ws/1/213');
-  socket.value.onopen = () => {
-    termLoading.value = false;
-    // socket.value.send(JSON.stringify({
-    //   ctrl: 'resize',
-    //   data: {
-    //     width: 500,
-    //   }
-    // }));
-  };
-  socket.value.onclose = () => {
-    // console.log('close');
-  };
-  socket.value.onerror = e => {
-    term.value.write(`\x1b[31m${e}\x1b[m\r\n`);
-  };
-  initTerm();
-};
-
-const initTerm = () => {
-  term.value = new Terminal({
-    fontSize: 14,
-    cursorBlink: true,
-    row: 32,
-  });
-  const attachAddon = new AttachAddon(socket.value);
-  term.value.open(terminal.value);
-  fitAddon.activate(term.value); // 自适应尺寸
-  attachAddon.activate(term.value);
-
-  nextTick(() => {
-    fitAddon.fit();
-  });
-  term.value.focus();
 };
 
 // 上传按钮对象
@@ -394,12 +271,13 @@ const pollingMap = new Map();
 // 上传类型数组
 const acceptTypeList = [...Object.values(UploadTypeName)];
 // 上传类型字符串
-const acceptType: string = acceptTypeList.map(item => `.${item},`).join(' ');
+const acceptType: string = acceptTypeList.map((item) => `.${item},`).join(' ');
 // 发送消息按钮
 const isAllowToSend = computed(() => {
   let defaultStatus = true;
-  uploadFilesView.value?.forEach(element => {
-    element.status !== UploadStatus.USED && element.status !== UploadStatus.UNUSED
+  uploadFilesView.value?.forEach((element) => {
+    element.status !== UploadStatus.USED &&
+    element.status !== UploadStatus.UNUSED
       ? (defaultStatus = false)
       : undefined;
   });
@@ -408,10 +286,11 @@ const isAllowToSend = computed(() => {
 
 // 会话切换时
 watch(currentSelectedSession, async (newVal) => {
+  if (!newVal) return;
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
   let curPolling = pollingMap.get(newVal);
-  
+
   let isNewSession = false;
   if (!newFileView) {
     isNewSession = true;
@@ -435,17 +314,17 @@ watch(currentSelectedSession, async (newVal) => {
     const { documents } = response.result;
     existUploadList.length = 0;
     documents
-      .filter(item => item.type !== UploadStatus.RESOLVEFAIL)
-      .forEach(item => {
+      .filter((item) => item.type !== UploadStatus.RESOLVEFAIL)
+      .forEach((item) => {
         existUploadList.push(item);
         if (item.status !== UploadStatus.USED) {
           isNewSession ? uploadFilesView.value.push(item as any) : null;
         }
       });
-      isNewSession ? curPolling.startPolling() : null;
-      uploadFilesView.value.sort((pre, cur) => {
-        return cur.created_at - pre.created_at;
-      });
+    // isNewSession ? curPolling.startPolling() : null;
+    uploadFilesView.value.sort((pre, cur) => {
+      return cur.created_at - pre.created_at;
+    });
   }
 });
 
@@ -469,8 +348,12 @@ const isUploadTypeError = (files): boolean => {
 // 上传是否存在同名文件
 const isUploadFileExist = (files): boolean => {
   for (let file of files) {
-    const isInBackendList = existUploadList.map(item => item.name).includes(file.name);
-    const isInUploadViews = uploadFilesView.value.map(item => item.name).includes(file.name);
+    const isInBackendList = existUploadList
+      .map((item) => item.name)
+      .includes(file.name);
+    const isInUploadViews = uploadFilesView.value
+      .map((item) => item.name)
+      .includes(file.name);
     if (isInBackendList || isInUploadViews) {
       return true;
     }
@@ -527,22 +410,25 @@ const updateUploadView = (files, batch): void => {
 const sizeFormator = (size: number) => {
   if (size > 1024 * 1024) {
     return `${(size / 1024 / 1024).toFixed(2)}GB`;
-  } 
+  }
   if (size > 1024) {
     return `${(size / 1024).toFixed(2)}MB`;
   }
   return `${size.toFixed(2)}KB`;
-}
+};
 
-const getPollingProcess = sessionId => {
+const getPollingProcess = (sessionId) => {
   let timer;
   let currentCount = 0;
   const maxErrorCount = 200;
   const process = async () => {
-    const pollingExistUploadList = existUploadMap.get(sessionId);
-    const pollingUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
-    ? uploadFilesView.value
-    : uploadViewsMap.get(sessionId);
+    const pollingExistUploadList = existUploadMap.get(sessionId) || [];
+    const pollingUploadFilesView = isSameSession(
+      sessionId,
+      currentSelectedSession.value,
+    )
+      ? uploadFilesView.value
+      : uploadViewsMap.get(sessionId);
     const [_, response] = await api.getUploadFiles(sessionId);
     if (!_ && response) {
       const { documents } = response.result;
@@ -550,14 +436,16 @@ const getPollingProcess = sessionId => {
       // 更新existUploadList列表
       pollingExistUploadList.length = 0;
       documents
-        .filter(item => item.status !== UploadStatus.RESOLVEFAIL)
-        .forEach(item => {
+        .filter((item) => item.status !== UploadStatus.RESOLVEFAIL)
+        .forEach((item) => {
           pollingExistUploadList.push(item);
         });
       // 更新上传的可见列表
-      pollingUploadFilesView.forEach(item => {
+      pollingUploadFilesView?.forEach((item) => {
         if (item.status !== UploadStatus.UPLOADFAIL) {
-          const foundDocument = documents.find(document => document.name === item.name);
+          const foundDocument = documents.find(
+            (document) => document.name === item.name,
+          );
           if (foundDocument) {
             const { id, name, type, size, status } = foundDocument;
             item.id = id;
@@ -571,7 +459,7 @@ const getPollingProcess = sessionId => {
         }
       });
       // 若所有文件解析成功 则停止轮询
-      documents.forEach(document => {
+      documents.forEach((document) => {
         if (document.status === UploadStatus.RESOLVING) {
           isStopPolling = false;
         }
@@ -606,17 +494,26 @@ const isSameSession = (sessionId, curSessionId): boolean => {
 };
 
 // 上传文件(用户操作可能分批次)
-const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promise<void> => {
+const updateFilesInSession = async (
+  formData,
+  curUploadBatch,
+  sessionId,
+): Promise<void> => {
   const [_, response] = await api.uploadFiles(formData, sessionId);
-  const requestUploadFilesView = isSameSession(sessionId, currentSelectedSession.value)
+  const requestUploadFilesView = isSameSession(
+    sessionId,
+    currentSelectedSession.value,
+  )
     ? uploadFilesView.value
     : uploadViewsMap.get(sessionId);
   if (!_ && response) {
     const { documents } = response.result;
     // 再次更新视图 更新上传状态
-    requestUploadFilesView.forEach(item => {
+    requestUploadFilesView.forEach((item) => {
       if (item.batch === curUploadBatch) {
-        const matchedItem = documents.find(element => element.name === item.name);
+        const matchedItem = documents.find(
+          (element) => element.name === item.name,
+        );
         if (matchedItem) {
           const { id, type, size, name } = matchedItem;
           item.id = id;
@@ -638,7 +535,7 @@ const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promis
     }
     curPollingProcess.startPolling();
   } else {
-    requestUploadFilesView.forEach(item => {
+    requestUploadFilesView.forEach((item) => {
       if (item.batch === curUploadBatch) {
         item.status = UploadStatus.UPLOADFAIL;
       }
@@ -647,7 +544,7 @@ const updateFilesInSession = async (formData, curUploadBatch, sessionId): Promis
 };
 
 // 点击上传选中文件时
-const onFileChange = event => {
+const onFileChange = (event) => {
   const files = event.target.files;
   const curUploadBatch = uploadBatch;
   // 清空上传id
@@ -677,60 +574,67 @@ const emitUpload = (event): void => {
 
 const handleDelete = (file): void => {
   // 删除列表中的删除项
-  uploadFilesView.value = uploadFilesView.value.filter((item: UploadFileCard) => item.name !== file.name);
-  existUploadList = existUploadList.filter((item: UploadFileCard) => item.name !== file.name);
+  uploadFilesView.value = uploadFilesView.value.filter(
+    (item: UploadFileCard) => item.name !== file.name,
+  );
+  existUploadList = existUploadList.filter(
+    (item: UploadFileCard) => item.name !== file.name,
+  );
   uploadViewsMap.set(currentSelectedSession.value, uploadFilesView.value);
   existUploadMap.set(currentSelectedSession.value, existUploadList);
 };
 
 const clearSuggestion = (index: number): void => {
-  if('search_suggestions' in conversationList.value[index]){
-  conversationList.value[index].search_suggestions = undefined;
+  if ('search_suggestions' in conversationList.value[index]) {
+    conversationList.value[index].search_suggestions = undefined;
   }
-}
+};
 
 onMounted(() => {
-  // 全局数据初始化
-  // getMode();
+  // 数据初始化
+  AppForm.value = props.createAppForm;
   if (!inputRef.value) return;
   inputRef.value.focus();
 });
 
-watch(
-  () => props,
-  () => {
-    modeOptions.value = props.modeOptions;
-  },
-  {
-    deep: true,
-  }
-);
-
 watch(selectMode, (newValue, oldValue) => {
-  setOptionDisabled();
-  user_selected_plugins.value = [];
+  user_selected_app.value = [];
   let first = true;
   if (selectMode.value.length !== 0) {
     if (selectMode.value[0] === 'auto') {
-      user_selected_plugins.value.push('auto');
+      user_selected_app.value.push('auto');
     } else {
-      selectMode.value.forEach(item => {
+      selectMode.value.forEach((item) => {
         const plugin = {
           plugin_name: item,
         };
-        user_selected_plugins.value.push(plugin.plugin_name);
+        user_selected_app.value.push(plugin.plugin_name);
       });
     }
   }
   nextTick(() => {
-    const totalW = (document.querySelector('.recognitionMode') as HTMLElement).offsetWidth;
-    const selectPreW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
-    const allTags = document.querySelectorAll('.recognitionMode .el-select-tags-wrapper .el-tag--info');
+    const totalW = (document.querySelector('.recognitionMode') as HTMLElement)
+      .offsetWidth;
+    const selectPreW = (document.querySelector('.el-select') as HTMLElement)
+      .offsetWidth;
+    const allTags = document.querySelectorAll(
+      '.recognitionMode .el-select-tags-wrapper .el-tag--info',
+    );
     document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? ((document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).style.display = 'flex')
+      ? ((
+          document.querySelector(
+            '.recognitionMode .el-select-tags-wrapper',
+          ) as HTMLElement
+        ).style.display = 'flex')
       : '';
-    const allTagsWidth = document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? (document.querySelector('.recognitionMode .el-select-tags-wrapper') as HTMLElement).offsetWidth
+    const allTagsWidth = document.querySelector(
+      '.recognitionMode .el-select-tags-wrapper',
+    )
+      ? (
+          document.querySelector(
+            '.recognitionMode .el-select-tags-wrapper',
+          ) as HTMLElement
+        ).offsetWidth
       : '';
     const nTag = allTags[allTags.length - 1] as HTMLElement;
     const isNExist = true;
@@ -738,13 +642,18 @@ watch(selectMode, (newValue, oldValue) => {
       return;
     }
     if (totalW > allTagsWidth + 100) {
-      (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${allTagsWidth + 70}px`;
+      (
+        document.querySelector('.recognitionMode .el-select') as HTMLElement
+      ).style.width = `${allTagsWidth + 70}px`;
     } else {
-      (document.querySelector('.recognitionMode .el-select') as HTMLElement).style.width = `${totalW}px`;
+      (
+        document.querySelector('.recognitionMode .el-select') as HTMLElement
+      ).style.width = `${totalW}px`;
     }
     if (allTags.length > 3) {
       const lastTag = allTags[allTags.length - 3] as HTMLElement;
-      const selectDomW = (document.querySelector('.el-select') as HTMLElement).offsetWidth;
+      const selectDomW = (document.querySelector('.el-select') as HTMLElement)
+        .offsetWidth;
       let show_w = 0;
       if (selectDomW >= totalW) {
         show_w = selectDomW - lastTag.offsetWidth + 200;
@@ -759,11 +668,9 @@ watch(selectMode, (newValue, oldValue) => {
     }
   });
 });
-
-watch(isTermShow, (newValue, oldValue) => {
-  fnChangeShellBox(newValue);
-});
-
+const selectQuestion = (val: any) => {
+  dialogueInput.value = val;
+};
 /**
  * 暂停和重新生成问答
  */
@@ -771,91 +678,138 @@ const handlePauseAndReGenerate = (cid?: number) => {
   // 停止生成handlePauseAndReGenerate
   pausedStream(cid);
 };
+
+const getappMode = (appId: string) => {
+  api
+    .querySingleAppData({
+      id: appId as string,
+    })
+    .then((res) => {
+      const appInfo = res?.[1]?.result;
+      if (appInfo) {
+        Form.value = {
+          icon: appInfo?.icon,
+          name: appInfo?.name,
+          description: appInfo?.description,
+          links: appInfo?.links?.map((item) => item.url),
+          recommendedQuestions: appInfo?.recommendedQuestions,
+          dialogRounds: appInfo?.dialogRounds,
+          permission: {
+            visibility: appInfo?.permission?.visibility,
+            authorizedUsers: appInfo?.permission?.authorizedUsers,
+          },
+        };
+      }
+    });
+};
+
+watch(
+  () => user_selected_app,
+  (val) => {
+    if (user_selected_app.value[0] && !isCreateApp.value) {
+      getappMode(user_selected_app.value[0]);
+    }
+    if (!isCreateApp.value) {
+      Form.value = props.createAppForm;
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
+
+watch(
+  () => isCreateApp,
+  (val) => {
+    if (isCreateApp.value === true) {
+      AppForm.value = props.createAppForm;
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
 </script>
 
 <template>
-  <div style="height: 100%; width: 100%; display: flex">
+  <div class="dialogue-rightContainer">
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-conversation">
-      <div class="dialogue-conversation-main" ref="dialogueRef">
+      <div
+        class="dialogue-conversation-main"
+        ref="dialogueRef"
+        v-if="!isCreateApp"
+      >
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
           :key="index"
+          :groupId="getItem(item, 'groupId')"
           :type="item.belong"
           :inputParams="item.params"
           :content="item.message"
           :echartsObj="getItem(item, 'echartsObj')"
-          :recordList="item.belong === 'robot' ? item.messageList.getRecordIdList() : ''"
-          :isLikeList="item.belong === 'robot' ? item.messageList.getIslikeList() : ''"
+          :recordList="
+            item.belong === 'robot' ? item.messageList.getRecordIdList() : ''
+          "
+          :isCommentList="
+            item.belong === 'robot' ? item.messageList.getCommentList() : ''
+          "
+          :messageArray="
+            item.belong === 'robot' ? item.messageList : ''
+          "
           :is-finish="getItem(item, 'isFinish')"
-          :is-support="getItem(item, 'isSupport')"
-          :is-against="getItem(item, 'isAgainst')"
           :test="getItem(item, 'test')"
           :metadata="getItem(item, 'metadata')"
           :flowdata="getItem(item, 'flowdata')"
           :created-at="item.createdAt"
           :current-selected="item.currentInd"
           :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
-          :user-selected-plugins="user_selected_plugins"
+          :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :modeOptions="modeOptions"
-          @commont="handleCommont"
-          @report="handleReport"
+          @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div v-if="conversationList.length === 0">
-          <InitalPanel />
+        <div
+          v-if="
+            conversationList.length === 0 &&
+            (app.selectedAppId === '' || !app.selectedAppId)
+          "
+        >
+          <InitalPanel @selectQuestion="selectQuestion" />
+        </div>
+        <div
+          class="dialogue-interPreview-main"
+          v-if="conversationList.length === 0 && app.selectedAppId !== ''"
+        >
+          <InterPreview
+            :createAppForm="Form"
+            @selectQuestion="selectQuestion"
+          />
         </div>
       </div>
-
+      <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">
         <!-- 问题换一换 -->
         <div
-          v-if="isAnswerGenerating"
+          v-if="isAnswerGenerating && !isCreateApp"
           class="dialogue-panel__stop"
           @click="handlePauseAndReGenerate(Number(conversationList.length))"
         >
-          <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/dark_stop_answer.svg" alt="" />
+          <img
+            v-if="themeStore.theme === 'dark'"
+            src="@/assets/svgs/dark_stop_answer.svg"
+            alt=""
+          />
           <img v-else src="@/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="dialogue-panel__stop-answer">
             {{ $t('feedback.stop') }}
           </div>
-        </div>
-        <div class="problem" v-if="conversationList.length === 0">
-          <ul>
-            <li v-for="item in filterQuestions" :key="item.id" @click="selectQuestion">
-              {{ $t('question.' + item.question) }}
-            </li>
-          </ul>
-          <div class="change-button" @click="changeProblem">
-            <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/light_change.svg" alt="" />
-            <img v-else src="@/assets/svgs/dark_change.svg" alt="" />
-            <span>{{ $t('main.refresh') }}</span>
-          </div>
-        </div>
-        <!-- 识别方式 -->
-        <div class="recognitionMode">
-          <el-select
-            class="mode-select"
-            v-model="selectMode"
-            multiple
-            collapse-tags
-            filterable
-            allow-create
-            default-first-option
-            :placeholder="$t('main.query_interpretation')"
-          >
-            <el-option
-              v-for="item in modeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              :disabled="item.disabled"
-            />
-          </el-select>
         </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
@@ -863,6 +817,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
             <div class="dialogue-conversation-bottom-sendbox__textarea">
               <textarea
                 ref="inputRef"
+                :disabled="isCreateApp"
                 v-model="dialogueInput"
                 maxlength="2000"
                 :placeholder="$t('main.ask_me_anything')"
@@ -871,7 +826,11 @@ const handlePauseAndReGenerate = (cid?: number) => {
             </div>
             <!-- 上传 -->
             <div class="dialogue-conversation-bottom-sendbox__upload">
-              <el-tooltip placement="top" :content="$t('upload.upload_tip_text')" effect="light">
+              <el-tooltip
+                placement="top"
+                :content="$t('upload.upload_tip_text')"
+                effect="light"
+              >
                 <div class="upload-wrapper">
                   <input
                     ref="uploadButton"
@@ -881,8 +840,16 @@ const handlePauseAndReGenerate = (cid?: number) => {
                     @change="onFileChange"
                     src="@/assets/svgs/upload_light.svg"
                   />
-                  <img v-if="themeStore.theme === 'dark'" src="@/assets/svgs/upload_light.svg" @click="emitUpload" />
-                  <img v-else src="@/assets/svgs/upload_dark.svg" @click="emitUpload" />
+                  <img
+                    v-if="themeStore.theme === 'dark'"
+                    src="@/assets/svgs/upload_light.svg"
+                    @click="emitUpload"
+                  />
+                  <img
+                    v-else
+                    src="@/assets/svgs/upload_dark.svg"
+                    @click="emitUpload"
+                  />
                 </div>
               </el-tooltip>
             </div>
@@ -890,29 +857,51 @@ const handlePauseAndReGenerate = (cid?: number) => {
             <div class="dialogue-conversation-bottom-sendbox__icon">
               <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
               <img
-                v-if="!isAllowToSend || isAnswerGenerating || dialogueInput.length <= 0"
-                src="@/assets/images/send_disable.png"
+                v-if="
+                  !isAllowToSend ||
+                  isAnswerGenerating ||
+                  dialogueInput.length <= 0
+                "
+                src="@/assets/svgs/send_disabled.svg"
                 alt=""
               />
-              <div v-else @click="handleSendMessage(undefined,dialogueInput)">
-                <img v-if="themeStore.theme === 'dark'" src="@/assets/images/dark_send.png" alt="" />
-                <img v-else src="@/assets/images/light_send.png" alt="" />
+              <div v-else class="send-message-btn">
+                <img
+                  @click="handleSendMessage(undefined, dialogueInput)"
+                  src="@/assets/svgs/send_enabled.svg"
+                  alt=""
+                />
               </div>
             </div>
           </div>
           <!-- 上传问价列表 -->
           <transition name="fade">
-            <div class="dialogue-conversation-bottom__upload-list" v-if="uploadFilesView.length > 0">
-              <upload-file-group :file-list="uploadFilesView" @delete-file="handleDelete"></upload-file-group>
+            <div
+              class="dialogue-conversation-bottom__upload-list"
+              v-if="uploadFilesView.length > 0"
+            >
+              <upload-file-group
+                :file-list="uploadFilesView"
+                @delete-file="handleDelete"
+              ></upload-file-group>
             </div>
           </transition>
         </div>
       </div>
+      <footer class="copilot-footer">
+        <CommonFooter />
+      </footer>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.dialogue-rightContainer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  min-width: 1028px;
+}
 .dialogue-panel__stop {
   display: flex;
   justify-content: center;
@@ -924,6 +913,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
   margin-top: 38px;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 16px;
   cursor: pointer;
   position: relative;
   img {
@@ -968,7 +958,11 @@ button[disabled]:hover {
 
   /* 滚动条轨道样式 */
   ::-webkit-scrollbar-track {
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
+    background-image: linear-gradient(
+      180deg,
+      #e7f0fd 1%,
+      #daeafc 40%
+    ) !important;
     display: none;
   }
 
@@ -1020,6 +1014,14 @@ button[disabled]:hover {
       border-radius: 8px;
       bottom: 0px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      .dialogue-conversation-bottom-sendbox__icon {
+        & > img {
+          cursor: not-allowed;
+        }
+        & > .send-message-btn > img {
+          cursor: pointer;
+        }
+      }
     }
 
     &__upload-list {
@@ -1073,8 +1075,19 @@ button[disabled]:hover {
           color: var(--o-text-color-primary);
           font-size: 16px;
           background-color: var(--o-bg-color-base);
-          font-family: HarmonyOS_Sans_SC_Medium, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-            Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          font-family:
+            HarmonyOS_Sans_SC_Regular,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            'Segoe UI',
+            Roboto,
+            Oxygen,
+            Ubuntu,
+            Cantarell,
+            'Open Sans',
+            'Helvetica Neue',
+            sans-serif;
 
           &:focus {
             outline: none;
@@ -1086,7 +1099,7 @@ button[disabled]:hover {
         }
 
         textarea::-webkit-input-placeholder {
-          font-family: HarmonyOS_Sans_SC_Medium;
+          font-family: HarmonyOS_Sans_SC_Regular;
         }
       }
 
@@ -1098,6 +1111,7 @@ button[disabled]:hover {
 
         .upload-wrapper {
           position: relative;
+          top: 3px;
 
           input {
             width: 32px;
@@ -1113,26 +1127,20 @@ button[disabled]:hover {
           }
 
           img:hover {
-            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg) brightness(100%) contrast(103%);
+            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
+              brightness(100%) contrast(103%);
           }
         }
       }
 
       &__icon {
         text-align: right;
+        & img {
+          position: relative;
+          bottom: 5px;
+        }
       }
     }
-  }
-}
-
-.dialogue-shell {
-  flex: 1;
-  height: calc(100% - 36px);
-  width: 500px;
-
-  :deep(.xterm) {
-    padding: 10px;
-    height: 100%;
   }
 }
 
@@ -1159,12 +1167,20 @@ button[disabled]:hover {
       margin-bottom: 8px;
 
       &:hover {
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 0.8), rgba(90, 179, 255, 0.8));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 0.8),
+          rgba(90, 179, 255, 0.8)
+        );
         color: var(--o-text-color-fourth);
       }
 
       &:active {
-        background-image: linear-gradient(to right, rgba(109, 117, 250, 1), rgba(90, 179, 255, 1));
+        background-image: linear-gradient(
+          to right,
+          rgba(109, 117, 250, 1),
+          rgba(90, 179, 255, 1)
+        );
         color: var(--o-text-color-fourth);
       }
     }
@@ -1254,5 +1270,13 @@ button[disabled]:hover {
 :deep(.el-select) {
   border-radius: 8px;
   background: var(--o-bg-color-base);
+}
+
+.copilot-footer {
+  margin-top: 16px;
+}
+
+.dialogue-interPreview-main {
+  width: 100%;
 }
 </style>

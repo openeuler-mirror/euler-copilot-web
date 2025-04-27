@@ -1,0 +1,19 @@
+<svg width="16.000000" height="16.000000" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip335_26971">
+			<rect id="svg" width="10.000000" height="10.000000" transform="translate(3.000000 3.000000)" fill="white" fill-opacity="0"/>
+		</clipPath>
+		<linearGradient x1="-0.319999" y1="3.599999" x2="15.711999" y2="15.999999" id="paint_linear_335_26970_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#6D75FA"/>
+			<stop offset="1.000000" stop-color="#5AB3FF"/>
+		</linearGradient>
+	</defs>
+	<circle id="椭圆 120" cx="8.000000" cy="8.000000" r="8.000000" fill="url(#paint_linear_335_26970_0)" fill-opacity="1.000000"/>
+	<circle id="椭圆 120" cx="8.000000" cy="8.000000" r="7.500000" stroke="#979797" stroke-opacity="0" stroke-width="1.000000"/>
+	<g clip-path="url(#clip335_26971)">
+		<path id="path" d="M11.4 5.02L7.97 5.02C7.97 4.5 7.55 4.08 7.03 4.08L6.41 4.08C5.89 4.08 5.47 4.5 5.47 5.02L4.54 5.02C4.03 5.02 3.61 5.44 3.61 5.96L3.61 10.94C3.61 11.46 4.03 11.88 4.54 11.88L11.4 11.88C11.91 11.88 12.33 11.46 12.33 10.94L12.33 5.96C12.33 5.44 11.91 5.02 11.4 5.02ZM7.97 10.32C6.94 10.32 6.1 9.48 6.1 8.45C6.1 7.42 6.94 6.58 7.97 6.58C9 6.58 9.84 7.42 9.84 8.45C9.84 9.48 9 10.32 7.97 10.32ZM10.93 7.2C10.67 7.2 10.46 6.99 10.46 6.74C10.46 6.48 10.67 6.27 10.93 6.27C11.19 6.27 11.4 6.48 11.4 6.74C11.4 6.99 11.19 7.2 10.93 7.2Z" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="nonzero"/>
+	</g>
+</svg>

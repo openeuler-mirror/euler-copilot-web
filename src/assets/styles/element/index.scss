@@ -2,7 +2,6 @@
   --el-color-primary: #0077ff;
 }
 
-
 .euler-copilot-message-box {
   background-color: #fefefe;
   border-radius: 4px;
@@ -14,64 +13,87 @@
 
 .el-message-box {
   width: 432px !important;
-  height: 184px !important; 
+  height: 184px !important;
 }
 
-.el-button:not(.is-disabled){
+.el-button:not(.is-disabled) {
   // background-color: white !important;
   color: var(--o-button-color) !important;
   border-color: var(--o-button-border-color) !important;
 }
 
-.el-button:not(.is-disabled):focus{
+.el-button:not(.is-disabled):focus {
   // background-color: white !important;
-  color:var(--o-button-color)  !important;
+  color: var(--o-button-color) !important;
   border-color: var(--o-button-border-color) !important;
 }
 
-.el-button:not(.is-disabled):active{
+.el-button:not(.is-disabled):active {
   // background-color: white !important;
-  color: #6395FD !important;
-  border-color: #6395FD !important;
+  color: #6395fd !important;
+  border-color: #6395fd !important;
 }
 
-.el-button:not(.is-disabled):hover{
+.el-button:not(.is-disabled):hover {
   // background-color: white !important;
-  color: #7AA5FF !important;
-  border-color: #7AA5FF !important;
+  color: #7aa5ff !important;
+  border-color: #7aa5ff !important;
 }
 
-
-
-
-.el-button--primary:not(.is-disabled){
-  background-color: #6395FD !important;
+.el-button--primary:not(.is-disabled) {
+  background-color: #6395fd !important;
   color: white !important;
-  border-color: #6395FD !important;
+  border-color: #6395fd !important;
 }
 
-.el-button--primary:not(.is-disabled):focus{
-  background-color: #6395FD !important;
+.el-button--primary:not(.is-disabled):focus {
+  background-color: #6395fd !important;
   color: white !important;
-  border-color: #6395FD !important;
+  border-color: #6395fd !important;
 }
 
-.el-button--primary:not(.is-disabled):active{
-  background-color: #6395FD !important;
+.el-button--primary:not(.is-disabled):active {
+  background-color: #6395fd !important;
   color: white !important;
-  border-color: #6395FD !important;
+  border-color: #6395fd !important;
 }
 
-.el-button--primary:not(.is-disabled):hover{
-  background-color: #7AA5FF !important;
+.el-button--primary:not(.is-disabled):hover {
+  background-color: #7aa5ff !important;
   color: white !important;
-  border-color: #7AA5FF !important;
+  border-color: #7aa5ff !important;
 }
 
-.el-message{
-  --o-message-border-radius:8px !important;
+.el-message {
+  --o-message-border-radius: 8px !important;
 }
 
-.exit-button{
+.exit-button {
   margin-left: 0px !important;
+}
+
+.o-message--error {
+  width: 544px;
+  background-color: var(--o-message-bg-color_error) !important;
+  border-color: var(--o-message-border-color_error) !important;
+  .el-message__content {
+    flex: 1;
+  }
+  .el-icon {
+    position: relative !important;
+    top: unset !important;
+  }
+}
+
+.o-message--success {
+  width: 544px;
+  background-color: #c2e7c7 !important;
+  border-color: #24ab36 !important;
+  .el-message__content {
+    flex: 1;
+  }
+  .el-icon {
+    position: relative !important;
+    top: unset !important;
+  }
 }

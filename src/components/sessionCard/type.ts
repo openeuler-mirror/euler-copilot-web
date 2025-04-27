@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 export interface SessionItem {
-  conversation_id: string;
+  conversationId: string;
   title: string;
   createdTime?: string | Date;
   docCount?: number;
