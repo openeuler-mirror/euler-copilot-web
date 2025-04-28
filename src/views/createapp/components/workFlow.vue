@@ -35,6 +35,7 @@ import {
 import yaml from 'js-yaml';
 import $bus from 'src/bus/index';
 import CustomLoading from '../../customLoading/index.vue';
+import EditFlowName from './workFlowConfig/editFlowName.vue';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -44,6 +45,8 @@ const activeNames = ref([]);
 const activeName = ref();
 const workFlowItemName = ref();
 const isAddWorkFlow = ref(false);
+const isEditFlowName = ref(false);
+const editFlowNameId = ref();
 const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
@@ -70,6 +73,7 @@ const loading = ref(false);
 const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
 const connectHandleNodeId = ref('');
+const updateFlowsDebugStatus = ref(false);
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -157,7 +161,15 @@ const addWorkFlow = () => {
   isAddWorkFlow.value = true;
 };
 // 关闭工作流弹出
-const handleClose = () => {
+const handleClose = (flowId?: string) => {
+  if(isEditFlowName.value){
+    api.querySingleAppData({ id: route.query.appId }).then((res) => {
+      //workflowList 数据更新
+      workFlowList.value = res[1]?.result.workflows;
+      choiceFlowId(workFlowList.value.find(item => item.id === flowId));
+    })
+  }
+  isEditFlowName.value = false;
   isAddWorkFlow.value = false;
 };
 // 删除节点
@@ -209,6 +221,8 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
   nodeDesc.value = desc;
   isEditYaml.value = true;
   nodeYamlId.value = nodeId;
+  // 编辑 yaml 时，需要debug 后才可发布
+  emits('updateFlowsDebug', false);
 };
 // 关闭抽屉
 const closeDrawer = () => {
@@ -281,6 +295,10 @@ const searchApiList = () => {
 const handleDebugDialogOps = (visible) => {
   // 这里将对应的保存
   if (!debugDialogVisible.value) {
+    //在点击调试时，默认该
+    if(!updateFlowsDebugStatus.value){
+      flowObj.value.debug = false;
+    }
     saveFlow();
   }
   if (typeof visible === 'boolean') {
@@ -306,6 +324,7 @@ const edgesChange = (edges) => {
   // 边增加删除时直接将工作流debug状态置为false
   if (edges?.[0]?.type === 'remove' || edges?.[0]?.type === 'add') {
     emits('updateFlowsDebug', false);
+    updateFlowsDebugStatus.value = false;
     nodeAndLineConnection();
   }
 };
@@ -326,6 +345,7 @@ const nodesChange = (nodes) => {
     emits('updateFlowsDebug', false);
     nodeAndLineConnection();
   }
+  updateFlowsDebugStatus.value = false;
 };
 
 // 子组件获取的flow
@@ -363,11 +383,17 @@ const queryFlow = (deal: string) => {
           }
           // 更新当前publish状态
           emits('updateFlowsDebug');
+          updateFlowsDebugStatus.value = true;
         }
         loading.value = false;
       });
   }
 };
+const openEditFlowDialog = (item) => {
+  editFlowNameId.value = item.id;
+  editFlow(item);
+  isEditFlowName.value = true;
+}
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
 const editFlow = (item) => {
   loading.value = true;
@@ -466,62 +492,60 @@ const redrageFlow = (nodesList, edgesList) => {
 };
 
 // 接受工作流调试时获取的相应的数据
-$bus.on('getNodesStatue', (lines) => {
+$bus.on('getNodesStatue', (item:any) => {
   // 对相应节点修改状态--此处需要分为开始/结束,分支,普通三种节点修改
   try {
-    lines?.forEach((item) => {
-      const newLines = yaml.load(item);
-      // 工作流开始时更新debugResult
-      if (newLines?.data?.event === 'flow.start') {
-        totalTime.value = 0;
-        debugTime.value = '';
-        debugStatus.value = newLines.data.flow?.stepStatus;
-        updateNodeFunc('start', 'success', '');
-      }
+    const newLines = item;
+    // 工作流开始时更新debugResult
+    if (newLines?.data?.event === 'flow.start') {
+      totalTime.value = 0;
+      debugTime.value = '';
+      debugStatus.value = newLines.data.flow?.stepStatus;
+      updateNodeFunc('start', 'success', '');
+    }
 
-      // 这里判断是否有调试状态的值，无值不处理
-      if (!debugStatus.value) {
-        return;
-      }
-      // step.input和step.output对应的节点状态需要修改
-      if (
-        newLines?.data?.event === 'step.input' ||
-        newLines?.data?.event === 'step.output'
-      ) {
-        // output-节点运行结束时，获取节点运行的耗时
-        let constTime = '';
-        if (newLines.data.event === 'step.output') {
-          totalTime.value += newLines.data?.metadata?.timeCost;
-          constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`;
-          // 此处获取output的数据，并将此数据传给节点显示
-          updateNodeFunc(
-            newLines.data.flow.stepId,
-            newLines.data.flow?.stepStatus,
-            constTime,
-            {
-              params: newLines.data?.content,
-              type: 'output',
-            },
-          );
-        } else {
-          updateNodeFunc(
-            newLines.data.flow.stepId,
-            newLines.data.flow?.stepStatus,
-            constTime,
-            {
-              params: newLines.data?.content,
-              type: 'input',
-            },
-          );
-        }
-      } else if (newLines?.data?.event === 'flow.stop') {
-        debugStatus.value = newLines.data.flow?.stepStatus;
-        debugTime.value = `${totalTime.value.toFixed(3)}s`;
-        // 最后更新-调用一下接口
+    // 这里判断是否有调试状态的值，无值不处理
+    if (!debugStatus.value) {
+      return;
+    }
+    // step.input和step.output对应的节点状态需要修改
+    if (
+      newLines?.data?.event === 'step.input' ||
+      newLines?.data?.event === 'step.output'
+    ) {
+      // output-节点运行结束时，获取节点运行的耗时
+      let constTime = '';
+      if (newLines.data.event === 'step.output') {
+        totalTime.value += newLines.data?.metadata?.timeCost;
+        constTime = `${newLines.data?.metadata?.timeCost?.toFixed(3)}s`;
+        // 此处获取output的数据，并将此数据传给节点显示
+        updateNodeFunc(
+          newLines.data.flow.stepId,
+          newLines.data.flow?.stepStatus,
+          constTime,
+          {
+            params: newLines.data?.content,
+            type: 'output',
+          },
+        );
       } else {
-        // do nothing
+        updateNodeFunc(
+          newLines.data.flow.stepId,
+          newLines.data.flow?.stepStatus,
+          constTime,
+          {
+            params: newLines.data?.content,
+            type: 'input',
+          },
+        );
       }
-    });
+    } else if (newLines?.data?.event === 'flow.stop') {
+      debugStatus.value = newLines.data.flow?.stepStatus;
+      debugTime.value = `${totalTime.value.toFixed(3)}s`;
+      // 最后更新-调用一下接口
+    } else {
+      // do nothing
+    }
   } catch (error) {
     ElMessage.error('请检查格式是否正确');
   }
@@ -532,6 +556,7 @@ $bus.on('getNodesStatue', (lines) => {
 $bus.on('debugChatEnd', () => {
   // 更新发布按钮状态
   emits('updateFlowsDebug');
+  updateFlowsDebugStatus.value = true;
 });
 
 // 更新节点状态--调试到对应节点id，根据id设置节点与边状态
@@ -664,7 +689,6 @@ const saveFlow = (updateNodeParameter?) => {
     )
     .then((res) => {
       if (res[1]?.result) {
-        ElMessage.success('工作流更新成功');
         queryFlow('update');
         const updatedCurFlow = res[1].result.flow;
         console.log(res[1].result);
@@ -887,7 +911,7 @@ defineExpose({
               @click="choiceFlowId(item)"
             >
               <div class="flowName">{{ item.name }}</div>
-              <div class="dealIcon editIcon" @click="editFlow(item)"></div>
+              <div class="dealIcon editIcon" @click="openEditFlowDialog(item)"></div>
               <div class="dealIcon delIcon" @click.stop="delFlow(item)"></div>
             </el-option>
             <template #footer class="selectFooter">
@@ -906,10 +930,7 @@ defineExpose({
           content="节点连接完成才能进行调试"
           placement="top"
         >
-          <div
-            class="debugBtn isDebugDis"
-            @click="handleDebugDialogOps(true)"
-          ></div>
+          <div class="debugBtn isDebugDis"></div>
         </el-tooltip>
         <div
           v-else
@@ -940,6 +961,13 @@ defineExpose({
         </el-button>
       </div>
     </div>
+    <EditFlowName 
+      v-model="isEditFlowName" 
+      :flowObj="flowObj"
+      :appId="route.query?.appId"
+      :editFlowNameId="editFlowNameId"
+      @handleClose="handleClose"
+      ></EditFlowName>
     <!-- 工作流新建弹窗 -->
     <WorkFlowDialog
       v-if="isAddWorkFlow"

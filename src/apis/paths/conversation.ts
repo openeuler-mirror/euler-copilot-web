@@ -122,26 +122,44 @@ export const getHistoryConversation = (
 };
 
 /**
- * 评论对话
+ * 点踩
  * @param params
  * @returns
  */
 export const commentConversation = (params: {
+  type: string;
   qaRecordId: string;
-  isLike: number;
+  comment: string;
   dislikeReason?: string;
   reasonLink?: string;
   reasonDescription?: string;
+  groupId: string | undefined;
 }): Promise<[any, FcResponse<Record<string, unknown>> | undefined]> => {
-  const { qaRecordId, isLike, dislikeReason, reasonLink, reasonDescription } =
-    params;
-  return post(`/api/comment`, {
-    record_id: qaRecordId,
-    is_like: isLike,
-    dislike_reason: dislikeReason,
-    reason_link: reasonLink,
-    reason_description: reasonDescription,
-  });
+  const {
+    qaRecordId,
+    comment,
+    dislikeReason,
+    reasonLink,
+    reasonDescription,
+    groupId,
+    type,
+  } = params;
+  if (type === 'disliked') {
+    return post(`/api/comment`, {
+      record_id: qaRecordId,
+      comment: comment,
+      group_id: groupId,
+      dislike_reason: dislikeReason,
+      reason_link: reasonLink,
+      reason_description: reasonDescription,
+    });
+  } else {
+    return post(`/api/comment`, {
+      record_id: qaRecordId,
+      group_id: groupId,
+      comment: comment,
+    });
+  }
 };
 
 export const getRecognitionMode = (): Promise<

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ComputedRef, onMounted, ref } from 'vue';
+import { computed, ComputedRef, nextTick, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import {
@@ -161,6 +161,17 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
   }
 };
 
+const changeLanguagefun = (lang: 'CN' | 'EN') => {
+  changeLanguage(lang);
+  // 同步语言到iframe
+  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
+  if (iframe?.contentWindow) {
+    const data = { lang: localStorage.getItem('localeLang') ?? 'CN' ,type: 'changeLanguage'};
+    let target = window.location.origin.includes('localhost')?'http://localhost:3002/witchaind/' : `${window.location.origin}/witchaind/`;
+    iframe.contentWindow.postMessage(data, target);
+  }
+};
+
 const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
   formValidateStatus.value[prop] = isValid;
 };
@@ -174,14 +185,13 @@ onMounted(() => {
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
-  console.log('onMounted', window.location.host);
   initCopilot();
   const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
   if (iframe) {
     if (window.location.origin === 'http://localhost:3000') {
-      iframe.src = `http://localhost:3002`;
+      iframe.src = `http://localhost:3002/witchaind/`;
     } else {
-      iframe.src = `${window.location.origin}/witchaind`;
+      iframe.src = `${window.location.origin}/witchaind/`;
     }
   }
 });
@@ -276,7 +286,7 @@ watch(
         <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
           <tools />
         </KeepAlive>
-        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
+          <RouterView v-show="router.currentRoute.value.name !== 'witchainD'"/>
       </div>
     </div>
     <el-dialog

@@ -56,7 +56,7 @@ export interface ConversationRecord {
   flow: Flow;
   content: Content;
   metadata: Metadata;
-  is_like?: boolean;
+  comment: string;
   created_at: string;
 }
 
@@ -71,10 +71,10 @@ export interface ConversationRecordList {
  *  "flow_description": "查询机器192.168.10.1的CVE信息", //推荐项关联的工作流描述，若不关联则为空
  *  "question": "查询机器192.168.10.1的CVE信息", //推荐问题的内容
  */
-export interface Suggest {
-  appId: string;
+export interface Suggestion {
+  flowName: string;
   flowId: string;
-  flow_description: string;
+  flowDescription: string;
   question: string;
 }
 

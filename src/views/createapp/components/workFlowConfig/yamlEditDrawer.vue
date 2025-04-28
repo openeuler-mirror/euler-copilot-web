@@ -29,10 +29,24 @@
                 </el-icon>
                 <span>{{ item.title }}</span>
               </template>
+              <div
+                class="yamlMonacoEditor"
+                v-if="item.type && index === 1"
+              >
+                <MonacoEditor
+                  :yamlContent="item.yamlCode"
+                  placeholder="Code goes here..."
+                  :handleQueryYamlValue="handleChange"
+                  :readOnly="item.disabled"
+                />
+              </div>
+              <div v-else-if="item.type && index === 2">
+                <YamlContentOutput :yamlOutPutContent="item.yamlCode"/>
+              </div>
               <MirrorText
-                v-if="item.type"
+                v-else-if="item.type && !index"
                 ref="textarea"
-                :class="{ outputYaml: index !== 1 }"
+                class="outputYaml"
                 v-model:updateVal="item.yamlCode"
                 :yamlCode="item.yamlCode"
                 :disabled="item.disabled"
@@ -92,6 +106,8 @@ import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
 import { ElMessage } from 'element-plus';
+import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
+import YamlContentOutput  from 'src/components/yamloutput/yamlContentOutput.jsx';
 const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
@@ -149,9 +165,7 @@ watch(
     yamlExpress.value[1].yamlCode = yaml.dump(
       props.yamlContent.input_parameters,
     );
-    yamlExpress.value[2].yamlCode = yaml.dump(
-      props.yamlContent.output_parameters,
-    );
+    yamlExpress.value[2].yamlCode = props.yamlContent.output_parameters;
   },
   { deep: true, immediate: true },
 );
@@ -166,6 +180,11 @@ watch(
   },
   { deep: true, immediate: true },
 );
+
+const handleChange = (payload) => {
+  yamlExpress.value[1].yamlCode = payload;
+};
+
 const closeDrawer = () => {
   emits('closeDrawer');
 };
@@ -190,6 +209,29 @@ const updateNodeYaml = () => {
 </script>
 
 <style lang="scss">
+.yamlMonacoEditor {
+  height: 400px;
+}
+
+.monacoEditorMask{
+  .view-lines{
+    position: relative;
+  }
+  .view-lines{
+    pointer-events: none;
+
+  }
+  .view-lines::after{
+    content: '';
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #c3cedf;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+}
 .flowDrawer.el-drawer {
   padding: 0px;
   background-color: var(--o-bg-color-base);

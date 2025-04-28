@@ -1,21 +1,28 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import { useDialogueActions } from './hooks/useDialogueActions';
-import { useMarkdownParser } from './hooks/useMarkdownParser';
-import { ref, toRef } from 'vue';
-import { echartsObj } from 'src/store/conversation';
+import marked from 'src/utils/marked.js';
+import { computed, ref, withDefaults } from 'vue';
+import { writeText } from 'src/utils';
+import {
+  useSessionStore,
+  useChangeThemeStore,
+  echartsObj,
+} from '@/store';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
+import xss from 'xss';
+import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import DialogueThought from './DialogueThought.vue';
 import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
+import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
-import { useLangStore, useChangeThemeStore, useSessionStore } from '@/store';
+import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
-import { Suggest } from 'src/apis/paths/type';
+import { Suggestion } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
 const { language } = storeToRefs(useLangStore());
 const echartsDraw = ref();
@@ -24,14 +31,16 @@ export interface DialoguePanelProps {
   key: number;
   //
   cid: number;
+  // groupid
+  groupId: string;
   // 用来区分是用户还是ai的输入
   type: DialoguePanelType;
   // 文本内容
   inputParams: object;
   // 文本内容
-  content: string[] | string;
+  content?: string[] | string;
   // 当前选中的第n次回答的索引，默认是最新回答
-  currentSelected: number;
+  currentSelected?: number;
   // 文本内容是否生成完毕
   isFinish?: boolean;
   // 是否在loading
@@ -46,8 +55,10 @@ export interface DialoguePanelProps {
   userSelectedApp?: any;
   //
   recordList?: string[] | undefined;
+  // MessageList 结构
+  messageArray?: MessageArray[] | undefined;
   //
-  isLikeList?: number[] | undefined;
+  isCommentList?: string[] | undefined;
   //
   search_suggestions?: any;
   //
@@ -68,15 +79,14 @@ export interface DialoguePanelProps {
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
-
+import { api } from 'src/apis';
+import { MessageArray } from 'src/views/dialogue/types';
 var option = ref();
 var show = ref(false);
 const size = reactive({
   width: 328,
   height: 416,
 });
-const isSupport = ref(false);
-const isAgainst = ref(false);
 const themeStore = useChangeThemeStore();
 var myChart;
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
@@ -86,28 +96,12 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   // currentSelected: 0,
   needRegernerate: false,
 });
-
-const { handleCopy, handleFeedback } = useDialogueActions(
-  toRef(props, 'content'),
-  toRef(props, 'currentSelected'),
-);
-
-const { thoughtContent, contentAfterMark } = useMarkdownParser(
-  toRef(props, 'content'),
-  toRef(props, 'currentSelected'),
-);
+const messageArray = ref<MessageArray>(props.messageArray);
+const thoughtContent = ref('');
 const index = ref(0);
-const isLike = ref(props.isLikeList);
+const isComment = ref("none");
 const emits = defineEmits<{
-  (
-    e: 'commont',
-    type: 'support' | 'against',
-    qaRecordId: string,
-    reason?: string,
-    reasion_link?: string,
-    reason_description?: string,
-  ): void;
-  (e: 'report', qaRecordId: string, reason?: string): void;
+  (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
     e: 'handleSendMessage',
     groupId: string | undefined,
@@ -118,6 +112,7 @@ const emits = defineEmits<{
 }>();
 
 // #region ----------------------------------------< pause and regenerate >--------------------------------------
+
 /**
  * 暂停和重新生成问答
  */
@@ -125,12 +120,13 @@ const handlePauseAndReGenerate = (cid?: number) => {
   if (!cid) {
     return;
   }
-
   emits('clearSuggestion', props.key);
   if (props.isFinish) {
     // 重新生成
     thoughtContent.value = '';
     reGenerateAnswer(cid, user_selected_app.value);
+    index.value = messageArray.value.getAllItems().length - 1;
+    isComment.value = "none";
   } else {
     // 停止生成
     pausedStream(cid);
@@ -138,6 +134,90 @@ const handlePauseAndReGenerate = (cid?: number) => {
 };
 
 // #endregion
+
+// 复制
+const handleCopy = (): void => {
+  if (!props.content || !Array.isArray(props.content)) {
+    errorMsg(i18n.global.t('feedback.copied_failed'));
+    return;
+  }
+  writeText(props.content[props.currentSelected]);
+  successMsg(i18n.global.t('feedback.copied_successfully'));
+  return;
+};
+/**
+ * 赞同与反对
+ */
+const handleLike = async (
+  type: 'liked' | 'disliked' | 'report',
+): Promise<void> => {
+  const qaRecordId = props.recordList[index.value];
+  if (type === 'liked') {
+    await api.commentConversation({
+      type: !isSupport.value ? 'liked' : 'none',
+      qaRecordId: qaRecordId,
+      comment: !isSupport.value ? 'liked' : 'none',
+      groupId: props.groupId,
+    }).then((res) => {
+      if(res[1].code === 200){
+        isSupport.value = isSupport.value ? false : true;
+        isAgainst.value = false;
+        messageArray.value.getAllItems()[index.value].comment = isSupport.value ? 'liked' : 'none';
+      }
+    })
+  } else if (type === 'disliked') {
+    if(isAgainst.value){
+      await api.commentConversation({
+      type: 'none',
+      qaRecordId: qaRecordId,
+      comment: 'none',
+      groupId: props.groupId,
+    }).then((res) => {
+      if(res[1].code === 200){
+        isAgainst.value = false;
+        isSupport.value = false;
+        messageArray.value.getAllItems()[index.value].comment = 'none';
+      }
+    })
+    }else{
+      isAgainstVisible.value = true;
+    }
+  } else {
+    isReportVisible.value = true;
+  }
+};
+
+/**
+ * 反对
+ * @param reason
+ * @param reasionLink
+ * @param reasonDescription
+ */
+const handleDislike = async (
+  reason: string,
+  reasionLink?: string,
+  reasonDescription?: string,
+): Promise<void> => {
+  const qaRecordId = props.recordList[index.value];
+  await api.commentConversation(
+    {
+      type: !isAgainst.value ? 'disliked' : 'none',
+      qaRecordId: qaRecordId,
+      comment: !isAgainst.value ? 'disliked' : 'none',
+      dislikeReason: reason,
+      groupId: props.groupId,
+      reasonLink: reasionLink,
+      reasonDescription: reasonDescription,
+    }
+  ).then((res) => {
+    if(res[1].code === 200){
+      isAgainstVisible.value = false;
+      isAgainst.value = isAgainst.value ? false : true;
+      isSupport.value = false;
+      messageArray.value.getAllItems()[index.value].comment = isAgainst.value ? 'disliked' : 'none';
+    };
+  });
+};
 
 const handleOutsideClick = () => {
   isAgainstVisible.value = false;
@@ -151,10 +231,13 @@ const unbindDocumentClick = () => {
   document.removeEventListener('click', handleOutsideClick);
 };
 
-// 举报功能 目前未实现
-const handleReport = async (reason: string): Promise<void> => {
+// 举报功能
+const handleReport = async (
+  reason_type: string,
+  reason: string,
+): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  emits('report', qaRecordId, reason);
+  emits('handleReport', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
 };
 
@@ -177,6 +260,41 @@ const isAgainstVisible = ref<boolean>(false);
 const isReportVisible = ref<boolean>(false);
 
 const txt2imgPathZoom = ref('');
+// 解析完成后的文本内容
+const contentAfterMark = computed(() => {
+  if (!props.content) {
+    return '';
+  }
+  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
+  let str = marked.parse(
+    xss(props.content[index.value])
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<'),
+  );
+  //将table提取出来中加一个<div>父节点控制溢出
+  let tableStart = str.indexOf('<table>');
+  if (tableStart !== -1) {
+    str =
+      str.slice(0, tableStart) +
+      '<div class="overflowTable">' +
+      str
+        .slice(tableStart, str.indexOf('</table>') + '</table>'.length)
+        .replace('</table>', '</table></div>') +
+      str.slice(str.indexOf('</table>') + '</table>'.length);
+  }
+  //仅获取第一个遇到的 think 标签
+  const startIndex = str.indexOf('<think>');
+  const endIndex = str.indexOf('</think>');
+  if (startIndex !== -1 && endIndex === -1) {
+    // 计算 <a> 之后的字符串
+    const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
+    thoughtContent.value = contentAfterA;
+    return '';
+  } else if (startIndex !== -1 && endIndex !== -1) {
+    thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  }
+  return str.replace(/<think>([\s\S]*?)<\/think>/g, '');
+});
 
 const prePageHandle = (cid: number) => {
   thoughtContent.value = '';
@@ -185,20 +303,66 @@ const prePageHandle = (cid: number) => {
     index.value = 0;
   } else {
     index.value--;
-    // handleIsLike();
+    isComment.value = messageArray.value.getAllItems()[index.value].comment;
+    handleIsLike();
   }
 };
 
 const nextPageHandle = (cid: number) => {
   thoughtContent.value = '';
   nextPage(cid);
-  if (index.value === (props.isLikeList as number[]).length - 1) {
-    index.value = (props.isLikeList as number[]).length - 1;
+  if (index.value === (props.content as string[]).length - 1) {
+    index.value = (props.content as string[]).length - 1;
   } else {
     index.value++;
-    // handleIsLike();
+    isComment.value = messageArray.value.getAllItems()[index.value].comment;
+    handleIsLike();
   }
 };
+
+const isSupport = ref(false);
+const isAgainst = ref(false);
+
+const handleIsLike = () => {
+  if (isComment.value === undefined) {
+    isSupport.value = false;
+    isAgainst.value = false;
+  } else {
+      if (isComment.value !== 'none') {
+        isSupport.value = isComment.value === 'liked';
+        isAgainst.value = !isSupport.value;
+      } else {
+        isSupport.value = false;
+        isAgainst.value = false;
+      }
+  }
+};
+
+onMounted(() => {
+  if(props.messageArray?.value){
+    isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
+  }
+  setTimeout(() => {
+    handleIsLike();
+  }, 200);
+});
+
+watch(
+  () => props.messageArray,
+  () => {
+      index.value = 0;
+      if(props.messageArray){
+        index.value = props.messageArray?.getAllItems().length - 1;
+      }
+      messageArray.value = props.messageArray;
+      if(props.messageArray){
+        isComment.value = props.messageArray.getAllItems()[index.value].comment;
+      }
+      handleIsLike();
+  },{
+    immediate: true,
+  }
+);
 
 watch(
   () => props.test,
@@ -245,8 +409,15 @@ watch(
   },
 );
 
+watch(
+  () => index.value, 
+  () => {
+    handleIsLike();
+  }
+)
+
 onBeforeUnmount(() => {
-  isLike.value = undefined;
+  isComment.value = undefined;
   index.value = 0;
 });
 
@@ -261,7 +432,7 @@ const zoom_out = () => {
   answer_zoom.value = false;
 };
 
-const selectQuestion = (item: Suggest) => {
+const selectQuestion = (item: Suggestion) => {
   let question = item.question;
   let user_selected_flow = item.flowId;
   if (user_selected_flow) {
@@ -272,7 +443,7 @@ const selectQuestion = (item: Suggest) => {
 };
 
 const popperSize = () => {
-  if (language.value == 'en') {
+  if (language.value == 'EN') {
     size.width = 418;
     size.height = 496;
     return size;
@@ -298,14 +469,6 @@ const chatWithParams = async () => {
   );
 };
 
-const searchAppName = (appId) => {
-  for (let item in props.modeOptions) {
-    if (props.modeOptions[item].value == appId) {
-      return props.modeOptions[item].label;
-    }
-  }
-  return '';
-};
 </script>
 <template>
   <div
@@ -315,7 +478,7 @@ const searchAppName = (appId) => {
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
         <div class="centerTimeStyle">
-          {{ dayjs(Number(createdAt) * 1000).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ dayjs(createdAt * 1000).format('YYYY-MM-DD HH:mm:ss') }}
         </div>
       </div>
       <div class="dialogue-panel__user-time" v-else>
@@ -422,7 +585,7 @@ const searchAppName = (appId) => {
               @click="prePageHandle(Number(cid))"
               src="@/assets/svgs/arror_left.svg"
             />
-            <span class="pagenation-cur">{{ currentSelected! + 1 }}</span>
+            <span class="pagenation-cur">{{ index! + 1 }}</span>
             <span class="pagenation-total">{{ `/${content?.length}` }}</span>
             <img
               class="pagenation-arror ml-8"
@@ -469,22 +632,22 @@ const searchAppName = (appId) => {
               effect="light"
             >
               <img
-                class="button-icon"
+                class="button-icon simg"
                 v-if="!isSupport && themeStore.theme === 'dark'"
                 src="@/assets/svgs/dark_support.svg"
+                @click="handleLike('liked')"
               />
               <img
-                class="button-icon"
-                v-if="
-                  !isSupport &&
-                  (themeStore.theme === 'light' || !themeStore.theme)
-                "
+                class="button-icon simg"
+                v-if="!isSupport && themeStore.theme === 'light'"
                 src="@/assets/svgs/light_support.svg"
+                @click="handleLike('liked')"
               />
               <img
-                class="button-icon"
+                class="button-icon simg"
                 v-if="isSupport"
                 src="@/assets/svgs/support_active.svg"
+                @click="handleLike('liked')"
               />
             </el-tooltip>
             <el-tooltip
@@ -495,7 +658,7 @@ const searchAppName = (appId) => {
             >
               <el-popover
                 placement="bottom-end"
-                class="against-button"
+                class="disliked-button"
                 :visible="isAgainstVisible"
                 width="328"
                 height="328"
@@ -507,22 +670,26 @@ const searchAppName = (appId) => {
                     class="button-icon"
                     v-if="!isAgainst && themeStore.theme === 'dark'"
                     src="@/assets/svgs/dark_against.svg"
+                    @click="handleLike('disliked')"
                   />
                   <img
                     class="button-icon"
-                    v-if="
-                      !isAgainst &&
-                      (themeStore.theme === 'light' || !themeStore.theme)
-                    "
+                    v-if="!isAgainst && themeStore.theme === 'light'"
                     src="@/assets/svgs/light_against.svg"
+                    @click="handleLike('disliked')"
                   />
                   <img
                     class="button-icon"
                     v-if="isAgainst"
                     src="@/assets/svgs/against_active.svg"
+                    @click="handleLike('disliked')"
                   />
                 </template>
-                <AgainstPopover @click.stop @close="isAgainstVisible = false" />
+                <AgainstPopover
+                  @click.stop
+                  @close="isAgainstVisible = false"
+                  @submit="handleDislike"
+                />
               </el-popover>
             </el-tooltip>
             <el-tooltip
@@ -533,7 +700,7 @@ const searchAppName = (appId) => {
             >
               <el-popover
                 placement="bottom-end"
-                class="against-button"
+                class="disliked-button"
                 :visible="isReportVisible"
                 :width="size.width"
                 :height="size.height"
@@ -545,11 +712,13 @@ const searchAppName = (appId) => {
                     v-if="themeStore.theme === 'dark'"
                     class="button-icon"
                     src="@/assets/svgs/dark_report.svg"
+                    @click="handleLike('report')"
                   />
                   <img
-                    v-if="themeStore.theme === 'light' || !themeStore.theme"
+                    v-if="themeStore.theme === 'light'"
                     class="button-icon"
                     src="@/assets/svgs/light_report.svg"
+                    @click="handleLike('report')"
                   />
                 </template>
                 <ReportPopover
@@ -567,8 +736,8 @@ const searchAppName = (appId) => {
         <ul class="search-suggestions_value">
           <li class="value" v-for="(item, index) in props.search_suggestions">
             <div @click="selectQuestion(item)">
-              <p class="test" v-if="item.appId">
-                #{{ searchAppName(item.appId) }}
+              <p class="test" v-if="item.flowName">
+                #{{item.flowName }}
               </p>
               {{ item.question }}
             </div>

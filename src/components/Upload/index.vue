@@ -9,17 +9,15 @@ import {
   IconCaretRight,
 } from '@computing/opendesign-icons';
 import type {
-  UploadFile,
-  ElUploadProgressEvent,
   ElFile,
 } from 'element-plus/es/components/upload/src/upload.type';
-import { Codemirror } from 'vue-codemirror';
 import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { yaml } from '@codemirror/lang-yaml';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { useChangeThemeStore } from '@/store';
 import CustomLoading from 'src/views/customLoading/index.vue';
+import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
 
 const loading = ref(false);
 const themeStore = useChangeThemeStore();
@@ -69,7 +67,7 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  getServiceYaml: {
+  ServiceYaml: {
     type: String,
     default: '',
   },
@@ -183,22 +181,19 @@ const doPreview = (e: Event) => {
 const getServiceYamlFun = async (id: string) => {
   await api.querySingleApiData({ serviceId: id, edit: true }).then((res) => {
     if (res) {
-      getServiceYaml.value = jsYaml.dump(res?.result.data);
-      getServiceName.value = res?.result.name;
+      getServiceYaml.value = jsYaml.dump(res[1].result.data);
+      getServiceName.value = res[1].result.data.info.title;
     }
   });
 };
 const handleChange = (payload) => {
   yamlToJsonContent.value = jsYaml.load(payload);
-  setTimeout(() => {
-    payload.view.scrollDOM.scrollTop = 0;
-  }, 100);
 };
 watch(
   () => props,
   () => {
     getServiceJson.value = props.getServiceJson;
-    getServiceYaml.value = props.getServiceYaml;
+    getServiceYaml.value = props.ServiceYaml;
     getServiceName.value = props.getServiceName;
     if (getServiceJson.value?.length) {
       activeServiceNameList.value = getServiceJson.value.map(
@@ -297,7 +292,7 @@ onMounted(() => {
   </el-upload>
   <div class="code-container" v-if="uploadtype === 'edit'">
     <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
-    <Codemirror
+    <!-- <Codemirror
       v-model="getServiceYaml"
       placeholder="Code goes here..."
       :autofocus="true"
@@ -308,10 +303,18 @@ onMounted(() => {
       @ready="handleReady"
       @update="updateFunc"
       @change="handleChange"
+    /> -->
+    <MonacoEditor
+      v-if="uploadtype === 'edit' && getServiceYaml"
+      v-if="uploadtype === 'edit' && getServiceYaml"
+      :yamlContent="getServiceYaml"
+      placeholder="Code goes here..."
+      :readOnly="!editable"
+      :handleQueryYamlValue="handleChange"
     />
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
-    <span class="serviceName">{{ getServiceName }}</span>
+    <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
     <el-collapse
       v-model="activeServiceNameList"
       class="o-hpc-collapse"
@@ -370,6 +373,9 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.code-container{
+  height: calc(100% - 48px);
+}
 .serviceName {
   display: block;
   font-size: 14px;

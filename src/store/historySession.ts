@@ -161,45 +161,39 @@ export const useHistorySessionStore = defineStore(
       return true;
     };
 
-    /**
-     * 创建新会话
-     */
-    const createNewSession = async (): Promise<void> => {
-      const sId =
-        historySession.value.length === 0
-          ? null
-          : historySession.value[0]?.conversationId;
-      if (sId) {
-        const [, cov] = await api.getHistoryConversation(sId);
-        if (cov && cov.result.records.length === 0) {
-          if (currentSelectedSession.value !== sId) {
-            currentSelectedSession.value = sId;
-          }
-          successMsg(i18n.global.t('history.latestConversation'));
-          await getHistorySession();
-        } else {
-          await generateSession();
+  /**
+   * 创建新会话
+   */
+  const createNewSession = async (): Promise<void> => {
+    const sId =
+      historySession.value.length === 0
+        ? null
+        : historySession.value[0]?.conversationId;
+    if (sId) {
+      const [, cov] = await api.getHistoryConversation(sId);
+      if (cov && cov.result.records.length === 0) {
+        if (currentSelectedSession.value !== sId) {
+          currentSelectedSession.value = sId;
         }
+        successMsg(i18n.global.t('history.latestConversation'));
+        await getHistorySession();
       } else {
         await generateSession();
       }
-    };
-    /**
-     * 创建一个新的会话
-     */
-    const generateSession = async (): Promise<void> => {
-      const [_, res] = await api.createSession();
-      if (!_ && res) {
-        // 用于处理多次点击会话造成 409 的问题
-        if (res.code === 409) {
-          successMsg(i18n.global.t('history.sessionLimit'));
-          await getHistorySession();
-          return;
-        }
-        currentSelectedSession.value = res.result.conversationId;
-        await getHistorySession();
-      }
-    };
+    } else {
+      await generateSession();
+    }
+  };
+  /**
+   * 创建一个新的会话
+   */
+  const generateSession = async (): Promise<void> => {
+    const [_, res] = await api.createSession();
+    if (!_ && res) {
+      currentSelectedSession.value = res.result.conversationId;
+      await getHistorySession();
+    }
+  };
 
     /**
      * 创建一个新的会话-debug工作流会话-需要一个传参

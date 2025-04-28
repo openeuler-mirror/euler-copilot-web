@@ -11,7 +11,7 @@ import type {
   UserDialoguePanelType,
   RobotDialoguePanelType,
 } from 'src/components/dialoguePanel/type';
-import { Metadata } from 'src/apis/paths/type';
+import { Metadata, Suggestion } from 'src/apis/paths/type';
 
 // 工具类型
 export type LinkType = 'redirect' | 'action';
@@ -89,11 +89,12 @@ export interface RobotConversationItem {
   // 当前选中第n次回答的索引值
   currentInd: number;
   isFinish?: boolean;
+  comment?: string;
   isSupport?: boolean;
   isAgainst?: boolean;
   createdAt?: string | Date;
   groupId: string | undefined;
-  search_suggestions?: string[];
+  search_suggestions?: Suggestion[];
   echartsObj?: any;
   metadata?: undefined | Metadata;
   flowdata?: FlowType | undefined;
@@ -103,24 +104,28 @@ export interface RobotConversationItem {
 export interface MessageRecord {
   message: string;
   record_id: string;
-  is_like: number | undefined;
+  comment: string;
 }
 
 export class MessageArray {
   private items: MessageRecord[] = [];
-  addItem(message: string, record_id: string, is_like: number): void {
+  addItem(message: string, record_id: string, comment: string): void {
     const newItem: MessageRecord = {
       message,
       record_id,
-      is_like,
+      comment,
     };
     this.items.push(newItem);
   }
-
+  push(item: MessageRecord): void {
+    this.items.push(item);
+  }
   getItem(index: number): MessageRecord | undefined {
     return this.items[index];
   }
-
+  getContentbyIndex(index: number): string | undefined {
+    return this.items[index]?.message;
+  }
   getLength(): number {
     return this.items.length;
   }
@@ -137,20 +142,17 @@ export class MessageArray {
     return this.items.map((item) => item.record_id);
   }
 
-  getIslikeList(): number[] {
-    //类型断言，将undefined转换为0。
-    return this.items.map((item) => item.is_like ?? 0);
+  getCommentList(): string[] {
+    return this.items.map((item) => item.comment ? item.comment : 'none');
   }
 
-  getisLikeByIndex(index: number): number {
-    return this.items.map((item) => item.is_like ?? 0)[index];
+  getCommentbyIndex(index: number): string {
+    return this.items.map((item) => item.comment ? item.comment : 'none')[index];
   }
-
-  changeisLikeByCidAndIndex(
-    cid: number,
+  changeCommentByIndex(
     index: number,
-    islike: number | boolean,
+    comment: string,
   ): void {
-    this.getisLikeByIndex(index)[cid] = islike;
+    this.items[index].comment = comment;
   }
 }

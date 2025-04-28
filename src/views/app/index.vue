@@ -150,7 +150,7 @@ import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
-import DefaultAppIcon from '../../assets/svgs/defaultIcon.svg';
+import DefaultAppIcon from '../../assets/svgs/defaultIcon.webp';
 import { storeToRefs } from 'pinia';
 import { useAccountStore, useHistorySessionStore } from 'src/store';
 import CustomLoading from '../customLoading/index.vue';
@@ -295,21 +295,14 @@ const handleEditApp = (e, item) => {
 watch(
   () => [appSearchValue, appSearchType],
   () => {
-    handleParmasQueryAppList();
+    if (router.currentRoute.value.query.to === 'createdByMe') {
+      handleSearchAppList('createdByMe');
+    } else {
+      handleParmasQueryAppList();
+    }
   },
-  { deep: true },
+  { deep: true, immediate: true },
 );
-
-onMounted(() => {
-  handleQueryAppList();
-});
-
-onMounted(() => {
-  console.log(router.currentRoute.value.query);
-  if (router.currentRoute.value.query.to === 'createdByMe') {
-    handleSearchAppList('createdByMe');
-  }
-});
 </script>
 <style lang="scss" scoped>
 .create-button__icon {

@@ -24,10 +24,6 @@ export interface DialogueSession {
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
 
-enum SupportMap {
-  support = 1,
-  against = 0,
-}
 const Form = ref(props.createAppForm);
 const AppForm = ref(props.createAppForm);
 const { pausedStream } = useSessionStore();
@@ -236,49 +232,17 @@ const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 
 /**
- * 支持、反对 更改逻辑的钩子函数。
- * @param type
- * @param cid
- */
-const handleCommont = async (
-  type: 'support' | 'against',
-  cid: number,
-  qaRecordId: number,
-  index: number,
-  reason?: string,
-  reasonLink?: string,
-  reasonDescription?: string,
-) => {
-  const params: {
-    qaRecordId: string;
-    isLike: number;
-    dislikeReason?: string;
-    reasonLink?: string;
-    reasonDescription?: string;
-  } = {
-    qaRecordId: qaRecordId,
-    isLike: SupportMap[type],
-    dislikeReason: reason,
-    reasonLink: reasonLink,
-    reasonDescription: reasonDescription,
-  };
-
-  const [_, res] = await api.commentConversation(params);
-  if (!_ && res) {
-    successMsg(i18n.global.t('feedback.feedbackSuccesful'));
-  }
-};
-
-/**
  * 举报逻辑的钩子函数。
  * @param type
  * @param cid
  */
-const handleReport = async (qaRecordId: string, reason: string) => {
+const handleReport = async (qaRecordId: string,reason_type:string,reason: string) => {
   const params: {
     qaRecordId: string;
+    reason_type:string;
     reason: string;
   } = {
+    reason_type: reason_type,
     record_id: qaRecordId,
     reason: reason,
   };
@@ -356,7 +320,7 @@ watch(currentSelectedSession, async (newVal) => {
           isNewSession ? uploadFilesView.value.push(item as any) : null;
         }
       });
-    isNewSession ? curPolling.startPolling() : null;
+    // isNewSession ? curPolling.startPolling() : null;
     uploadFilesView.value.sort((pre, cur) => {
       return cur.created_at - pre.created_at;
     });
@@ -781,6 +745,7 @@ watch(
           v-for="(item, index) in conversationList"
           :cid="item.cid"
           :key="index"
+          :groupId="getItem(item, 'groupId')"
           :type="item.belong"
           :inputParams="item.params"
           :content="item.message"
@@ -788,12 +753,13 @@ watch(
           :recordList="
             item.belong === 'robot' ? item.messageList.getRecordIdList() : ''
           "
-          :isLikeList="
-            item.belong === 'robot' ? item.messageList.getIslikeList() : ''
+          :isCommentList="
+            item.belong === 'robot' ? item.messageList.getCommentList() : ''
+          "
+          :messageArray="
+            item.belong === 'robot' ? item.messageList : ''
           "
           :is-finish="getItem(item, 'isFinish')"
-          :is-support="getItem(item, 'isSupport')"
-          :is-against="getItem(item, 'isAgainst')"
           :test="getItem(item, 'test')"
           :metadata="getItem(item, 'metadata')"
           :flowdata="getItem(item, 'flowdata')"
@@ -804,8 +770,7 @@ watch(
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
           :modeOptions="modeOptions"
-          @commont="handleCommont"
-          @report="handleReport"
+          @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />

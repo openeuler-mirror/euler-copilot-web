@@ -7,7 +7,6 @@ import router from 'src/router';
 const themeStore = useChangeThemeStore();
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
-import { emit } from 'process';
 
 const route = useRoute();
 const appName = ref();
