@@ -1,19 +1,26 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
-import { useDialogueActions } from './hooks/useDialogueActions';
-import { useMarkdownParser } from './hooks/useMarkdownParser';
-import { ref, toRef } from 'vue';
-import { echartsObj } from 'src/store/conversation';
+import marked from 'src/utils/marked.js';
+import { computed, ref, withDefaults } from 'vue';
+import { writeText } from 'src/utils';
+import {
+  useSessionStore,
+  useChangeThemeStore,
+  echartsObj,
+} from '@/store';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
+import xss from 'xss';
+import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import DialogueThought from './DialogueThought.vue';
 import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
+import i18n from 'src/i18n';
 import { storeToRefs } from 'pinia';
-import { useLangStore, useChangeThemeStore, useSessionStore } from '@/store';
+import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggestion } from 'src/apis/paths/type';
 const { params } = storeToRefs(useHistorySessionStore());
@@ -31,9 +38,9 @@ export interface DialoguePanelProps {
   // 文本内容
   inputParams: object;
   // 文本内容
-  content: string[] | string;
+  content?: string[] | string;
   // 当前选中的第n次回答的索引，默认是最新回答
-  currentSelected: number;
+  currentSelected?: number;
   // 文本内容是否生成完毕
   isFinish?: boolean;
   // 是否在loading
@@ -80,8 +87,6 @@ const size = reactive({
   width: 328,
   height: 416,
 });
-const isSupport = ref(false);
-const isAgainst = ref(false);
 const themeStore = useChangeThemeStore();
 var myChart;
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
@@ -92,16 +97,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   needRegernerate: false,
 });
 const messageArray = ref<MessageArray>(props.messageArray);
-
-const { handleCopy, handleFeedback } = useDialogueActions(
-  toRef(props, 'content'),
-  toRef(props, 'currentSelected'),
-);
-
-const { thoughtContent, contentAfterMark } = useMarkdownParser(
-  toRef(props, 'content'),
-  toRef(props, 'currentSelected'),
-);
+const thoughtContent = ref('');
 const index = ref(0);
 const isComment = ref("none");
 const emits = defineEmits<{
@@ -116,6 +112,7 @@ const emits = defineEmits<{
 }>();
 
 // #region ----------------------------------------< pause and regenerate >--------------------------------------
+
 /**
  * 暂停和重新生成问答
  */
@@ -234,8 +231,11 @@ const unbindDocumentClick = () => {
   document.removeEventListener('click', handleOutsideClick);
 };
 
-// 举报功能 目前未实现
-const handleReport = async (reason: string): Promise<void> => {
+// 举报功能
+const handleReport = async (
+  reason_type: string,
+  reason: string,
+): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   emits('handleReport', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
@@ -260,6 +260,41 @@ const isAgainstVisible = ref<boolean>(false);
 const isReportVisible = ref<boolean>(false);
 
 const txt2imgPathZoom = ref('');
+// 解析完成后的文本内容
+const contentAfterMark = computed(() => {
+  if (!props.content) {
+    return '';
+  }
+  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
+  let str = marked.parse(
+    xss(props.content[index.value])
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<'),
+  );
+  //将table提取出来中加一个<div>父节点控制溢出
+  let tableStart = str.indexOf('<table>');
+  if (tableStart !== -1) {
+    str =
+      str.slice(0, tableStart) +
+      '<div class="overflowTable">' +
+      str
+        .slice(tableStart, str.indexOf('</table>') + '</table>'.length)
+        .replace('</table>', '</table></div>') +
+      str.slice(str.indexOf('</table>') + '</table>'.length);
+  }
+  //仅获取第一个遇到的 think 标签
+  const startIndex = str.indexOf('<think>');
+  const endIndex = str.indexOf('</think>');
+  if (startIndex !== -1 && endIndex === -1) {
+    // 计算 <a> 之后的字符串
+    const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
+    thoughtContent.value = contentAfterA;
+    return '';
+  } else if (startIndex !== -1 && endIndex !== -1) {
+    thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
+  }
+  return str.replace(/<think>([\s\S]*?)<\/think>/g, '');
+});
 
 const prePageHandle = (cid: number) => {
   thoughtContent.value = '';
@@ -408,7 +443,7 @@ const selectQuestion = (item: Suggestion) => {
 };
 
 const popperSize = () => {
-  if (language.value == 'en') {
+  if (language.value == 'EN') {
     size.width = 418;
     size.height = 496;
     return size;
@@ -443,7 +478,7 @@ const chatWithParams = async () => {
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
         <div class="centerTimeStyle">
-          {{ dayjs(Number(createdAt) * 1000).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ dayjs(createdAt * 1000).format('YYYY-MM-DD HH:mm:ss') }}
         </div>
       </div>
       <div class="dialogue-panel__user-time" v-else>
@@ -597,22 +632,22 @@ const chatWithParams = async () => {
               effect="light"
             >
               <img
-                class="button-icon"
+                class="button-icon simg"
                 v-if="!isSupport && themeStore.theme === 'dark'"
                 src="@/assets/svgs/dark_support.svg"
+                @click="handleLike('liked')"
               />
               <img
-                class="button-icon"
-                v-if="
-                  !isSupport &&
-                  (themeStore.theme === 'light' || !themeStore.theme)
-                "
+                class="button-icon simg"
+                v-if="!isSupport && themeStore.theme === 'light'"
                 src="@/assets/svgs/light_support.svg"
+                @click="handleLike('liked')"
               />
               <img
-                class="button-icon"
+                class="button-icon simg"
                 v-if="isSupport"
                 src="@/assets/svgs/support_active.svg"
+                @click="handleLike('liked')"
               />
             </el-tooltip>
             <el-tooltip
@@ -635,22 +670,26 @@ const chatWithParams = async () => {
                     class="button-icon"
                     v-if="!isAgainst && themeStore.theme === 'dark'"
                     src="@/assets/svgs/dark_against.svg"
+                    @click="handleLike('disliked')"
                   />
                   <img
                     class="button-icon"
-                    v-if="
-                      !isAgainst &&
-                      (themeStore.theme === 'light' || !themeStore.theme)
-                    "
+                    v-if="!isAgainst && themeStore.theme === 'light'"
                     src="@/assets/svgs/light_against.svg"
+                    @click="handleLike('disliked')"
                   />
                   <img
                     class="button-icon"
                     v-if="isAgainst"
                     src="@/assets/svgs/against_active.svg"
+                    @click="handleLike('disliked')"
                   />
                 </template>
-                <AgainstPopover @click.stop @close="isAgainstVisible = false" />
+                <AgainstPopover
+                  @click.stop
+                  @close="isAgainstVisible = false"
+                  @submit="handleDislike"
+                />
               </el-popover>
             </el-tooltip>
             <el-tooltip
@@ -673,11 +712,13 @@ const chatWithParams = async () => {
                     v-if="themeStore.theme === 'dark'"
                     class="button-icon"
                     src="@/assets/svgs/dark_report.svg"
+                    @click="handleLike('report')"
                   />
                   <img
-                    v-if="themeStore.theme === 'light' || !themeStore.theme"
+                    v-if="themeStore.theme === 'light'"
                     class="button-icon"
                     src="@/assets/svgs/light_report.svg"
+                    @click="handleLike('report')"
                   />
                 </template>
                 <ReportPopover

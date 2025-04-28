@@ -43,8 +43,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="eulercopilot-main" :style="{ height: qiankunWindow.__POWERED_BY_QIANKUN__ ? '100%' : '100vh' }">
-    <DialogueView />
   <div
     class="eulercopilot-main"
     :style="{ height: qiankunWindow.__POWERED_BY_QIANKUN__ ? '100%' : '100vh' }"
@@ -54,7 +52,6 @@ onMounted(() => {
 
     <router-view />
     </div>
-  </div>
 </template>
 
 <style lang="scss" scoped>

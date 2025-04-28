@@ -173,7 +173,7 @@ export const useSessionStore = defineStore('conversation', () => {
           switch (eventType) {
             case 'text.add':
               {
-                scrollBottom();
+                scrollToBottom(); 
                 //向message添加值
                 conversationItem.message[conversationItem.currentInd] +=
                 message.content.text;
