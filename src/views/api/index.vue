@@ -1,177 +1,185 @@
 <template>
-  <CustomLoading :loading="loading"></CustomLoading>
-  <div class="apiCenterBox">
-    <div class="apiCenterMain">
-      <div class="apiCenterTitle">
-        {{ $t('semantic.semantic_interface_center') }}
-      </div>
-      <div class="apiCenterSearch">
-        <el-input
-          style="max-width: 400px"
-          v-model="apiSearchValue"
-          :placeholder="$t('semantic.interface_search')"
-          :suffix-icon="IconSearch"
-        >
-          <template #prepend>
-            <el-select
-              v-model="apiSearchType"
-              style="width: 115px"
-              :suffix-icon="IconCaretDown"
-            >
-              <el-option :label="$t('semantic.all_select')" value="all" />
-              <el-option :label="$t('semantic.interface_name')" value="name" />
-              <el-option
-                :label="$t('semantic.interface_introduction')"
-                value="description"
-              />
-              <el-option :label="$t('semantic.username')" value="author" />
-            </el-select>
-          </template>
-        </el-input>
-        <el-button
-          type="primary"
-          class="createApi"
-          @click="openSidebar('upload', '')"
-        >
-          {{ $t('semantic.interface_upload') }}
-        </el-button>
-      </div>
-      <div class="apiCenterType">
-        <div
-          class="apiCenterBtn"
-          :class="{ apiCenterBtnActive: apiType === 'my' }"
-          @click="handleSearchapiList('my')"
-        >
-          {{ $t('semantic.all_interface') }}
+  <div>
+    <CustomLoading :loading="loading"></CustomLoading>
+    <div class="apiCenterBox">
+      <div class="apiCenterMain">
+        <div class="apiCenterTitle">
+          {{ $t('semantic.semantic_interface_center') }}
         </div>
-        <div
-          class="apiCenterBtn"
-          :class="{ apiCenterBtnActive: apiType === 'createdByMe' }"
-          @click="handleSearchapiList('createdByMe')"
-        >
-          {{ $t('semantic.my_upload') }}
-        </div>
-        <div
-          class="apiCenterBtn"
-          :class="{ apiCenterBtnActive: apiType === 'favorited' }"
-          @click="handleSearchapiList('favorited')"
-        >
-          {{ $t('semantic.my_favorite') }}
-        </div>
-      </div>
-      <div class="apiCenterCardContainer">
-        <div class="apiCenterCardBox" v-if="apiList?.length">
-          <div v-for="apiItem in apiList" class="apiCenterCardSingle">
-            <div
-              class="apiCenterCardTop"
-              @click="openSidebar('get', apiItem.serviceId)"
-            >
-              <div class="apiCenterCardIcon">
-                <el-icon class="menu-icon">
-                  <img
-                    class="create-button__icon"
-                    src="@/assets/svgs/defaultIcon.webp"
-                  />
-                </el-icon>
-              </div>
-              <div class="apiCenterCardContent">
-                <div class="apiCenterCardContentTop">
-                  <div class="apiCenterCardContentTitle">
-                    {{ apiItem.name }}
-                  </div>
-                  <div
-                    class="apiCenterCardContentCollect"
-                    :class="
-                      !apiItem.published && apiType === 'createdByMe'
-                        ? 'noClick'
-                        : ''
-                    "
-                    @click.stop="handleFavorite($event, apiItem)"
-                  >
-                    <IconFavorite
-                      v-if="apiItem.favorited"
-                      class="apiFavorite"
-                    />
-                    <IconUnfavorite v-else />
-                  </div>
-                </div>
-                <div class="apiCenterCardContentDes">
-                  <TextMoreTootip :value="apiItem.description" :row="2" />
-                </div>
-              </div>
-            </div>
-            <div class="apiCenterCardBottom">
-              <div class="apiCenterCardUser">@{{ apiItem.author }}</div>
-              <div
-                class="apiCenterCardOps"
-                v-if="userinfo.user_sub === apiItem.author"
+        <div class="apiCenterSearch">
+          <el-input
+            style="max-width: 400px"
+            v-model="apiSearchValue"
+            :placeholder="$t('semantic.interface_search')"
+            :suffix-icon="IconSearch"
+          >
+            <template #prepend>
+              <el-select
+                v-model="apiSearchType"
+                style="width: 115px"
+                :suffix-icon="IconCaretDown"
               >
-                <el-button text @click="openSidebar('edit', apiItem.serviceId)">
-                  {{ $t('semantic.interface_edit') }}
-                </el-button>
-                <el-button text @click="handleDelapi(apiItem)">
-                  {{ $t('semantic.interface_delete') }}
-                </el-button>
+                <el-option :label="$t('semantic.all_select')" value="all" />
+                <el-option
+                  :label="$t('semantic.interface_name')"
+                  value="name"
+                />
+                <el-option
+                  :label="$t('semantic.interface_introduction')"
+                  value="description"
+                />
+                <el-option :label="$t('semantic.username')" value="author" />
+              </el-select>
+            </template>
+          </el-input>
+          <el-button
+            type="primary"
+            class="createApi"
+            @click="openSidebar('upload', '')"
+          >
+            {{ $t('semantic.interface_upload') }}
+          </el-button>
+        </div>
+        <div class="apiCenterType">
+          <div
+            class="apiCenterBtn"
+            :class="{ apiCenterBtnActive: apiType === 'my' }"
+            @click="handleSearchapiList('my')"
+          >
+            {{ $t('semantic.all_interface') }}
+          </div>
+          <div
+            class="apiCenterBtn"
+            :class="{ apiCenterBtnActive: apiType === 'createdByMe' }"
+            @click="handleSearchapiList('createdByMe')"
+          >
+            {{ $t('semantic.my_upload') }}
+          </div>
+          <div
+            class="apiCenterBtn"
+            :class="{ apiCenterBtnActive: apiType === 'favorited' }"
+            @click="handleSearchapiList('favorited')"
+          >
+            {{ $t('semantic.my_favorite') }}
+          </div>
+        </div>
+        <div class="apiCenterCardContainer">
+          <div class="apiCenterCardBox" v-if="apiList?.length">
+            <div v-for="apiItem in apiList" class="apiCenterCardSingle">
+              <div
+                class="apiCenterCardTop"
+                @click="openSidebar('get', apiItem.serviceId)"
+              >
+                <div class="apiCenterCardIcon">
+                  <el-icon class="menu-icon">
+                    <img
+                      class="create-button__icon"
+                      src="@/assets/svgs/defaultIcon.webp"
+                    />
+                  </el-icon>
+                </div>
+                <div class="apiCenterCardContent">
+                  <div class="apiCenterCardContentTop">
+                    <div class="apiCenterCardContentTitle">
+                      {{ apiItem.name }}
+                    </div>
+                    <div
+                      class="apiCenterCardContentCollect"
+                      :class="
+                        !apiItem.published && apiType === 'createdByMe'
+                          ? 'noClick'
+                          : ''
+                      "
+                      @click.stop="handleFavorite($event, apiItem)"
+                    >
+                      <IconFavorite
+                        v-if="apiItem.favorited"
+                        class="apiFavorite"
+                      />
+                      <IconUnfavorite v-else />
+                    </div>
+                  </div>
+                  <div class="apiCenterCardContentDes">
+                    <TextMoreTootip :value="apiItem.description" :row="2" />
+                  </div>
+                </div>
+              </div>
+              <div class="apiCenterCardBottom">
+                <div class="apiCenterCardUser">@{{ apiItem.author }}</div>
+                <div
+                  class="apiCenterCardOps"
+                  v-if="userinfo.user_sub === apiItem.author"
+                >
+                  <el-button
+                    text
+                    @click="openSidebar('edit', apiItem.serviceId)"
+                  >
+                    {{ $t('semantic.interface_edit') }}
+                  </el-button>
+                  <el-button text @click="handleDelapi(apiItem)">
+                    {{ $t('semantic.interface_delete') }}
+                  </el-button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="appCenterNoData" v-else>
-          <div class="noDataIcon"></div>
-          <div class="desc">{{ $t('semantic.no_data') }}</div>
+          <div class="appCenterNoData" v-else>
+            <div class="noDataIcon"></div>
+            <div class="desc">{{ $t('semantic.no_data') }}</div>
+          </div>
         </div>
       </div>
+      <el-drawer
+        class="el-drawer"
+        v-model="drawer"
+        :title="actionName"
+        :show-close="false"
+        header-class="drawerHeader"
+        destory-on-close="true"
+        :direction="direction"
+        :before-close="handleClose"
+      >
+        <div class="drawerContent">
+          <div v-if="actions === 'upload'" class="monacoEditorBox">
+            <Upload
+              type="upload"
+              @closeDrawer="handleClose"
+              :serviceId="selectedServiceId"
+            />
+          </div>
+          <div v-if="actions === 'get'" class="monacoEditorBox">
+            <Upload
+              type="get"
+              @closeDrawer="handleClose"
+              :serviceId="selectedServiceId"
+              :getServiceJson="getServiceJson"
+              :getServiceName="getServiceName"
+            />
+          </div>
+          <div v-if="actions === 'edit'" class="monacoEditorBox">
+            <Upload
+              type="edit"
+              @closeDrawer="handleClose"
+              :serviceId="selectedServiceId"
+              :ServiceYaml="getServiceYaml"
+              :getServiceName="getServiceName"
+            />
+          </div>
+        </div>
+      </el-drawer>
     </div>
-    <el-drawer
-      class="el-drawer"
-      v-model="drawer"
-      :title="actionName"
-      show-close="false"
-      header-class="drawerHeader"
-      destory-on-close="true"
-      :direction="direction"
-      :before-close="handleClose"
-    >
-      <div class="drawerContent">
-        <div v-if="actions === 'upload'" class="monacoEditorBox">
-          <Upload
-            type="upload"
-            @closeDrawer="handleClose"
-            :serviceId="selectedServiceId"
-          />
-        </div>
-        <div v-if="actions === 'get'" class="monacoEditorBox">
-          <Upload
-            type="get"
-            @closeDrawer="handleClose"
-            :serviceId="selectedServiceId"
-            :getServiceJson="getServiceJson"
-            :getServiceName="getServiceName"
-          />
-        </div>
-        <div v-if="actions === 'edit'" class="monacoEditorBox">
-          <Upload
-            type="edit"
-            @closeDrawer="handleClose"
-            :serviceId="selectedServiceId"
-            :ServiceYaml="getServiceYaml"
-            :getServiceName="getServiceName"
-          />
-        </div>
-      </div>
-    </el-drawer>
+    <el-pagination
+      class="pagination"
+      v-if="totalCount >= 16"
+      v-model:current-page="currentPage"
+      v-model:page-size="currentPageSize"
+      :page-sizes="pagination.pageSizes"
+      :layout="pagination.layout"
+      :total="totalCount"
+      popper-class="appPagination"
+      @change="handleChangePage"
+    />
   </div>
-  <el-pagination
-    class="pagination"
-    v-if="totalCount >= 16"
-    v-model:current-page="currentPage"
-    v-model:page-size="currentPageSize"
-    :page-sizes="pagination.pageSizes"
-    :layout="pagination.layout"
-    :total="totalCount"
-    popper-class="appPagination"
-    @change="handleChangePage"
-  />
 </template>
 <script setup lang="ts">
 import {
@@ -379,7 +387,7 @@ onMounted(() => {
 .drawerContent {
   height: calc(100% - 32px);
 }
-.monacoEditorBox{
+.monacoEditorBox {
   height: 100%;
 }
 .el-drawer {

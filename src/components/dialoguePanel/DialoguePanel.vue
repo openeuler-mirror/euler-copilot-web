@@ -1,13 +1,9 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, ref, withDefaults } from 'vue';
+import { computed, ref } from 'vue';
 import { writeText } from 'src/utils';
-import {
-  useSessionStore,
-  useChangeThemeStore,
-  echartsObj,
-} from '@/store';
+import { useSessionStore, useChangeThemeStore, echartsObj } from '@/store';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
@@ -99,7 +95,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
 const messageArray = ref<MessageArray>(props.messageArray);
 const thoughtContent = ref('');
 const index = ref(0);
-const isComment = ref("none");
+const isComment = ref('none');
 const emits = defineEmits<{
   (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
@@ -126,7 +122,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
     thoughtContent.value = '';
     reGenerateAnswer(cid, user_selected_app.value);
     index.value = messageArray.value.getAllItems().length - 1;
-    isComment.value = "none";
+    isComment.value = 'none';
   } else {
     // 停止生成
     pausedStream(cid);
@@ -153,33 +149,38 @@ const handleLike = async (
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   if (type === 'liked') {
-    await api.commentConversation({
-      type: !isSupport.value ? 'liked' : 'none',
-      qaRecordId: qaRecordId,
-      comment: !isSupport.value ? 'liked' : 'none',
-      groupId: props.groupId,
-    }).then((res) => {
-      if(res[1].code === 200){
-        isSupport.value = isSupport.value ? false : true;
-        isAgainst.value = false;
-        messageArray.value.getAllItems()[index.value].comment = isSupport.value ? 'liked' : 'none';
-      }
-    })
+    await api
+      .commentConversation({
+        type: !isSupport.value ? 'liked' : 'none',
+        qaRecordId: qaRecordId,
+        comment: !isSupport.value ? 'liked' : 'none',
+        groupId: props.groupId,
+      })
+      .then((res) => {
+        if (res[1].code === 200) {
+          isSupport.value = isSupport.value ? false : true;
+          isAgainst.value = false;
+          messageArray.value.getAllItems()[index.value].comment =
+            isSupport.value ? 'liked' : 'none';
+        }
+      });
   } else if (type === 'disliked') {
-    if(isAgainst.value){
-      await api.commentConversation({
-      type: 'none',
-      qaRecordId: qaRecordId,
-      comment: 'none',
-      groupId: props.groupId,
-    }).then((res) => {
-      if(res[1].code === 200){
-        isAgainst.value = false;
-        isSupport.value = false;
-        messageArray.value.getAllItems()[index.value].comment = 'none';
-      }
-    })
-    }else{
+    if (isAgainst.value) {
+      await api
+        .commentConversation({
+          type: 'none',
+          qaRecordId: qaRecordId,
+          comment: 'none',
+          groupId: props.groupId,
+        })
+        .then((res) => {
+          if (res[1].code === 200) {
+            isAgainst.value = false;
+            isSupport.value = false;
+            messageArray.value.getAllItems()[index.value].comment = 'none';
+          }
+        });
+    } else {
       isAgainstVisible.value = true;
     }
   } else {
@@ -199,8 +200,8 @@ const handleDislike = async (
   reasonDescription?: string,
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  await api.commentConversation(
-    {
+  await api
+    .commentConversation({
       type: !isAgainst.value ? 'disliked' : 'none',
       qaRecordId: qaRecordId,
       comment: !isAgainst.value ? 'disliked' : 'none',
@@ -208,15 +209,17 @@ const handleDislike = async (
       groupId: props.groupId,
       reasonLink: reasionLink,
       reasonDescription: reasonDescription,
-    }
-  ).then((res) => {
-    if(res[1].code === 200){
-      isAgainstVisible.value = false;
-      isAgainst.value = isAgainst.value ? false : true;
-      isSupport.value = false;
-      messageArray.value.getAllItems()[index.value].comment = isAgainst.value ? 'disliked' : 'none';
-    };
-  });
+    })
+    .then((res) => {
+      if (res[1].code === 200) {
+        isAgainstVisible.value = false;
+        isAgainst.value = isAgainst.value ? false : true;
+        isSupport.value = false;
+        messageArray.value.getAllItems()[index.value].comment = isAgainst.value
+          ? 'disliked'
+          : 'none';
+      }
+    });
 };
 
 const handleOutsideClick = () => {
@@ -267,9 +270,7 @@ const contentAfterMark = computed(() => {
   }
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
   let str = marked.parse(
-    xss(props.content[index.value])
-      .replace(/&gt;/g, '>')
-      .replace(/&lt;/g, '<'),
+    xss(props.content[index.value]).replace(/&gt;/g, '>').replace(/&lt;/g, '<'),
   );
   //将table提取出来中加一个<div>父节点控制溢出
   let tableStart = str.indexOf('<table>');
@@ -328,18 +329,18 @@ const handleIsLike = () => {
     isSupport.value = false;
     isAgainst.value = false;
   } else {
-      if (isComment.value !== 'none') {
-        isSupport.value = isComment.value === 'liked';
-        isAgainst.value = !isSupport.value;
-      } else {
-        isSupport.value = false;
-        isAgainst.value = false;
-      }
+    if (isComment.value !== 'none') {
+      isSupport.value = isComment.value === 'liked';
+      isAgainst.value = !isSupport.value;
+    } else {
+      isSupport.value = false;
+      isAgainst.value = false;
+    }
   }
 };
 
 onMounted(() => {
-  if(props.messageArray?.value){
+  if (props.messageArray?.value) {
     isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
   }
   setTimeout(() => {
@@ -350,18 +351,19 @@ onMounted(() => {
 watch(
   () => props.messageArray,
   () => {
-      index.value = 0;
-      if(props.messageArray){
-        index.value = props.messageArray?.getAllItems().length - 1;
-      }
-      messageArray.value = props.messageArray;
-      if(props.messageArray){
-        isComment.value = props.messageArray.getAllItems()[index.value].comment;
-      }
-      handleIsLike();
-  },{
+    index.value = 0;
+    if (props.messageArray) {
+      index.value = props.messageArray?.getAllItems().length - 1;
+    }
+    messageArray.value = props.messageArray;
+    if (props.messageArray) {
+      isComment.value = props.messageArray.getAllItems()[index.value].comment;
+    }
+    handleIsLike();
+  },
+  {
     immediate: true,
-  }
+  },
 );
 
 watch(
@@ -410,11 +412,11 @@ watch(
 );
 
 watch(
-  () => index.value, 
+  () => index.value,
   () => {
     handleIsLike();
-  }
-)
+  },
+);
 
 onBeforeUnmount(() => {
   isComment.value = undefined;
@@ -468,7 +470,6 @@ const chatWithParams = async () => {
     params.value,
   );
 };
-
 </script>
 <template>
   <div
@@ -736,9 +737,7 @@ const chatWithParams = async () => {
         <ul class="search-suggestions_value">
           <li class="value" v-for="(item, index) in props.search_suggestions">
             <div @click="selectQuestion(item)">
-              <p class="test" v-if="item.flowName">
-                #{{item.flowName }}
-              </p>
+              <p class="test" v-if="item.flowName">#{{ item.flowName }}</p>
               {{ item.question }}
             </div>
           </li>
