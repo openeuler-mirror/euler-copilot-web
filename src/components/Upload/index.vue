@@ -7,10 +7,9 @@ import {
   IconVisible,
   IconDelete,
   IconCaretRight,
+  IconChevronDown,
 } from '@computing/opendesign-icons';
-import type {
-  ElFile,
-} from 'element-plus/es/components/upload/src/upload.type';
+import type { ElFile } from 'element-plus/es/components/upload/src/upload.type';
 import { api } from 'src/apis';
 import { errorMsg, successMsg } from 'src/components/Message';
 import { yaml } from '@codemirror/lang-yaml';
@@ -306,7 +305,6 @@ onMounted(() => {
     /> -->
     <MonacoEditor
       v-if="uploadtype === 'edit' && getServiceYaml"
-      v-if="uploadtype === 'edit' && getServiceYaml"
       :yamlContent="getServiceYaml"
       placeholder="Code goes here..."
       :readOnly="!editable"
@@ -373,7 +371,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.code-container{
+.code-container {
   height: calc(100% - 48px);
 }
 .serviceName {
