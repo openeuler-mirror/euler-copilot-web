@@ -1,8 +1,8 @@
-# EulerCopilot 服务协议
+# openEuler Intelligence 服务协议
 
-欢迎您使用开放原子开源基金会（下文简称“基金会”或“我们”）提供的 EulerCopilot 服务!
+欢迎您使用开放原子开源基金会（下文简称“基金会”或“我们”）提供的 openEuler Intelligence 服务!
 
-本协议约束您（使用者）对[EulerCopilot](https://euler-copilot-web.test.osinfra.cn)网站等相关服务（以下简称“本服务”或“EulerCopilot”）的使用。
+本协议约束您（使用者）对[openEuler Intelligence](https://euler-copilot-web.test.osinfra.cn)网站等相关服务（以下简称“本服务”或“openEuler Intelligence”）的使用。
 
 **重要提示:**
 
@@ -10,7 +10,7 @@
 
 **本服务主要面向成人**。如果您未满 18 周岁，请在法定监护人陪同下阅读本协议，并在征得法定监护人的同意后使用本服务。当您阅读并点击同意本协议**或您的注册、登录、使用等行为将视为您**已充分阅读、理解并接受本协议的全部内容。
 
-EulerCopilot（内测版）旨在让内测用户提前体验openEuler的智能化能力，帮助发现和修复版本质量、可用性及易用性问题，共同将版本做得更加完善。如果您发现任何问题（包括软件设计、软件功能、不合适的问答对等），欢迎您反馈您的宝贵意见！
+openEuler Intelligence（内测版）旨在让内测用户提前体验openEuler的智能化能力，帮助发现和修复版本质量、可用性及易用性问题，共同将版本做得更加完善。如果您发现任何问题（包括软件设计、软件功能、不合适的问答对等），欢迎您反馈您的宝贵意见！
 
 **本服务仅限于内测用户学习研究、内部测试目的使用**。您不得将本服务用于生产环境或任何其他商业目的，否则您自行承担由此造成的所有后果和责任。
 
@@ -22,9 +22,9 @@ EulerCopilot（内测版）旨在让内测用户提前体验openEuler的智能�
 
 ## 第 1 条 定义
 
-**1.1 用户** ：指通过https://euler-copilot-web.test.osinfra.cn网站使用 EulerCopilot 服务的自然人。本协议中可称为“使用者”或“您”。
+**1.1 用户** ：指通过https://euler-copilot-web.test.osinfra.cn网站使用 openEuler Intelligence 服务的自然人。本协议中可称为“使用者”或“您”。
 
-**1.2 EulerCopilot** ：指基金会基于大语言模型提供的生成类人工智能问答产品。
+**1.2 openEuler Intelligence** ：指基金会基于大语言模型提供的生成类人工智能问答产品。
 
 **1.3 输入** : 指用户为使用本服务在对话框输入的内容。
 
