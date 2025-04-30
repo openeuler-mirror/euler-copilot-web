@@ -1,8 +1,8 @@
-# EulerCopilot Service Agreement
+# openEuler Intelligence Service Agreement
 
-Thank you for choosing the EulerCopilot service provided by the OpenAtom Foundation ("Foundation", "we", "our", or "us").
+Thank you for choosing the openEuler Intelligence service provided by the OpenAtom Foundation ("Foundation", "we", "our", or "us").
 
-This Agreement governs your ("you" or "user") use of the [EulerCopilot](https://euler-copilot-web.test.osinfra.cn) website and related services ("Services" or "EulerCopilot").
+This Agreement governs your ("you" or "user") use of the [openEuler Intelligence](https://euler-copilot-web.test.osinfra.cn) website and related services ("Services" or "openEuler Intelligence").
 
 **Important:**
 
@@ -10,7 +10,7 @@ Please carefully read and understand this entire Agreement before using the Serv
 
 **These Services are intended for adult users.** If you are under 18 years old, please review this Agreement with your legal guardian and obtain their consent before using the Services. By clicking to agree to this Agreement, or by **registering, logging in, or using the Services**, you represent and warrant that you have fully read, understood, and agree to be bound by this Agreement.
 
-**EulerCopilot is currently in beta and is not publicly available.** EulerCopilot offers consulting capabilities on OS basics and shell commands, key features of openEuler, openEuler domain data and knowledge, and openEuler O&M solutions.
+**openEuler Intelligence is currently in beta and is not publicly available.** openEuler Intelligence offers consulting capabilities on OS basics and shell commands, key features of openEuler, openEuler domain data and knowledge, and openEuler O&M solutions.
 
 **These Services are for internal testing purposes only and may not be used for any other purpose.** Please safeguard your account credentials and do not transfer, lend, or disclose your account, URLs, IP addresses, or any other Service information to any other party.
 
@@ -20,9 +20,9 @@ If you or the entity you represent do not agree to any provision of this Agreeme
 
 ## 1. Definitions
 
-**1.1 User**: any individual who uses the EulerCopilot Services through the EulerCopilot website (<https://euler-copilot-web.test.osinfra.cn>). This Agreement may refer to users as "you."
+**1.1 User**: any individual who uses the openEuler Intelligence Services through the openEuler Intelligence website (<https://euler-copilot-web.test.osinfra.cn>). This Agreement may refer to users as "you."
 
-**1.2 EulerCopilot**: generative artificial intelligence (AI) Q&A product provided by the Foundation based on large language models.
+**1.2 openEuler Intelligence**: generative artificial intelligence (AI) Q&A product provided by the Foundation based on large language models.
 
 **1.3 Input**: content entered by the user in the dialogue box to use the Services.
 
