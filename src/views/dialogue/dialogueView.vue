@@ -13,15 +13,17 @@ import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
 import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import CopilotIcon from '@/assets/svgs/routerCopilot.svg';
 import CopilotIconSelected from '@/assets/svgs/routerCopilotSelected.svg';
-import ApiIcon from '@/assets/svgs/routerApi.svg';
-import ApiIconSelected from '@/assets/svgs/routerApiSelected.svg';
+import PluginCenter from '@/assets/svgs/plugin_center.svg';
+import PluginCenterSelected from '@/assets/svgs/plugin_center_active.svg';
 import AppIcon from '@/assets/svgs/routerApp.svg';
 import AppIconSelected from '@/assets/svgs/routerAppSelected.svg';
 import WitChainDIcon from '@/assets/svgs/witChainD.svg';
 import WitChainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
+import Setting from '@/assets/svgs/setting.svg';
+import SettingSelected from '@/assets/svgs/setting_active.svg';
 import tools from '../tools/index.vue';
 import TitleBar from './components/TitleBar.vue';
 
@@ -42,6 +44,7 @@ const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
+const route = useRoute();
 const type = import.meta.env.VITE_USER_TYPE;
 let routerList: ComputedRef<
   Array<{
@@ -63,10 +66,10 @@ let routerList: ComputedRef<
       anotherName: 'copilot',
     },
     {
-      name: i18n.global.t('menu.semantic_center'),
+      name: i18n.global.t('menu.plugin_center'),
       path: '/api',
-      src: ApiIcon,
-      selectedSrc: ApiIconSelected,
+      src: PluginCenter,
+      selectedSrc: PluginCenterSelected,
       routerName: 'api',
     },
     {
@@ -166,8 +169,13 @@ const changeLanguagefun = (lang: 'CN' | 'EN') => {
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
   if (iframe?.contentWindow) {
-    const data = { lang: localStorage.getItem('localeLang') ?? 'CN' ,type: 'changeLanguage'};
-    let target = window.location.origin.includes('localhost')?'http://localhost:3002/witchaind/' : `${window.location.origin}/witchaind/`;
+    const data = {
+      lang: localStorage.getItem('localeLang') ?? 'CN',
+      type: 'changeLanguage',
+    };
+    let target = window.location.origin.includes('localhost')
+      ? 'http://localhost:3002/witchaind/'
+      : `${window.location.origin}/witchaind/`;
     iframe.contentWindow.postMessage(data, target);
   }
 };
@@ -177,10 +185,10 @@ const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
 };
 onMounted(() => {
   if (localStorage.getItem('theme')) {
-    document.body.setAttribute(
-      'theme',
-      localStorage.getItem('theme') || 'light',
-    );
+    // document.body.setAttribute(
+    //   'theme',
+    //   localStorage.getItem('theme') || 'light',
+    // );
   }
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
@@ -256,37 +264,54 @@ watch(
     <TitleBar />
     <div class="dialogue-container">
       <div class="dialogue-menu">
-        <router-link
-          v-for="item in routerList"
-          :key="item.path"
-          :to="item.path"
-          class="menu-item"
-        >
+        <div>
+          <router-link
+            v-for="item in routerList"
+            :key="item.path"
+            :to="item.path"
+            class="menu-item"
+          >
+            <span class="menu-icon">
+              <el-icon
+                class="menu-icon"
+                @click="addNewSession(item.routerName)"
+              >
+                <img
+                  v-if="
+                    router.currentRoute.value.name
+                      ?.toString()
+                      .indexOf(item.routerName) !== -1 ||
+                    router.currentRoute.value.name
+                      ?.toString()
+                      .indexOf(item.anotherName!) !== -1
+                  "
+                  class="create-button__icon"
+                  :src="item.selectedSrc"
+                />
+                <img v-else class="create-button__icon" :src="item.src" />
+              </el-icon>
+            </span>
+            <span class="menu-text">{{ item.name }}</span>
+          </router-link>
+        </div>
+
+        <router-link to="/settings" class="menu-item">
           <span class="menu-icon">
-            <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
+            <el-icon class="menu-icon">
               <img
-                v-if="
-                  router.currentRoute.value.name
-                    ?.toString()
-                    .indexOf(item.routerName) !== -1 ||
-                  router.currentRoute.value.name
-                    ?.toString()
-                    .indexOf(item.anotherName!) !== -1
-                "
                 class="create-button__icon"
-                :src="item.selectedSrc"
+                :src="route.path === '/settings' ? SettingSelected : Setting"
               />
-              <img v-else class="create-button__icon" :src="item.src" />
             </el-icon>
           </span>
-          <span class="menu-text">{{ item.name }}</span>
+          <span class="menu-text">{{ i18n.global.t('menu.settings') }}</span>
         </router-link>
       </div>
       <div class="dialogue-content">
         <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
           <tools />
         </KeepAlive>
-          <RouterView v-show="router.currentRoute.value.name !== 'witchainD'"/>
+        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
       </div>
     </div>
     <el-dialog
@@ -394,62 +419,6 @@ watch(
 </template>
 
 <style lang="scss">
-.dialogue-container {
-  display: flex;
-  height: calc(100% - 48px);
-}
-//hover active selected 样式待填充
-.dialogue-menu {
-  position: relative;
-  z-index: 1;
-  width: 64px;
-  height: 100%;
-  padding-top: 8px;
-  background-color: var(--o-bg-color-base);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  .menu-item {
-    display: flex;
-    font-style: none;
-    text-decoration: none;
-    width: 64px;
-    height: 64px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 10px;
-    cursor: pointer;
-    .menu-icon {
-      align-items: center;
-      img {
-        //hover颜色待改进
-        width: 40px;
-        &:hover {
-          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
-            brightness(101%) contrast(101%);
-        }
-        &:active {
-          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
-            brightness(101%) contrast(101%);
-        }
-      }
-    }
-    .menu-text {
-      font-style: none;
-      display: block;
-      font-size: 12px;
-      color: var(--o-text-color-primary);
-      text-align: center;
-      padding: 0 1px;
-    }
-  }
-}
-.dialogue-content {
-  width: 100%;
-  height: 100%;
-  flex: 1;
-}
 .model-dialog {
   padding: 0 !important;
   .el-dialog__title {
@@ -528,7 +497,6 @@ watch(
 
 .apikey {
   &_view {
-    // height: 400px;
     &_alert {
       margin-bottom: 8px;
     }
@@ -639,5 +607,57 @@ watch(
   overflow: hidden;
   background-image: var(--o-bg-image);
   background-size: cover;
+
+  .dialogue-container {
+    display: flex;
+    height: calc(100% - 48px);
+
+    .dialogue-menu {
+      position: relative;
+      z-index: 1;
+      width: 64px;
+      height: 100%;
+      padding-top: 8px;
+      background-color: var(--o-bg-color-base);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      .menu-item {
+        display: flex;
+        font-style: none;
+        text-decoration: none;
+        width: 64px;
+        height: 64px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+        cursor: pointer;
+        .menu-icon {
+          align-items: center;
+          img {
+            width: 40px;
+          }
+        }
+        .menu-text {
+          font-style: none;
+          display: block;
+          font-size: 12px;
+          color: var(--o-text-color-primary);
+          text-align: center;
+          padding: 0 1px;
+        }
+      }
+    }
+
+    .dialogue-content {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      background-image: var(--o-bg-image);
+      background-size: cover;
+    }
+  }
 }
 </style>

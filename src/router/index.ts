@@ -49,6 +49,11 @@ const staticRoutes: Array<RouteRecordRaw> = [
         component: (): Promise<typeof import('src/views/tools/index.vue')> =>
           import('src/views/tools/index.vue'),
       },
+      {
+        path: '/settings',
+        name: 'settings',
+        component: () => import('src/views/settings/index.vue'),
+      },
     ],
   },
   {
