@@ -1,7 +1,7 @@
 # euler-copilot-web
 
 #### Description
-EulerCopilot前端
+openEuler Intelligence前端
 
 #### Software Architecture
 Software architecture description
