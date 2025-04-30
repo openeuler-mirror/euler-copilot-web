@@ -14,3 +14,5 @@ export * from './apikey';
 export * from './knowledge';
 export * from './app';
 export * from './api';
+export * from './model';
+export * from './mcp';

@@ -30,14 +30,14 @@
       }
 
       .createApi {
-        margin-left: 16px;
+        margin-left: 8px;
         border-radius: 4px;
       }
+      
     }
 
     .apiCenterType {
       display: flex;
-      width: 400px;
       height: 32px;
       align-items: center;
       justify-content: space-between;
@@ -45,7 +45,7 @@
       border-radius: 4px;
       background-color: var(--o-border-color-base);
       .apiCenterBtn {
-        width: 130px;
+        width: 197px;
         height: 28px;
         display: flex;
         font-size: 12px;
@@ -57,8 +57,6 @@
       }
     }
     .apiCenterCardContainer {
-      margin-top: 12px;
-      padding-top: 4px;
       max-width: 1336px;
       max-height: calc(100vh - 370px);
       min-height: calc(100vh - 370px);
@@ -70,6 +68,7 @@
         flex-wrap: wrap;
         box-sizing: border-box;
         gap: 16px;
+        margin-top: 16px;
         .apiCenterCardSingle {
           box-sizing: border-box;
           border: 1px solid transparent;
@@ -82,64 +81,24 @@
           height: 136px;
           padding: 16px;
           background-color: var(--o-bg-color-base);
-          .apiCenterCardTop {
+          .apiCenterCardContentCollect {
+            width: 24px;
+            height: 24px;
+            background-color: var(--o-bg-color-light);
+            border-radius: 8px;
             display: flex;
-            .apiCenterCardIcon {
-              margin-right: 18px;
-              display: flex;
-              align-items: center;
-              .menu-icon {
-                width: 48px;
-                height: 48px;
+            justify-content: center;
+            align-items: center;
+            svg {
+              width: 16px;
+              height: 16px;
+              path {
+                fill: var(--o-text-color-tertiary);
               }
             }
-            .apiCenterCardContent {
-              cursor: pointer;
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              gap: 4px;
-              .apiCenterCardContentTop {
-                display: flex;
-                justify-content: space-between;
-                .apiCenterCardContentTitle {
-                  color: var(--o-text-color-primary);
-                  font-size: 16px;
-                  line-height: 24px;
-                  overflow: hidden;
-                  white-space: nowrap;
-                  text-overflow: ellipsis;
-                  width: 80%;
-                }
-                .apiCenterCardContentCollect {
-                  width: 24px;
-                  height: 24px;
-                  background-color: var(--o-bg-color-light);
-                  border-radius: 8px;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  svg {
-                    width: 16px;
-                    height: 16px;
-                    path {
-                      fill: var(--o-text-color-tertiary);
-                    }
-                  }
-                  .apiFavorite {
-                    path {
-                      fill: rgb(99, 149, 253);
-                    }
-                  }
-                }
-              }
-              .apiCenterCardContentDes {
-                .vue-text{
-                  cursor: pointer !important;
-                  color: var(--o-api-description);
-                }
-                font-size: 14px;
-                line-height: 22px;
+            .apiFavorite {
+              path {
+                fill: rgb(99, 149, 253);
               }
             }
           }
