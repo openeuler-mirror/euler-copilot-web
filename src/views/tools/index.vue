@@ -56,7 +56,7 @@ const sendMessageToIframe = (stopActive: boolean) => {
   
   try {
     const language = localStorage.getItem('localeLang');
-    const message = { StopActive: stopActive };
+    const message = { StopActive: stopActive ,type: 'changeActive' };
     iframe.contentWindow.postMessage({...message,lang:language}, iframeTarget);
   } catch (error) {
     console.error('发送消息到iframe失败:', error);
