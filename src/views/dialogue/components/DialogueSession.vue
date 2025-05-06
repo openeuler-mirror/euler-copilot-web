@@ -4,7 +4,11 @@ import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
 import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
+import MultiSelectTags from'src/views/dialogue/components/MultiSelectTags.vue';
 import { storeToRefs } from 'pinia';
+import {
+  IconCaretRight,
+} from '@computing/opendesign-icons';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
@@ -23,13 +27,26 @@ export interface DialogueSession {
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
-
 const Form = ref(props.createAppForm);
 const AppForm = ref(props.createAppForm);
 const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
+const selectedModal = ref({});
+const handleChangeMode = (val: string) => { 
+  selectedModal.value = val;
+  console.log(val);
+}
 // const isCreateApp = ref(true);
+const modeOptions = ref([
+  {
+    label: 'test1',
+    value: 'session',
+  },
+  {
+    label: 'test2',
+    value: 'history',
+  }]);
 const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
@@ -810,6 +827,40 @@ watch(
             {{ $t('feedback.stop') }}
           </div>
         </div>
+        <div class="dialogue-conversation-bottom-selectGroup">
+            <div class="modalSelectGroup">
+              <el-dropdown trigger="click">
+                <span class="el-dropdown-link" v-if="selectedModal.label">
+                  <img :src="selectedModal.icon" alt="" />
+                  {{ selectedModal.label }}
+                  <el-icon>
+                    <IconCaretRight/>
+                  </el-icon>
+                </span>
+                <span class="el-dropdown-link" v-else>
+                  请选择模型
+                  <el-icon>
+                    <IconCaretRight/>
+                  </el-icon>
+                </span>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-for="(item, index) in modeOptions"
+                      :key="index"
+                      @click="handleChangeMode(item)">
+                      <img
+                        :src="item.icon"
+                        alt=""
+                        style="width: 20px; height: 20px; margin-right: 8px"/>
+                      {{ item.label }}
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>        
+            </div>
+            <MultiSelectTags></MultiSelectTags>
+          </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
           <div class="dialogue-conversation-bottom-sendbox">
@@ -854,7 +905,6 @@ watch(
             </div>
             <!-- 发送问题 -->
             <div class="dialogue-conversation-bottom-sendbox__icon">
-              <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
               <img
                 v-if="
                   !isAllowToSend ||
@@ -873,7 +923,6 @@ watch(
               </div>
             </div>
           </div>
-          <!-- 上传问价列表 -->
           <transition name="fade">
             <div
               class="dialogue-conversation-bottom__upload-list"
@@ -895,6 +944,20 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+.modalSelectGroup{
+  width: 140px;
+  margin-right: 8px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  height: 32px;
+  background-color: #fff;
+  border-radius: 8px;
+  display: inline-block;
+  span{
+    font-size: 18px;
+    height: 32px;
+  }
+}
 .dialogue-rightContainer {
   height: 100%;
   width: 100%;

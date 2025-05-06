@@ -1,5 +1,5 @@
 <template>
-  <InterPreview :create-app-form="createAppForm" createApp="true" />
+  <InterPreview :create-app-form="createAppForm" :createApp="true" />
   <div class="sendbox-wrapper">
     <div class="dialogue-conversation-bottom-sendbox">
       <div class="dialogue-conversation-bottom-sendbox__textarea">
