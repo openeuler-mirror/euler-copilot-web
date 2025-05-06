@@ -149,6 +149,7 @@
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/estree": "1.0.7",
     "@types/minimist": "^1.2.5",
+    "@types/mockjs": "^1.0.10",
     "@types/node": "^22.14.0",
     "@typescript-eslint/eslint-plugin": "8.17.0",
     "@typescript-eslint/parser": "8.17.0",
@@ -171,6 +172,7 @@
     "globals": "15.13.0",
     "minimist": "^1.2.8",
     "mitt": "^3.0.1",
+    "mockjs": "^1.1.0",
     "ora": "^5.4.1",
     "prettier": "3.4.2",
     "rimraf": "^6.0.1",
@@ -183,6 +185,7 @@
     "typescript-eslint": "8.17.0",
     "uuid": "^11.1.0",
     "vite": "5.4.11",
+    "vite-plugin-mock": "^3.0.2",
     "vite-plugin-qiankun": "1.0.15"
   },
   "packageManager": "pnpm@10.9.0+sha512.0486e394640d3c1fb3c9d43d49cf92879ff74f8516959c235308f5a8f62e2e19528a65cdc2a3058f587cde71eba3d5b56327c8c33a97e4c4051ca48a10ca2d5f"
