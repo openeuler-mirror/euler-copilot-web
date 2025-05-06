@@ -221,12 +221,6 @@ watch(
   { deep: true },
 );
 
-const addNewSession = async (routerName: string) => {
-  if (routerName === 'dialogue') {
-    await createNewSession();
-  }
-};
-
 const initCopilot = async (): Promise<void> => {
   const currRoute = router.currentRoute;
   if (currRoute.value.query.appId) {
@@ -274,7 +268,6 @@ watch(
             <span class="menu-icon">
               <el-icon
                 class="menu-icon"
-                @click="addNewSession(item.routerName)"
               >
                 <img
                   v-if="
