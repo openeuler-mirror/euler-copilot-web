@@ -2,10 +2,6 @@
 @import './message.scss';
 @import './theme.scss';
 
-// 全局重写tooltip样式
-.el-popper {
-    max-width: 376px !important;
-}
 
 // Linux平台窗口圆角和阴影样式
 html.platform-linux {

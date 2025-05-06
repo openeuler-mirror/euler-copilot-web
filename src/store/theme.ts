@@ -34,10 +34,7 @@ export const useChangeThemeStore = defineStore(
           document.body.setAttribute('theme', theme.value!);
         }
       } else {
-        if (!theme.value) {
-          theme.value = 'light';
-          document.body.setAttribute('theme', theme.value!);
-        }
+        document.body.setAttribute('theme', theme.value || 'light');
       }
       window.addEventListener('storage', storageListener);
     });

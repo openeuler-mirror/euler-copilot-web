@@ -7,7 +7,8 @@ export const useLangStore = defineStore(
   'lang',
   () => {
     const i18n = useI18n();
-    const language = ref<string>(localStorage.getItem('localeLang') || '');
+    const language = ref<string>();
+
     const changeLanguage = (lang: 'zh_cn' | 'en') => {
       language.value = lang;
       i18n.locale.value = language.value;

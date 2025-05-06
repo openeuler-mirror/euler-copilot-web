@@ -4,7 +4,7 @@
     <div class="apiCenterBox">
       <div class="apiCenterMain">
         <div class="apiCenterTitle">
-          {{ $t('semantic.semantic_interface_center') }}
+          {{ $t('menu.plugin_center') }}
         </div>
         <div class="apiCenterSearch">
           <el-input
@@ -20,106 +20,131 @@
                 :suffix-icon="IconCaretDown"
               >
                 <el-option :label="$t('semantic.all_select')" value="all" />
-                <el-option
-                  :label="$t('semantic.interface_name')"
-                  value="name"
-                />
-                <el-option
-                  :label="$t('semantic.interface_introduction')"
-                  value="description"
-                />
-                <el-option :label="$t('semantic.username')" value="author" />
+                <el-option label="插件名称" value="name" />
+                <el-option label="创建人" value="author" />
               </el-select>
             </template>
           </el-input>
-          <el-button
-            type="primary"
-            class="createApi"
-            @click="openSidebar('upload', '')"
+
+          <el-popover
+            placement="bottom"
+            width="102"
+            :popper-style="{
+              minWidth: '100px',
+              inset: '183px auto auto 1141px',
+              padding: '4px 0px',
+            }"
+            trigger="click"
+            :show-arrow="false"
           >
-            {{ $t('semantic.interface_upload') }}
-          </el-button>
+            <template #reference>
+              <el-button type="primary" class="createApi">
+                {{ $t('semantic.create_plugin') }}
+                <el-icon><IconCaretDown /></el-icon>
+              </el-button>
+            </template>
+            <div class="pluginOptions">
+              <div class="pluginOptionsItem" @click="openSidebar('upload', '')">
+                {{ $t('semantic.semantic_interface') }}
+              </div>
+              <div class="pluginOptionsItem" @click="onOpenMcpDrawer">
+                {{ $t('semantic.mcp_service') }}
+              </div>
+            </div>
+          </el-popover>
         </div>
+
         <div class="apiCenterType">
           <div
             class="apiCenterBtn"
-            :class="{ apiCenterBtnActive: apiType === 'my' }"
-            @click="handleSearchapiList('my')"
+            :class="{ apiCenterBtnActive: pluginType === 'semantic_interface' }"
+            @click="onPluginTypeClick('semantic_interface')"
           >
-            {{ $t('semantic.all_interface') }}
+            {{ $t('semantic.semantic_interface') }}
           </div>
           <div
             class="apiCenterBtn"
-            :class="{ apiCenterBtnActive: apiType === 'createdByMe' }"
-            @click="handleSearchapiList('createdByMe')"
+            :class="{ apiCenterBtnActive: pluginType === 'mcp' }"
+            @click="onPluginTypeClick('mcp')"
           >
-            {{ $t('semantic.my_upload') }}
-          </div>
-          <div
-            class="apiCenterBtn"
-            :class="{ apiCenterBtnActive: apiType === 'favorited' }"
-            @click="handleSearchapiList('favorited')"
-          >
-            {{ $t('semantic.my_favorite') }}
+            {{ $t('semantic.mcp_service') }}
           </div>
         </div>
+
         <div class="apiCenterCardContainer">
-          <div class="apiCenterCardBox" v-if="apiList?.length">
-            <div v-for="apiItem in apiList" class="apiCenterCardSingle">
-              <div
-                class="apiCenterCardTop"
-                @click="openSidebar('get', apiItem.serviceId)"
-              >
-                <div class="apiCenterCardIcon">
-                  <el-icon class="menu-icon">
-                    <img
-                      class="create-button__icon"
-                      src="@/assets/svgs/defaultIcon.webp"
-                    />
-                  </el-icon>
-                </div>
-                <div class="apiCenterCardContent">
-                  <div class="apiCenterCardContentTop">
-                    <div class="apiCenterCardContentTitle">
-                      {{ apiItem.name }}
-                    </div>
+          <el-tabs
+            v-if="pluginType === 'semantic_interface'"
+            v-model="apiType"
+            class="plugin-tabs"
+            @tab-click="(tab) => handleSearchapiList(tab.props.name)"
+          >
+            <el-tab-pane
+              :label="$t('semantic.all_select')"
+              name="my"
+              :lazy="true"
+            ></el-tab-pane>
+            <el-tab-pane
+              :label="$t('semantic.my_upload')"
+              name="createdByMe"
+              :lazy="true"
+            ></el-tab-pane>
+            <el-tab-pane
+              :label="$t('semantic.my_favorite')"
+              name="favorited"
+              :lazy="true"
+            ></el-tab-pane>
+          </el-tabs>
+          <div class="apiCenterCardBox" v-if="pluginLists.length">
+            <div v-for="item in pluginLists" class="apiCenterCardSingle">
+              <div @click="openSidebar('get', item.serviceId)">
+                <PluginCard
+                  :name="item.name"
+                  :description="item.description"
+                  :icon="item.icon"
+                >
+                  <template
+                    #topRight
+                    v-if="pluginType === 'semantic_interface'"
+                  >
                     <div
                       class="apiCenterCardContentCollect"
                       :class="
-                        !apiItem.published && apiType === 'createdByMe'
+                        !item.published && apiType === 'createdByMe'
                           ? 'noClick'
                           : ''
                       "
-                      @click.stop="handleFavorite($event, apiItem)"
+                      @click.stop="handleFavorite($event, item)"
                     >
-                      <IconFavorite
-                        v-if="apiItem.favorited"
-                        class="apiFavorite"
-                      />
+                      <IconFavorite v-if="item.favorited" class="apiFavorite" />
                       <IconUnfavorite v-else />
                     </div>
-                  </div>
-                  <div class="apiCenterCardContentDes">
-                    <TextMoreTootip :value="apiItem.description" :row="2" />
-                  </div>
-                </div>
-              </div>
-              <div class="apiCenterCardBottom">
-                <div class="apiCenterCardUser">@{{ apiItem.author }}</div>
-                <div
-                  class="apiCenterCardOps"
-                  v-if="userinfo.user_sub === apiItem.author"
-                >
-                  <el-button
-                    text
-                    @click="openSidebar('edit', apiItem.serviceId)"
-                  >
-                    {{ $t('semantic.interface_edit') }}
-                  </el-button>
-                  <el-button text @click="handleDelapi(apiItem)">
-                    {{ $t('semantic.interface_delete') }}
-                  </el-button>
-                </div>
+                  </template>
+                  <template #footer>
+                    <div class="apiCenterCardBottom">
+                      <div class="apiCenterCardUser">@{{ item.author }}</div>
+                      <div
+                        class="apiCenterCardOps"
+                        v-if="
+                          userinfo.user_sub === item.author ||
+                          pluginType === 'mcp'
+                        "
+                      >
+                        <el-button
+                          text
+                          @click.stop="openSidebar('edit', item.serviceId)"
+                        >
+                          {{ $t('semantic.interface_edit') }}
+                        </el-button>
+                        <el-button
+                          text
+                          @click.stop="handleDelapi(item.serviceId)"
+                        >
+                          {{ $t('semantic.interface_delete') }}
+                        </el-button>
+                      </div>
+                    </div>
+                  </template>
+                </PluginCard>
               </div>
             </div>
           </div>
@@ -140,14 +165,14 @@
         :before-close="handleClose"
       >
         <div class="drawerContent">
-          <div v-if="actions === 'upload'" class="monacoEditorBox">
+          <div v-if="actions === 'upload'">
             <Upload
               type="upload"
               @closeDrawer="handleClose"
               :serviceId="selectedServiceId"
             />
           </div>
-          <div v-if="actions === 'get'" class="monacoEditorBox">
+          <div v-if="actions === 'get'">
             <Upload
               type="get"
               @closeDrawer="handleClose"
@@ -156,17 +181,25 @@
               :getServiceName="getServiceName"
             />
           </div>
-          <div v-if="actions === 'edit'" class="monacoEditorBox">
+          <div v-if="actions === 'edit'">
             <Upload
               type="edit"
               @closeDrawer="handleClose"
               :serviceId="selectedServiceId"
-              :ServiceYaml="getServiceYaml"
+              :getServiceYaml="getServiceYaml"
               :getServiceName="getServiceName"
             />
           </div>
         </div>
       </el-drawer>
+      <McpDrawer
+        v-model:visible="mcpDrawerVisible"
+        :service-id="selectedServiceId"
+      />
+      <McpServiceDetailDrawer
+        v-model:visible="mcpDetailDrawerVisible"
+        :service-id="selectedServiceId"
+      />
     </div>
     <el-pagination
       class="pagination"
@@ -189,8 +222,8 @@ import {
   IconUnfavorite,
 } from '@computing/opendesign-icons';
 import './style.scss';
-import TextMoreTootip from '@/components/textMoreTootip/index.vue';
-import { ref, onMounted, watch, markRaw } from 'vue';
+import PluginCard from './components/PluginCard.vue';
+import { ref, onMounted, watch, markRaw, CSSProperties } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessageBox } from 'element-plus';
@@ -202,6 +235,29 @@ import { storeToRefs } from 'pinia';
 import * as jsYaml from 'js-yaml';
 import i18n from 'src/i18n';
 import CustomLoading from '../customLoading/index.vue';
+import McpDrawer from './components/McpDrawer.vue';
+import McpServiceDetailDrawer from './components/McpServiceDetail.vue';
+
+const mcpDrawerVisible = ref(false);
+const mcpDetailDrawerVisible = ref(false);
+
+function onMcpCarkClick() {}
+
+function onOpenMcpDrawer() {
+  mcpDrawerVisible.value = true;
+}
+
+const pluginLists = ref<
+  {
+    serviceId: string;
+    description: string;
+    favorited?: boolean;
+    icon: string;
+    author: string;
+    name: string;
+    published?: boolean;
+  }[]
+>([]);
 
 const apiList = ref();
 const drawer = ref(false);
@@ -209,6 +265,7 @@ const direction = ref('rtl');
 const actionName = ref('');
 const router = useRouter();
 const actions = ref();
+const pluginType = ref<'semantic_interface' | 'mcp'>('semantic_interface');
 const apiType = ref('my');
 const apiSearchType = ref('all');
 const selectedServiceId = ref('');
@@ -233,41 +290,48 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
 };
 
 const getServiceYamlFun = async (id: string) => {
-  await api.querySingleApiData({ serviceId: id, edit: true }).then((res) => {
-    if (res) {
-      //res[1] res 取决于当前环境
-      getServiceYaml.value = jsYaml.dump(res[1]?.result.data);
-      getServiceName.value = res[1]?.result.name;
-    }
-  });
+  const [, res] = await api.querySingleApiData({ serviceId: id, edit: true });
+  if (res) {
+    //res[1] res 取决于当前环境
+    getServiceYaml.value = jsYaml.dump(res.result.data);
+    getServiceName.value = res[1]?.result.name;
+  }
 };
 
 const getServiceJsonFun = async (id: string) => {
-  await api.querySingleApiData({ serviceId: id }).then((res) => {
-    if (res) {
-      //res[1] res 取决于当前环境
-      getServiceJson.value = res[1]?.result.apis;
-      getServiceName.value = res[1]?.result.name;
-    }
-  });
+  const [, res] = await api.querySingleApiData({ serviceId: id });
+  if (res) {
+    //res[1] res 取决于当前环境
+    getServiceJson.value = res.result.apis;
+    getServiceName.value = res.result.name;
+  }
 };
 
 const openSidebar = (action: string, id: string) => {
-  drawer.value = true;
-  actions.value = action;
-  if (action === 'upload') {
-    // 展示上传的框架
-    actionName.value = i18n.global.t('semantic.upload_semantic_interface');
-  } else if (action === 'edit') {
-    // 展示编辑的框架
-    actionName.value = i18n.global.t('semantic.edit_semantic_interface');
+  if (pluginType.value === 'semantic_interface') {
+    drawer.value = true;
+    actions.value = action;
+    if (action === 'upload') {
+      // 展示上传的框架
+      actionName.value = i18n.global.t('semantic.upload_semantic_interface');
+    } else if (action === 'edit') {
+      // 展示编辑的框架
+      actionName.value = i18n.global.t('semantic.edit_semantic_interface');
+      selectedServiceId.value = id;
+      getServiceYamlFun(id);
+    } else if (action === 'get') {
+      // 展示查看的框架
+      actionName.value = i18n.global.t('semantic.view_semantic_interface');
+      selectedServiceId.value = id;
+      getServiceJsonFun(id);
+    }
+  } else if (pluginType.value === 'mcp') {
     selectedServiceId.value = id;
-    getServiceYamlFun(id);
-  } else if (action === 'get') {
-    // 展示查看的框架
-    actionName.value = i18n.global.t('semantic.view_semantic_interface');
-    selectedServiceId.value = id;
-    getServiceJsonFun(id);
+    if (action === 'edit') {
+      mcpDrawerVisible.value = true;
+    } else if (action === 'get') {
+      mcpDetailDrawerVisible.value = true;
+    }
   }
 };
 
@@ -281,31 +345,52 @@ const handleClose = () => {
 
 const handleParmasQueryapiList = (params?: any) => {
   let payload = {};
-  if (apiType.value !== 'my') {
-    payload[apiType.value] = true;
+  if (pluginType.value === 'semantic_interface') {
+    payload = {};
   }
-  handleQueryApiList({
-    searchType: apiSearchType.value,
-    keyword: apiSearchValue.value,
-    ...payload,
-    ...params,
-  });
+  // if (apiType.value !== 'my') {
+  //   payload[apiType.value] = true;
+  // }
+  queryList(pluginType.value);
 };
 
-const handleQueryApiList = (payload?: any) => {
+const queryList = async (type: 'semantic_interface' | 'mcp') => {
   loading.value = true;
-  api
-    .queryApiList({
+  const payload = {
+    searchType: apiSearchType.value,
+    keyword: apiSearchValue.value || undefined,
+  };
+  if (type === 'semantic_interface') {
+    payload[apiType.value] = true;
+    const [, res] = await api.queryApiList({
       page: currentPage.value,
       pageSize: currentPageSize.value,
-      ...payload,
-    })
-    .then((res) => {
-      apiList.value = res[1]?.result.services;
-      currentPage.value = res[1]?.result.currentPage;
-      totalCount.value = res[1]?.result.totalCount;
-      loading.value = false;
+      ...(payload as any),
     });
+    if (res) {
+      pluginLists.value = res.result.services;
+      currentPage.value = res.result.currentPage;
+      totalCount.value = res.result.totalCount;
+      loading.value = false;
+    }
+  } else if (type === 'mcp') {
+    const [_, res] = await api.getMcpList({
+      page: currentPage.value,
+      pageSize: currentPageSize.value,
+      ...(payload as any),
+    });
+    if (res) {
+      pluginLists.value = res.result.services.map((item) => ({
+        serviceId: item.mcpserviceId,
+        description: item.description,
+        icon: item.icon,
+        author: item.author,
+        name: item.name,
+      }));
+    }
+  }
+
+  loading.value = false;
 };
 
 const handleFavorite = (e, item) => {
@@ -324,8 +409,7 @@ const handleFavorite = (e, item) => {
     });
 };
 
-const handleSearchapiList = (type) => {
-  apiType.value = type;
+const handleSearchapiList = (type: 'my' | 'createdByMe' | 'favorited') => {
   if (type === 'my') {
     handleParmasQueryapiList();
   } else {
@@ -337,14 +421,14 @@ const handleSearchapiList = (type) => {
   }
 };
 
-const handleDelapi = (item) => {
+const handleDelapi = (id: string) => {
   ElMessageBox.confirm('确定删除此接口吗？', '提示', {
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(() => {
     api
       .deleteSingleApiData({
-        serviceId: item.serviceId,
+        serviceId: id,
       })
       .then((res) => {
         if (res[1]) {
@@ -355,10 +439,13 @@ const handleDelapi = (item) => {
   });
 };
 
-const handleEditapi = (e, item) => {
-  e.stopPropagation();
-  router.push(`/createapi?apiId=${item.apiId}`);
-};
+function onPluginTypeClick(type: 'semantic_interface' | 'mcp') {
+  if (pluginType.value === type) {
+    return;
+  }
+  pluginType.value = type;
+  queryList(pluginType.value);
+}
 
 watch(
   () => [apiSearchValue, apiSearchType],
@@ -369,7 +456,7 @@ watch(
 );
 
 onMounted(() => {
-  handleQueryApiList();
+  queryList(pluginType.value);
 });
 </script>
 <style lang="scss" scoped>
@@ -385,10 +472,8 @@ onMounted(() => {
   margin-bottom: 0px !important;
 }
 .drawerContent {
+  overflow-y: auto;
   height: calc(100% - 32px);
-}
-.monacoEditorBox {
-  height: 100%;
 }
 .el-drawer {
   margin: 0px;
@@ -451,7 +536,6 @@ img {
   }
 }
 :deep(.el-drawer__body) {
-  overflow: unset !important;
   padding: 8px 24px 16px !important;
   .drawerBody {
     height: 100%;
@@ -461,9 +545,24 @@ img {
     }
   }
 }
-:deep(.el-drawer__header) {
-  color: var(--o-text-color-primary) !important;
-  padding: 24px 0px 0px 24px !important;
-  margin-bottom: 0px !important;
+
+.pluginOptions {
+  .pluginOptionsItem {
+    padding: 8px 15px;
+    cursor: pointer;
+    &:hover {
+      background-color: rgb(122, 165, 255);
+      color: #fff;
+    }
+  }
+}
+</style>
+
+<style>
+.plugin-tabs {
+  --o-tabs-font-size: 14px;
+  --o-tabs-item-padding: 5px 16px 0 5px;
+  --o-tabs-line-height: 32px;
+  --o-tabs-color_active: rgb(99, 149, 253);
 }
 </style>

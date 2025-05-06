@@ -83,7 +83,7 @@ export function useScrollBottom(
 
   onBeforeUnmount(() => {
     containerRef.value?.removeEventListener('scroll', onChatContainerScroll);
-    clearTimeout(scrollTimeout.value);
+    scrollTimeout && clearTimeout(scrollTimeout);
   });
 
   return {
