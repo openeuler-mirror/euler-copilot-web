@@ -987,7 +987,7 @@ button[disabled]:hover {
     top: 0;
     left: 0;
     opacity: 0.4;
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #accbee 100%);
+    // background-image: linear-gradient(180deg, #e7f0fd 1%, #accbee 100%);
     z-index: -1;
   }
 

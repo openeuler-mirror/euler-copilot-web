@@ -19,7 +19,7 @@ export const getApiKey = (): Promise<
     any,
     (
       | FcResponse<{
-          api_key: string;
+          api_key_exists: string;
         }>
       | undefined
     ),
@@ -32,11 +32,10 @@ export const getApiKey = (): Promise<
  * USER登录
  * @returns
  */
-export const changeApiKey = (params: {
-  action: string;
-  query?: string;
-}): Promise<[any, FcResponse<object> | undefined]> => {
-  return post('/api/auth/key', params, params);
+export const changeApiKey = (params: { action: string; query?: string }) => {
+  return post<{
+    api_key: string;
+  }>('/api/auth/key', params, params);
 };
 
 export const apiKeyApi = {
