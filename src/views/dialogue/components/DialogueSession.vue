@@ -830,7 +830,7 @@ watch(
             {{ $t('feedback.stop') }}
           </div>
         </div>
-        <div class="dialogue-conversation-bottom-selectGroup">
+        <div class="dialogue-conversation-bottom-selectGroup" style="display: none;">
             <div class="modalSelectGroup">
               <el-dropdown trigger="click">
                 <span class="el-dropdown-link" v-if="selectedModal.label">
