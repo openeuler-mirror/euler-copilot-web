@@ -38,15 +38,7 @@ const handleChangeMode = (val: string) => {
   console.log(val);
 }
 // const isCreateApp = ref(true);
-const modeOptions = ref([
-  {
-    label: 'test1',
-    value: 'session',
-  },
-  {
-    label: 'test2',
-    value: 'history',
-  }]);
+const modeOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
@@ -609,11 +601,20 @@ const clearSuggestion = (index: number): void => {
   }
 };
 
+const getAddedModalList = async() => {
+  const [_, res] = await api.getAddedModels();
+  if(!_ && res && res.code === 200) {
+     console.log(res);
+     modeOptions.value = res.result.models;
+  }
+}
+
 onMounted(() => {
   // 数据初始化
   AppForm.value = props.createAppForm;
   if (!inputRef.value) return;
   inputRef.value.focus();
+  getAddedModalList();
 });
 
 watch(selectMode, (newValue, oldValue) => {
@@ -789,7 +790,6 @@ watch(
           :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
-          :modeOptions="modeOptions"
           @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
@@ -830,12 +830,12 @@ watch(
             {{ $t('feedback.stop') }}
           </div>
         </div>
-        <div class="dialogue-conversation-bottom-selectGroup" style="display: none;">
+        <div class="dialogue-conversation-bottom-selectGroup">
             <div class="modalSelectGroup">
               <el-dropdown trigger="click">
-                <span class="el-dropdown-link" v-if="selectedModal.label">
-                  <img :src="selectedModal.icon" alt="" />
-                  {{ selectedModal.label }}
+                <span class="el-dropdown-link" v-if="selectedModal.model">
+                  <img style="width: 16px;" :src="selectedModal.icon" alt="" />
+                  <span style="width: 100px; overflow: hidden;line-height: 32px; padding-left: 8px;"> {{ selectedModal.model }}</span>
                   <el-icon>
                     <IconCaretRight/>
                   </el-icon>
@@ -856,7 +856,7 @@ watch(
                         :src="item.icon"
                         alt=""
                         style="width: 20px; height: 20px; margin-right: 8px"/>
-                      {{ item.label }}
+                      {{ item.model }}
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
