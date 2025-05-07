@@ -35,7 +35,6 @@ const isCreateApp = ref(props?.isCreateApp);
 const selectedModal = ref({});
 const handleChangeMode = (val: string) => { 
   selectedModal.value = val;
-  console.log(val);
 }
 // const isCreateApp = ref(true);
 const modeOptions = ref([]);
@@ -311,7 +310,6 @@ watch(currentSelectedSession, async (newVal) => {
 
   if (!curPolling) {
     pollingMap.set(newVal, getPollingProcess(newVal));
-    console.log('new polling');
   }
 
   existUploadList = existUploadMap.get(newVal);
@@ -319,7 +317,6 @@ watch(currentSelectedSession, async (newVal) => {
   curPolling = pollingMap.get(newVal);
   // 调用接口获取最新上传列表
   const [_, response] = await api.getUploadFiles(newVal);
-  console.log('watch');
   if (!_ && response) {
     const { documents } = response.result;
     existUploadList.length = 0;
@@ -432,7 +429,6 @@ const getPollingProcess = (sessionId) => {
   let currentCount = 0;
   const maxErrorCount = 200;
   const process = async () => {
-    console.log('getPollingProcess process' );
     const pollingExistUploadList = existUploadMap.get(sessionId) || [];
     const pollingUploadFilesView = isSameSession(
       sessionId,
@@ -496,7 +492,6 @@ const getPollingProcess = (sessionId) => {
     clearInterval(timer);
     timer = null;
   };
-  console.log('getPollingProcess');
   return { startPolling, stopPolling };
 };
 
@@ -604,7 +599,6 @@ const clearSuggestion = (index: number): void => {
 const getAddedModalList = async() => {
   const [_, res] = await api.getAddedModels();
   if(!_ && res && res.code === 200) {
-     console.log(res);
      modeOptions.value = res.result.models;
   }
 }

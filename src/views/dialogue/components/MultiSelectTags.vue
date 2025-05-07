@@ -7,7 +7,6 @@ const searchKey = ref('');
 const activeNames = ref([]);
 const filterKnowledgeList = computed(() => {
   // filter by searchKey
-  console.log(searchKey.value);
   if (!searchKey.value) return availableitems.value;
   else {
     return availableitems.value
@@ -35,12 +34,10 @@ const selectTag = (tag) => {
   }
 };
 onMounted(() => {
-  console.log(selectedTags.value);
   getKnowledgeList();
 });
 
 const getKnowledgeList = async () => {
-  console.log('getKnowledgeList');
   const [_, res] = await api.getKnowledgeList();
   if (!_ && res && res.code === 200) {
     // availableitems.value = res.result.tkbList[0].kbList;
