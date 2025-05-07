@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
           src="@/assets/svgs/euler_copilot_logo.svg"
           alt="euler_copilot_logo"
         />
-        <h4>EulerCopilot</h4>
+        <h4>openEuler Intelligence</h4>
       </div>
       <div class="chat-header-operation">
         <Operations></Operations>
