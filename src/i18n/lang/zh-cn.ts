@@ -29,7 +29,7 @@ export default {
     },
   },
   home: {
-    name: 'openEuler智能大模型系统',
+    name: 'openEuler智能化解决方案',
   },
   tabs: {
     work: '作品',
