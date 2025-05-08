@@ -8,6 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import axios from 'axios';
+import https from 'https';
 import { IconError } from '@computing/opendesign-icons';
 import { handleChangeRequestHeader, handleStatusError } from './tools';
 import type {
@@ -39,11 +40,19 @@ const baseURL =
   import.meta.env.MODE === 'electron-production'
     ? import.meta.env.VITE_BASE_PROXY_URL
     : './';
+
+// 创建 https agent 跳过证书校验
+const httpsAgent =
+  typeof window !== 'undefined' && (window as any).electronProcess
+    ? new https.Agent({ rejectUnauthorized: false })
+    : undefined;
+
 // 创建 axios 实例
 export const server = axios.create({
   baseURL,
   // API 请求的默认前缀
   timeout: 60 * 1000, // 请求超时时间
+  httpsAgent,
 });
 
 // request interceptor

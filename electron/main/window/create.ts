@@ -123,7 +123,7 @@ function setupWindowOpenHandler(win: BrowserWindow) {
           y,
           resizable: true,
           webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, '../preload/index.js'),
             webSecurity: false,
             nodeIntegration: true,
             nodeIntegrationInWorker: true,

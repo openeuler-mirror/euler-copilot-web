@@ -7,7 +7,7 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { app, ipcMain, Menu, BrowserWindow } from 'electron';
+import { app, session, ipcMain, Menu, BrowserWindow } from 'electron';
 import { createDefaultWindow, createChatWindow, createTray } from './window';
 import { cachePath, commonCacheConfPath } from './common/conf';
 import { mkdirpIgnoreError, getUserDefinedConf } from './common/fs-utils';
@@ -22,6 +22,11 @@ import {
 import { buildAppMenu } from './common/menu';
 import { registerIpcListeners } from './common/ipc';
 
+// 允许本地部署时使用无效证书，仅在 Electron 主进程下生效
+if (process.versions.electron) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 // 确保应用名称使用productName而不是package.json中的name
 app.name = productObj.name;
 
@@ -34,6 +39,22 @@ const osLocale = getOsLocale();
 // 应用初始化
 app.once('ready', () => {
   onReady();
+});
+
+// 处理证书错误事件，允许所有证书错误
+app.on(
+  'certificate-error',
+  (event, webContents, url, error, certificate, callback) => {
+    event.preventDefault();
+    callback(true);
+  },
+);
+
+// 针对所有 session 处理证书错误
+app.on('ready', () => {
+  session.defaultSession.setCertificateVerifyProc((request, callback) => {
+    callback(0); // 0 表示通过所有证书校验
+  });
 });
 
 // 处理应用退出前的事件，设置退出标志

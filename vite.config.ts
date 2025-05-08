@@ -47,7 +47,7 @@ export default ({ mode }): UserConfigExport => {
       }),
     ],
     build: {
-      minify: "esbuild",
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -87,6 +87,7 @@ export default ({ mode }): UserConfigExport => {
         '/api': {
           target: env.VITE_BASE_PROXY_URL,
           changeOrigin: true,
+          secure: false,
           ws: false,
           rewrite: (path: string) => path,
           cookieDomainRewrite: '.euler-copilot-master.test.osinfra.cn',
