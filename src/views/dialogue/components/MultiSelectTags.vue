@@ -1,4 +1,5 @@
 <script setup>
+import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
 import { api } from '@/apis';
 import { ref, computed, onMounted } from 'vue';
 
@@ -12,7 +13,7 @@ const filterKnowledgeList = computed(() => {
     return availableitems.value
       .map((item) => {
         const filterList = item.kbList.filter((kb) =>
-          kb.kbName.includes(searchKey.value),
+          kb.kbName.includes(searchKey.value) || kb.kbId.includes(searchKey.value),
         );
         return filterList.length > 0 ? { ...item, kbList: filterList } : null;
       })
@@ -65,11 +66,11 @@ const toggleModal = () => {
   <div class="multi-select-container">
     <div class="multi-select-box">
       <div class="select-content">
-        <div class="label-text" @click="toggleModal">知识库</div>
-        <div v-if="selectedTags.length === 0" class="placeholder">
-          请选择标签
+        <div class="label-text" @click="toggleModal">
+            <img style="width: 16px;" src="@/assets/svgs/search.svg" alt="" />
+            <span>知识库</span>
         </div>
-        <div v-else class="tags-container">
+        <div v-if="selectedTags.length" class="tags-container">
           <div v-for="(tag, index) in selectedTags" :key="index" class="tag">
             <span class="tag-text">{{ tag.kbName }}</span>
             <button class="tag-delete" @click="removeTag(index)">×</button>
@@ -86,16 +87,16 @@ const toggleModal = () => {
           <h3>知识库</h3>
           <button class="close-button" @click="toggleModal">×</button>
         </div>
+        <div class="multi-select-list">
         <ElInput
           v-model="searchKey"
-          :placeholder="$t('history.find_recent_chats')"
+          :placeholder="$t('witChainD.find_witChainD')"
           class="search-input"
         >
           <template #suffix>
             <img class="search-input__icon" src="@/assets/svgs/search.svg" />
           </template>
         </ElInput>
-        <div class="multi-select-list">
           <ul v-if="filterKnowledgeList.length">
             <ElCollapse v-model="activeNames">
               <template v-for="item in filterKnowledgeList" :key="item.key">
@@ -144,6 +145,58 @@ const toggleModal = () => {
 </template>
 
 <style lang="scss" scoped>
+
+.search-input {
+      margin-top: 8px;
+      width: calc(100% - 48px) !important;
+      font-size: 12px;
+      border-radius: 4px;
+      border-color: var(--o-border-color-lighter);
+      &__icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+:deep(.el-collapse-item) {
+  margin-bottom: 12px;
+}
+:deep(.el-collapse-item__content) {
+  border-bottom: none;
+  padding-bottom: 0px;
+  margin: 1px;
+}
+
+:deep(.el-collapse-item__header) {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  height: 16px;
+  margin-bottom: 8px;
+  color: #8d98aa;
+  font-size: 12px;
+  border-top: none;
+  border-bottom: none;
+  padding: 0px;
+  & i {
+    margin-right: 4px;
+  }
+}
+
+:deep(.el-collapse-item__arrow) {
+  margin: 1px 0px 0px 0px;
+}
+
+:deep(.el-collapse) {
+  border-top: none;
+  border-bottom: none;
+}
+
+:deep(.el-collapse-item__wrap) {
+  border-bottom: 5px;
+}
+
 .search-input {
   margin-top: 8px;
   width: calc(100% - 18px);
@@ -163,13 +216,13 @@ const toggleModal = () => {
   max-width: calc(100% - 148px);
   text-overflow: ellipsis;
   width: auto;
-  position: relative;
-  bottom: -8px;
+  position: absolute;
+  bottom: 159px;
+//   bottom: -8px;
 }
 
 .multi-select-box {
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -211,14 +264,17 @@ const toggleModal = () => {
 }
 
 .label-text {
-  font-size: 14px;
+  font-size: 12px;
   color: #303133;
-  margin-right: 10px;
+  margin-right: 16px;
   white-space: nowrap;
   flex-shrink: 0; /* 防止文字被压缩 */
-  display: inline-block;
+  display: flex;
   line-height: 32px;
-  margin-left: 8px;
+  margin-left: 16px;
+  img {
+    margin-right: 6px;
+  }
 }
 .tags-container {
   display: inline-flex; /* 使用inline-flex确保在同一行 */
@@ -227,6 +283,7 @@ const toggleModal = () => {
   flex-grow: 1;
   height: 100%;
   gap: 6px;
+  margin-right: 8px;
 }
 
 .tag {
@@ -234,7 +291,7 @@ const toggleModal = () => {
   align-items: center;
   background-color: #ecf5ff;
   color: #409eff;
-  border-radius: 4px;
+  border-radius: 16px;
   padding: 0 8px;
   font-size: 12px;
   height: 24px;
@@ -271,9 +328,9 @@ const toggleModal = () => {
 /* 全局样式，不使用scoped */
 .global-tag-modal {
   position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
+  top: 60px;
+  right: 16px;
+  bottom: 46px;
   width: 342px;
   background-color: #fff;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
@@ -323,17 +380,19 @@ const toggleModal = () => {
   max-width: 600px;
   margin: 0 auto;
   overflow: auto;
+  margin: 0px 24px 16px 24px;
 }
 
 .list-item {
   position: relative;
   padding: 16px;
   border-radius: 8px;
-  background-color: #f9f9f9;
-  border: 1px solid #e0e0e0;
+  background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
+//   border: 1px solid #e0e0e0;
   cursor: pointer;
   transition: all 0.2s ease;
-
+  width: calc(100% - 48px);
+  margin-top: 8px;
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
@@ -360,7 +419,6 @@ const toggleModal = () => {
 .item-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .item-header {
@@ -371,7 +429,7 @@ const toggleModal = () => {
 
 .item-name {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
 }
@@ -392,6 +450,7 @@ const toggleModal = () => {
 }
 
 .item-description {
+  font-size: 12px !important;
   margin: 0;
   color: #666;
   font-size: 14px;
@@ -399,6 +458,10 @@ const toggleModal = () => {
 
 .item-id {
   font-size: 12px;
+  height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #999;
 }
 .global-modal-overlay {

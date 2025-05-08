@@ -827,19 +827,19 @@ watch(
         <div class="dialogue-conversation-bottom-selectGroup">
             <div class="modalSelectGroup">
               <el-dropdown trigger="click">
-                <span class="el-dropdown-link" v-if="selectedModal.model">
+                <div class="el-dropdown-link" v-if="selectedModal.model">
                   <img style="width: 16px;" :src="selectedModal.icon" alt="" />
                   <span style="width: 100px; overflow: hidden;line-height: 32px; padding-left: 8px;"> {{ selectedModal.model }}</span>
+                  <el-icon style="margin-left: auto;">
+                    <IconCaretRight/>
+                  </el-icon>
+                </div>
+                <div class="el-dropdown-link" v-else>
+                  <span>请选择模型</span>
                   <el-icon>
                     <IconCaretRight/>
                   </el-icon>
-                </span>
-                <span class="el-dropdown-link" v-else>
-                  请选择模型
-                  <el-icon>
-                    <IconCaretRight/>
-                  </el-icon>
-                </span>
+                </div>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item
@@ -951,8 +951,20 @@ watch(
   border-radius: 8px;
   display: inline-block;
   span{
-    font-size: 18px;
     height: 32px;
+  }
+  .el-dropdown{
+    width: 100%;
+    display: block;
+    span{
+      line-height: 32px;
+    }
+  }
+  .el-dropdown-link{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
   }
 }
 .dialogue-rightContainer {
