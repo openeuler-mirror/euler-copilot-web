@@ -43,7 +43,9 @@ export const handleChangeRequestHeader = (
   }
   // TODO 请求携带token 字段待定
   const token = localStorage.getItem('ECSESSION');
-  token && (config.headers.Authorization = `${token}`);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 };
 
@@ -63,20 +65,23 @@ async function toAuthorization() {
   );
 
   const postMessageListener = (event: MessageEvent) => {
-    const { origin } = event.data;
     const AUTH_SERVER_URL = import.meta.env.VITE_BASE_PROXY_URL;
-    // 校验域名，防止攻击， TODO 域名待定
-    if (origin === AUTH_SERVER_URL) {
-      const { data } = event;
-      if (data?.type === 'AUTH_SUCCESS') {
-        window.removeEventListener('message', postMessageListener);
-        // TODO 存储token信息，字段待定
-        localStorage.setItem('ECSESSION', data.token);
-        authWindow?.close();
-        window.location.reload();
-      }
+    // 期望 event.data = { type: 'auth_success', sessionId: 'xxxx' }
+    const { sessionId, type } = event.data || {};
+    // 校验域名，防止攻击，兼容 Electron 没有域名的情况
+    const isElectron = window.location.protocol === 'file:';
+    if (
+      (isElectron || event.origin === AUTH_SERVER_URL) &&
+      type === 'auth_success' &&
+      sessionId
+    ) {
+      window.removeEventListener('message', postMessageListener);
+      localStorage.setItem('ECSESSION', sessionId);
+      authWindow?.close();
+      window.location.reload();
     }
   };
+
   if (authWindow) {
     const loop = setInterval(() => {
       if (authWindow && authWindow.closed) {
