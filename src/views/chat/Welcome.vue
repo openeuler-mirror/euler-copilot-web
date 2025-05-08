@@ -5,7 +5,7 @@
       src="../../assets/svgs/euler_copilot_logo.svg"
       alt="euler_copilot_logo"
     />
-    <p class="welcome-main">EulerCopilot 很高兴为您服务</p>
+    <p class="welcome-main">openEuler Intelligence 很高兴为您服务</p>
     <p class="welcome-desc">我是你的智能问答助手，现在就可以向我提问啦！</p>
   </div>
 </template>

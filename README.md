@@ -1,7 +1,7 @@
 # euler-copilot-web
 
 #### 介绍
-EulerCopilot前端
+openEuler Intelligence前端
 
 #### 软件架构
 软件架构说明

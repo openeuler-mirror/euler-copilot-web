@@ -203,3 +203,28 @@ export interface serviceApiData {
    */
   [property: string]: any;
 }
+/**
+ * addedModalList, 获取可选modal列表
+ */
+export interface addedModalList {
+  modelId: string;
+  model: string;
+  icon: string;
+}
+/**
+ * teamKnowledgeList, 获取teamKnowledgeList列表
+ */
+export interface teamKnowledgeList {
+  teamId: string;
+  teamName: string;
+  knowledgeList: KnowledgeList[];
+}
+/**
+ * KnowledgeList, 获取knowledgeList列表
+ */
+export interface KnowledgeList {
+  kbId: string;
+  kbName: string;
+  description: string;
+  isUsed: boolean;
+}

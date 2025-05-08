@@ -691,9 +691,7 @@ const saveFlow = (updateNodeParameter?) => {
       if (res[1]?.result) {
         queryFlow('update');
         const updatedCurFlow = res[1].result.flow;
-        console.log(res[1].result);
         isNodeConnect.value = res[1].result.connectivity;
-        console.log(isNodeConnect.value);
         redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
       }
       loading.value = false;

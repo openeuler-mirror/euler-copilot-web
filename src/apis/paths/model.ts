@@ -1,5 +1,5 @@
 import { get, post, del } from '../server';
-
+import { addedModalList } from './type';
 enum Provider {
   OLLAMA = 'Ollama',
   VLLM = 'VLLM',
@@ -48,12 +48,25 @@ const getModelProviderList = () => {
   }>('/api/model/provider');
 };
 
+const getKnowledgeList = () => {
+  return get('/api/kb');
+};
+
 const getAllModels = (searchKey: string) => {
   return get<{
     models: { modelId: string; modelName: string }[];
   }>('/api/model/all', {
     searchKey,
   });
+};
+
+/**
+ * 获取已添加模型列表
+ */
+const getAddedModels = () => {
+  return get<{
+    models: addedModalList[];
+  }>('/api/model');
 };
 
 /**
@@ -84,9 +97,11 @@ const deleteModel = (modelId: string) => {
 };
 
 export const modelApi = {
+  getAddedModels,
   getUserModelList,
   getModelProviderList,
   createModel,
   getAllModels,
   deleteModel,
+  getKnowledgeList
 };

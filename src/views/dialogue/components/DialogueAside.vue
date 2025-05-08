@@ -50,7 +50,7 @@ const {
   currentSelectedSession,
 } = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
-const { getHistorySession } = useHistorySessionStore();
+const { getHistorySession, createNewSession } = useHistorySessionStore();
 const { userinfo } = storeToRefs(useAccountStore());
 const deleteType = ref(true);
 // 搜索的关键词
@@ -325,6 +325,10 @@ watch(
     </ElTooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
+        <ElButton class="create-button" @click="createNewSession">
+          <img class="create-button__icon" src="@/assets/svgs/create.svg" />
+          <span>{{ $t('history.new_chat') }}</span>
+        </ElButton>
         <div class="collapsible-apps">
           <div class="collapsible-header" @click="toggleCollapse">
             <div class="header-content">
@@ -709,11 +713,11 @@ watch(
     border-radius: 8px;
     border-color: #5ab3ff !important;
     padding-top: 8px;
-
+    margin-bottom: 16px;
     span {
       font-size: 16px;
       color: var(--o-color-white);
-      line-height: 24px;
+      line-height: 26px;
       vertical-align: inherit;
     }
 
