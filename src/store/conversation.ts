@@ -8,19 +8,8 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { defineStore } from 'pinia';
-import {
-  ref,
-  nextTick,
-  watch,
-  onMounted,
-  onBeforeUnmount,
-  reactive,
-} from 'vue';
-import {
-  useAccountStore,
-  useHistorySessionStore,
-  useLangStore,
-} from 'src/store';
+import { ref } from 'vue';
+import { useHistorySessionStore, useLangStore } from 'src/store';
 import {
   AppShowType,
   FlowDataType,
@@ -32,11 +21,11 @@ import {
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-import { ElMessageBox } from 'element-plus';
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { Application } from 'src/apis/paths/type';
+import { handleAuthorize } from 'src/apis/tools';
 import $bus from 'src/bus/index';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+
 const STREAM_URL = '/api/chat';
 const newStreamUrl = 'api/chat';
 let controller = new AbortController();
@@ -129,6 +118,11 @@ export const useSessionStore = defineStore('conversation', () => {
     };
     headers['Content-Type'] = 'application/json; charset=UTF-8';
     headers['X-CSRF-Token'] = getCookie('_csrf_tk');
+    // 从 localStorage 获取 ECSESSION 并设置 Authorization
+    const token = localStorage.getItem('ECSESSION');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     try {
       let pp = {};
       if (params.params && typeof params.params === 'object') {
@@ -173,13 +167,14 @@ export const useSessionStore = defineStore('conversation', () => {
           switch (eventType) {
             case 'text.add':
               {
-                scrollToBottom(); 
+                scrollToBottom();
                 //向message添加值
                 conversationItem.message[conversationItem.currentInd] +=
-                message.content.text;
+                  message.content.text;
                 //向messageList添加值
-                conversationItem.messageList.getAllItems()[conversationItem.currentInd].message +=
-                message.content.text;
+                conversationItem.messageList.getAllItems()[
+                  conversationItem.currentInd
+                ].message += message.content.text;
               }
               break;
             case 'heartbeat':
@@ -434,11 +429,7 @@ export const useSessionStore = defineStore('conversation', () => {
           },
         });
       }
-      const isServiceOk = await handleServiceStatus(
-        resp.value.status,
-        params,
-        ind,
-      );
+      const isServiceOk = await handleServiceStatus(resp.value.status);
       if (!isServiceOk) {
         return;
       }
@@ -488,18 +479,16 @@ export const useSessionStore = defineStore('conversation', () => {
     }
   };
 
-  const handleServiceStatus = async (
-    status: number,
-    params: {
-      question: string;
-      conversationId?: string;
-      qaRecordId?: string;
-    },
-    ind?: number,
-  ): Promise<boolean> => {
+  /**
+   * 处理服务状态
+   * @param status
+   * @param params
+   * @param ind
+   */
+  const handleServiceStatus = async (status: number): Promise<boolean> => {
     if (status === 401 || status === 403) {
       // 鉴权失败重发
-      await toAuth();
+      await handleAuthorize(status);
       return false;
     } else if (status === 429) {
       throw new Error(`HTTP error, Rate limit exceeded`);
@@ -508,39 +497,6 @@ export const useSessionStore = defineStore('conversation', () => {
     }
   };
 
-  async function toAuth() {
-    const store = useAccountStore();
-    if (qiankunWindow.__POWERED_BY_QIANKUN__) {
-      const url = await store.getAuthUrl('login');
-      if (url) {
-        const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
-          ? `${url}&redirect_index=${location.href}`
-          : url;
-        if (redirectUrl) window.location.href = redirectUrl;
-      }
-    } else {
-      ElMessageBox.confirm(
-        i18n.global.t('Login.unauthorized'),
-        i18n.global.t('history.confirmation_message1'),
-        {
-          confirmButtonText: i18n.global.t('Login.login'),
-          showClose: false,
-          showCancelButton: false,
-          autofocus: false,
-          closeOnClickModal: false,
-          closeOnPressEscape: false,
-        },
-      ).then(async () => {
-        const url = await store.getAuthUrl('login');
-        if (url) {
-          const redirectUrl = qiankunWindow.__POWERED_BY_QIANKUN__
-            ? `${url}&redirect_index=${location.href}`
-            : url;
-          if (redirectUrl) window.location.href = redirectUrl;
-        }
-      });
-    }
-  }
   /**
    * 处理不合法信息
    * @param ind 当前问答对索引
@@ -611,10 +567,10 @@ export const useSessionStore = defineStore('conversation', () => {
       (
         conversationList.value[regenerateInd] as RobotConversationItem
       ).messageList.push({
-        message:"",
-        record_id:qaRecordId,
-        comment:"none",
-      }); 
+        message: '',
+        record_id: qaRecordId,
+        comment: 'none',
+      });
       (
         conversationList.value[regenerateInd] as RobotConversationItem
       ).currentInd =
