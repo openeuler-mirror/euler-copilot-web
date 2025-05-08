@@ -96,7 +96,7 @@ export function createTray(): Tray {
     appTray.setImage(resizedImage);
   }
   const contextMenu = Menu.buildFromTemplate(trayMenus);
-  appTray.setToolTip('EulerCopilot');
+  appTray.setToolTip('openEuler Intelligence');
 
   appTray.setContextMenu(contextMenu);
   return appTray;

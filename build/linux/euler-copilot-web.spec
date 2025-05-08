@@ -21,7 +21,7 @@ Version:          0.9.6
 Release:          1%{?dist}
 License:          MulanPSL-2.0 
 Group:            Applications/Utilities
-Summary:          openEuler 大模型智能系统 Web 前端
+Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
 
 URL:              https://gitee.com/openeuler/euler-copilot-web
@@ -31,10 +31,10 @@ Packager:         openEuler <contact@openeuler.org>
 BuildRequires:    curl
 
 %description
-openEuler 大模型智能系统 Web 前端
+openEuler 智能化解决方案 Web 前端
 
 %package -n       euler-copilot-desktop
-Summary:          openEuler 大模型智能系统桌面客户端
+Summary:          openEuler 智能化解决方案桌面客户端
 Requires:         at-spi2-core
 Requires:         gtk3
 Requires:         libXScrnSaver
@@ -47,7 +47,7 @@ Requires(post):   /bin/sh
 Requires(postun): /bin/sh
 
 %description -n   euler-copilot-desktop
-openEuler 大模型智能系统桌面客户端
+openEuler 智能化解决方案桌面客户端
 
 
 %prep
@@ -100,7 +100,7 @@ pnpm run package:linux
 
 
 %install
-mkdir -p %{buildroot}/opt/EulerCopilot
+mkdir -p %{buildroot}/opt/Intelligence
 mkdir -p %{buildroot}/usr/share/applications
 # 创建图标目录
 mkdir -p %{buildroot}/usr/share/icons/hicolor/16x16/apps
@@ -114,7 +114,7 @@ mkdir -p %{buildroot}/usr/share/icons/hicolor/256x256@2/apps
 mkdir -p %{buildroot}/usr/share/icons/hicolor/512x512/apps
 
 # 复制构件到目标目录
-cp -a %{_builddir}/%{name}-%{version}/release/euler-copilot-%{version}/%{_electron_build_dir}/* %{buildroot}/opt/EulerCopilot/
+cp -a %{_builddir}/%{name}-%{version}/release/openeuler-intelligence-%{version}/%{_electron_build_dir}/* %{buildroot}/opt/Intelligence/
 # 拷贝桌面入口文件和图标
 cp -a %{_builddir}/%{name}-%{version}/build/linux/euler-copilot-desktop.desktop %{buildroot}/usr/share/applications/
 cp -a %{_builddir}/%{name}-%{version}/build/icons/16x16.png %{buildroot}/usr/share/icons/hicolor/16x16/apps/euler-copilot-desktop.png
@@ -134,8 +134,8 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 
 %files -n euler-copilot-desktop
 # 应用安装目录及其所有内容
-%dir /opt/EulerCopilot
-%attr(0755, root, root) /opt/EulerCopilot/*
+%dir /opt/Intelligence
+%attr(0755, root, root) /opt/Intelligence/*
 # 桌面与图标
 %attr(0644, root, root) /usr/share/applications/euler-copilot-desktop.desktop
 %attr(0644, root, root) /usr/share/icons/hicolor/16x16/apps/euler-copilot-desktop.png
@@ -157,17 +157,17 @@ if type update-alternatives 2>/dev/null >&1; then
     if [ -L '/usr/bin/euler-copilot-desktop' -a -e '/usr/bin/euler-copilot-desktop' -a "`readlink '/usr/bin/euler-copilot-desktop'`" != '/etc/alternatives/euler-copilot-desktop' ]; then
         rm -f '/usr/bin/euler-copilot-desktop'
     fi
-    update-alternatives --install '/usr/bin/euler-copilot-desktop' 'euler-copilot-desktop' '/opt/EulerCopilot/euler-copilot-desktop' 100 || ln -sf '/opt/EulerCopilot/euler-copilot-desktop' '/usr/bin/euler-copilot-desktop'
+    update-alternatives --install '/usr/bin/euler-copilot-desktop' 'euler-copilot-desktop' '/opt/Intelligence/euler-copilot-desktop' 100 || ln -sf '/opt/Intelligence/euler-copilot-desktop' '/usr/bin/euler-copilot-desktop'
 else
-    ln -sf '/opt/EulerCopilot/euler-copilot-desktop' '/usr/bin/euler-copilot-desktop'
+    ln -sf '/opt/Intelligence/euler-copilot-desktop' '/usr/bin/euler-copilot-desktop'
 fi
 
 # Check if user namespaces are supported by the kernel and working with a quick test:
 if ! { [[ -L /proc/self/ns/user ]] && unshare --user true; }; then
     # Use SUID chrome-sandbox only on systems without user namespaces:
-    chmod 4755 '/opt/EulerCopilot/chrome-sandbox' || true
+    chmod 4755 '/opt/Intelligence/chrome-sandbox' || true
 else
-    chmod 0755 '/opt/EulerCopilot/chrome-sandbox' || true
+    chmod 0755 '/opt/Intelligence/chrome-sandbox' || true
 fi
 
 if hash update-mime-database 2>/dev/null; then
@@ -189,7 +189,7 @@ fi
 # Unfortunately, at the moment AppArmor doesn't have a good story for backwards compatibility.
 # https://askubuntu.com/questions/1517272/writing-a-backwards-compatible-apparmor-profile
 if apparmor_status --enabled > /dev/null 2>&1; then
-  APPARMOR_PROFILE_SOURCE='/opt/EulerCopilot/resources/apparmor-profile'
+  APPARMOR_PROFILE_SOURCE='/opt/Intelligence/resources/apparmor-profile'
   APPARMOR_PROFILE_TARGET='/etc/apparmor.d/euler-copilot-desktop'
   if apparmor_parser --skip-kernel-load --debug "$APPARMOR_PROFILE_SOURCE" > /dev/null 2>&1; then
     cp -f "$APPARMOR_PROFILE_SOURCE" "$APPARMOR_PROFILE_TARGET"

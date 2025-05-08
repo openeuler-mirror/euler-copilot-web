@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<BubbleProps>(), {
     >
       <div class="loading" v-if="loading">
         <img src="@/assets/images/loading.png" alt="" class="loading-icon" />
-        <div class="loading-text">EulerCopilot正在生成回答...</div>
+        <div class="loading-text">openEuler Intelligence 正在生成回答...</div>
       </div>
       <template v-else>
         <component v-if="contentRender" :is="contentRender(content)" />

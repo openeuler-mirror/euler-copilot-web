@@ -1,16 +1,16 @@
 [Desktop Entry]
-Name=EulerCopilot
-Exec=/opt/EulerCopilot/euler-copilot-desktop %U
+Name=openEuler Intelligence
+Exec=/opt/Intelligence/euler-copilot-desktop %U
 Terminal=false
 Type=Application
 Icon=euler-copilot-desktop
-StartupWMClass=EulerCopilot
-Comment=openEuler LLM Intelligent System Desktop Client
-Comment[zh]=openEuler 大模型智能系统桌面客户端
-Comment[zh_CN]=openEuler 大模型智能系统桌面客户端
-Comment[zh_CN.UTF-8]=openEuler 大模型智能系统桌面客户端
-Comment[zh_HK]=openEuler 大模型智能系統桌面應用程式
-Comment[zh_HK.UTF-8]=openEuler 大模型智能系統桌面應用程式
-Comment[zh_TW]=openEuler 大模型智能系統桌面軟體
-Comment[zh_TW.UTF-8]=openEuler 大模型智能系統桌面軟體
+StartupWMClass=Intelligence
+Comment=openEuler Intelligence Desktop Client
+Comment[zh]=openEuler 智能化解决方案桌面客户端
+Comment[zh_CN]=openEuler 智能化解决方案桌面客户端
+Comment[zh_CN.UTF-8]=openEuler 智能化解决方案桌面客户端
+Comment[zh_HK]=openEuler 智能化解決方案桌面應用程式
+Comment[zh_HK.UTF-8]=openEuler 智能化解決方案桌面應用程式
+Comment[zh_TW]=openEuler 智能化解決方案桌面軟體
+Comment[zh_TW.UTF-8]=openEuler 智能化解決方案桌面軟體
 Categories=Utility;
