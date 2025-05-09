@@ -21,7 +21,7 @@ Version:          0.9.6
 Release:          1%{?dist}
 License:          MulanPSL-2.0 
 Group:            Applications/Utilities
-Summary:          openEuler 大模型智能系统 Web 前端
+Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
 
 URL:              https://gitee.com/openeuler/euler-copilot-web
@@ -31,10 +31,10 @@ Packager:         openEuler <contact@openeuler.org>
 BuildRequires:    curl
 
 %description
-openEuler 大模型智能系统 Web 前端
+openEuler 智能化解决方案 Web 前端
 
 %package -n       euler-copilot-desktop
-Summary:          openEuler 大模型智能系统桌面客户端
+Summary:          openEuler 智能化解决方案桌面客户端
 Requires:         at-spi2-core
 Requires:         gtk3
 Requires:         libXScrnSaver
@@ -47,7 +47,7 @@ Requires(post):   /bin/sh
 Requires(postun): /bin/sh
 
 %description -n   euler-copilot-desktop
-openEuler 大模型智能系统桌面客户端
+openEuler 智能化解决方案桌面客户端
 
 
 %prep

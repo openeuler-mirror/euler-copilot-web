@@ -173,7 +173,7 @@ export function createDefaultWindow(): BrowserWindow {
 
   // 设置窗口标题
   defaultWindow.webContents.on('did-finish-load', () => {
-    defaultWindow?.setTitle('openEuler 大模型智能系统');
+    defaultWindow?.setTitle('openEuler 智能化解决方案');
   });
 
   return defaultWindow;
