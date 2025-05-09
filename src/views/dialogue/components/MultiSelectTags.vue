@@ -218,6 +218,7 @@ const toggleModal = () => {
   width: auto;
   position: absolute;
   bottom: 159px;
+//   bottom: -8px;
 }
 
 .multi-select-box {
@@ -387,6 +388,7 @@ const toggleModal = () => {
   padding: 16px;
   border-radius: 8px;
   background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
+//   border: 1px solid #e0e0e0;
   cursor: pointer;
   transition: all 0.2s ease;
   width: calc(100% - 48px);
