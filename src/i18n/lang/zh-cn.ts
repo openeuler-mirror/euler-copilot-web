@@ -29,7 +29,7 @@ export default {
     },
   },
   home: {
-    name: 'openEuler Intelligence',
+    name: 'openEuler 智能化解决方案',
   },
   tabs: {
     work: '作品',
@@ -282,6 +282,7 @@ export default {
     witChainD: '资产库配置',
     witChainD_id: '资产库id',
     describe_the_witChainD: '请输入',
+    find_witChainD: '请输入知识库名称/ID',
   },
   flow: {
     flow_start: '工作流进行中',

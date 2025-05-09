@@ -287,6 +287,7 @@ export default {
     witChainD: 'WitChainD',
     witChainD_id: 'id',
     describe_the_witChainD: 'Please enter witChainD id',
+    find_witChainD: 'Please enter witChainD name/id',
   },
   flow: {
     flow_start: 'Workflow in progress',
