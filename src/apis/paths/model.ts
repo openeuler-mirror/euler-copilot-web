@@ -48,8 +48,8 @@ const getModelProviderList = () => {
   }>('/api/model/provider');
 };
 
-const getKnowledgeList = () => {
-  return get('/api/kb');
+const getKnowledgeList = (conversationId?: string) => {
+  return post('/api/kb', { conversationId });
 };
 
 const getAllModels = (searchKey: string) => {
@@ -96,12 +96,21 @@ const deleteModel = (modelId: string) => {
   return del(`/api/model/${modelId}`);
 };
 
+const updateModelAndKnowLedgeList = (params: {
+  conversationId: string;
+  modelId: string;
+  kbIds: string[];
+}) => {
+  return post('/api/conversation', params);
+};
+
 export const modelApi = {
+  updateModelAndKnowLedgeList,
   getAddedModels,
   getUserModelList,
   getModelProviderList,
   createModel,
   getAllModels,
   deleteModel,
-  getKnowledgeList
+  getKnowledgeList,
 };

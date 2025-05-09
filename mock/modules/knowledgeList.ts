@@ -5,7 +5,7 @@ import Mock from 'mockjs';
 export default [
   {
     url: "/api/kb",
-    method: "get",
+    method: "post",
     response: () => {
         const result = Mock.mock({
           'tkbList|5': [
