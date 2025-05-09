@@ -54,6 +54,11 @@ const globals = {
       validateIPC(channel);
       ipcRenderer.removeAllListeners(channel);
     },
+
+    // 动态获取代理URL
+    getProxyUrl: async (): Promise<string> => {
+      return await ipcRenderer.invoke('copilot:get-proxy-url');
+    },
   },
 
   process: {
