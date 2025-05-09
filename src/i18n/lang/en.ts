@@ -122,7 +122,7 @@ export default {
     service_agreement: 'Service Agreement',
     privacy_policy: 'Privacy Policy',
     contact_us: 'Contact Us',
-    version: 'Version 0.9.5',
+    version: 'Version 0.9.6-Beta',
   },
   history: {
     new_chat: 'New Chat',

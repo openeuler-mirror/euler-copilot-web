@@ -25,13 +25,12 @@ import { Application } from 'src/apis/paths/type';
 import { handleAuthorize } from 'src/apis/tools';
 import $bus from 'src/bus/index';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { getBaseProxyUrl } from 'src/utils/tools';
 
-const STREAM_URL = '/api/chat';
-const newStreamUrl = 'api/chat';
 let controller = new AbortController();
-export var txt2imgPath = ref('');
-export var echartsObj = ref({});
-export var echartsHas = ref(false);
+export const txt2imgPath = ref('');
+export const echartsObj = ref({});
+export const echartsHas = ref(false);
 const excelPath = ref('');
 const resp = ref();
 const features = {
@@ -315,10 +314,12 @@ export const useSessionStore = defineStore('conversation', () => {
           $bus.emit('getNodesStatue', { data: message });
         }
       };
+      const baseProxyUrl = await getBaseProxyUrl();
+      const streamUrl = baseProxyUrl + '/api/chat';
       if (params.user_selected_flow) {
         // 之前的对话历史记录
         if (!params.type) {
-          await fetchEventSource(STREAM_URL, {
+          await fetchEventSource(streamUrl, {
             signal: controller.signal,
             keepalive: true,
             method: 'POST',
@@ -346,7 +347,7 @@ export const useSessionStore = defineStore('conversation', () => {
           });
         } else {
           // 新的工作流调试记录
-          await fetchEventSource(newStreamUrl, {
+          await fetchEventSource(streamUrl, {
             signal: controller.signal,
             keepalive: true,
             method: 'POST',
@@ -371,7 +372,7 @@ export const useSessionStore = defineStore('conversation', () => {
         }
       } else if (params.user_selected_app) {
         // 新的工作流调试记录
-        await fetchEventSource(STREAM_URL, {
+        await fetchEventSource(streamUrl, {
           signal: controller.signal,
           keepalive: true,
           method: 'POST',
@@ -401,7 +402,7 @@ export const useSessionStore = defineStore('conversation', () => {
       } else if (false) {
         //写传参数情况
       } else {
-        await fetchEventSource(STREAM_URL, {
+        await fetchEventSource(streamUrl, {
           signal: controller.signal,
           keepalive: true,
           method: 'POST',
