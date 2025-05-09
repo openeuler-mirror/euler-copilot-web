@@ -1,7 +1,7 @@
 {
-  "name": "euler-copilot",
+  "name": "openeuler-intelligence",
   "version": "0.9.6",
-  "description": "openEuler 大模型智能系统",
+  "description": "openEuler 智能化解决方案",
   "author": {
     "name": "openEuler",
     "email": "contact@openeuler.org"
@@ -35,8 +35,8 @@
     "package:linux": "pnpm run build:desktop && electron-builder --linux"
   },
   "build": {
-    "appId": "org.openeuler.eulercopilot",
-    "productName": "EulerCopilot",
+    "appId": "org.openeuler.intelligence",
+    "productName": "openEuler Intelligence",
     "copyright": "Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.",
     "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
     "directories": {
@@ -71,7 +71,7 @@
       ]
     },
     "mac": {
-      "executableName": "EulerCopilot",
+      "executableName": "openEuler Intelligence",
       "category": "public.app-category.utilities",
       "target": [
         "dmg"
@@ -94,7 +94,7 @@
       "installerHeaderIcon": "build/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "EulerCopilot",
+      "shortcutName": "openEuler Intelligence",
       "deleteAppDataOnUninstall": true,
       "include": "build/win/nsis-installer.nsh"
     },
@@ -188,5 +188,5 @@
     "vite-plugin-mock": "^3.0.2",
     "vite-plugin-qiankun": "1.0.15"
   },
-  "packageManager": "pnpm@10.9.0+sha512.0486e394640d3c1fb3c9d43d49cf92879ff74f8516959c235308f5a8f62e2e19528a65cdc2a3058f587cde71eba3d5b56327c8c33a97e4c4051ca48a10ca2d5f"
+  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
 }
