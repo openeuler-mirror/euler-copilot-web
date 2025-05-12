@@ -96,5 +96,7 @@ export async function getBaseProxyUrl(): Promise<string> {
   if (window.location.hostname === 'localhost') {
     return '';
   }
-  return import.meta.env.VITE_BASE_PROXY_URL;
+  // VITE_BASE_PROXY_URL 未定义时返回空字符串
+  const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
+  return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
 }
