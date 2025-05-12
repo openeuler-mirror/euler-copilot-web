@@ -29,6 +29,7 @@ export interface DialogueSession {
 const props = withDefaults(defineProps<DialogueSession>(), {});
 const Form = ref(props.createAppForm);
 const AppForm = ref(props.createAppForm);
+const knowledgeList = ref();
 const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
@@ -189,6 +190,12 @@ const handleSendMessage = async (
   if (!currentSelectedSession.value) {
     await generateSession();
   }
+  // 更新当前的会话模型和知识库列表
+  await api.updateModelAndKnowLedgeList({
+    conversationId: currentSelectedSession.value,
+    modelId: selectMode.value[0],
+    kbIds:knowledgeList.value,
+  })
   if (user_selected_flow) {
     await sendQuestion(
       groupId,
@@ -499,6 +506,11 @@ const isSameSession = (sessionId, curSessionId): boolean => {
   return sessionId === curSessionId;
 };
 
+const handleUpdate = (kbList: any[]): void => {
+  // 获取 knowledgeList 列表
+  knowledgeList.value = kbList;
+}
+
 // 上传文件(用户操作可能分批次)
 const updateFilesInSession = async (
   formData,
@@ -610,6 +622,13 @@ onMounted(() => {
   inputRef.value.focus();
   getAddedModalList();
 });
+
+watch(currentSelectedSession, (newValue, oldValue) => {
+  // 更新选择 mode
+  selectMode.value = [];
+},{
+  immediate: true,
+})
 
 watch(selectMode, (newValue, oldValue) => {
   user_selected_app.value = [];
@@ -856,7 +875,7 @@ watch(
                 </template>
               </el-dropdown>        
             </div>
-            <MultiSelectTags></MultiSelectTags>
+            <MultiSelectTags @updateValue="handleUpdate"/>
           </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
