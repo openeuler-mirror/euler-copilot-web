@@ -70,22 +70,6 @@ export const useSessionStore = defineStore('conversation', () => {
   // ai回复是否还在生成中
   const isAnswerGenerating = ref<boolean>(false);
   /**
-   * 将所有获取的数据进行data: \n\n 分割只保留有效信息，更容易处理最后的状态码
-   * @param input
-   * {
-   **/
-  function splitDataString(input) {
-    if (input.includes('"data: ')) {
-      return [input];
-    }
-    const parts = input.split(/data: /g).filter((part) => part.trim() !== '');
-    if (input.startsWith('data: ')) {
-      return parts.map((part) => 'data: ' + part);
-    } else {
-      return [parts[0], ...parts.slice(1).map((part) => 'data: ' + part)];
-    }
-  }
-  /**
    * 请求流式数据
    * @param params
    * {

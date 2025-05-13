@@ -10,7 +10,6 @@
 import { ElNotification, ElMessageBox } from 'element-plus';
 import { LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
 import { useAccountStore } from 'src/store';
-import { getBaseProxyUrl } from 'src/utils/tools';
 
 import type {
   AxiosError,
