@@ -64,16 +64,9 @@ async function toAuthorization() {
   );
 
   const postMessageListener = async (event: MessageEvent) => {
-    const AUTH_SERVER_URL = await getBaseProxyUrl();
     // 期望 event.data = { type: 'auth_success', sessionId: 'xxxx' }
     const { sessionId, type } = event.data || {};
-    // 校验域名，防止攻击，兼容 Electron 没有域名的情况
-    const isElectron = window.location.protocol === 'file:';
-    if (
-      (isElectron || event.origin === AUTH_SERVER_URL) &&
-      type === 'auth_success' &&
-      sessionId
-    ) {
+    if (type === 'auth_success' && sessionId) {
       window.removeEventListener('message', postMessageListener);
       localStorage.setItem('ECSESSION', sessionId);
       authWindow?.close();
