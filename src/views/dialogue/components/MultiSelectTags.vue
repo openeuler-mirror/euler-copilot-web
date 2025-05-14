@@ -278,8 +278,7 @@ const checkTagsOverflow = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   width: auto;
-  position: absolute;
-  bottom: 159px;
+  position: relative;
 }
 
 .multi-select-box {
