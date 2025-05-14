@@ -1,20 +1,24 @@
 <script setup>
 import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
+import { IconCheckBold, IconXSolid } from '@computing/opendesign-icons';
 import { api } from '@/apis';
 import { ref, computed, onMounted } from 'vue';
 
 const isModalOpen = ref(false);
 const searchKey = ref('');
 const activeNames = ref([]);
-const emit = defineEmits(['updateValue'])
+const emit = defineEmits(['updateValue']);
+const isTagsOverflow = ref(false);
 const filterKnowledgeList = computed(() => {
   // filter by searchKey
   if (!searchKey.value) return availableitems.value;
   else {
     return availableitems.value
       .map((item) => {
-        const filterList = item.kbList.filter((kb) =>
-          kb.kbName.includes(searchKey.value) || kb.kbId.includes(searchKey.value),
+        const filterList = item.kbList.filter(
+          (kb) =>
+            kb.kbName.includes(searchKey.value) ||
+            kb.kbId.includes(searchKey.value),
         );
         return filterList.length > 0 ? { ...item, kbList: filterList } : null;
       })
@@ -35,7 +39,10 @@ const selectTag = (tag) => {
     selectedTags.value.splice(selectedTags.value.indexOf(tag), 1);
   }
   // 触发父组件的updateValue事件
-  emit('updateValue', selectedTags.value.map((item) => item.kbId));
+  emit(
+    'updateValue',
+    selectedTags.value.map((item) => item.kbId),
+  );
 };
 onMounted(() => {
   getKnowledgeList();
@@ -44,7 +51,6 @@ onMounted(() => {
 const getKnowledgeList = async () => {
   const [_, res] = await api.getKnowledgeList();
   if (!_ && res && res.code === 200) {
-    // availableitems.value = res.result.tkbList[0].kbList;
     availableitems.value = res.result.tkbList;
     activeNames.value = res.result.tkbList.map((item) => item.teamName);
   }
@@ -63,6 +69,53 @@ const isSelected = (tag) => {
 const toggleModal = () => {
   isModalOpen.value = !isModalOpen.value;
 };
+
+// 待优化
+const checkTagsOverflow = () => {
+  const container = document.querySelector('.tags-container');
+  console.log(container, 'container');
+  if (!container) return;
+
+  const tags = container.querySelectorAll('.tag');
+  console.log(tags, 'tags');
+  if (!tags.length) return;
+
+  //重置所有标签的样式
+  tags.forEach((tag) => {
+    tag.style.maxWidth = 'none';
+    tag.querySelector('.tag-text').style.maxWidth = '120px';
+  });
+
+  if (container.scrollWidth >= container.clientWidth && !isTagsOverflow.value) {
+    console.log(container.scrollWidth, container.clientWidth);
+    isTagsOverflow.value = true;
+    let lastVisibleIndex = tags.length - 1;
+    while (lastVisibleIndex >= 0) {
+      const tagRect = tags[lastVisibleIndex].getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      if (tagRect.right <= containerRect.right) {
+        break;
+      }
+      lastVisibleIndex--;
+    }
+
+    if (lastVisibleIndex >= 0) {
+      const lastTag = tags[lastVisibleIndex];
+      const tagText = lastTag.querySelector('.tag-text');
+
+      // 计算可用空间
+      const containerRight = container.getBoundingClientRect().right;
+      const tagRight = lastTag.getBoundingClientRect().right;
+      const deleteBtnWidth = 20; // 关闭按钮的预估宽度
+
+      // 设置最大宽度
+      const availableWidth =
+        containerRight - lastTag.getBoundingClientRect().left - deleteBtnWidth;
+      tagText.style.maxWidth = `${Math.max(0, availableWidth)}px`;
+    }
+  }
+};
 </script>
 
 <template>
@@ -70,13 +123,17 @@ const toggleModal = () => {
     <div class="multi-select-box">
       <div class="select-content">
         <div class="label-text" @click="toggleModal">
-            <img style="width: 16px;" src="@/assets/svgs/search.svg" alt="" />
-            <span>知识库</span>
+          <img style="width: 16px" src="@/assets/svgs/search.svg" alt="" />
+          <span>知识库</span>
         </div>
         <div v-if="selectedTags.length" class="tags-container">
           <div v-for="(tag, index) in selectedTags" :key="index" class="tag">
             <span class="tag-text">{{ tag.kbName }}</span>
-            <button class="tag-delete" @click="removeTag(index)">×</button>
+            <button class="tag-delete" @click="removeTag(index)">
+              <el-icon>
+                <IconXSolid />
+              </el-icon>
+            </button>
           </div>
         </div>
       </div>
@@ -91,15 +148,15 @@ const toggleModal = () => {
           <button class="close-button" @click="toggleModal">×</button>
         </div>
         <div class="multi-select-list">
-        <ElInput
-          v-model="searchKey"
-          :placeholder="$t('witChainD.find_witChainD')"
-          class="search-input"
-        >
-          <template #suffix>
-            <img class="search-input__icon" src="@/assets/svgs/search.svg" />
-          </template>
-        </ElInput>
+          <ElInput
+            v-model="searchKey"
+            :placeholder="$t('witChainD.find_witChainD')"
+            class="search-input"
+          >
+            <template #suffix>
+              <img class="search-input__icon" src="@/assets/svgs/search.svg" />
+            </template>
+          </ElInput>
           <ul v-if="filterKnowledgeList.length">
             <ElCollapse v-model="activeNames">
               <template v-for="item in filterKnowledgeList" :key="item.key">
@@ -129,7 +186,9 @@ const toggleModal = () => {
                         <div class="item-header">
                           <h3 class="item-name">{{ item.kbName }}</h3>
                           <span v-if="isSelected(item)" class="checkmark">
-                            ✓
+                            <el-icon>
+                              <IconCheckBold />
+                            </el-icon>
                           </span>
                         </div>
                         <p class="item-description">{{ item.description }}</p>
@@ -148,18 +207,17 @@ const toggleModal = () => {
 </template>
 
 <style lang="scss" scoped>
-
 .search-input {
-      margin-top: 8px;
-      width: calc(100% - 48px) !important;
-      font-size: 12px;
-      border-radius: 4px;
-      border-color: var(--o-border-color-lighter);
-      &__icon {
-        width: 16px;
-        height: 16px;
-      }
-    }
+  margin-top: 8px;
+  width: calc(100% - 48px) !important;
+  font-size: 12px;
+  border-radius: 4px;
+  border-color: var(--o-border-color-lighter);
+  &__icon {
+    width: 16px;
+    height: 16px;
+  }
+}
 
 :deep(.el-collapse-item) {
   margin-bottom: 12px;
@@ -217,6 +275,7 @@ const toggleModal = () => {
   display: inline-block;
   font-family: 'Arial', sans-serif;
   max-width: calc(100% - 148px);
+  overflow: hidden;
   text-overflow: ellipsis;
   width: auto;
   position: absolute;
@@ -229,7 +288,7 @@ const toggleModal = () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 5px;
-  background-color: #fff;
+  background-color: var(--o-bg-color-base);
   cursor: pointer;
   max-height: 32px;
   &:hover {
@@ -267,7 +326,8 @@ const toggleModal = () => {
 
 .label-text {
   font-size: 12px;
-  color: #303133;
+  //   color: #303133;
+  color: var(--o-text-color-primary);
   margin-right: 16px;
   white-space: nowrap;
   flex-shrink: 0; /* 防止文字被压缩 */
@@ -286,6 +346,7 @@ const toggleModal = () => {
   height: 100%;
   gap: 6px;
   margin-right: 8px;
+  max-width: 755px; /* 留出空间给删除按钮 */
 }
 
 .tag {
@@ -299,14 +360,19 @@ const toggleModal = () => {
   height: 24px;
   line-height: 24px;
   white-space: nowrap; /* 防止标签内容换行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
   .tag-text {
+    white-space: nowrap; /* 防止标签内容换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin-right: 5px;
   }
 
   .tag-delete {
     background: none;
     border: none;
-    color: #409eff;
+    color: rgb(141, 152, 172);
     cursor: pointer;
     font-size: 14px;
     line-height: 1;
@@ -314,7 +380,7 @@ const toggleModal = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
+    width: 14px;
     height: 16px;
 
     &:hover {
@@ -334,7 +400,7 @@ const toggleModal = () => {
   right: 16px;
   bottom: 46px;
   width: 342px;
-  background-color: #fff;
+  background-color: var(--el-bg-color);
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   z-index: 9999; /* 非常高的z-index确保在最上层 */
   display: flex;
@@ -347,12 +413,11 @@ const toggleModal = () => {
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-bottom: 1px solid #ebeef5;
 
   h3 {
     margin: 0;
     font-size: 16px;
-    color: #303133;
+    color: var(--o-text-color-secondary);
   }
 
   .close-button {
@@ -389,13 +454,17 @@ const toggleModal = () => {
   position: relative;
   padding: 16px;
   border-radius: 8px;
-  background-image: linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2));
+  background-image: linear-gradient(
+    to right,
+    rgba(109, 117, 250, 0.2),
+    rgba(90, 179, 255, 0.2)
+  );
   cursor: pointer;
   transition: all 0.2s ease;
   width: calc(100% - 48px);
   margin-top: 8px;
   &:hover {
-    transform: translateY(-2px);
+    outline: 1px solid #7aa5ff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   }
 
@@ -413,6 +482,7 @@ const toggleModal = () => {
       border-style: solid;
       border-width: 0 24px 24px 0;
       border-color: transparent #3498db transparent transparent;
+      border-radius: 4px;
     }
   }
 }
@@ -432,13 +502,13 @@ const toggleModal = () => {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--o-text-color-primary);
 }
 
 .checkmark {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 0px;
+  right: -1px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -448,12 +518,16 @@ const toggleModal = () => {
   font-weight: bold;
   font-size: 12px;
   z-index: 1;
+  .el-icon {
+    width: 8.75px;
+    height: 7.18px;
+  }
 }
 
 .item-description {
   font-size: 12px !important;
   margin: 0;
-  color: #666;
+  color: var(--o-text-color-secondary);
   font-size: 14px;
 }
 
@@ -464,6 +538,7 @@ const toggleModal = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   color: #999;
+  margin-top: 8px;
 }
 .global-modal-overlay {
   position: fixed;

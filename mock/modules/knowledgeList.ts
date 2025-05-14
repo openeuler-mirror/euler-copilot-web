@@ -14,8 +14,8 @@ export default [
                 teamName: '@cname(2,5)',
                 "kbList|5": [{
                     kbId: '@guid',
-                    kbName: '@cname(2,5)',
-                    description: '@csentence(10, 20)',
+                    kbName: '@csentence(5,20)',
+                    description: '@csentence(10, 50)',
                     isUsed: '@boolean', // 生成随机颜色的图片
                 }]
             },
