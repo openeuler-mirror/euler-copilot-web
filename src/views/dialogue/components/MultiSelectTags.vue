@@ -278,8 +278,7 @@ const checkTagsOverflow = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   width: auto;
-  position: absolute;
-  bottom: 159px;
+  position: relative;
 }
 
 .multi-select-box {
@@ -392,7 +391,7 @@ const checkTagsOverflow = () => {
 }
 </style>
 
-<style lang="scss">
+<style lang="scss" scoped>
 /* 全局样式，不使用scoped */
 .global-tag-modal {
   position: fixed;

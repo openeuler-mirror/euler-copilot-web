@@ -960,6 +960,9 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+.dialogue-conversation-bottom-selectGroup{
+  display: flex;
+}
 .modalSelectGroup{
   width: 140px;
   margin-right: 8px;
