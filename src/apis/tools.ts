@@ -22,9 +22,7 @@ import i18n from 'src/i18n';
 function getCookie(name: string) {
   const matches = document.cookie.match(
     new RegExp(
-      '(?:^|; )' +
-        name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') +
-        '=([^;]*)',
+      '(?:^|; )' + name.replace(/([.$?*|{}()[]\\\/\+^])/g, '\\$1') + '=([^;]*)',
     ),
   );
   return matches ? decodeURIComponent(matches[1]) : undefined;
@@ -64,17 +62,10 @@ async function toAuthorization() {
     `width=${w},height=${h},resizable=yes,scrollbars=yes,top=${top},left=${left}`,
   );
 
-  const postMessageListener = (event: MessageEvent) => {
-    const AUTH_SERVER_URL = import.meta.env.VITE_BASE_PROXY_URL;
+  const postMessageListener = async (event: MessageEvent) => {
     // 期望 event.data = { type: 'auth_success', sessionId: 'xxxx' }
     const { sessionId, type } = event.data || {};
-    // 校验域名，防止攻击，兼容 Electron 没有域名的情况
-    const isElectron = window.location.protocol === 'file:';
-    if (
-      (isElectron || event.origin === AUTH_SERVER_URL) &&
-      type === 'auth_success' &&
-      sessionId
-    ) {
+    if (type === 'auth_success' && sessionId) {
       window.removeEventListener('message', postMessageListener);
       localStorage.setItem('ECSESSION', sessionId);
       authWindow?.close();

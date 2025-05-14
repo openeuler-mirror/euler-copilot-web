@@ -6,6 +6,7 @@ import { ref, computed, onMounted } from 'vue';
 const isModalOpen = ref(false);
 const searchKey = ref('');
 const activeNames = ref([]);
+const emit = defineEmits(['updateValue'])
 const filterKnowledgeList = computed(() => {
   // filter by searchKey
   if (!searchKey.value) return availableitems.value;
@@ -33,6 +34,8 @@ const selectTag = (tag) => {
   } else {
     selectedTags.value.splice(selectedTags.value.indexOf(tag), 1);
   }
+  // 触发父组件的updateValue事件
+  emit('updateValue', selectedTags.value.map((item) => item.kbId));
 };
 onMounted(() => {
   getKnowledgeList();

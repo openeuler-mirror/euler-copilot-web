@@ -25,7 +25,7 @@ export default {
       url: '请输入 URL',
       api_key: '请输入 API KEY',
       model_name: '请选择模型',
-      max_token: '请输入最大Token',
+      max_token: '请输入最大 Token 数',
     },
   },
   home: {
@@ -116,7 +116,7 @@ export default {
     refresh: '换一换',
     query_interpretation: '请选择识别方式',
     Automatic: '自动识别',
-    ask_me_anything: '在此输入您想了解的内容，输入Shift+Enter换行',
+    ask_me_anything: '在此输入您想了解的内容，输入 Shift+Enter 换行',
     you_might_want_to_know: '你可能想问',
     close: '关闭',
     email1: '联系邮箱',
@@ -125,7 +125,7 @@ export default {
     service_agreement: '服务协议',
     privacy_policy: '隐私政策',
     contact_us: '联系我们',
-    version: '版本号0.9.5-内测版',
+    version: '版本号0.9.6-内测版',
   },
   history: {
     new_chat: '新建对话',
@@ -163,7 +163,7 @@ export default {
     feedbackSuccesful: '反馈成功',
     regenerate: '重新生成',
     try_ask_me: '你可以继续问我：',
-    eulercopilot_is_thinking: 'openEuler Intelligence正在生成回答...',
+    eulercopilot_is_thinking: 'openEuler Intelligence 正在生成回答...',
     generation_stopped: '回答已停止生成',
     stop: '停止回答',
     stopSuccessful: '暂停成功',
@@ -213,55 +213,56 @@ export default {
     password: '密码',
     enter_password: '请输入密码',
     incorrect_password: '密码输入有误',
-    api_key_management: 'API Key管理',
-    no_api_key_available: '暂无可用的API Key',
-    create_api_key: '新建API Key',
-    api_key_display_once: '此API Key只展示一次，请复制后妥善保存。',
+    api_key_management: 'API Key 管理',
+    no_api_key_available: '暂无可用的 API Key',
+    create_api_key: '新建 API Key',
+    api_key_display_once: '此 API Key 只展示一次，请复制后妥善保存。',
     revoke: '撤销',
     refresh: '刷新',
     unauthorized: '页面未授权，请先登录',
   },
   question: {
-    open_euler_community_edition_categories: 'openEuler社区版本有哪些分类？',
+    open_euler_community_edition_categories: 'openEuler 社区版本有哪些分类？',
     lts_release_cycle_and_support:
-      'openEuler长期支持版本的发布间隔周期和社区支持各是多久？',
+      'openEuler 长期支持版本的发布间隔周期和社区支持各是多久？',
     innovation_release_cycle_and_support:
-      'openEuler社区创新版本的发布间隔周期和社区支持各是多久？',
+      'openEuler 社区创新版本的发布间隔周期和社区支持各是多久？',
     container_cloud_platform_solution:
-      'openEuler社区的容器云管理平台解决方案(CCPS)是什么？',
-    sec_gear_main_functions: 'secGear主要提供哪三大能力？',
-    dde_description: 'DDE是一款什么组件？',
-    lustre_description: 'Lustre是什么？',
+      'openEuler 社区的容器云管理平台解决方案(CCPS)是什么？',
+    sec_gear_main_functions: 'secGear 主要提供哪三大能力？',
+    dde_description: 'DDE 是一款什么组件？',
+    lustre_description: 'Lustre 是什么？',
     open_euler_testing_management_platform:
-      'openEuler社区的测试管理平台是什么？',
-    open_euler_pkgship: 'openEuler的pkgship是什么？',
+      'openEuler 社区的测试管理平台是什么？',
+    open_euler_pkgship: 'openEuler 的 pkgship 是什么？',
     open_euler_software_package_introduction_principles:
-      'openEuler软件包引入原则是什么？',
+      'openEuler 软件包引入原则是什么？',
     download_rpm_without_installing:
-      'openEuler系统如何将一个RPM包下载到本地而不安装？',
+      'openEuler 系统如何将一个RPM包下载到本地而不安装？',
     count_the_occurrences_of_the_hello:
-      '请给我一个shell命令，实现以下功能：计算test.txt文件中hello字符串的出现次数',
+      '请给我一个 shell 命令，实现以下功能：计算 test.txt 文件中 hello 字符串的出现次数',
     convert_uppercase_to_lowercase:
-      '给我一个shell命令，实现以下功能：linux命令将本目录及子目录文本文件中的大写字母修改成小写字母',
+      '给我一个 shell 命令，实现以下功能：linux 命令将本目录及子目录文本文件中的大写字母修改成小写字母',
     list_files_with_specific_permissions:
-      '给我一个shell命令，实现以下功能：shell命令查找当前目录下权限符合的文件并列出',
+      '给我一个 shell 命令，实现以下功能：shell 命令查找当前目录下权限符合的文件并列出',
     search_error_keyword_with_context:
-      '给我一个shell命令，实现以下功能：在/home目录及其子目录中查找关键字“error”的文本文件，并将匹配行以及它们前后的3行内容输出到名为“result.txt”的文件中',
+      '给我一个 shell 命令，实现以下功能：在 /home 目录及其子目录中查找关键字“error”的文本文件，并将匹配行以及它们前后的3行内容输出到名为“result.txt”的文件中',
     clear_dependencies_for_software_package:
-      'openEuler系统如何清除软件源的依赖？',
-    gpgcheck_purpose_in_dnf: 'openEuler系统DNF中的gpgcheck参数是用来做什么的？',
+      'openEuler 系统如何清除软件源的依赖？',
+    gpgcheck_purpose_in_dnf:
+      'openEuler 系统 DNF 中的 gpgcheck 参数是用来做什么的？',
     installonly_limit_function_in_dnf:
-      'openEuler系统DNF中的installonly_limit参数的作用是？',
+      'openEuler 系统 DNF 中的 installonly_limit 参数的作用是？',
     clean_requirement_on_remove_function_in_dnf:
-      'openEuler系统DNF中的clean_requirement_on_remove参数具有什么功能？',
+      'openEuler 系统 DNF 中的 clean_requirement_on_remove 参数具有什么功能？',
     hunan_tobacco_monopoly_applications_on_openeuler:
-      '湖南省烟草专卖局基于openeuler系统有哪些应用？',
+      '湖南省烟草专卖局基于 openeuler 系统有哪些应用？',
     xsky_applications_on_openeuler:
-      'XSKY星辰天合公司基于openeuler系统有哪些应用？',
+      'XSKY星辰天合公司基于 openeuler 系统有哪些应用？',
   },
   upload: {
     upload_tip_text:
-      '支持上传文件（最多上传10个，总大小限制为64MB）接受pdf、docx、doc、txt、md、xlsx',
+      '支持上传文件（最多上传10个，总大小限制为64MB）接受 pdf、docx、doc、txt、md、xlsx',
     uploading: '正在上传...',
     upload_fail: '上传失败',
     resolving: '正在解析...',
@@ -273,14 +274,14 @@ export default {
     aside_session_file_count_back: '个文档',
   },
   apikey: {
-    save_apikey: '此API KEY只展示一次，请复制后妥善保存',
-    no_apikey: '暂无可用的apikey',
-    create_apikey: '新建apikey',
+    save_apikey: '此 API KEY 只展示一次，请复制后妥善保存',
+    no_apikey: '暂无可用的 API Key',
+    create_apikey: '新建 API Key',
     cancel: '取消',
   },
   witChainD: {
     witChainD: '资产库配置',
-    witChainD_id: '资产库id',
+    witChainD_id: '资产库 ID',
     describe_the_witChainD: '请输入',
     find_witChainD: '请输入知识库名称/ID',
   },

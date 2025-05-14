@@ -7,9 +7,17 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
+
+import { addedModalList, teamKnowledgeList } from "src/apis/paths/type";
+
+// 更新接口
 export interface SessionItem {
   conversationId: string;
   title: string;
   createdTime?: string | Date;
   docCount?: number;
+  appId?: string;
+  debug?: boolean;
+  model?: addedModalList;
+  kbList?: teamKnowledgeList[];
 }

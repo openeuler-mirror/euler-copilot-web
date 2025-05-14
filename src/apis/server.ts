@@ -18,6 +18,7 @@ import type {
 } from 'axios';
 import { ElMessage } from 'element-plus';
 import { successMsg } from 'src/components/Message';
+import { getBaseProxyUrl } from 'src/utils/tools';
 
 export interface FcResponse<T> {
   error: string;
@@ -35,10 +36,12 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
-const baseURL =
-  import.meta.env.MODE === 'electron-production'
-    ? import.meta.env.VITE_BASE_PROXY_URL
-    : './';
+const baseURL: string = './';
+if (import.meta.env.MODE === 'electron-production') {
+  getBaseProxyUrl().then((url) => {
+    server.defaults.baseURL = url;
+  });
+}
 
 // 创建 axios 实例
 export const server = axios.create({

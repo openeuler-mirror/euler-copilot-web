@@ -30,11 +30,11 @@ type HtmlEvent = 'copyPreCode';
  * @param data 自定义属性
  */
 export const onHtmlEventDispatch = (
-  _t: any,
-  _ty: any,
-  event: any,
+  _t: EventTarget | null,
+  _ty: string,
+  _event: Event,
   type: HtmlEvent,
-  data: any,
+  data: string,
 ): void => {
   if (type === 'copyPreCode') {
     const code = document.getElementById(data);
@@ -69,8 +69,34 @@ export const writeText = (text: string): void => {
     textArea.focus();
     textArea.select();
     new Promise<void>((res, rej) => {
-      document.execCommand('copy') ? res() : rej(new Error('复制失败'));
+      if (document.execCommand('copy')) {
+        res();
+      } else {
+        rej(new Error('复制失败'));
+      }
       textArea.remove();
     });
   }
 };
+
+/**
+ * 获取后端代理URL，兼容web、electron开发和electron生产
+ */
+export async function getBaseProxyUrl(): Promise<string> {
+  // Electron 生产环境（file:协议）读取配置
+  if (
+    window.eulercopilot &&
+    typeof window.eulercopilot.ipcRenderer?.getProxyUrl === 'function' &&
+    window.location.protocol === 'file:'
+  ) {
+    const url = await window.eulercopilot.ipcRenderer.getProxyUrl();
+    if (url) return url;
+  }
+  // 本地开发环境（localhost:3000），直接返回空字符串，确保 axios 只拼接 path
+  if (window.location.hostname === 'localhost') {
+    return '';
+  }
+  // VITE_BASE_PROXY_URL 未定义时返回空字符串
+  const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
+  return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
+}

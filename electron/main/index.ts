@@ -10,7 +10,11 @@
 import { app, session, ipcMain, Menu, BrowserWindow } from 'electron';
 import { createDefaultWindow, createChatWindow, createTray } from './window';
 import { cachePath, commonCacheConfPath } from './common/conf';
-import { mkdirpIgnoreError, getUserDefinedConf } from './common/fs-utils';
+import {
+  mkdirpIgnoreError,
+  getUserDefinedConf,
+  ensureConfigFile,
+} from './common/fs-utils';
 import { getOsLocale, resolveNlsConfiguration } from './common/locale';
 import { resolveThemeConfiguration, setApplicationTheme } from './common/theme';
 import { productObj } from './common/product';
@@ -21,6 +25,8 @@ import {
 } from './common/shortcuts';
 import { buildAppMenu } from './common/menu';
 import { registerIpcListeners } from './common/ipc';
+import * as path from 'node:path';
+import { homedir } from 'node:os';
 
 // 允许本地部署时使用无效证书，仅在 Electron 主进程下生效
 if (process.versions.electron) {
@@ -35,6 +41,30 @@ let isQuitting = false;
 
 // 获取系统语言环境
 const osLocale = getOsLocale();
+
+// 启动时确保 smart-shell.json 存在
+const configDir = path.join(
+  process.platform === 'linux'
+    ? path.join(
+        process.env['XDG_CONFIG_HOME'] || path.join(homedir(), '.config'),
+      )
+    : path.join(homedir(), '.config'),
+  'eulercopilot',
+);
+const configPath = path.join(configDir, 'smart-shell.json');
+const defaultConfig = {
+  backend: 'openai',
+  openai: {
+    base_url: '',
+    model: '',
+    api_key: '',
+  },
+  eulercopilot: {
+    base_url: 'https://www.eulercopilot.local',
+    api_key: '',
+  },
+};
+ensureConfigFile(configPath, defaultConfig);
 
 // 应用初始化
 app.once('ready', () => {
@@ -137,7 +167,7 @@ async function startup() {
   registerIpcListeners();
 
   // 创建系统托盘
-  const tray = createTray();
+  createTray();
 
   // 创建应用窗口
   let win = createDefaultWindow();
@@ -180,3 +210,45 @@ async function startup() {
     chatWindow.hide();
   });
 }
+
+// 定义配置类型，避免使用 any
+interface Config {
+  backend: string;
+  openai: {
+    base_url: string;
+    model: string;
+    api_key: string;
+  };
+  eulercopilot: {
+    base_url: string;
+    api_key: string;
+  };
+}
+
+// 注册获取代理URL的IPC
+ipcMain.handle('copilot:get-proxy-url', async () => {
+  try {
+    // 兼容Linux/macOS，配置文件路径
+    const configDir = path.join(
+      process.platform === 'linux'
+        ? path.join(
+            process.env['XDG_CONFIG_HOME'] || path.join(homedir(), '.config'),
+          )
+        : path.join(homedir(), '.config'),
+      'eulercopilot',
+    );
+    const configPath = path.join(configDir, 'smart-shell.json');
+    const confRaw = getUserDefinedConf(configPath);
+    const conf = confRaw as unknown as Config | undefined;
+    if (
+      conf &&
+      conf.eulercopilot &&
+      typeof conf.eulercopilot.base_url === 'string'
+    ) {
+      return conf.eulercopilot.base_url || '';
+    }
+    return '';
+  } catch {
+    return '';
+  }
+});
