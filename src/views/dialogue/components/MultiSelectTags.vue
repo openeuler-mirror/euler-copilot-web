@@ -391,7 +391,7 @@ const checkTagsOverflow = () => {
 }
 </style>
 
-<style lang="scss">
+<style lang="scss" scoped>
 /* 全局样式，不使用scoped */
 .global-tag-modal {
   position: fixed;
