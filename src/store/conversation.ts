@@ -9,14 +9,19 @@
 // See the Mulan PSL v2 for more details.
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { useHistorySessionStore, useLangStore } from 'src/store';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
+
+import {
+  useHistorySessionStore,
+  useLangStore,
+} from 'src/store';
 import {
   AppShowType,
   FlowDataType,
   MessageArray,
   type ConversationItem,
   type RobotConversationItem,
-  type UserConversationItem,
+  type UserConversationItem, FlowType,
 } from 'src/views/dialogue/types';
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
@@ -24,30 +29,19 @@ import i18n from 'src/i18n';
 import { Application } from 'src/apis/paths/type';
 import { handleAuthorize } from 'src/apis/tools';
 import $bus from 'src/bus/index';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { useScrollBottom } from '@/hooks/useScrollBottom';
+import { getCookie } from "@/apis/tools";
 import { getBaseProxyUrl } from 'src/utils/tools';
 
-let controller = new AbortController();
-export const txt2imgPath = ref('');
 export const echartsObj = ref({});
-export const echartsHas = ref(false);
+
+let controller = new AbortController();
 const excelPath = ref('');
-const resp = ref();
 const features = {
   max_tokens: 2048,
   context_num: 2,
 };
 
-function getCookie(name: string) {
-  const matches = document.cookie.match(
-    new RegExp(
-      '(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\/+^])/g, '\\$1') + '=([^;]*)',
-    ),
-  );
-  return matches ? decodeURIComponent(matches[1]) : undefined;
-}
-
-import { useScrollBottom } from '@/hooks/useScrollBottom';
 export const useSessionStore = defineStore('conversation', () => {
   // #region ----------------------------------------< scroll >--------------------------------------
   // 会话窗口容器
@@ -58,6 +52,9 @@ export const useSessionStore = defineStore('conversation', () => {
   });
 
   // #endregion
+
+  const { language } = useLangStore();
+
   // 是否暂停回答
   const isPaused = ref(false);
   // 会话列表
@@ -68,11 +65,350 @@ export const useSessionStore = defineStore('conversation', () => {
   });
   const appList = ref<Application[]>();
   // ai回复是否还在生成中
-  const isAnswerGenerating = ref<boolean>(false);
+  const isAnswerGenerating = ref(false);
+
+  // 方法集合 - 用于处理不同类型的event message
+  const dataTransfers = {
+    textAdd: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>
+    ) => {
+      scrollToBottom();
+      const content = (message.content || {}) as Record<string, string>;
+      const contentText: string = content.text || '';
+      //向message添加值
+      conversationItem.message[conversationItem.currentInd] += contentText;
+      //向messageList添加值
+      const items = conversationItem.messageList.getAllItems();
+      items[conversationItem.currentInd].message += contentText;
+    },
+    documentAdd: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>
+    ) => {
+      conversationItem.message[conversationItem.currentInd] += message.content;
+      conversationItem.files = [
+        ...conversationItem.files,
+        message.content
+      ];
+    },
+    suggestionFunc: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>
+    ) => {
+      if (conversationItem.search_suggestions) {
+        conversationItem.search_suggestions.push(
+          Object(message.content),
+        );
+      } else {
+        conversationItem.search_suggestions = [
+          Object(message.content),
+        ];
+      }
+    },
+    flowStart: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>
+    ) => {
+      const flow = (message.flow || {}) as Record<string, string>;
+      conversationItem.flowdata = {
+        id: `${flow.stepId || ''}`,
+        title: i18n.global.t('flow.flow_start'),
+        // 工作流这里stepName代替step_progress，为不影响首页对话暂且用||
+        progress: flow.stepProgress || '',
+        status: 'running',
+        display: true,
+        flowId: `${flow.stepId || ''}`,
+        data: [[]],
+      };
+    },
+    stepInput: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>
+    ) => {
+      const flow = (message.flow || {}) as Record<string, string>;
+      conversationItem.flowdata?.data[0].push({
+        id: flow.stepId,
+        title: flow.stepName,
+        status: flow.stepStatus,
+        data: {
+          input: message.content,
+        },
+      });
+      if (conversationItem.flowdata) {
+        conversationItem.flowdata.progress = flow.stepProgress;
+        conversationItem.flowdata.status = flow.stepStatus;
+      }
+    },
+    stepOutput: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>
+    ) => {
+      const flow = (message.flow || {}) as Record<string, string>;
+      const metadata = (message.metadata || {}) as Record<string, unknown>;
+      const target = conversationItem.flowdata?.data[0].find(
+        (item) => item.id === flow.stepId,
+      );
+      if (target) {
+        target.data.output = message.content;
+        target.status = flow.stepStatus;
+        // 工作流添加每阶段的时间耗时
+        target['costTime'] = metadata.timeCost;
+        if (
+          flow.step_status === 'error' &&
+          conversationItem.flowdata
+        ) {
+          conversationItem.flowdata.status = flow.stepStatus;
+        }
+      }
+    },
+    flowStop: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+      isFlowDebug: boolean
+    ) => {
+      const content = (message.content || {}) as Record<string, unknown>;
+      const contentFlow = (content.flow || {}) as Record<string, string>;
+      const messageFlow = (message.flow || {}) as Record<string, string>;
+      if (isFlowDebug) {
+        // 如果是工作流的调试功能-添加status/data
+        conversationItem.flowdata = {
+          id: contentFlow.stepId,
+          title: i18n.global.t('flow.flow_end'),
+          progress: contentFlow.stepProgress,
+          status: messageFlow.stepStatus,
+          display: true,
+          data: conversationItem?.flowdata?.data,
+        };
+      } else if (content.type !== 'schema' && conversationItem.flowdata) {
+        // 删除 end 逻辑
+        conversationItem.flowdata = {
+          id: contentFlow.stepId,
+          title: i18n.global.t('flow.flow_end'),
+          progress: contentFlow.stepProgress,
+          status: 'success',
+          display: true,
+          data: conversationItem.flowdata.data,
+        };
+      } else {
+        conversationItem.paramsList = content.data;
+        if (conversationItem.flowdata) {
+          conversationItem.flowdata.title = i18n.global.t(
+            'flow.flow_params_error',
+          );
+          conversationItem.flowdata.status = 'error';
+          conversationItem.paramsList = content.data;
+        }
+      }
+    },
+    dataDone: (
+      conversationItem: RobotConversationItem,
+      isFlowDebug: boolean
+    ) => {
+      if (excelPath.value.length > 0) {
+        conversationItem.message[conversationItem.currentInd] +=
+          `</p><p>下载地址：${excelPath.value}`;
+      }
+      conversationItem.isFinish = true;
+      isAnswerGenerating.value = false;
+      // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
+      if (isFlowDebug) {
+        $bus.emit('debugChatEnd');
+      }
+    }
+  }
+
+  // chat message回调
+  const handleMsgDataShow = (
+    params: Record<string, unknown>,
+    msgData: Record<string, unknown>,
+    conversationItem: RobotConversationItem
+  ) => {
+    if (isPaused.value) {
+      // 手动暂停输出
+      isAnswerGenerating.value = false;
+      return;
+    }
+    const rawMsgData = msgData.data as string;
+    if (rawMsgData === '[DONE]') {
+      dataTransfers.dataDone(conversationItem, !!params.type);
+      return;
+    }
+
+    // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
+    // 这里json解析
+    const message = JSON.parse(rawMsgData || '{}');
+    const eventType = message['event'];
+    if ('metadata' in message) {
+      conversationItem.metadata = message.metadata;
+    }
+    if ('event' in message) {
+      switch (eventType) {
+        case 'text.add':
+          dataTransfers.textAdd(conversationItem, message);
+          break;
+        case 'heartbeat':
+          break;
+        case 'graph':
+          conversationItem.echartsObj = message.content.option;
+          break;
+        case 'document.add':
+          dataTransfers.documentAdd(conversationItem, message);
+          break;
+        case 'Suggestion':
+          dataTransfers.suggestionFunc(conversationItem, message);
+          break;
+        case 'init':
+          //初始化获取 metadata
+          conversationItem.metadata = message.metadata;
+          conversationItem.createdAt = message.content.created_at;
+          conversationItem.groupId = message.groupId;
+          break;
+        case 'flow.start':
+          //事件流开始--后续验证对话无下拉连接后则完全替换
+          dataTransfers.flowStart(conversationItem, message);
+          break;
+        case 'step.input':
+          dataTransfers.stepInput(conversationItem, message);
+          break;
+        case 'step.output':
+          dataTransfers.stepOutput(conversationItem, message);
+          break;
+        case 'flow.stop':
+          //时间流结束
+          dataTransfers.flowStop(conversationItem, message, !!params.type);
+          break;
+        default:
+          break;
+      }
+    }
+    // 将lines传递给workflow-以更新工作流节点的状态
+    if (params.user_selected_flow && params.user_selected_app) {
+      $bus.emit('getNodesStatue', { data: message });
+    }
+  };
+
+  // 方法集合 - 用于区分fetch时的请求
+  const funcFetch = {
+    fetchHistory: async (
+      url: string,
+      params: Record<string, unknown>,
+      innerParams: Record<string, unknown>,
+      fetchParams: Record<string, unknown>
+    ) => {
+      if (!params.type) {
+        await fetchEventSource(
+          url,
+          {
+            ...fetchParams,
+            body: JSON.stringify({
+              app: {
+                appId: (params.user_selected_app as unknown[])[0],
+                auth: {},
+                flowId: params.user_selected_flow,
+                params: innerParams,
+              },
+              conversationId: params.conversationId,
+              features: features,
+              groupId: params.groupId,
+              language,
+              question: params.question,
+              // record_id: params.qaRecordId,
+            })
+          }
+        );
+        return;
+      }
+      // 新的工作流调试记录
+      await fetchEventSource(
+        url,
+        {
+          ...fetchParams,
+          body: JSON.stringify({
+            app: {
+              appId: (params.user_selected_app as unknown[])[0],
+              flowId: params.user_selected_flow,
+              params: {},
+            },
+            conversationId: params.conversationId,
+            debug: true,
+            question: params.question,
+          })
+        }
+      );
+    },
+    fetchAppNew: async (
+      url: string,
+      params: Record<string, unknown>,
+      innerParams: Record<string, unknown>,
+      fetchParams: Record<string, unknown>
+    ) => {
+      await fetchEventSource(
+        url,
+        {
+          ...fetchParams,
+          body: JSON.stringify({
+            app: {
+              appId: (params.user_selected_app as unknown[])[0],
+              auth: {},
+              flowId: '',
+              params: innerParams,
+            },
+            conversationId: params.conversationId,
+            features: features,
+            language,
+            groupId: params.groupId,
+            question: params.question,
+            record_id: params.qaRecordId,
+          })
+        }
+      );
+    },
+    fetchDefault: async (
+      url: string,
+      params: Record<string, unknown>,
+      innerParams: Record<string, unknown>,
+      fetchParams: Record<string, unknown>
+    ) => {
+      await fetchEventSource(
+        url,
+        {
+          ...fetchParams,
+          body: JSON.stringify({
+            app: {
+              appId: '',
+              flowId: '',
+              params: {},
+              auth: {},
+            },
+            conversationId: params.conversationId,
+            features: features,
+            groupId: params.groupId,
+            language,
+            question: params.question,
+            record_id: params.qaRecordId,
+          })
+        }
+      );
+    }
+  }
+
+  const judgeResp = async (resp) => {
+    const isServiceOk = await handleServiceStatus(resp.status);
+    if (!isServiceOk) {
+      return false;
+    }
+    if (!resp.ok) {
+      throw new Error(`HTTP error! status: ${resp.status}`);
+    }
+    if (!resp.body) {
+      throw new Error(`HTTP error, body not exits`);
+    }
+    return true;
+  }
+
   /**
    * 请求流式数据
-   * @param params
-   * {
    **/
   const getStream = async (
     params: {
@@ -87,388 +423,81 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number,
   ): Promise<void> => {
-    const { language } = useLangStore();
+
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
-    // 当前问答在整个问答记录中的索引 openouler有什么ai特性
+    // 当前问答在整个问答记录中的索引 openEuler有什么ai特性
     const answerIndex = ind ?? conversationList.value.length - 1;
-    const conversationItem = conversationList.value[
-      answerIndex
-    ] as RobotConversationItem;
+    const conversationItem =
+      conversationList.value[answerIndex] as RobotConversationItem;
     controller = new AbortController();
-    const headers = {
-      user: JSON.stringify({ userName: 'openEuler' }),
-    };
-    headers['Content-Type'] = 'application/json; charset=UTF-8';
-    headers['X-CSRF-Token'] = getCookie('_csrf_tk');
-    // 从 localStorage 获取 ECSESSION 并设置 Authorization
-    const token = localStorage.getItem('ECSESSION');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+
     try {
-      let pp = {};
+      let pp;
       if (params.params && typeof params.params === 'object') {
         pp = params.params;
       } else if (params.params && typeof params.params === 'string') {
         pp = Object(JSON.parse(params.params));
-      } else {
-        pp = {};
       }
       isPaused.value = false;
       excelPath.value = '';
       echartsObj.value = {};
-      txt2imgPath.value = '';
-      const handelMsgDataShow = (msgData) => {
-        if (isPaused.value) {
-          // 手动暂停输出
-          isAnswerGenerating.value = false;
-          return;
-        }
-        if (msgData.data === '[DONE]') {
-          if (excelPath.value.length > 0) {
-            conversationItem.message[conversationItem.currentInd] +=
-              `</p><p>下载地址：${excelPath.value}`;
-          }
-          conversationItem.isFinish = true;
-          isAnswerGenerating.value = false;
-          // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
-          if (params.type) {
-            $bus.emit('debugChatEnd');
-          }
-          return;
-        }
+      // txt2imgPath.value = '';
 
-        // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
-        // 这里json解析
-        const message = JSON.parse(msgData.data || '{}');
-        const eventType = message['event'];
-        if ('metadata' in message) {
-          conversationItem.metadata = message.metadata;
-        }
-        if ('event' in message) {
-          switch (eventType) {
-            case 'text.add':
-              {
-                scrollToBottom();
-                //向message添加值
-                conversationItem.message[conversationItem.currentInd] +=
-                  message.content.text;
-                //向messageList添加值
-                conversationItem.messageList.getAllItems()[
-                  conversationItem.currentInd
-                ].message += message.content.text;
-              }
-              break;
-            case 'heartbeat':
-              break;
-            case 'graph':
-              {
-                conversationItem.echartsObj = message.content.option;
-              }
-              break;
-            case 'ducument.add':
-              {
-                conversationItem.message[conversationItem.currentInd] +=
-                  message.content;
-                conversationItem.files = [
-                  ...conversationItem.files,
-                  message.content,
-                ];
-              }
-              break;
-            case 'Suggestion':
-              {
-                if (conversationItem.search_suggestions) {
-                  conversationItem.search_suggestions.push(
-                    Object(message.content),
-                  );
-                } else {
-                  conversationItem.search_suggestions = [
-                    Object(message.content),
-                  ];
-                }
-              }
-              break;
-            case 'init':
-              {
-                //初始化获取 metadata
-                conversationItem.metadata = message.metadata;
-                conversationItem.createdAt = message.content.created_at;
-                conversationItem.groupId = message.groupId;
-              }
-              break;
-            case 'flow.start':
-              {
-                //事件流开始--后续验证对话无下拉连接后则完全替换
-                const flow = message.flow;
-                conversationItem.flowdata = {
-                  id: flow?.stepId || '',
-                  title: i18n.global.t('flow.flow_start'),
-                  // 工作流这里stepName代替step_progresss，为不影响首页对话暂且用||
-                  progress: flow?.stepProgress || '',
-                  status: 'running',
-                  display: true,
-                  flowId: flow?.flowId || '',
-                  data: [[]],
-                };
-              }
-              break;
-            case 'step.input':
-              {
-                conversationItem.flowdata?.data[0].push({
-                  id: message.flow?.stepId,
-                  title: message.flow?.stepName,
-                  status: message.flow?.stepStatus,
-                  data: {
-                    input: message.content,
-                  },
-                });
-                if (conversationItem.flowdata) {
-                  conversationItem.flowdata.progress =
-                    message.flow?.stepProgress;
-                  conversationItem.flowdata.status = message.flow?.stepStatus;
-                }
-              }
-              break;
-            case 'step.output':
-              {
-                const target = conversationItem.flowdata?.data[0].find(
-                  (item) => item.id === message.flow?.stepId,
-                );
-                if (target) {
-                  target.data.output = message.content;
-                  target.status = message.flow?.stepStatus;
-                  // 工作流添加每阶段的时间耗时
-                  target['costTime'] = message.metadata?.timeCost;
-                  if (
-                    message.flow.step_status === 'error' &&
-                    conversationItem.flowdata
-                  ) {
-                    conversationItem.flowdata.status = message.flow?.stepStatus;
-                  }
-                }
-              }
-              break;
-            case 'flow.stop':
-              //时间流结束
-              {
-                const flow = message.content.flow;
-                if (params.type) {
-                  // 如果是工作流的调试功能-添加status/data
-                  conversationItem.flowdata = {
-                    id: flow?.stepId,
-                    title: i18n.global.t('flow.flow_end'),
-                    progress: flow?.stepProgress,
-                    status: message.flow?.stepStatus,
-                    display: true,
-                    data: conversationItem?.flowdata?.data,
-                  };
-                } else if (
-                  message.content.type !== 'schema' &&
-                  conversationItem.flowdata
-                ) {
-                  // 删除 end 逻辑
-                  conversationItem.flowdata = {
-                    id: flow?.stepId,
-                    title: i18n.global.t('flow.flow_end'),
-                    progress: flow?.stepProgress,
-                    status: 'success',
-                    display: true,
-                    data: conversationItem.flowdata.data,
-                  };
-                } else {
-                  conversationItem.paramsList = message.content.data;
-                  if (conversationItem.flowdata) {
-                    conversationItem.flowdata.title = i18n.global.t(
-                      'flow.flow_params_error',
-                    );
-                    conversationItem.flowdata.status = 'error';
-                    conversationItem.paramsList = message.content.data;
-                  }
-                }
-              }
-              break;
-            default:
-              break;
-          }
-        }
-        // 将lines传递给workflow-以更新工作流节点的状态
-        if (params.user_selected_flow && params.user_selected_app) {
-          $bus.emit('getNodesStatue', { data: message });
-        }
-      };
+      let resp = {} as Response;
       const baseProxyUrl = await getBaseProxyUrl();
       const streamUrl = baseProxyUrl + '/api/chat';
+      const localEc = window.localStorage?.getItem('ECSESSION');
+      const fetchParams = {
+        signal: controller.signal,
+        keepalive: true,
+        method: 'POST',
+        headers: {
+          user: JSON.stringify({ userName: 'openEuler' }),
+          'Content-Type': 'application/json; charset=UTF-8',
+          'X-CSRF-Token': getCookie('_csrf_tk') || '',
+          // 从 localStorage 获取 ECSESSION 并设置 Authorization
+          ...(localEc ? {'Authorization': `Bearer ${localEc}`} : {})
+        },
+        body: {},
+        onopen: async (response) => {
+          resp = response;
+        },
+        onmessage: async (ev) => {
+          handleMsgDataShow(params, ev, conversationItem);
+        }
+      }
+
       if (params.user_selected_flow) {
         // 之前的对话历史记录
-        if (!params.type) {
-          await fetchEventSource(streamUrl, {
-            signal: controller.signal,
-            keepalive: true,
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-              question: params.question,
-              language,
-              conversationId: params.conversationId,
-              groupId: params.groupId,
-              // record_id: params.qaRecordId,
-              app: {
-                appId: params.user_selected_app[0],
-                flowId: params.user_selected_flow,
-                params: pp,
-                auth: {},
-              },
-              features: features,
-            }),
-            async onopen(response) {
-              resp.value = response;
-            },
-            async onmessage(ev) {
-              handelMsgDataShow(ev);
-            },
-          });
-        } else {
-          // 新的工作流调试记录
-          await fetchEventSource(streamUrl, {
-            signal: controller.signal,
-            keepalive: true,
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-              app: {
-                params: {},
-                appId: params.user_selected_app[0],
-                flowId: params.user_selected_flow,
-              },
-              question: params.question,
-              conversationId: params.conversationId,
-              debug: true,
-            }),
-            async onopen(response) {
-              resp.value = response;
-            },
-            async onmessage(ev) {
-              handelMsgDataShow(ev);
-            },
-          });
-        }
+        await funcFetch.fetchHistory(streamUrl, params, pp, fetchParams);
       } else if (params.user_selected_app) {
         // 新的工作流调试记录
-        await fetchEventSource(streamUrl, {
-          signal: controller.signal,
-          keepalive: true,
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({
-            question: params.question,
-            conversationId: params.conversationId,
-            record_id: params.qaRecordId,
-            language,
-            groupId: params.groupId,
-            // record_id: params.qaRecordId,
-            app: {
-              appId: params.user_selected_app[0],
-              flowId: '',
-              params: pp,
-              auth: {},
-            },
-            features: features,
-          }),
-          async onopen(response) {
-            resp.value = response;
-          },
-          async onmessage(ev) {
-            handelMsgDataShow(ev);
-          },
-        });
-      } else if (false) {
-        //写传参数情况
+        await funcFetch.fetchAppNew(streamUrl, params, pp, fetchParams);
+        // } else if (false) {
+        //   //写传参数情况
       } else {
-        await fetchEventSource(streamUrl, {
-          signal: controller.signal,
-          keepalive: true,
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({
-            question: params.question,
-            conversationId: params.conversationId,
-            record_id: params.qaRecordId,
-            language,
-            groupId: params.groupId,
-            // record_id: params.qaRecordId,
-            app: {
-              appId: '',
-              flowId: '',
-              params: {},
-              auth: {},
-            },
-            features: features,
-          }),
-          async onopen(response) {
-            resp.value = response;
-          },
-          async onmessage(ev) {
-            handelMsgDataShow(ev);
-          },
-        });
+        await funcFetch.fetchDefault(streamUrl, params, pp, fetchParams);
       }
-      const isServiceOk = await handleServiceStatus(resp.value.status);
-      if (!isServiceOk) {
-        return;
-      }
-      if (!resp.value.ok) {
-        throw new Error(`HTTP error! status: ${resp.value.status}`);
-      }
-      if (!resp.value.body) {
-        throw new Error(`HTTP error, body not exits`);
-      }
+
+      await judgeResp(resp);
     } catch (err: any) {
       isPaused.value = true;
       isAnswerGenerating.value = false;
-      (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
-        true;
+      const targetItem = conversationList.value[answerIndex] as RobotConversationItem;
+      targetItem.isFinish = true;
       if (err.name === 'AbortError') {
         successMsg(i18n.global.t('feedback.stopSuccessful'));
-        (
-          conversationList.value[answerIndex] as RobotConversationItem
-        ).isFinish = true;
+        // targetItem.isFinish = true;
       } else {
-        (conversationList.value[answerIndex] as RobotConversationItem).message[
-          (
-            conversationList.value[answerIndex] as RobotConversationItem
-          ).currentInd
-        ] += i18n.global.t('feedback.systemBusy');
+        targetItem.message[targetItem.currentInd] += i18n.global.t('feedback.systemBusy');
       }
-    }
-  };
-
-  /**
-   * 解析图表格式的文本
-   */
-  const extractAttributesFromMarker = (
-    str: string,
-  ): { title: string; link: string } | null => {
-    const regex = /<<<[^>]*title="([^"]+)"[^>]*link="([^"]+)"[^>]*>>>/;
-
-    const match = str.match(regex);
-
-    if (match) {
-      return {
-        title: match[1],
-        link: match[2],
-      };
-    } else {
-      return null;
     }
   };
 
   /**
    * 处理服务状态
    * @param status
-   * @param params
-   * @param ind
    */
   const handleServiceStatus = async (status: number): Promise<boolean> => {
     if (status === 401 || status === 403) {
@@ -483,46 +512,15 @@ export const useSessionStore = defineStore('conversation', () => {
   };
 
   /**
-   * 处理不合法信息
-   * @param ind 当前问答对索引
-   */
-  const judgeMessage = (ind: number, msg: string): boolean => {
-    let errorMsg = '';
-    if (msg.includes('[SENSITIVE]')) {
-      errorMsg = i18n.global.t('feedback.onlySupport');
-    }
-    //error没加限制
-    if (msg.includes('[ERROR]')) {
-      errorMsg = i18n.global.t('feedback.systemBusy');
-      const answerIndex = ind ?? conversationList.value.length - 1;
-      const conversationItem = conversationList.value[
-        answerIndex
-      ] as RobotConversationItem;
-      if (conversationItem.flowdata) {
-        conversationItem.flowdata.status = 'error';
-      }
-    }
-    if (
-      errorMsg &&
-      !(conversationList.value[ind] as RobotConversationItem).message[
-        (conversationList.value[ind] as RobotConversationItem).currentInd
-      ]
-    ) {
-      (conversationList.value[ind] as RobotConversationItem).message[
-        (conversationList.value[ind] as RobotConversationItem).currentInd
-      ] = errorMsg;
-      (conversationList.value[ind] as RobotConversationItem).isFinish = true;
-      isAnswerGenerating.value = false;
-      scrollToBottom();
-      return false;
-    }
-    scrollToBottom();
-    return true;
-  };
-  /**
    * 发送问题
+   * @param groupId
    * @param question 问题
+   * @param user_selected_app
    * @param regenerateInd 重新生成的回答索引
+   * @param qaRecordId
+   * @param user_selected_flow
+   * @param params
+   * @param type
    */
   const sendQuestion = async (
     groupId: string | undefined,
@@ -537,35 +535,28 @@ export const useSessionStore = defineStore('conversation', () => {
     const { updateSessionTitle, currentSelectedSession } =
       useHistorySessionStore();
     if (conversationList.value.length === 0) {
-      // 如果当前还没有对话记录，将第一个问题的questtion作为对话标题
+      // 如果当前还没有对话记录，将第一个问题的question作为对话标题
       await updateSessionTitle({
         conversationId: currentSelectedSession,
         title: question.slice(0, 20),
       });
     }
     if (regenerateInd) {
+      const targetItem = conversationList.value[regenerateInd] as RobotConversationItem;
       // 重新生成，指定某个回答，修改默认索引
-      (
-        conversationList.value[regenerateInd] as RobotConversationItem
-      ).message.push(''); //123
+      targetItem.message.push(''); //123
       // 重新生成，指定某个回答，修改默认索引
-      (
-        conversationList.value[regenerateInd] as RobotConversationItem
-      ).messageList.push({
+      targetItem.messageList.push({
         message: '',
-        record_id: qaRecordId,
+        record_id: qaRecordId || '',
         comment: 'none',
       });
-      (
-        conversationList.value[regenerateInd] as RobotConversationItem
-      ).currentInd =
-        (conversationList.value[regenerateInd] as RobotConversationItem).message
-          .length - 1; //123
+      targetItem.currentInd = targetItem.message.length - 1; //123
     } else {
       // 初次生成 ，创建一个问题和一个回答
       const ind = conversationList.value.length - 1;
-      const a = new MessageArray();
-      a.addItem('', '', 'none');
+      const messageList = new MessageArray();
+      messageList.addItem('', '', 'none');
       conversationList.value.push(
         {
           cid: ind + 1,
@@ -577,7 +568,7 @@ export const useSessionStore = defineStore('conversation', () => {
           cid: ind + 2,
           belong: 'robot',
           message: [''],
-          messageList: a,
+          messageList,
           currentInd: 0,
           isFinish: false,
           recordId: '',
@@ -589,63 +580,55 @@ export const useSessionStore = defineStore('conversation', () => {
     }
     isAnswerGenerating.value = true;
     scrollToBottom(true);
+
+    let getStreamParams: Parameters<typeof getStream>[0] = {
+      question,
+      qaRecordId,
+      groupId
+    };
     if (user_selected_flow && user_selected_app) {
-      await getStream(
-        {
-          question,
-          qaRecordId,
-          user_selected_app: [...user_selected_app],
-          user_selected_flow,
-          groupId: groupId,
-          params: params || undefined,
-          type: type,
-        },
-        regenerateInd ?? undefined,
-      );
+      getStreamParams = {
+        ...getStreamParams,
+        user_selected_app: [...user_selected_app],
+        user_selected_flow,
+        params: params || undefined,
+        type: type
+      }
     } else if (user_selected_app?.length) {
-      await getStream(
-        {
-          question,
-          qaRecordId,
-          user_selected_app: [...user_selected_app],
-          groupId: groupId,
-          params: params || undefined,
-        },
-        regenerateInd ?? undefined,
-      );
-    } else {
-      await getStream(
-        {
-          question,
-          qaRecordId,
-          groupId: groupId,
-        },
-        regenerateInd ?? undefined,
-      );
+      getStreamParams = {
+        ...getStreamParams,
+        user_selected_app: [...user_selected_app],
+        params: params || undefined,
+      }
     }
+    await getStream(
+      getStreamParams,
+      regenerateInd ?? undefined,
+    );
   };
+
   /**
    * 暂停流式返回
    */
   const pausedStream = async (cid?: number): Promise<void> => {
-    const answerIndex =
-      conversationList.value.findIndex((val) => val.cid === cid) !== -1
-        ? conversationList.value.findIndex((val) => val.cid === cid)
-        : conversationList.value.length - 1;
+    let answerIdx = conversationList.value.findIndex((val) => val.cid === cid);
+    if (answerIdx === -1) {
+      answerIdx = conversationList.value.length - 1;
+    }
+
     isPaused.value = true;
-    (conversationList.value[answerIndex] as RobotConversationItem).message[0] +=
-      '暂停生成';
-    (conversationList.value[answerIndex] as RobotConversationItem).isFinish =
-      true;
+    const targetItem = conversationList.value[answerIdx] as RobotConversationItem;
+    targetItem.message[0] += '暂停生成';
+    targetItem.isFinish = true;
     cancel();
     const resp = await api.stopGeneration();
     if (resp?.[1]?.code === 200) {
       isAnswerGenerating.value = false;
     }
   };
+
   /**
    * 重新生成回答
-   * @param cid
    */
   const reGenerateAnswer = (
     cid: number,
@@ -655,64 +638,54 @@ export const useSessionStore = defineStore('conversation', () => {
     const answerInd = conversationList.value.findIndex(
       (val) => val.cid === cid,
     );
+    const answerItem = conversationList.value[answerInd] as RobotConversationItem;
     const question = (
       conversationList.value[answerInd - 1] as UserConversationItem
     ).message;
-    const recordId = (
-      conversationList.value[answerInd] as RobotConversationItem
-    ).recordId;
+    const recordId = answerItem.recordId;
     let groupId: string | undefined;
     if (type && type === 'params') {
       groupId = undefined;
     } else {
-      groupId = (conversationList.value[answerInd] as RobotConversationItem)
-        .groupId
-        ? (conversationList.value[answerInd] as RobotConversationItem).groupId
-        : '';
+      groupId = answerItem.groupId || '';
     }
-    (conversationList.value[answerInd] as RobotConversationItem).isFinish =
-      false;
+    answerItem.isFinish = false;
     if (!question) {
       return;
     }
     sendQuestion(groupId, question, user_selected_app, answerInd, recordId, '');
   };
 
-  // #region ----------------------------------------< pagenation >--------------------------------------
+  // #region ----------------------------------------< pagination >--------------------------------------
   /**
    * 上一条
    * @param cid
    */
   const prePage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex(
+    const answerItem = conversationList.value.find(
       (val) => val.cid === cid,
-    );
-    if (
-      (conversationList.value[answerInd] as RobotConversationItem)
-        .currentInd === 0
-    ) {
+    ) as RobotConversationItem;
+    if (!answerItem || answerItem.currentInd === 0) {
       return;
     }
-    (conversationList.value[answerInd] as RobotConversationItem).currentInd -=
-      1;
+    answerItem.currentInd -= 1;
   };
+
   /**
    * 下一条
    * @param cid
    */
   const nextPage = (cid: number): void => {
-    const answerInd = conversationList.value.findIndex(
+    const answerItem = conversationList.value.find(
       (val) => val.cid === cid,
-    );
-
-    if (
-      conversationList.value[answerInd].message.length - 1 ===
-      (conversationList.value[answerInd] as RobotConversationItem).currentInd
-    ) {
+    ) as RobotConversationItem;
+    if (!answerItem) {
       return;
     }
-    (conversationList.value[answerInd] as RobotConversationItem).currentInd +=
-      1;
+    if (answerItem.message.length - 1 === answerItem.currentInd) {
+      return;
+    }
+    answerItem.currentInd += 1;
   };
   // #endregion
 
@@ -721,34 +694,28 @@ export const useSessionStore = defineStore('conversation', () => {
    * @param conversationId
    */
   const getConversation = async (conversationId: string): Promise<void> => {
-    const [_, res] = await api.getHistoryConversation(conversationId);
-    if (!_ && res) {
+    const [err, res] = await api.getHistoryConversation(conversationId);
+    if (!err && res) {
       conversationList.value = [];
+      const cList = conversationList.value as RobotConversationItem[];
       res.result.records.forEach((record) => {
-        if (
-          (conversationList.value as RobotConversationItem[]).find(
-            (i) => i.groupId === record.groupId,
-          )
-        ) {
-          const re = (conversationList.value as RobotConversationItem[]).find(
-            (i) => i.groupId === record.groupId,
+        const targetRecord = cList.find(i => i.groupId === record.groupId);
+        if (targetRecord) {
+          // 这里用groupId找到的targetRecord中的message必为array（为string的情况不存在groupId）
+          targetRecord.message.push(record.content.answer);
+          targetRecord.messageList.addItem(
+            record.content.answer,
+            record.id,
+            // is_like字段改为 comment = "liked", "disliked", "none"
+            record.comment,
           );
-          re?.message.push(record.content.answer);
-          if (typeof re?.message !== 'string') {
-            re?.messageList.addItem(
-              record.content.answer,
-              record.id,
-              // is_like字段改为 comment = "liked", "disliked", "none"
-              record.comment,
-            );
-            if (re?.currentInd !== undefined) {
-              re.currentInd = re.currentInd + 1;
-            }
+          if (targetRecord.currentInd !== undefined) {
+            targetRecord.currentInd ++;
           }
           return;
         }
-        const a = new MessageArray();
-        a.addItem(
+        const messageList = new MessageArray();
+        messageList.addItem(
           record.content.answer,
           record.id,
           // is_like字段改为 comment = "liked", "disliked", "none"
@@ -765,7 +732,7 @@ export const useSessionStore = defineStore('conversation', () => {
             cid: conversationList.value.length + 2,
             belong: 'robot',
             message: [record.content.answer],
-            messageList: a,
+            messageList,
             currentInd: 0,
             isAgainst: false,
             isSupport: false,
@@ -774,25 +741,16 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
-            flowdata: record?.flow
-              ? (GenerateFlowData(record.flow) as {
-                  id: number;
-                  title: string;
-                  status: string;
-                  data: any;
-                  display: boolean;
-                  progress: string;
-                  flowId?: string;
-                })
-              : undefined,
+            flowdata: record?.flow ? (generateFlowData(record.flow) as FlowType) : undefined,
           },
         );
         scrollToBottom();
       });
     }
   };
+
   //将获取到的 flow 数据结构转换
-  const GenerateFlowData = (record: any): object => {
+  const generateFlowData = (record: any): FlowDataType => {
     const flowData = {
       id: record.recordId,
       title: record.id,
@@ -812,12 +770,7 @@ export const useSessionStore = defineStore('conversation', () => {
         },
       });
     }
-    return flowData as FlowDataType;
-  };
-
-  const comment = (cid: number, isSupport: boolean, index: number): void => {
-    const ind = conversationList.value.find((item) => item.cid === cid);
-    // ind.message.items[index].is_like = isSupport;
+    return flowData;
   };
 
   /**
@@ -827,8 +780,8 @@ export const useSessionStore = defineStore('conversation', () => {
     isPaused.value = true;
     (
       conversationList.value[
-        conversationList.value.length - 1
-      ] as RobotConversationItem
+      conversationList.value.length - 1
+        ] as RobotConversationItem
     ).isFinish = true;
     cancel();
     const resp = await api.stopGeneration();
@@ -837,31 +790,10 @@ export const useSessionStore = defineStore('conversation', () => {
     }
   };
 
-  // 判断string是否是json对象
-  const judgeJson = (str) => {
-    if (!str) {
-      return false;
-    }
-    if (str.length < 8) {
-      return false;
-    }
-    const str3 = str.substr(6, str.length - 1);
-    try {
-      const obj = JSON.parse('"' + str3);
-      if (typeof obj === 'object' && obj) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (err) {
-      console.error('An error occurred:', err);
-      return false;
-    }
-  };
-
   const cancel = () => {
     controller.abort();
   };
+
   return {
     isPaused,
     conversationList,
@@ -876,7 +808,6 @@ export const useSessionStore = defineStore('conversation', () => {
     nextPage,
     reGenerateAnswer,
     getConversation,
-    comment,
-    cancel,
+    cancel
   };
 });
