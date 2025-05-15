@@ -28,8 +28,6 @@ onMounted(async () => {
     window.location.hostname === '127.0.0.1';
   iframeTarget.value =
     isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
-  console.log('TitleBar baseUrl', baseUrl);
-  console.log('TitleBar iframeTarget', iframeTarget.value);
 });
 
 const changeLanguagefun = (lang: 'CN' | 'EN') => {

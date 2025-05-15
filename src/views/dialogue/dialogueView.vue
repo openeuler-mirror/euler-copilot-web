@@ -178,8 +178,6 @@ onMounted(async () => {
     window.location.hostname === '127.0.0.1';
   const iframeTarget =
     isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
-  console.log('dialogueView baseUrl', baseUrl);
-  console.log('dialogueView iframeTarget', iframeTarget);
 
   if (localStorage.getItem('theme')) {
     // document.body.setAttribute(
