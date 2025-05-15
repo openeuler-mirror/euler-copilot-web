@@ -2,6 +2,7 @@ export default {
   common: {
     confirm: '确定',
     cancel: '取消',
+    close: '关闭',
     add: '添加{name}',
     edit: '编辑{name}',
     delete: '删除',

@@ -1,15 +1,15 @@
 import { get, post, del } from '../server';
 
-const MCP_BASE_URL = '/api/mcpservice';
+const MCP_BASE_URL = '/api/mcp';
 /**
- * 获取用户的模型列表
+ * 获取mcp服务列表
  * @returns
  */
 const getMcpList = (params: {
-  searchType: string;
-  keyword: string;
-  page: number;
-  pageSize: number;
+  searchType?: string;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
 }) => {
   return get<{
     currentPage: number;
@@ -21,22 +21,21 @@ const getMcpList = (params: {
         description: string;
         icon: string;
         author: string;
+        isActive: boolean;
       },
     ];
     totalModels: number;
   }>(MCP_BASE_URL, params);
 };
 
-const getMcpServiceDetail = (mcpserviceId: string) => {
+const getMcpServiceDetail = (id: string) => {
   return get<{
     serviceId: string;
     icon: string;
     name: string;
     description: string;
-    data: {
-      transmitProto: 'Stdio' | 'Streamable' | 'SSE';
-      config: string;
-    };
+    data: string;
+    mcpType: 'Stdio' | 'SSE' | 'Streamable';
     tools: {
       name: string;
       description: string;
@@ -51,20 +50,32 @@ const getMcpServiceDetail = (mcpserviceId: string) => {
         type: string;
       }[];
     }[];
-  }>(`${MCP_BASE_URL}/${mcpserviceId}`);
+  }>(`${MCP_BASE_URL}/${id}`);
 };
 
-const createMcpService = (params: {
+const createOrUpdateMcpService = (params: {
+  serviceId?: string;
   icon: string;
   name: string;
   description: string;
-  config: { transmitProto: 'Stdio' | 'Streamable' | 'SSE'; config: string };
+  config: string;
+  mcpType: 'Stdio' | 'SSE' | 'Streamable';
 }) => {
   return post<{}>(`${MCP_BASE_URL}`, params);
+};
+
+const deleteMcpService = (id: string) => {
+  return del<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`);
+};
+
+const activeMcpService = (id: string, active: boolean) => {
+  return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`, { active });
 };
 
 export const mcpApi = {
   getMcpList,
   getMcpServiceDetail,
-  createMcpService,
+  createOrUpdateMcpService,
+  deleteMcpService,
+  activeMcpService,
 };
