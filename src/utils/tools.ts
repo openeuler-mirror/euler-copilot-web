@@ -80,7 +80,7 @@ export const writeText = (text: string): void => {
 };
 
 /**
- * 获取后端代理URL，兼容web、electron开发和electron生产
+ * 获取后端代理URL，本地开发环境由 axios 拼接 path
  */
 export async function getBaseProxyUrl(): Promise<string> {
   // Electron 生产环境（file:协议）读取配置
@@ -97,6 +97,23 @@ export async function getBaseProxyUrl(): Promise<string> {
     return '';
   }
   // VITE_BASE_PROXY_URL 未定义时返回空字符串
+  const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
+  return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
+}
+
+/**
+ * 获取后端API URL
+ */
+export async function getBaseUrl(): Promise<string> {
+  // Electron 生产环境（file:协议）读取配置
+  if (
+    window.eulercopilot &&
+    typeof window.eulercopilot.ipcRenderer?.getProxyUrl === 'function'
+  ) {
+    const url = await window.eulercopilot.ipcRenderer.getProxyUrl();
+    if (url) return url;
+  }
+  // VITE_BASE_API_URL 未定义时返回空字符串
   const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
   return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
 }
