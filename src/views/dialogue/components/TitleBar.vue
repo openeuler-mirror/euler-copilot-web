@@ -70,7 +70,7 @@ const headerStyles = computed<CSSProperties>(() => {
   <header class="dialogue-header" :style="headerStyles">
     <span class="dialogue-header-left">
       <img src="@/assets/svgs/euler_copilot_logo.svg" />
-      <h4>{{ $t('home.name') }}</h4>
+      <h4>openEuler Intelligence</h4>
     </span>
     <div class="header-right">
       <el-popover popper-class="popper-class">
