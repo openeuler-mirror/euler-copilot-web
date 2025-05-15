@@ -35,7 +35,7 @@ const getMcpServiceDetail = (id: string) => {
     name: string;
     description: string;
     data: string;
-    mcpType: 'Stdio' | 'SSE' | 'Streamable';
+    mcpType: 'stdio' | 'sse' | 'stream';
     tools: {
       name: string;
       description: string;
@@ -59,7 +59,7 @@ const createOrUpdateMcpService = (params: {
   name: string;
   description: string;
   config: string;
-  mcpType: 'Stdio' | 'SSE' | 'Streamable';
+  mcpType: 'stdio' | 'sse' | 'stream';
 }) => {
   return post<{}>(`${MCP_BASE_URL}`, params);
 };

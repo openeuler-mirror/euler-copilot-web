@@ -9,7 +9,7 @@ interface McpDetail {
   icon: string;
   name: string;
   description: string;
-  type: 'Stdio' | 'SSE' | 'Streamable';
+  type: 'stdio' | 'sse' | 'stream';
   mcpConfig: string;
 }
 
@@ -27,7 +27,7 @@ const form = reactive<McpDetail>({
   icon: '',
   name: '',
   description: '',
-  type: 'Stdio',
+  type: 'stdio',
   mcpConfig: '',
 });
 
@@ -42,9 +42,9 @@ const rules = reactive<FormRules<typeof form>>({
 });
 
 const mcpTypes = [
-  { label: 'Stdio', value: 'Stdio' },
+  { label: 'Stdio', value: 'stdio' },
   { label: 'SSE', value: 'sse' },
-  { label: 'Streamable', value: 'Streamable' },
+  { label: 'Streamable', value: 'stream' },
 ];
 
 const beforeIconUpload: UploadProps['beforeUpload'] = async (rawFile) => {
@@ -90,7 +90,7 @@ async function onConfirm(formEl: FormInstance | undefined) {
     });
 
     formEl.resetFields();
-    jsonEditorRef.value.setJsonValue('{\n\n}');
+    jsonEditorRef.value.setJsonValue('{\n  \n}');
     emits('success');
   });
 }
