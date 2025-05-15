@@ -39,6 +39,8 @@ const handleIframeLoad = () => {
   if (isActive.value) {
     sendMessageToIframe(false);
   }
+  const token = localStorage.getItem('ECSESSION') ?? '';
+  sendTokenToIframe(token)
 };
 
 // 处理iframe错误
@@ -63,6 +65,18 @@ const sendMessageToIframe = (stopActive: boolean) => {
   }
 };
 
+const sendTokenToIframe = (token: string) => {
+  const iframe = iframeRef.value;
+  if (!iframe?.contentWindow) {
+    return;
+  }
+  if(token){
+    const data = { parentToken: token,type: 'parentToken'};
+    let target = window.location.origin.includes('localhost')?'http://localhost:3002/witchaind/' : `${window.location.origin}/witchaind/`;
+    iframe.contentWindow.postMessage(data, target);
+  }
+}
+
 // 监听路由变化来控制iframe的活动状态
 watch(
   () => router.currentRoute.value.path,
@@ -75,6 +89,8 @@ watch(
     
     if (isIframeLoaded.value) {
       sendMessageToIframe(!isWitchaindRoute);
+      const token = localStorage.getItem('ECSESSION') ?? '';
+      sendTokenToIframe(token)
     }
   },
   { immediate: true }

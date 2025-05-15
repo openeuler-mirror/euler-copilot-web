@@ -13,15 +13,7 @@ onMounted(() => {
   if (window.electronProcess?.platform === 'linux') {
     isLinuxPlatform.value = true;
   }
-  const token = localStorage.getItem('ECSESSION');
-  if(token){
-    const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
-    if (iframe?.contentWindow) {
-      const data = { parentToken: token,type: 'parentToken'};
-      let target = window.location.origin.includes('localhost')?'http://localhost:3002/witchaind/' : `${window.location.origin}/witchaind/`;
-      iframe.contentWindow.postMessage(data, target);
-    }
-  }
+  
 });
 </script>
 
