@@ -165,7 +165,7 @@
         :before-close="handleClose"
       >
         <div class="drawerContent">
-          <div v-if="actions === 'upload'">
+          <div v-if="actions === 'upload'" style="height: 100%;">
             <Upload
               type="upload"
               @closeDrawer="handleClose"
