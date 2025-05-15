@@ -2,6 +2,7 @@
 import { computed, ComputedRef, nextTick, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
+import { getBaseUrl } from 'src/utils/tools';
 import {
   useHistorySessionStore,
   useSessionStore,
@@ -167,7 +168,17 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
 const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
   formValidateStatus.value[prop] = isValid;
 };
-onMounted(() => {
+
+onMounted(async () => {
+  const baseUrl = await getBaseUrl();
+  const origin = window.location.origin;
+  const isElectron = window.navigator.userAgent.includes('Electron');
+  const isLocalhost =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1';
+  const iframeTarget =
+    isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+
   if (localStorage.getItem('theme')) {
     // document.body.setAttribute(
     //   'theme',
@@ -177,14 +188,12 @@ onMounted(() => {
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
+
   initCopilot();
+
   const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
   if (iframe) {
-    if (window.location.origin === 'http://localhost:3000') {
-      iframe.src = `http://localhost:3002/witchaind/`;
-    } else {
-      iframe.src = `${window.location.origin}/witchaind/`;
-    }
+    iframe.src = iframeTarget;
   }
 });
 
@@ -250,9 +259,7 @@ watch(
             class="menu-item"
           >
             <span class="menu-icon">
-              <el-icon
-                class="menu-icon"
-              >
+              <el-icon class="menu-icon">
                 <img
                   v-if="
                     router.currentRoute.value.name
