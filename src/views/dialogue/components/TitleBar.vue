@@ -8,26 +8,38 @@ import {
   useHistorySessionStore,
   useSessionStore,
 } from '@/store';
-import { computed, CSSProperties, ref } from 'vue';
+import { computed, CSSProperties, ref, onMounted } from 'vue';
 import { electronProcess, ipcRenderer } from '@/utils/electron';
+import { getBaseUrl } from 'src/utils/tools';
 
 const { language } = storeToRefs(useLangStore());
 const { changeLanguage } = useLangStore();
 const themeStore = useChangeThemeStore();
 
 const lang = computed(() => (language.value === 'en' ? 'English' : '简体中文'));
+const iframeTarget = ref('');
 
-const changeLanguagefun = (lang: 'zh_cn' | 'en') => {
+onMounted(async () => {
+  const baseUrl = await getBaseUrl();
+  const origin = window.location.origin;
+  const isElectron = window.navigator.userAgent.includes('Electron');
+  const isLocalhost =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1';
+  iframeTarget.value =
+    isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+});
+
+const changeLanguagefun = (lang: 'CN' | 'EN') => {
   changeLanguage(lang);
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
   if (iframe?.contentWindow) {
-    const data = { lang: localStorage.getItem('localeLang') };
-    let target = `${window.location.origin}/witchaind`;
-    iframe.contentWindow.postMessage(data, target);
-  }
-  if (ipcRenderer) {
-    ipcRenderer.invoke('copilot:lang', { lang: lang });
+    const data = {
+      lang: localStorage.getItem('localeLang') ?? 'CN',
+      type: 'changeLanguage',
+    };
+    iframe.contentWindow.postMessage(data, iframeTarget.value);
   }
 };
 
