@@ -3,16 +3,16 @@ import { CaretRight } from '@element-plus/icons-vue';
 import { ref, watch } from 'vue';
 import { api } from '@/apis';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
+import lightNull from '@/assets/svgs/light_null.svg';
+import { ElEmpty } from 'element-plus';
 
 interface McpDetail {
   serviceId: string;
   icon: string;
   name: string;
   description: string;
-  data: {
-    transmitProto: 'Stdio' | 'Streamable' | 'SSE';
-    config: string;
-  };
+  data: string;
+  mcpType: string;
   tools: {
     name: string;
     description: string;
@@ -86,7 +86,11 @@ watch(
               </div>
             </el-tab-pane>
             <el-tab-pane label="工具" name="tools" :lazy="true">
-              <div class="tool" v-for="tool in mcpServiceDetail.tools">
+              <div
+                class="tool"
+                v-if="mcpServiceDetail.tools.length"
+                v-for="tool in mcpServiceDetail.tools"
+              >
                 <p class="tool_name">{{ tool.name }}</p>
                 <span class="tool-description">
                   {{ tool.description }}
@@ -131,6 +135,11 @@ watch(
                   </el-collapse-item>
                 </el-collapse>
               </div>
+              <ElEmpty
+                v-else
+                :image="lightNull"
+                :description="$t('common.null')"
+              />
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -193,6 +202,7 @@ watch(
         line-height: 22px;
         font-weight: 400;
         color: rgb(78, 88, 101);
+        word-break: break-all;
       }
 
       :deep(.el-tabs__content) {
@@ -209,7 +219,7 @@ watch(
       }
 
       .tool {
-        --c-collapse-bg: rgb(244, 246, 250);
+        --c-collapse-bg: var(--el-collapse-header-bg);
         padding: 16px;
         border-radius: 4px;
         background-color: var(--c-collapse-bg);

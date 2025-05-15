@@ -76,6 +76,7 @@ const props = defineProps<CardInfo>();
   .plugin-card-content__desc {
     font-size: 14px;
     line-height: 22px;
+    height: 44px;
     .vue-text {
       cursor: pointer !important;
       color: var(--o-api-description);

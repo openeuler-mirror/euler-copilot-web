@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, toRaw } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as monaco from 'monaco-editor';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
@@ -42,7 +42,7 @@ function initMonacoEditor() {
   };
 
   editor = monaco.editor.create(monacoEditorRef.value, {
-    value: props.code || '{}',
+    value: props.code || '{\n  \n}',
     language: 'json',
     theme: 'vs',
     tabSize: 4,
@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="monacoEditorRef" class="editor-container" />
 </template>
-<style lang="scss">
+<style lang="scss" scoped>
 .editor-container {
   width: 100%;
   height: 100%;

@@ -31,7 +31,7 @@
             width="102"
             :popper-style="{
               minWidth: '100px',
-              inset: '183px auto auto 1141px',
+              transform: 'translateY(-10px)',
               padding: '4px 0px',
             }"
             trigger="click"
@@ -44,10 +44,17 @@
               </el-button>
             </template>
             <div class="pluginOptions">
-              <div class="pluginOptionsItem" @click="openSidebar('upload', '')">
+              <div
+                class="pluginOptionsItem"
+                @click="openSidebar('upload', '', 'semantic_interface')"
+              >
                 {{ $t('semantic.semantic_interface') }}
               </div>
-              <div class="pluginOptionsItem" @click="onOpenMcpDrawer">
+              <div
+                v-if="userinfo.is_admin"
+                class="pluginOptionsItem"
+                @click="onOpenMcpDrawer()"
+              >
                 {{ $t('semantic.mcp_service') }}
               </div>
             </div>
@@ -76,7 +83,7 @@
             v-if="pluginType === 'semantic_interface'"
             v-model="apiType"
             class="plugin-tabs"
-            @tab-click="(tab) => handleSearchapiList(tab.props.name)"
+            @tab-click="(tab) => handleSearchApiList(tab.props.name)"
           >
             <el-tab-pane
               :label="$t('semantic.all_select')"
@@ -96,7 +103,7 @@
           </el-tabs>
           <div class="apiCenterCardBox" v-if="pluginLists.length">
             <div v-for="item in pluginLists" class="apiCenterCardSingle">
-              <div @click="openSidebar('get', item.serviceId)">
+              <div @click="openSidebar('get', item.serviceId, pluginType)">
                 <PluginCard
                   :name="item.name"
                   :description="item.description"
@@ -129,17 +136,29 @@
                           pluginType === 'mcp'
                         "
                       >
+                        <div v-if="userinfo.is_admin">
+                          <el-button
+                            text
+                            @click.stop="onOpenMcpDrawer(item.serviceId)"
+                          >
+                            {{ $t('semantic.interface_edit') }}
+                          </el-button>
+                          <el-button
+                            text
+                            @click.stop="handleDelApi(item.serviceId)"
+                          >
+                            {{ $t('semantic.interface_delete') }}
+                          </el-button>
+                        </div>
+
                         <el-button
+                          v-else
                           text
-                          @click.stop="openSidebar('edit', item.serviceId)"
+                          @click.stop="
+                            onActiveService(item.serviceId, item.isActive)
+                          "
                         >
-                          {{ $t('semantic.interface_edit') }}
-                        </el-button>
-                        <el-button
-                          text
-                          @click.stop="handleDelapi(item.serviceId)"
-                        >
-                          {{ $t('semantic.interface_delete') }}
+                          {{ item.isActive ? '取消激活' : '激活' }}
                         </el-button>
                       </div>
                     </div>
@@ -195,6 +214,7 @@
       <McpDrawer
         v-model:visible="mcpDrawerVisible"
         :service-id="selectedServiceId"
+        @success="onCreateOrUpdateMcpServiceSuccess"
       />
       <McpServiceDetailDrawer
         v-model:visible="mcpDetailDrawerVisible"
@@ -223,7 +243,7 @@ import {
 } from '@computing/opendesign-icons';
 import './style.scss';
 import PluginCard from './components/PluginCard.vue';
-import { ref, onMounted, watch, markRaw, CSSProperties } from 'vue';
+import { ref, onMounted, watch, markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessageBox } from 'element-plus';
@@ -241,11 +261,26 @@ import McpServiceDetailDrawer from './components/McpServiceDetail.vue';
 const mcpDrawerVisible = ref(false);
 const mcpDetailDrawerVisible = ref(false);
 
-function onMcpCarkClick() {}
-
-function onOpenMcpDrawer() {
+function onOpenMcpDrawer(id?: string) {
+  if (id) {
+    selectedServiceId.value = id;
+  }
   mcpDrawerVisible.value = true;
 }
+
+function onCreateOrUpdateMcpServiceSuccess() {
+  mcpDrawerVisible.value = false;
+  queryList(pluginType.value);
+}
+
+watch(
+  () => mcpDrawerVisible.value,
+  () => {
+    if (!mcpDrawerVisible.value) {
+      selectedServiceId.value = '';
+    }
+  },
+);
 
 const pluginLists = ref<
   {
@@ -256,6 +291,7 @@ const pluginLists = ref<
     author: string;
     name: string;
     published?: boolean;
+    isActive?: boolean;
   }[]
 >([]);
 
@@ -286,7 +322,7 @@ const loading = ref(false);
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
   currentPageSize.value = pageSize;
-  handleParmasQueryapiList();
+  handleParamsQueryApiList();
 };
 
 const getServiceYamlFun = async (id: string) => {
@@ -307,8 +343,12 @@ const getServiceJsonFun = async (id: string) => {
   }
 };
 
-const openSidebar = (action: string, id: string) => {
-  if (pluginType.value === 'semantic_interface') {
+const openSidebar = (
+  action: string,
+  id: string,
+  type: 'semantic_interface' | 'mcp',
+) => {
+  if (type === 'semantic_interface') {
     drawer.value = true;
     actions.value = action;
     if (action === 'upload') {
@@ -325,7 +365,7 @@ const openSidebar = (action: string, id: string) => {
       selectedServiceId.value = id;
       getServiceJsonFun(id);
     }
-  } else if (pluginType.value === 'mcp') {
+  } else if (type === 'mcp') {
     selectedServiceId.value = id;
     if (action === 'edit') {
       mcpDrawerVisible.value = true;
@@ -340,17 +380,14 @@ const handleClose = () => {
   getServiceJson.value = '';
   getServiceYaml.value = '';
   drawer.value = false;
-  handleParmasQueryapiList();
+  handleParamsQueryApiList();
 };
 
-const handleParmasQueryapiList = (params?: any) => {
+const handleParamsQueryApiList = (params?: any) => {
   let payload = {};
   if (pluginType.value === 'semantic_interface') {
     payload = {};
   }
-  // if (apiType.value !== 'my') {
-  //   payload[apiType.value] = true;
-  // }
   queryList(pluginType.value);
 };
 
@@ -386,6 +423,7 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
         icon: item.icon,
         author: item.author,
         name: item.name,
+        isActive: item.isActive,
       }));
     }
   }
@@ -405,39 +443,60 @@ const handleFavorite = (e, item) => {
       favorited: !item.favorited,
     })
     .then((res) => {
-      handleParmasQueryapiList();
+      handleParamsQueryApiList();
     });
 };
 
-const handleSearchapiList = (type: 'my' | 'createdByMe' | 'favorited') => {
+const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
   if (type === 'my') {
-    handleParmasQueryapiList();
+    handleParamsQueryApiList();
   } else {
     currentPage.value = 1;
     currentPageSize.value = 16;
-    handleParmasQueryapiList({
+    handleParamsQueryApiList({
       [type]: true,
     });
   }
 };
 
-const handleDelapi = (id: string) => {
-  ElMessageBox.confirm('确定删除此接口吗？', '提示', {
-    type: 'warning',
-    icon: markRaw(IconAlarm),
-  }).then(() => {
-    api
-      .deleteSingleApiData({
-        serviceId: id,
-      })
-      .then((res) => {
+const handleDelApi = (id: string) => {
+  if (pluginType.value === 'semantic_interface') {
+    ElMessageBox.confirm('确定删除此接口吗？', '提示', {
+      type: 'warning',
+      icon: markRaw(IconAlarm),
+    }).then(() => {
+      api
+        .deleteSingleApiData({
+          serviceId: id,
+        })
+        .then((res) => {
+          if (res[1]) {
+            successMsg('删除成功');
+            handleParamsQueryApiList();
+          }
+        });
+    });
+  } else if (pluginType.value === 'mcp') {
+    ElMessageBox.confirm('确定删除此服务吗？', '提示', {
+      type: 'warning',
+      icon: markRaw(IconAlarm),
+    }).then(() => {
+      api.deleteMcpService(id).then((res) => {
         if (res[1]) {
           successMsg('删除成功');
-          handleParmasQueryapiList();
+          handleParamsQueryApiList();
         }
       });
-  });
+    });
+  }
 };
+
+async function onActiveService(serviceId: string, active: boolean = true) {
+  const [_, res] = await api.activeMcpService(serviceId, !active);
+  if (res) {
+    handleParamsQueryApiList();
+  }
+}
 
 function onPluginTypeClick(type: 'semantic_interface' | 'mcp') {
   if (pluginType.value === type) {
@@ -450,7 +509,7 @@ function onPluginTypeClick(type: 'semantic_interface' | 'mcp') {
 watch(
   () => [apiSearchValue, apiSearchType],
   () => {
-    handleParmasQueryapiList();
+    handleParamsQueryApiList();
   },
   { deep: true },
 );

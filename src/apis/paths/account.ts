@@ -23,6 +23,7 @@ export const authorizeUser = (): Promise<
           username: string;
           organization: string;
           revision_number: string | null;
+          is_admin: boolean;
         }>
       | undefined
     ),

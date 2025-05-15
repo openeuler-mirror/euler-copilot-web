@@ -20,6 +20,7 @@ const props = defineProps<{
 
 const emits = defineEmits<{
   (e: 'update:visible', visible: boolean): void;
+  (e: 'success'): void;
 }>();
 
 const form = reactive<McpDetail>({
@@ -43,7 +44,7 @@ const rules = reactive<FormRules<typeof form>>({
 const mcpTypes = [
   { label: 'Stdio', value: 'Stdio' },
   { label: 'SSE', value: 'sse' },
-  { label: 'Streamable', value: 'Ssreamable' },
+  { label: 'Streamable', value: 'Streamable' },
 ];
 
 const beforeIconUpload: UploadProps['beforeUpload'] = async (rawFile) => {
@@ -79,29 +80,30 @@ async function onConfirm(formEl: FormInstance | undefined) {
   if (json) form.mcpConfig = json;
   await formEl.validate(async (valid) => {
     if (!valid) return;
-    const [err, _] = await api.createMcpService({
+    const [_, res] = await api.createOrUpdateMcpService({
+      serviceId: props.serviceId || undefined,
       icon: form.icon,
       name: form.name,
       description: form.description,
-      config: {
-        transmitProto: form.type as 'Stdio' | 'Streamable' | 'SSE',
-        config: form.mcpConfig,
-      },
+      config: form.mcpConfig,
+      mcpType: form.type,
     });
-    ElMessage.success('Success');
-    emits('update:visible', false);
+
+    formEl.resetFields();
+    jsonEditorRef.value.setJsonValue('{\n\n}');
+    emits('success');
   });
 }
 
 async function getMcpServiceDetail(serviceId: string) {
   const [_, res] = await api.getMcpServiceDetail(serviceId);
   if (res) {
-    const { icon, name, description, data } = res.result;
+    const { icon, name, description, data, mcpType } = res.result;
     form.icon = icon;
     form.name = name;
     form.description = description;
-    form.type = data.transmitProto as 'Stdio' | 'Streamable' | 'SSE';
-    form.mcpConfig = data.config;
+    form.type = mcpType;
+    form.mcpConfig = data;
     jsonEditorRef.value.setJsonValue(form.mcpConfig);
   }
 }
@@ -120,7 +122,7 @@ watch(
   <div class="mcp-drawer">
     <el-drawer
       size="700"
-      title="创建MCP服务"
+      :title="serviceId ? '编辑MCP服务' : '创建MCP服务'"
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
@@ -175,12 +177,16 @@ watch(
             </el-form-item>
           </el-form>
         </div>
-
-        <div class="footer">
-          <el-button @click="emits('update:visible', false)">取消</el-button>
-          <el-button type="primary" @click="onConfirm(formRef)">确定</el-button>
-        </div>
       </div>
+
+      <template #footer>
+        <el-button @click="emits('update:visible', false)">
+          {{ $t('common.close') }}
+        </el-button>
+        <el-button type="primary" @click="onConfirm(formRef)">
+          {{ $t('common.confirm') }}
+        </el-button>
+      </template>
     </el-drawer>
   </div>
 </template>
@@ -263,18 +269,6 @@ watch(
         color: rgb(141, 152, 170);
       }
     }
-  }
-  .footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    padding: 8px 24px;
-    box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.1);
-    z-index: 9999;
   }
 }
 </style>
