@@ -29,7 +29,7 @@ export const useHistorySessionStore = defineStore(
     // 历史会话列表
     const historySession = ref<HistorySessionItem[]>([]);
     const params = ref();
-    const user_selected_app = ref([]);
+    const user_selected_app = ref();
     const selectMode = ref([]);
     const currentSelectedSession = ref<string>('');
     /**
