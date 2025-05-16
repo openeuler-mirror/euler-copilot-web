@@ -53,7 +53,7 @@ export interface UserConversationItem {
 }
 
 export interface FlowType {
-  id: number;
+  id: string;
   title: string;
   status: string;
   data: any;

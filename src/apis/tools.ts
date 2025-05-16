@@ -19,7 +19,7 @@ import type {
 import { storeToRefs } from 'pinia';
 import i18n from 'src/i18n';
 
-function getCookie(name: string) {
+export function getCookie(name: string) {
   const matches = document.cookie.match(
     new RegExp(
       '(?:^|; )' + name.replace(/([.$?*|{}()[]\\\/\+^])/g, '\\$1') + '=([^;]*)',
