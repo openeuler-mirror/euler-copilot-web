@@ -303,10 +303,10 @@ export const useSessionStore = defineStore('conversation', () => {
             ...fetchParams,
             body: JSON.stringify({
               app: {
-                appId: (params.user_selected_app as unknown[])[0],
+                appId: params.user_selected_app,
                 auth: {},
                 flowId: params.user_selected_flow,
-                params: innerParams,
+                params: innerParams || {},
               },
               conversationId: params.conversationId,
               features: features,
@@ -326,7 +326,7 @@ export const useSessionStore = defineStore('conversation', () => {
           ...fetchParams,
           body: JSON.stringify({
             app: {
-              appId: (params.user_selected_app as unknown[])[0],
+              appId: params.user_selected_app,
               flowId: params.user_selected_flow,
               params: {},
             },
@@ -349,10 +349,10 @@ export const useSessionStore = defineStore('conversation', () => {
           ...fetchParams,
           body: JSON.stringify({
             app: {
-              appId: (params.user_selected_app as unknown[])[0],
+              appId: params.user_selected_app,
               auth: {},
               flowId: '',
-              params: innerParams,
+              params: innerParams || {},
             },
             conversationId: params.conversationId,
             features: features,
