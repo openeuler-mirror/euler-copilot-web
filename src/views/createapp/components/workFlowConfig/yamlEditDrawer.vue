@@ -208,7 +208,7 @@ const updateNodeYaml = () => {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .yamlMonacoEditor {
   height: 400px;
 }

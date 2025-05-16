@@ -303,10 +303,10 @@ export const useSessionStore = defineStore('conversation', () => {
             ...fetchParams,
             body: JSON.stringify({
               app: {
-                appId: (params.user_selected_app as unknown[])[0],
+                appId: params.user_selected_app,
                 auth: {},
                 flowId: params.user_selected_flow,
-                params: innerParams,
+                params: innerParams || {},
               },
               conversationId: params.conversationId,
               features: features,
@@ -326,7 +326,7 @@ export const useSessionStore = defineStore('conversation', () => {
           ...fetchParams,
           body: JSON.stringify({
             app: {
-              appId: (params.user_selected_app as unknown[])[0],
+              appId: params.user_selected_app,
               flowId: params.user_selected_flow,
               params: {},
             },
@@ -349,10 +349,10 @@ export const useSessionStore = defineStore('conversation', () => {
           ...fetchParams,
           body: JSON.stringify({
             app: {
-              appId: (params.user_selected_app as unknown[])[0],
+              appId: params.user_selected_app,
               auth: {},
               flowId: '',
-              params: innerParams,
+              params: innerParams || {},
             },
             conversationId: params.conversationId,
             features: features,
@@ -525,7 +525,7 @@ export const useSessionStore = defineStore('conversation', () => {
   const sendQuestion = async (
     groupId: string | undefined,
     question: string,
-    user_selected_app?: string[],
+    user_selected_app?: string,
     regenerateInd?: number,
     qaRecordId?: string,
     user_selected_flow?: string,
@@ -589,7 +589,7 @@ export const useSessionStore = defineStore('conversation', () => {
     if (user_selected_flow && user_selected_app) {
       getStreamParams = {
         ...getStreamParams,
-        user_selected_app: [...user_selected_app],
+        user_selected_app: user_selected_app,
         user_selected_flow,
         params: params || undefined,
         type: type
@@ -597,7 +597,7 @@ export const useSessionStore = defineStore('conversation', () => {
     } else if (user_selected_app?.length) {
       getStreamParams = {
         ...getStreamParams,
-        user_selected_app: [...user_selected_app],
+        user_selected_app: user_selected_app,
         params: params || undefined,
       }
     }

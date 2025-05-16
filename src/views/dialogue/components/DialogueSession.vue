@@ -630,77 +630,6 @@ watch(currentSelectedSession, (newValue, oldValue) => {
   immediate: true,
 })
 
-watch(selectMode, (newValue, oldValue) => {
-  user_selected_app.value = [];
-  let first = true;
-  if (selectMode.value.length !== 0) {
-    if (selectMode.value[0] === 'auto') {
-      user_selected_app.value.push('auto');
-    } else {
-      selectMode.value.forEach((item) => {
-        const plugin = {
-          plugin_name: item,
-        };
-        user_selected_app.value.push(plugin.plugin_name);
-      });
-    }
-  }
-  nextTick(() => {
-    const totalW = (document.querySelector('.recognitionMode') as HTMLElement)
-      .offsetWidth;
-    const selectPreW = (document.querySelector('.el-select') as HTMLElement)
-      .offsetWidth;
-    const allTags = document.querySelectorAll(
-      '.recognitionMode .el-select-tags-wrapper .el-tag--info',
-    );
-    document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? ((
-          document.querySelector(
-            '.recognitionMode .el-select-tags-wrapper',
-          ) as HTMLElement
-        ).style.display = 'flex')
-      : '';
-    const allTagsWidth = document.querySelector(
-      '.recognitionMode .el-select-tags-wrapper',
-    )
-      ? (
-          document.querySelector(
-            '.recognitionMode .el-select-tags-wrapper',
-          ) as HTMLElement
-        ).offsetWidth
-      : '';
-    const nTag = allTags[allTags.length - 1] as HTMLElement;
-    const isNExist = true;
-    if (selectPreW >= totalW && newValue.length > oldValue.length && isNExist) {
-      return;
-    }
-    if (totalW > allTagsWidth + 100) {
-      (
-        document.querySelector('.recognitionMode .el-select') as HTMLElement
-      ).style.width = `${allTagsWidth + 70}px`;
-    } else {
-      (
-        document.querySelector('.recognitionMode .el-select') as HTMLElement
-      ).style.width = `${totalW}px`;
-    }
-    if (allTags.length > 3) {
-      const lastTag = allTags[allTags.length - 3] as HTMLElement;
-      const selectDomW = (document.querySelector('.el-select') as HTMLElement)
-        .offsetWidth;
-      let show_w = 0;
-      if (selectDomW >= totalW) {
-        show_w = selectDomW - lastTag.offsetWidth + 200;
-        if (show_w >= totalW) {
-          tagNum.value = Math.min(tagNum.value, selectMode.value.length - 2);
-        } else {
-          tagNum.value = Math.min(tagNum.value, selectMode.value.length - 1);
-        }
-      } else {
-        tagNum.value = allTags.length;
-      }
-    }
-  });
-});
 const selectQuestion = (val: any) => {
   dialogueInput.value = val;
 };
@@ -739,8 +668,12 @@ const getappMode = (appId: string) => {
 watch(
   () => user_selected_app,
   (val) => {
-    if (user_selected_app.value[0] && !isCreateApp.value) {
-      getappMode(user_selected_app.value[0]);
+    if(app.value){
+      console.log(app.value.appId);
+      user_selected_app.value = app.value.appId;
+    }
+    if (user_selected_app.value && !isCreateApp.value) {
+      getappMode(user_selected_app.value);
     }
     if (!isCreateApp.value) {
       Form.value = props.createAppForm;
