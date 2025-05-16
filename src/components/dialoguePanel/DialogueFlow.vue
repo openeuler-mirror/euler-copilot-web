@@ -58,7 +58,7 @@ watch(
                 v-if="props.flowdata.status === 'running'"
                 src="@/assets/images/loading.png"
                 alt=""
-                class="loading-animaIcon"
+                class="loading-animeIcon"
               />
               <img
                 v-if="props.flowdata.status === 'success'"
@@ -75,7 +75,7 @@ watch(
               <div v-if="!props.isWorkFlowDebug" class="loading-text">
                 {{ props.flowdata.title }}
               </div>
-              <div v-else class="-text">
+              <div v-else class="loading-text">
                 <div class="textTitle">
                   {{ StatusInfoTitle[props.flowdata.status] }}
                 </div>
@@ -328,6 +328,10 @@ watch(
   &-text {
     font-size: 16px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    justify-content: space-between;
     color: var(--o-text-color-primary);
   }
 }
