@@ -57,9 +57,9 @@ openEuler 智能化解决方案桌面客户端
 %build
 # Extract Node.js version using grep+sed for compatibility
 NODE_VER=$(grep '"node":' package.json | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-NODE_LINK="https://registry.npmmirror.com/-/binary/node/v${NODE_VER}/node-v${NODE_VER}-linux-%{_electron_arch}.tar.xz"
+NODE_LINK="https://mirrors.huaweicloud.com/nodejs/v${NODE_VER}/node-v${NODE_VER}-linux-%{_electron_arch}.tar.xz"
 # Download and install Node.js into a subdirectory
-NODE_HOME=/usr/local/node-v${NODE_VER}
+NODE_HOME="$PWD/.node-v${NODE_VER}"
 mkdir -p "$NODE_HOME"
 curl -sSL "$NODE_LINK" | tar -xJ -C "$NODE_HOME" --strip-components=1
 # Set NODE_HOME and update PATH, then test Node.js installation
@@ -67,16 +67,14 @@ export NODE_HOME
 export PATH="$NODE_HOME/bin:$PATH"
 node -v
 
-# Setup mirrors for Electron
-export ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
-export ELECTRON_BUILDER_BINARIES_MIRROR="https://npmmirror.com/mirrors/electron-builder-binaries/"
-
 # Setup npm mirror
-npm config set registry https://registry.npmmirror.com
+npm config set registry https://mirrors.huaweicloud.com/repository/npm/
+
+# Setup mirrors for Electron
+export ELECTRON_MIRROR="https://mirrors.huaweicloud.com/electron/"
 
 # Install pnpm globally
-corepack enable
-corepack prepare pnpm@latest --activate
+npm install -g pnpm
 pnpm -v
 
 # Download Electron binaries to cache directory
@@ -89,7 +87,7 @@ if [ ! -d "$CACHE_DIR" ]; then
 fi
 # Only download if not already present
 if [ ! -f "$CACHE_DIR/$PACKAGE_NAME" ]; then
-    curl -sSL "https://registry.npmmirror.com/-/binary/electron/$ELECTRON_VER/$PACKAGE_NAME" \
+    curl -sSL "https://mirrors.huaweicloud.com/electron/$ELECTRON_VER/$PACKAGE_NAME" \
         -o "$CACHE_DIR/$PACKAGE_NAME"
 fi
 
