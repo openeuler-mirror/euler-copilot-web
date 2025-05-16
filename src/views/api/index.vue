@@ -322,7 +322,7 @@ const loading = ref(false);
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
   currentPageSize.value = pageSize;
-  handleParamsQueryApiList();
+  queryList(pluginType.value);
 };
 
 const getServiceYamlFun = async (id: string) => {
@@ -380,14 +380,6 @@ const handleClose = () => {
   getServiceJson.value = '';
   getServiceYaml.value = '';
   drawer.value = false;
-  handleParamsQueryApiList();
-};
-
-const handleParamsQueryApiList = (params?: any) => {
-  let payload = {};
-  if (pluginType.value === 'semantic_interface') {
-    payload = {};
-  }
   queryList(pluginType.value);
 };
 
@@ -396,6 +388,7 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
   const payload = {
     searchType: apiSearchType.value,
     keyword: apiSearchValue.value || undefined,
+    [apiType.value]: true,
   };
   if (type === 'semantic_interface') {
     payload[apiType.value] = true;
@@ -443,19 +436,17 @@ const handleFavorite = (e, item) => {
       favorited: !item.favorited,
     })
     .then((res) => {
-      handleParamsQueryApiList();
+      queryList(pluginType.value);
     });
 };
 
 const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
   if (type === 'my') {
-    handleParamsQueryApiList();
+    queryList(pluginType.value);
   } else {
     currentPage.value = 1;
     currentPageSize.value = 16;
-    handleParamsQueryApiList({
-      [type]: true,
-    });
+    queryList(pluginType.value);
   }
 };
 
@@ -472,7 +463,7 @@ const handleDelApi = (id: string) => {
         .then((res) => {
           if (res[1]) {
             successMsg('删除成功');
-            handleParamsQueryApiList();
+            queryList(pluginType.value);
           }
         });
     });
@@ -484,7 +475,7 @@ const handleDelApi = (id: string) => {
       api.deleteMcpService(id).then((res) => {
         if (res[1]) {
           successMsg('删除成功');
-          handleParamsQueryApiList();
+          queryList(pluginType.value);
         }
       });
     });
@@ -494,7 +485,7 @@ const handleDelApi = (id: string) => {
 async function onActiveService(serviceId: string, active: boolean = true) {
   const [_, res] = await api.activeMcpService(serviceId, !active);
   if (res) {
-    handleParamsQueryApiList();
+    queryList(pluginType.value);
   }
 }
 
@@ -509,7 +500,7 @@ function onPluginTypeClick(type: 'semantic_interface' | 'mcp') {
 watch(
   () => [apiSearchValue, apiSearchType],
   () => {
-    handleParamsQueryApiList();
+    queryList(pluginType.value);
   },
   { deep: true },
 );
