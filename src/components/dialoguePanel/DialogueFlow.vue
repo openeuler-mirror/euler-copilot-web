@@ -126,46 +126,46 @@ watch(
               >
                 <template #title>
                   <div class="loading">
-                  <img
-                    v-if="secItem.status === 'running'"
-                    src="@/assets/images/loading.png"
-                    alt=""
-                    class="loading-animeIcon"
-                  />
-                  <img
-                    v-if="secItem.status === 'success'"
-                    src="@/assets/images/flow_success.png"
-                    alt=""
-                    class="loading-icon"
-                  />
-                  <img
-                    v-if="secItem.status === 'error'"
-                    src="@/assets/images/flow_fail.png"
-                    alt=""
-                    class="loading-icon"
-                  />
-                  <span class="title">{{ secItem.title }}</span>
-                  <span
-                    v-if="secItem.costTime"
-                    class="time"
-                    :class="`${secItem.status}Bg`"
-                  >
-                    {{ secItem.costTime.toFixed(3) }}s
-                  </span>
-                </div>
+                    <img
+                      v-if="secItem.status === 'running'"
+                      src="@/assets/images/loading.png"
+                      alt=""
+                      class="loading-animeIcon"
+                    />
+                    <img
+                      v-if="secItem.status === 'success'"
+                      src="@/assets/images/flow_success.png"
+                      alt=""
+                      class="loading-icon"
+                    />
+                    <img
+                      v-if="secItem.status === 'error'"
+                      src="@/assets/images/flow_fail.png"
+                      alt=""
+                      class="loading-icon"
+                    />
+                    <span class="title">{{ secItem.title }}</span>
+                    <span
+                      v-if="secItem.costTime"
+                      class="time"
+                      :class="`${secItem.status}Bg`"
+                    >
+                      {{ secItem.costTime.toFixed(3) }}s
+                    </span>
+                  </div>
                 </template>
                 <template #icon="{ isActive }">
-            <el-icon
-              class="el-collapse-item__arrow"
-              :class="{ 'is-active': activeNames.includes(item.id) }"
-            >
-              <img
-                src="@/assets/images/flow_arrow.png"
-                alt=""
-                class="o-collapse-icon"
-              />
-            </el-icon>
-          </template>
+                  <el-icon
+                    class="el-collapse-item__arrow"
+                    :class="{ 'is-active': activeNames.includes(item.id) }"
+                  >
+                    <img
+                      src="@/assets/images/flow_arrow.png"
+                      alt=""
+                      class="o-collapse-icon"
+                    />
+                  </el-icon>
+                </template>
                 <div
                   v-for="(desc, index) in secItem.data"
                   :key="index"
@@ -251,10 +251,10 @@ watch(
   }
 }
 .el-collapse-item__arrow.is-active {
-    transform: rotate(90deg);
-    top: 3px;
-    padding-left: 3px;
-  }
+  transform: rotate(90deg);
+  top: 3px;
+  padding-left: 3px;
+}
 .el-collapse-item__arrow {
   margin: 0px;
 }
@@ -298,6 +298,7 @@ watch(
   border-radius: 8px;
   border-top-left-radius: 0px;
   margin-left: 8px;
+  flex-wrap: nowrap; /* 水平排列 */
   @keyframes rotate-img {
     from {
       transform: rotate(0);
@@ -334,5 +335,13 @@ watch(
     justify-content: space-between;
     color: var(--o-text-color-primary);
   }
+  .time {
+    padding: 0px 12px;
+    margin-left: auto;
+  }
+}
+.totalTime {
+  padding: 0px 8px;
+  margin-left: auto;
 }
 </style>
