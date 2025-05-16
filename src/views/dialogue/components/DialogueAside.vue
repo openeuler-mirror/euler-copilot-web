@@ -241,12 +241,12 @@ const toggleCollapse = () => {
 const selectApp = (id) => {
   if (selectedAppId.value === id) {
     selectedAppId.value = '';
-    user_selected_app.value = [''];
+    user_selected_app.value = '';
     app.value.selectedAppId = '';
     app.value.appId = '';
   } else {
     selectedAppId.value = id;
-    user_selected_app.value = [id];
+    user_selected_app.value = id;
     app.value.selectedAppId = id;
     app.value.appId = id;
   }
