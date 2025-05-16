@@ -143,7 +143,7 @@ const handleSendMessage = async (
   await sendQuestion(
     groupId,
     question,
-    [props.appId],
+    props.appId,
     undefined,
     undefined,
     props.flowId,
