@@ -58,24 +58,24 @@ watch(
                 v-if="props.flowdata.status === 'running'"
                 src="@/assets/images/loading.png"
                 alt=""
-                class="loading-icon"
+                class="loading-animaIcon"
               />
               <img
                 v-if="props.flowdata.status === 'success'"
                 src="@/assets/images/flow_success.png"
                 alt=""
-                class="o-collapse-icon"
+                class="loading-icon"
               />
               <img
                 v-if="props.flowdata.status === 'error'"
                 src="@/assets/images/flow_fail.png"
                 alt=""
-                class="o-collapse-icon"
+                class="loading-icon"
               />
               <div v-if="!props.isWorkFlowDebug" class="loading-text">
                 {{ props.flowdata.title }}
               </div>
-              <div v-else class="loading-text">
+              <div v-else class="-text">
                 <div class="textTitle">
                   {{ StatusInfoTitle[props.flowdata.status] }}
                 </div>
@@ -90,13 +90,14 @@ watch(
                   {{ totalTime?.toFixed(3) }}s
                 </div>
               </div>
+              <div class="loading-progress">{{ props.flowdata.progress }}</div>
             </div>
-            <div class="loading-progress">{{ props.flowdata.progress }}</div>
+          </template>
+          <template #icon="{ isActive }">
             <el-icon
               class="el-collapse-item__arrow"
               :class="{ 'is-active': activeNames.includes(item.id) }"
             >
-              <!-- <i class="el-icon-edit"></i> -->
               <img
                 src="@/assets/images/flow_arrow.png"
                 alt=""
@@ -124,39 +125,25 @@ watch(
                 :name="secItem.id"
               >
                 <template #title>
+                  <div class="loading">
                   <img
                     v-if="secItem.status === 'running'"
                     src="@/assets/images/loading.png"
                     alt=""
-                    class="loading-icon"
+                    class="loading-animeIcon"
                   />
                   <img
                     v-if="secItem.status === 'success'"
                     src="@/assets/images/flow_success.png"
                     alt=""
-                    class="o-collapse-icon"
+                    class="loading-icon"
                   />
                   <img
                     v-if="secItem.status === 'error'"
                     src="@/assets/images/flow_fail.png"
                     alt=""
-                    class="o-collapse-icon"
+                    class="loading-icon"
                   />
-                  <el-icon
-                    class="el-collapse-item__arrow"
-                    :class="{
-                      'is-active': secondCollapseActiveName.includes(
-                        secItem.id,
-                      ),
-                    }"
-                  >
-                    <!-- <i class="el-icon-edit"></i> -->
-                    <img
-                      src="@/assets/images/flow_arrow.png"
-                      alt=""
-                      class="o-collapse-icon"
-                    />
-                  </el-icon>
                   <span class="title">{{ secItem.title }}</span>
                   <span
                     v-if="secItem.costTime"
@@ -165,7 +152,20 @@ watch(
                   >
                     {{ secItem.costTime.toFixed(3) }}s
                   </span>
+                </div>
                 </template>
+                <template #icon="{ isActive }">
+            <el-icon
+              class="el-collapse-item__arrow"
+              :class="{ 'is-active': activeNames.includes(item.id) }"
+            >
+              <img
+                src="@/assets/images/flow_arrow.png"
+                alt=""
+                class="o-collapse-icon"
+              />
+            </el-icon>
+          </template>
                 <div
                   v-for="(desc, index) in secItem.data"
                   :key="index"
@@ -186,7 +186,7 @@ watch(
 
 <style lang="scss">
 .el-collapse-item__content {
-  margin: 0px 16px 16px 16px;
+  margin: 0px 16px 16px 0px;
 }
 
 .el-collapse-item:last-child {
@@ -205,6 +205,7 @@ watch(
   border-radius: 0px !important;
 }
 .o-collapse-icon {
+  align-self: center;
   padding: 0px;
   margin-left: 0px;
   margin-right: 8px;
@@ -249,11 +250,17 @@ watch(
     padding-left: 3px;
   }
 }
+.el-collapse-item__arrow.is-active {
+    transform: rotate(90deg);
+    top: 3px;
+    padding-left: 3px;
+  }
 .el-collapse-item__arrow {
   margin: 0px;
 }
 .loading-progress {
   margin-right: 8px;
+  padding-right: 8px;
 }
 
 .border-red {
@@ -301,13 +308,25 @@ watch(
     }
   }
 
-  &-icon {
+  &-animeIcon {
+    margin-right: 8px;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    align-self: center;
     animation: rotate-img 1s infinite linear;
+  }
+
+  &-icon {
+    align-items: center;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
   }
 
   &-text {
     font-size: 16px;
-    line-height: 24px;
     width: 100%;
     color: var(--o-text-color-primary);
   }
