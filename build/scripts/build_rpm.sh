@@ -34,6 +34,12 @@ if [ ! -f "${tarball_path}" ]; then
     bash "${SCRIPT_DIR}/package_repository.sh"
 fi
 
+# 1.5 准备离线 node 依赖
+if [ ! -f "${PROJECT_ROOT}/release/offline_node_modules.tar.gz" ] || [ ! -f "${PROJECT_ROOT}/release/offline_pnpm_store.tar.gz" ]; then
+    echo "生成离线依赖..."
+    bash "${SCRIPT_DIR}/prepare_node_modules_offline.sh"
+fi
+
 # 2. 初始化 rpmbuild 目录到 release 目录
 RPMBUILD_DIR="${RELEASE_DIR}/rpmbuild"
 mkdir -p "${RPMBUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
@@ -41,6 +47,10 @@ mkdir -p "${RPMBUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 # 3. 准备 SPEC 和 SOURCES
 cp "${SPEC}" "${RPMBUILD_DIR}/SPECS/"
 cp "${tarball_path}" "${RPMBUILD_DIR}/SOURCES/"
+
+# 3.5 复制离线依赖包到 SOURCES
+cp "${RELEASE_DIR}/offline_node_modules.tar.gz" "${RPMBUILD_DIR}/SOURCES/"
+cp "${RELEASE_DIR}/offline_pnpm_store.tar.gz" "${RPMBUILD_DIR}/SOURCES/"
 
 # 4. 执行 rpmbuild
 echo "开始构建 RPM 包..."
