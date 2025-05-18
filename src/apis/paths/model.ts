@@ -1,5 +1,5 @@
-import { get, post, del } from '../server';
-import { addedModalList } from './type';
+import { get, post, del, put } from '../server';
+import { AddedModalList } from './type';
 enum Provider {
   OLLAMA = 'Ollama',
   VLLM = 'VLLM',
@@ -15,20 +15,28 @@ enum Provider {
  * @returns
  */
 const getUserModelList = () => {
-  return get<{
-    models: {
-      modelId: string;
+  return get<
+    {
+      llmId: string;
       icon: string;
-      description: string;
-      name: string;
-      model: string;
-      url: string;
-      provider: string;
+      openaiBaseUrl: string;
+      openaiApiKey: string;
+      modelName: string;
       maxTokens: number;
-      apiKey: string;
-    }[];
-    totalModels: number;
-  }>('/api/model');
+    }[]
+  >('/api/llm');
+};
+
+const getModelById = (modelId: string) => {
+  return get<{
+    modelId: string;
+    icon: string;
+    model: string;
+    url: string;
+    provider: string;
+    maxTokens: number;
+    apiKey: string;
+  }>(`/api/model/${modelId}`);
 };
 
 /**
@@ -36,16 +44,14 @@ const getUserModelList = () => {
  * @returns
  */
 const getModelProviderList = () => {
-  return get<{
-    providers: {
-      providerId: string;
+  return get<
+    {
+      provider: string;
       icon: string;
       url: string;
       description: string;
-      name: string;
-    }[];
-    totalProviders: number;
-  }>('/api/model/provider');
+    }[]
+  >('/api/llm/provider');
 };
 
 const getKnowledgeList = (conversationId?: string) => {
@@ -55,8 +61,8 @@ const getKnowledgeList = (conversationId?: string) => {
 const getAllModels = (searchKey: string) => {
   return get<{
     models: { modelId: string; modelName: string }[];
-  }>('/api/model/all', {
-    searchKey,
+  }>('/api/model/model', {
+    keyword: searchKey,
   });
 };
 
@@ -64,9 +70,7 @@ const getAllModels = (searchKey: string) => {
  * 获取已添加模型列表
  */
 const getAddedModels = () => {
-  return get<{
-    models: addedModalList[];
-  }>('/api/model');
+  return get<AddedModalList[]>('/api/llm');
 };
 
 /**
@@ -74,17 +78,15 @@ const getAddedModels = () => {
  * @param params
  * @returns
  */
-const createModel = (params: {
-  modelId?: string;
-  name: string;
-  provider: string;
-  icon?: string;
-  apiKey: string;
-  maxTokens: string;
-  model: string;
-  url: string;
+const createOrUpdateModel = (params: {
+  llmId?: string;
+  icon: string;
+  openaiBaseUrl?: string;
+  openaiApiKey: string;
+  modelName: string;
+  maxTokens: number;
 }) => {
-  return post('/api/model', params);
+  return put('/api/llm', params, { llmId: params.llmId });
 };
 
 /**
@@ -93,7 +95,7 @@ const createModel = (params: {
  * @returns
  */
 const deleteModel = (modelId: string) => {
-  return del(`/api/model/${modelId}`);
+  return del(`/api/llm`, undefined, { llmId: modelId });
 };
 
 const updateModelAndKnowLedgeList = (params: {
@@ -109,8 +111,9 @@ export const modelApi = {
   getAddedModels,
   getUserModelList,
   getModelProviderList,
-  createModel,
+  createOrUpdateModel,
   getAllModels,
   deleteModel,
   getKnowledgeList,
+  getModelById,
 };

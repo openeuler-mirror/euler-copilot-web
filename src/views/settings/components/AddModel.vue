@@ -22,19 +22,25 @@ interface From {
 }
 
 export interface ModelProvider {
-  providerId: string;
+  provider: string;
   icon: string;
   url: string;
   description: string;
-  name: string;
 }
 
 const props = defineProps<{
   visible: boolean;
   type: 'add' | 'edit';
+  model?: {
+    llmId: string;
+    icon: string;
+    openaiBaseUrl: string;
+    openaiApiKey: string;
+    modelName: string;
+    maxTokens: number;
+  };
   title?: string;
   provider?: ModelProvider;
-  default?: Partial<From>;
 }>();
 
 const emits = defineEmits<{
@@ -99,10 +105,13 @@ async function onConfirm(formEl: FormInstance | undefined) {
   if (!formEl) return;
   await formEl.validate(async (valid) => {
     if (!valid) return;
-    const [err, _] = await api.createModel({
-      ...form.value,
-      provider: props.provider?.name || '',
-      name: '',
+    const [err, _] = await api.createOrUpdateModel({
+      llmId: props.model?.llmId || undefined,
+      icon: props.provider?.icon || '',
+      openaiApiKey: form.value.apiKey,
+      openaiBaseUrl: props.provider?.url,
+      modelName: form.value.model,
+      maxTokens: Number(form.value.maxTokens),
     });
     if (err) {
       ElMessage.error(err.message);
@@ -114,14 +123,22 @@ async function onConfirm(formEl: FormInstance | undefined) {
 }
 
 watch(
-  () => [props.default, props.provider],
+  () => [props.model, props.provider],
   () => {
     nextTick(() => {
       formRef.value && formRef.value.resetFields();
 
-      if (props.default) {
-        form.value = { ...form.value, ...props.default };
-        console.log(form.value);
+      console.log(props.model);
+
+      if (props.model) {
+        const { openaiApiKey, openaiBaseUrl, maxTokens, modelName } =
+          props.model;
+        form.value = {
+          url: openaiBaseUrl,
+          model: modelName,
+          apiKey: openaiApiKey,
+          maxTokens: String(maxTokens),
+        };
       }
       if (props.provider) {
         form.value.url = props.provider.url;
@@ -152,24 +169,10 @@ watch(
           />
         </el-form-item>
         <el-form-item :label="t('settings.select_model')" prop="model">
-          <el-select
-            style="width: 100%"
+          <el-input
             v-model="form.model"
-            filterable
-            remote
-            reserve-keyword
             :placeholder="t('settings.placeHolder.model_name')"
-            remote-show-suffix
-            :remote-method="remoteMethod"
-            :loading="modelSelectLoading"
-          >
-            <el-option
-              v-for="item in modelOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          ></el-input>
         </el-form-item>
         <el-form-item label="API_Key" prop="apiKey">
           <el-input

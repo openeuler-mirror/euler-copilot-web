@@ -206,10 +206,13 @@ export interface serviceApiData {
 /**
  * addedModalList, 获取可选modal列表
  */
-export interface addedModalList {
-  modelId: string;
-  model: string;
-  icon: string;
+export interface AddedModalList {
+  llmId: string;
+  icon?: string;
+  openaiBaseUrl?: string;
+  openaiApiKey: string;
+  modelName: string;
+  maxTokens: string;
 }
 /**
  * teamKnowledgeList, 获取teamKnowledgeList列表

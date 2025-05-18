@@ -14,6 +14,20 @@ import CustomLoading from '../../customLoading/index.vue';
 import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
 import { ElMessage } from 'element-plus';
 import { useChangeThemeStore } from 'src/store';
+
+type AppConfig = {
+  icon: string;
+  name: string;
+  description: string;
+  links: string[];
+  recommendedQuestions: string[];
+  dialogRounds: number;
+  permission: {
+    visibility: string;
+    authorizedUsers: string[];
+  };
+};
+
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const themeStore = useChangeThemeStore();
@@ -26,7 +40,7 @@ const props = withDefaults(
 );
 const emits = defineEmits(['getFlowList', 'getPublishStatus']);
 const loading = ref(false);
-const createAppForm = ref({
+const createAppForm = ref<AppConfig>({
   icon: '',
   name: '',
   description: '',
@@ -117,7 +131,7 @@ const changeActiveName = () => {
     activeNames.value.push(1);
     activeName.value.push(1);
   }
-}
+};
 const addLink = () => {
   createAppForm.value.links.push('');
 };
@@ -272,7 +286,7 @@ const beforeUpload = async (file: ElFile) => {
     // 开始读取文件内容
     await new Promise((resolve, reject) => {
       reader.readAsText(file);
-      reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
+      reader.onloadend = () => resolve(true); // 当读取完成时解决 Promise
       reader.onerror = (error) => reject(error); // 如果出错则拒绝 Promise
     });
     return true;
@@ -295,9 +309,16 @@ defineExpose({
   <CustomLoading :loading="loading"></CustomLoading>
   <!-- 将基本信息collapse提出 -->
   <div class="appConfig">
-    <div class="baseInfoTitle" :class="{ 'activeCollapse': activeNames.includes(1) }" @click="changeActiveName">
+    <div
+      class="baseInfoTitle"
+      :class="{ activeCollapse: activeNames.includes(1) }"
+      @click="changeActiveName"
+    >
       <span>基本信息</span>
-      <el-icon :class="{ 'is-active': activeNames.includes(1) }" class="el-collapse-item__arrow">
+      <el-icon
+        :class="{ 'is-active': activeNames.includes(1) }"
+        class="el-collapse-item__arrow"
+      >
         <IconCaretRight />
       </el-icon>
     </div>

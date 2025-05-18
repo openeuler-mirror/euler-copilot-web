@@ -2,17 +2,18 @@
 import { onMounted, ref, watch } from 'vue';
 import ModelCard from './components/ModelCard.vue';
 import lightNull from '@/assets/svgs/light_null.svg';
-import DarkNull from '@/assets/svgs/dark_null.svg';
 import { ElEmpty, ElMessage } from 'element-plus';
 import AddModel, { ModelProvider } from './components/AddModel.vue';
 import i18n from '@/i18n';
 import { api } from '@/apis';
 
 interface Model {
-  modelId: string;
+  llmId: string;
   icon: string;
-  description: string;
-  name: string;
+  openaiBaseUrl: string;
+  openaiApiKey: string;
+  modelName: string;
+  maxTokens: number;
 }
 
 const { t } = i18n.global;
@@ -26,14 +27,17 @@ const isAddModelVisible = ref(false);
 async function onModelDel(modelId: string) {
   const [err, _] = await api.deleteModel(modelId);
   if (err) ElMessage.error(err.message);
-  else ElMessage.success('Success');
+  else {
+    ElMessage.success('Success');
+    queryModels();
+  }
 }
 const dialogTitle = ref();
 
-const toBeEditedModel = ref<Model>();
+const selectedModel = ref();
 function onModelEdit(model: Model) {
   dialogTitle.value = t(`common.edit`, { name: t('settings.model') });
-  toBeEditedModel.value = model;
+  selectedModel.value = model;
   isAddModelVisible.value = true;
 }
 
@@ -46,14 +50,14 @@ function onAddModel(provider: ModelProvider) {
 async function queryModels() {
   const [, res] = await api.getUserModelList();
   if (res) {
-    models.value = res.result.models;
+    models.value = res.result;
   }
 }
 
 async function queryModelProviders() {
   const [, res] = await api.getModelProviderList();
   if (res) {
-    modelProviders.value = res.result.providers;
+    modelProviders.value = res.result;
   }
 }
 
@@ -64,7 +68,8 @@ watch(
   () => {
     if (!isAddModelVisible.value) {
       selectedProvider.value = undefined;
-      toBeEditedModel.value = undefined;
+      selectedModel.value = undefined;
+      queryModels();
     }
   },
 );
@@ -80,14 +85,14 @@ onMounted(() => {
     <div class="added-model" v-if="models.length">
       <ModelCard
         v-for="item in models"
-        :name="item.name"
+        :name="item.modelName"
         :icon="item.icon"
         size="small"
       >
         <template #headerRight>
           <div class="added-model__operate">
             <a @click="onModelEdit(item)">{{ t('common.edit') }}</a>
-            <a @click="onModelDel(item.modelId)">{{ t('common.delete') }}</a>
+            <a @click="onModelDel(item.llmId)">{{ t('common.delete') }}</a>
           </div>
         </template>
       </ModelCard>
@@ -98,7 +103,7 @@ onMounted(() => {
     <div class="model-provider" v-if="modelProviders.length">
       <ModelCard
         v-for="item in modelProviders"
-        :name="item.name"
+        :name="item.provider"
         :icon="item.icon"
         :description="item.description"
       >
@@ -116,7 +121,7 @@ onMounted(() => {
     v-model:visible="isAddModelVisible"
     type="add"
     :title="dialogTitle"
-    :default="toBeEditedModel"
+    :model="selectedModel"
     :provider="selectedProvider"
   />
 </template>
@@ -127,20 +132,23 @@ onMounted(() => {
     line-height: 22px;
     font-weight: 700;
     margin-bottom: 8px;
+    color: var(--o-text-color-primary);
   }
 
   .added-model {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
+    align-content: flex-start; /* 关键：子项顶部对齐 */
     gap: 16px;
     min-height: 210px;
 
     &__operate {
       display: flex;
       gap: 8px;
-      color: rgb(99, 149, 253);
       font-size: 12px;
       line-height: 16px;
+      color: rgb(99, 149, 253);
+
       a {
         cursor: pointer;
         user-select: none;
