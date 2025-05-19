@@ -7,19 +7,31 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { get, post } from 'src/apis/server';
+import { get, post, put } from 'src/apis/server';
 import type { FcResponse } from 'src/apis/server';
 
 /**
- * USER登录
+ * updateKnowledgeList
  * @returns
  */
-export const updateKnowledgeList = (params: {
-  kb_id: string;
+export const updateKnowledgeList = ({
+  kb_ids,
+  conversationId,
+}: {
+  kb_ids: string[];
+  conversationId: string;
 }): Promise<[any, FcResponse<{}> | undefined]> => {
-  return post('/api/knowledge', params);
+  return put('/api/knowledge', {kb_ids} , { conversationId });
+};
+
+export const getConvKnowledgeList = (params:{
+  conversationId: string;
+  kbName?: string;
+}): Promise<[any, FcResponse<{}> | undefined]> => {
+  return get('/api/knowledge',params);
 };
 
 export const knowledgeApi = {
   updateKnowledgeList,
+  getConvKnowledgeList,
 };

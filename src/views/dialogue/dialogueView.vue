@@ -152,7 +152,7 @@ const copy = () => {
 
 const handleConfirmCreateModel = async (formData: any | undefined) => {
   const [_, res] = await api.updateKnowledgeList({
-    kb_id: ruleForm.kb_id || '',
+    kb_ids: ruleForm.kb_id || '',
   });
   if (!_ && res) {
     localStorage.setItem('kb_id', ruleForm.kb_id || '');

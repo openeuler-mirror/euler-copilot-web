@@ -50,7 +50,7 @@ const {
   currentSelectedSession,
 } = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
-const { getHistorySession, createNewSession } = useHistorySessionStore();
+const { getHistorySession, createNewSession, currentLLM } = useHistorySessionStore();
 const { userinfo } = storeToRefs(useAccountStore());
 const deleteType = ref(true);
 // 搜索的关键词
@@ -125,6 +125,7 @@ function checkDate(date: string | Date): string {
 
 onMounted(() => {
   getHistorySession();
+  currentLLM();
 });
 
 const deletedSessionName = ref('');

@@ -54,9 +54,6 @@ const getModelProviderList = () => {
   >('/api/llm/provider');
 };
 
-const getKnowledgeList = (conversationId?: string) => {
-  return post('/api/kb', { conversationId });
-};
 
 const getAllModels = (searchKey: string) => {
   return get<{
@@ -114,6 +111,5 @@ export const modelApi = {
   createOrUpdateModel,
   getAllModels,
   deleteModel,
-  getKnowledgeList,
   getModelById,
 };

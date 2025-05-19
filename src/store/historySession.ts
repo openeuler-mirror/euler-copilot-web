@@ -29,8 +29,8 @@ export const useHistorySessionStore = defineStore(
     // 历史会话列表
     const historySession = ref<HistorySessionItem[]>([]);
     const params = ref();
-    const user_selected_app = ref();
-    const selectMode = ref([]);
+    const user_selected_app = ref<string>();
+    const selectLLM= ref();
     const currentSelectedSession = ref<string>('');
     /**
      * 选择历史会话
@@ -78,6 +78,18 @@ export const useHistorySessionStore = defineStore(
       }
     };
     /**
+     * 获取当前 llm 模型的数值
+     */
+    const currentLLM = async() => {
+      console.log(currentSelectedSession.value);
+      await getHistorySession();
+      historySession.value.forEach((item) => {
+        if (item.conversationId === currentSelectedSession.value) {
+          selectLLM.value = item.llm;
+        }
+      })
+    };
+    /**
      * 选中某个会话
      * @param conversationId 会话id
      */
@@ -120,6 +132,7 @@ export const useHistorySessionStore = defineStore(
             createdTime: item.createdTime,
             title: item.title,
             docCount: item.docCount || 0,
+            llm: item.llm || {},
           }));
         if (res.result.conversations.length === 0) {
           await generateSession();
@@ -127,6 +140,7 @@ export const useHistorySessionStore = defineStore(
         if (!currentSelectedSession.value) {
           currentSelectedSession.value =
             res.result.conversations[0]?.conversationId;
+            //-----
         }
         if (currentSelectedSession.value) {
           const { getConversation, isAnswerGenerating } = useSessionStore();
@@ -188,7 +202,7 @@ export const useHistorySessionStore = defineStore(
    * 创建一个新的会话
    */
   const generateSession = async (): Promise<void> => {
-    const [_, res] = await api.createSession();
+    const [_, res] = await api.createSession(user_selected_app.value);
     if (!_ && res) {
       currentSelectedSession.value = res.result.conversationId;
       await getHistorySession();
@@ -224,7 +238,8 @@ export const useHistorySessionStore = defineStore(
       generateSession,
       generateSessionDebug,
       user_selected_app,
-      selectMode,
+      selectLLM,
+      currentLLM,
     };
   },
   {

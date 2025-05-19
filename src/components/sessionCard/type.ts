@@ -19,5 +19,14 @@ export interface SessionItem {
   appId?: string;
   debug?: boolean;
   model?: AddedModalList;
+  llm?:{
+    icon: string;
+    modelName: string;
+  }
   kbList?: teamKnowledgeList[];
+}
+// 新增接口
+export interface modelItem  {
+  icon: string;
+  modelName: string;
 }

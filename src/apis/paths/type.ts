@@ -86,6 +86,10 @@ export interface ConversationListItem {
   createdTime: string;
   docCount: number;
   title: string;
+  llm:{
+    icon: string;
+    modelName: string;
+  }
 }
 
 /*
