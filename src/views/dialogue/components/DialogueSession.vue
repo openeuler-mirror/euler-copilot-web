@@ -34,7 +34,7 @@ const isCreateApp = ref(props?.isCreateApp);
 const selectedLLM = ref({});
 const handleChangeMode = (val: string) => {
   selectedLLM.value = val;
-};
+  };
 // const isCreateApp = ref(true);
 const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
@@ -196,7 +196,7 @@ const handleSendMessage = async (
     }),
     await api.updateLLMList({
       conversationId: currentSelectedSession.value,
-      llmId: selectLLM.value,
+      llmId: selectedLLM.value,
     }),
   ]);
   if (user_selected_flow) {
@@ -630,11 +630,21 @@ onMounted(() => {
   getProviderLLM();
 });
 
+watch(selectLLM, (newValue) => {
+  console.log(selectLLM);
+  if (newValue) {
+    selectedLLM.value.modalName = newValue.modelName;
+    selectedLLM.value.icon = newValue.icon;
+    console.log(selectedLLM.value);
+    selectedLLM.value = { ...selectLLM.value };
+  }
+});
+
 watch(
   currentSelectedSession,
   (newValue, oldValue) => {
     // 更新选择 mode
-    selectLLM.value = [];
+    selectedLLM.value = [];
   },
   {
     immediate: true,

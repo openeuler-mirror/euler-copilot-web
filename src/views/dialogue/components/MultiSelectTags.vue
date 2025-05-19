@@ -75,6 +75,10 @@ const handleKnowledgeList = async () => {
           }
         });
       });
+      emit(
+    'updateValue',
+    selectedTags.value.map((item) => item.kbId),
+  );
     activeNames.value = res.result.teamKbList.map((item) => item.teamName);
   }
 };

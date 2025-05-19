@@ -30,7 +30,7 @@ export const useHistorySessionStore = defineStore(
     const historySession = ref<HistorySessionItem[]>([]);
     const params = ref();
     const user_selected_app = ref<string>();
-    const selectLLM= ref([]);
+    const selectLLM= ref();
     const currentSelectedSession = ref<string>('');
     /**
      * 选择历史会话
@@ -78,6 +78,19 @@ export const useHistorySessionStore = defineStore(
       }
     };
     /**
+     * 获取当前 llm 模型的数值
+     */
+    const currentLLM = async() => {
+      console.log(currentSelectedSession.value);
+      await getHistorySession();
+      historySession.value.forEach((item) => {
+        if (item.conversationId === currentSelectedSession.value) {
+          selectLLM.value = item.llm;
+          console.log(selectLLM.value);
+        }
+      })
+    };
+    /**
      * 选中某个会话
      * @param conversationId 会话id
      */
@@ -120,6 +133,7 @@ export const useHistorySessionStore = defineStore(
             createdTime: item.createdTime,
             title: item.title,
             docCount: item.docCount || 0,
+            llm: item.llm || {},
           }));
         if (res.result.conversations.length === 0) {
           await generateSession();
@@ -127,6 +141,7 @@ export const useHistorySessionStore = defineStore(
         if (!currentSelectedSession.value) {
           currentSelectedSession.value =
             res.result.conversations[0]?.conversationId;
+            //-----
         }
         if (currentSelectedSession.value) {
           const { getConversation, isAnswerGenerating } = useSessionStore();
@@ -225,6 +240,7 @@ export const useHistorySessionStore = defineStore(
       generateSessionDebug,
       user_selected_app,
       selectLLM,
+      currentLLM,
     };
   },
   {
