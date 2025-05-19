@@ -22,7 +22,7 @@ const getLLMList = () => {
  * @returns
  */
 const updateLLMList = ({ conversationId, llmId }) => {
-  return put('/api/llm/conv', { conversationId, llmId: [llmId.llmId] });
+  return put('/api/llm/conv', { conversationId, llmId:llmId.llmId });
 };
 
 /**
