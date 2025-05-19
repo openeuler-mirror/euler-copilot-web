@@ -34,6 +34,28 @@ if [ ! -f "${tarball_path}" ]; then
     bash "${SCRIPT_DIR}/package_repository.sh"
 fi
 
+# 1.5 检测架构并准备离线 node 依赖
+ARCH=$(uname -m)
+if [[ "$ARCH" == "x86_64" ]]; then
+    ARCH_SUFFIX="x64"
+elif [[ "$ARCH" == "aarch64" ]]; then
+    ARCH_SUFFIX="arm64"
+else
+    echo "不支持的架构: $ARCH" >&2
+    exit 2
+fi
+# 检查 node_modules 分块文件是否存在，不存在则生成
+NEED_GEN=0
+for i in 0 1 2 3; do
+    if [ ! -f "${RELEASE_DIR}/offline_node_modules-${ARCH_SUFFIX}.tar.zst.part${i}" ]; then
+        NEED_GEN=1
+    fi
+done
+if [ "$NEED_GEN" -eq 1 ]; then
+    echo "生成离线依赖..."
+    bash "${SCRIPT_DIR}/prepare_node_modules_offline.sh"
+fi
+
 # 2. 初始化 rpmbuild 目录到 release 目录
 RPMBUILD_DIR="${RELEASE_DIR}/rpmbuild"
 mkdir -p "${RPMBUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
@@ -42,8 +64,17 @@ mkdir -p "${RPMBUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 cp "${SPEC}" "${RPMBUILD_DIR}/SPECS/"
 cp "${tarball_path}" "${RPMBUILD_DIR}/SOURCES/"
 
+# 3.5 复制离线依赖包分块到 SOURCES
+for i in 0 1 2 3; do
+    cp "${RELEASE_DIR}/offline_node_modules-${ARCH_SUFFIX}.tar.zst.part${i}" "${RPMBUILD_DIR}/SOURCES/"
+done
+
 # 4. 执行 rpmbuild
 echo "开始构建 RPM 包..."
 rpmbuild --define "_topdir ${RPMBUILD_DIR}" -ba "${RPMBUILD_DIR}/SPECS/$(basename "${SPEC}")"
 
 echo "RPM 包构建完成，输出在 ${RPMBUILD_DIR}/RPMS 和 ${RPMBUILD_DIR}/SRPMS"
+
+# 移动构建好的 rpm 包到 release 目录
+find "${RPMBUILD_DIR}/RPMS" -type f -name '*.rpm' -exec cp -f {} "${RELEASE_DIR}/" \;
+echo "所有 RPM 包已移动到 ${RELEASE_DIR}"
