@@ -4,11 +4,9 @@ import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
 import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
-import MultiSelectTags from'src/views/dialogue/components/MultiSelectTags.vue';
+import MultiSelectTags from 'src/views/dialogue/components/MultiSelectTags.vue';
 import { storeToRefs } from 'pinia';
-import {
-  IconCaretRight,
-} from '@computing/opendesign-icons';
+import { IconCaretRight } from '@computing/opendesign-icons';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
@@ -18,7 +16,7 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
+const { user_selected_app, selectLLM } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
 
 export interface DialogueSession {
@@ -33,12 +31,12 @@ const knowledgeList = ref();
 const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
-const selectedModal = ref({});
-const handleChangeMode = (val: string) => { 
-  selectedModal.value = val;
-}
+const selectedLLM = ref({});
+const handleChangeMode = (val: string) => {
+  selectedLLM.value = val;
+};
 // const isCreateApp = ref(true);
-const modeOptions = ref([]);
+const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
 const questions = [
   {
@@ -191,11 +189,16 @@ const handleSendMessage = async (
     await generateSession();
   }
   // 更新当前的会话模型和知识库列表
-  await api.updateModelAndKnowLedgeList({
-    conversationId: currentSelectedSession.value,
-    modelId: selectMode.value[0],
-    kbIds:knowledgeList.value,
-  })
+  await Promise.all([
+    await api.updateKnowledgeList({
+      kb_ids: knowledgeList.value,
+      conversationId: currentSelectedSession.value,
+    }),
+    await api.updateLLMList({
+      conversationId: currentSelectedSession.value,
+      llmId: selectLLM.value,
+    }),
+  ]);
   if (user_selected_flow) {
     await sendQuestion(
       groupId,
@@ -251,10 +254,14 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
  * @param type
  * @param cid
  */
-const handleReport = async (qaRecordId: string,reason_type:string,reason: string) => {
+const handleReport = async (
+  qaRecordId: string,
+  reason_type: string,
+  reason: string,
+) => {
   const params: {
     qaRecordId: string;
-    reason_type:string;
+    reason_type: string;
     reason: string;
   } = {
     reason_type: reason_type,
@@ -509,7 +516,7 @@ const isSameSession = (sessionId, curSessionId): boolean => {
 const handleUpdate = (kbList: any[]): void => {
   // 获取 knowledgeList 列表
   knowledgeList.value = kbList;
-}
+};
 
 // 上传文件(用户操作可能分批次)
 const updateFilesInSession = async (
@@ -608,27 +615,31 @@ const clearSuggestion = (index: number): void => {
   }
 };
 
-const getAddedModalList = async() => {
-  const [_, res] = await api.getAddedModels();
-  if(!_ && res && res.code === 200) {
-     modeOptions.value = res.result.models;
+const getProviderLLM = async () => {
+  const [_, res] = await api.getLLMList();
+  if (!_ && res && res.code === 200) {
+    llmOptions.value = res.result;
   }
-}
+};
 
 onMounted(() => {
   // 数据初始化
   AppForm.value = props.createAppForm;
   if (!inputRef.value) return;
   inputRef.value.focus();
-  getAddedModalList();
+  getProviderLLM();
 });
 
-watch(currentSelectedSession, (newValue, oldValue) => {
-  // 更新选择 mode
-  selectMode.value = [];
-},{
-  immediate: true,
-})
+watch(
+  currentSelectedSession,
+  (newValue, oldValue) => {
+    // 更新选择 mode
+    selectLLM.value = [];
+  },
+  {
+    immediate: true,
+  },
+);
 
 const selectQuestion = (val: any) => {
   dialogueInput.value = val;
@@ -668,8 +679,7 @@ const getappMode = (appId: string) => {
 watch(
   () => user_selected_app,
   (val) => {
-    if(app.value){
-      console.log(app.value.appId);
+    if (app.value) {
       user_selected_app.value = app.value.appId;
     }
     if (user_selected_app.value && !isCreateApp.value) {
@@ -723,9 +733,7 @@ watch(
           :isCommentList="
             item.belong === 'robot' ? item.messageList.getCommentList() : ''
           "
-          :messageArray="
-            item.belong === 'robot' ? item.messageList : ''
-          "
+          :messageArray="item.belong === 'robot' ? item.messageList : ''"
           :is-finish="getItem(item, 'isFinish')"
           :test="getItem(item, 'test')"
           :metadata="getItem(item, 'metadata')"
@@ -777,39 +785,50 @@ watch(
           </div>
         </div>
         <div class="dialogue-conversation-bottom-selectGroup">
-            <div class="modalSelectGroup">
-              <el-dropdown trigger="click">
-                <div class="el-dropdown-link" v-if="selectedModal.model">
-                  <img style="width: 16px;" :src="selectedModal.icon" alt="" />
-                  <span style="width: 100px; overflow: hidden;line-height: 32px; padding-left: 8px;"> {{ selectedModal.model }}</span>
-                  <el-icon style="margin-left: auto;">
-                    <IconCaretRight/>
-                  </el-icon>
-                </div>
-                <div class="el-dropdown-link" v-else>
-                  <span>请选择模型</span>
-                  <el-icon>
-                    <IconCaretRight/>
-                  </el-icon>
-                </div>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-for="(item, index) in modeOptions"
-                      :key="index"
-                      @click="handleChangeMode(item)">
-                      <img
-                        :src="item.icon"
-                        alt=""
-                        style="width: 20px; height: 20px; margin-right: 8px"/>
-                      {{ item.model }}
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>        
-            </div>
-            <MultiSelectTags @updateValue="handleUpdate"/>
+          <div class="modalSelectGroup">
+            <el-dropdown trigger="click">
+              <div class="el-dropdown-link" v-if="selectedLLM.modelName">
+                <img style="width: 16px" :src="selectedLLM.icon" alt="" />
+                <span
+                  style="
+                    width: 100px;
+                    overflow: hidden;
+                    line-height: 32px;
+                    padding-left: 8px;
+                  "
+                >
+                  {{ selectedLLM.modelName }}
+                </span>
+                <el-icon style="margin-left: auto">
+                  <IconCaretRight />
+                </el-icon>
+              </div>
+              <div class="el-dropdown-link" v-else>
+                <span>请选择模型</span>
+                <el-icon>
+                  <IconCaretRight />
+                </el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    v-for="(item, index) in llmOptions"
+                    :key="index"
+                    @click="handleChangeMode(item)"
+                  >
+                    <img
+                      :src="item.icon"
+                      alt=""
+                      style="width: 20px; height: 20px; margin-right: 8px"
+                    />
+                    {{ item.modelName }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
+          <MultiSelectTags @updateValue="handleUpdate" :PropselectedTags="PropselectedTags" />
+        </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
           <div class="dialogue-conversation-bottom-sendbox">
@@ -893,10 +912,10 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-.dialogue-conversation-bottom-selectGroup{
+.dialogue-conversation-bottom-selectGroup {
   display: flex;
 }
-.modalSelectGroup{
+.modalSelectGroup {
   width: 140px;
   margin-right: 8px;
   padding: 0 8px;
@@ -905,17 +924,17 @@ watch(
   background-color: var(--o-bg-color-base);
   border-radius: 8px;
   display: inline-block;
-  span{
+  span {
     height: 32px;
   }
-  .el-dropdown{
+  .el-dropdown {
     width: 100%;
     display: block;
-    span{
+    span {
       line-height: 32px;
     }
   }
-  .el-dropdown-link{
+  .el-dropdown-link {
     display: flex;
     justify-content: space-between;
     align-items: center;

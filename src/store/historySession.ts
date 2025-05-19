@@ -29,8 +29,8 @@ export const useHistorySessionStore = defineStore(
     // 历史会话列表
     const historySession = ref<HistorySessionItem[]>([]);
     const params = ref();
-    const user_selected_app = ref();
-    const selectMode = ref([]);
+    const user_selected_app = ref<string>();
+    const selectLLM= ref([]);
     const currentSelectedSession = ref<string>('');
     /**
      * 选择历史会话
@@ -188,7 +188,7 @@ export const useHistorySessionStore = defineStore(
    * 创建一个新的会话
    */
   const generateSession = async (): Promise<void> => {
-    const [_, res] = await api.createSession();
+    const [_, res] = await api.createSession(user_selected_app.value);
     if (!_ && res) {
       currentSelectedSession.value = res.result.conversationId;
       await getHistorySession();
@@ -224,7 +224,7 @@ export const useHistorySessionStore = defineStore(
       generateSession,
       generateSessionDebug,
       user_selected_app,
-      selectMode,
+      selectLLM,
     };
   },
   {

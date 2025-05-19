@@ -1,9 +1,12 @@
 <script setup>
 import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
+import { api } from 'src/apis';
 import { IconCheckBold, IconXSolid } from '@computing/opendesign-icons';
-import { api } from '@/apis';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useHistorySessionStore } from 'src/store';
+import { storeToRefs } from 'pinia';
 
+const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const isModalOpen = ref(false);
 const searchKey = ref('');
 const activeNames = ref([]);
@@ -15,12 +18,12 @@ const filterKnowledgeList = computed(() => {
   else {
     return availableitems.value
       .map((item) => {
-        const filterList = item.kbList.filter(
+        const filterList = item.kb_list.filter(
           (kb) =>
             kb.kbName.includes(searchKey.value) ||
             kb.kbId.includes(searchKey.value),
         );
-        return filterList.length > 0 ? { ...item, kbList: filterList } : null;
+        return filterList.length > 0 ? { ...item, kb_list: filterList } : null;
       })
       .filter((item) => item !== null);
   }
@@ -45,14 +48,34 @@ const selectTag = (tag) => {
   );
 };
 onMounted(() => {
-  getKnowledgeList();
+  handleKnowledgeList();
 });
 
-const getKnowledgeList = async () => {
-  const [_, res] = await api.getKnowledgeList();
+watch(
+  currentSelectedSession,
+  () => {
+    handleKnowledgeList();
+  },
+  {
+    deep: true,
+  },
+);
+
+const handleKnowledgeList = async () => {
+  const [_, res] = await api.getKnowledgeList({
+    conversationId: currentSelectedSession.value,
+    kbName: '',
+  });
   if (!_ && res && res.code === 200) {
-    availableitems.value = res.result.tkbList;
-    activeNames.value = res.result.tkbList.map((item) => item.teamName);
+    availableitems.value = res.result.teamKbList;
+      availableitems.value.forEach((item) => {
+        item.kb_list.forEach((kb) => {
+          if (kb.isUsed === true) {
+            selectedTags.value.push(kb);
+          }
+        });
+      });
+    activeNames.value = res.result.teamKbList.map((item) => item.teamName);
   }
 };
 
@@ -173,7 +196,7 @@ const checkTagsOverflow = () => {
                     </el-icon>
                   </template>
                   <template
-                    v-for="(item, index) in item.kbList"
+                    v-for="(item, index) in item.kb_list"
                     :key="index"
                     class="list-item"
                   >
