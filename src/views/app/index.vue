@@ -161,7 +161,7 @@ import {
 import './style.scss';
 import { ref, watch, markRaw } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
 import { api } from '@/apis';
@@ -170,9 +170,6 @@ import DefaultAppIcon from '../../assets/svgs/defaultIcon.webp';
 import CustomLoading from '../customLoading/index.vue';
 import SelectAppTypeDialog from './components/SelectAppTypeDialog.vue';
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
-import DebugApp from '../createapp/components/DebugApp.vue';
-
-const isDebugDialogVisible = ref(false);
 
 interface App {
   appId: string;
@@ -184,10 +181,11 @@ interface App {
   name: string;
   published: boolean;
 }
+const route = useRoute();
+const router = useRouter();
 
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const publishStatus = ref('未发布');
-const router = useRouter();
 const appType = ref('my');
 const appSearchValue = ref();
 const appList = ref<App[]>([]);
@@ -208,7 +206,7 @@ const handleChangePage = (pageNum: number, pageSize: number) => {
 
 type AppFilter = 'my' | 'createdByMe' | 'favorited';
 type AppType = 'flow' | 'agent' | 'all';
-const pluginType = ref<AppFilter>('my');
+const pluginType = ref<AppFilter>((route.query.to as AppFilter) || 'my');
 const appSearchType = ref<AppType>('all');
 
 const isSelectAppTypeDialogVisible = ref(false);

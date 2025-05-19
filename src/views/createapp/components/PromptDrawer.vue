@@ -4,7 +4,8 @@ import { onMounted, ref, watch } from 'vue';
 import { api } from '@/apis';
 import NewOrEditPrompt from './NewOrEditPrompt.vue';
 import type { Prompt } from '@/apis/appCenter';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElEmpty } from 'element-plus';
+import lightNull from '@/assets/svgs/light_null.svg';
 
 defineProps<{
   visible: boolean;
@@ -87,7 +88,7 @@ onMounted(() => {
         </div>
 
         <div class="prompt-wrapper">
-          <div class="prompt-list">
+          <div class="prompt-list" v-if="promptList.length">
             <template v-for="item in promptList">
               <div
                 class="prompt-item"
@@ -120,9 +121,10 @@ onMounted(() => {
               </div>
             </template>
           </div>
+          <ElEmpty v-else :image="lightNull" :description="$t('common.null')" />
           <div class="prompt-preview">
             <p class="prompt-preview__title">系统配置区：</p>
-            <div class="prompt-preview__content">
+            <div class="prompt-preview__content" v-if="selectedPrompt">
               {{ selectedPrompt.prompt }}
             </div>
           </div>

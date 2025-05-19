@@ -413,7 +413,7 @@ watch(
             "
             :loading="
               role === 'assistant' &&
-              isStreaming &&
+              answer[answerIndex].content.length === 0 &&
               idx === conversations.length - 1
             "
             class="bubble-item"
@@ -606,7 +606,8 @@ watch(
 
     .chat-container {
       width: 100%;
-      height: 340px;
+      height: 57%;
+      min-height: 340px;
       overflow: auto;
 
       .bubble-item {

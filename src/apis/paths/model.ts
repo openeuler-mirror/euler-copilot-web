@@ -23,6 +23,7 @@ const getUserModelList = () => {
       openaiApiKey: string;
       modelName: string;
       maxTokens: number;
+      isEditable?: boolean;
     }[]
   >('/api/llm');
 };

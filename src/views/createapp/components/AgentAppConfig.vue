@@ -354,25 +354,6 @@ onMounted(async () => {
                 </template>
               </el-select>
             </el-form-item>
-
-            <el-form-item label="提示词" prop="prompt" class="prompt-form-item">
-              <el-button
-                :icon="CirclePlus"
-                text
-                @click="isPromptDrawerVisible = true"
-              >
-                插入模板
-              </el-button>
-              <el-input
-                v-model="createAppForm.prompt"
-                style="margin-top: 8px"
-                type="textarea"
-                :maxlength="150"
-                show-word-limit
-                :rows="12"
-                placeholder="请在这里编写提示词，包括角色设定、任务目标、具备的能力及恢复的要求与限制等。好的提示词会直接影响智能体效果"
-              ></el-input>
-            </el-form-item>
           </el-collapse-item>
 
           <el-collapse-item name="multipleRounds">
@@ -442,41 +423,6 @@ onMounted(async () => {
                           src="@/assets/svgs/light_delete.svg"
                           alt=""
                           @click="onDeleteMcp(item)"
-                        />
-                      </el-tooltip>
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </el-form-item>
-            <el-form-item label="知识库">
-              <div class="mcp-adder">
-                <div class="mcp-button">
-                  <el-button
-                    :icon="CirclePlus"
-                    text
-                    @click="isAssetLibraryDrawerVisible = true"
-                  >
-                    添加知识库
-                  </el-button>
-                  <span class="mcp-count">
-                    {{ createAppForm.knowledge.length }}/5
-                  </span>
-                </div>
-                <div class="mcp-list">
-                  <template
-                    v-for="item in createAppForm.knowledge"
-                    :keys="item.kbId"
-                  >
-                    <div class="mcp-item">
-                      <div class="mcp-content">
-                        <span>{{ item.kbName }}</span>
-                      </div>
-                      <el-tooltip content="删除" placement="top">
-                        <img
-                          src="@/assets/svgs/light_delete.svg"
-                          alt=""
-                          @click="onDeleteKnowledge(item)"
                         />
                       </el-tooltip>
                     </div>
@@ -692,6 +638,7 @@ onMounted(async () => {
               img {
                 width: 24px;
                 height: 24px;
+                border-radius: 50%;
               }
             }
             img {
