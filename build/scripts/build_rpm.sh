@@ -44,10 +44,10 @@ else
     echo "不支持的架构: $ARCH" >&2
     exit 2
 fi
-# 检查分块文件是否存在，不存在则生成
+# 检查 node_modules 分块文件是否存在，不存在则生成
 NEED_GEN=0
 for i in 0 1 2 3; do
-    if [ ! -f "${RELEASE_DIR}/offline_node_modules-${ARCH_SUFFIX}.tar.gz.part${i}" ] || [ ! -f "${RELEASE_DIR}/offline_pnpm_store-${ARCH_SUFFIX}.tar.gz.part${i}" ]; then
+    if [ ! -f "${RELEASE_DIR}/offline_node_modules-${ARCH_SUFFIX}.tar.zst.part${i}" ]; then
         NEED_GEN=1
     fi
 done
@@ -66,8 +66,7 @@ cp "${tarball_path}" "${RPMBUILD_DIR}/SOURCES/"
 
 # 3.5 复制离线依赖包分块到 SOURCES
 for i in 0 1 2 3; do
-    cp "${RELEASE_DIR}/offline_node_modules-${ARCH_SUFFIX}.tar.gz.part${i}" "${RPMBUILD_DIR}/SOURCES/"
-    cp "${RELEASE_DIR}/offline_pnpm_store-${ARCH_SUFFIX}.tar.gz.part${i}" "${RPMBUILD_DIR}/SOURCES/"
+    cp "${RELEASE_DIR}/offline_node_modules-${ARCH_SUFFIX}.tar.zst.part${i}" "${RPMBUILD_DIR}/SOURCES/"
 done
 
 # 4. 执行 rpmbuild

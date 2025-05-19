@@ -23,20 +23,17 @@ License:          MulanPSL-2.0
 Group:            Applications/Utilities
 Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
-Source1:          offline_node_modules-%{_electron_arch}.tar.gz.part0
-Source2:          offline_node_modules-%{_electron_arch}.tar.gz.part1
-Source3:          offline_node_modules-%{_electron_arch}.tar.gz.part2
-Source4:          offline_node_modules-%{_electron_arch}.tar.gz.part3
-Source5:          offline_pnpm_store-%{_electron_arch}.tar.gz.part0
-Source6:          offline_pnpm_store-%{_electron_arch}.tar.gz.part1
-Source7:          offline_pnpm_store-%{_electron_arch}.tar.gz.part2
-Source8:          offline_pnpm_store-%{_electron_arch}.tar.gz.part3
+Source1:          offline_node_modules-%{_electron_arch}.tar.zst.part0
+Source2:          offline_node_modules-%{_electron_arch}.tar.zst.part1
+Source3:          offline_node_modules-%{_electron_arch}.tar.zst.part2
+Source4:          offline_node_modules-%{_electron_arch}.tar.zst.part3
 
 URL:              https://gitee.com/openeuler/euler-copilot-web
 Vendor:           openEuler <contact@openeuler.org>
 Packager:         openEuler <contact@openeuler.org>
 
 BuildRequires:    curl
+BuildRequires:    zstd
 
 %description
 openEuler 智能化解决方案 Web 前端
@@ -99,25 +96,15 @@ if [ ! -f "$CACHE_DIR/$PACKAGE_NAME" ]; then
         -o "$CACHE_DIR/$PACKAGE_NAME"
 fi
 
-# 合并并解压离线 node_modules 和 pnpm store
-cat %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.gz.part0 \
-    %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.gz.part1 \
-    %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.gz.part2 \
-    %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.gz.part3 \
-    > offline_node_modules-%{_electron_arch}.tar.gz
-cat %{_sourcedir}/offline_pnpm_store-%{_electron_arch}.tar.gz.part0 \
-    %{_sourcedir}/offline_pnpm_store-%{_electron_arch}.tar.gz.part1 \
-    %{_sourcedir}/offline_pnpm_store-%{_electron_arch}.tar.gz.part2 \
-    %{_sourcedir}/offline_pnpm_store-%{_electron_arch}.tar.gz.part3 \
-    > offline_pnpm_store-%{_electron_arch}.tar.gz
+# 合并并解压离线 node_modules
+cat %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.zst.part0 \
+    %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.zst.part1 \
+    %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.zst.part2 \
+    %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.zst.part3 \
+    > offline_node_modules-%{_electron_arch}.tar.zst
 
-if [ -f offline_pnpm_store-%{_electron_arch}.tar.gz ]; then
-  mkdir -p ~/.pnpm-store
-  tar -xzf offline_pnpm_store-%{_electron_arch}.tar.gz -C ~/.pnpm-store
-fi
-
-if [ -f offline_node_modules-%{_electron_arch}.tar.gz ]; then
-  tar -xzf offline_node_modules-%{_electron_arch}.tar.gz
+if [ -f offline_node_modules-%{_electron_arch}.tar.zst ]; then
+  zstd -d offline_node_modules-%{_electron_arch}.tar.zst -c | tar -xf -
 fi
 
 # Install pnpm packages
