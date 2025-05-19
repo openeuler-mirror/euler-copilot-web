@@ -1,5 +1,5 @@
 import { get, post, del, put } from '../server';
-import { addedModalList } from './type';
+import { AddedModalList } from './type';
 /**
  * 获取用户的模型列表
  * @returns
@@ -22,16 +22,14 @@ const getLLMList = () => {
  * @returns
  */
 const updateLLMList = ({ conversationId, llmId }) => {
-  return put('/api/llm/conv', { conversationId, llmId:[llmId.llmId] });
+  return put('/api/llm/conv', { conversationId, llmId: [llmId.llmId] });
 };
 
 /**
  * 获取已添加模型列表
  */
 const getAddedModels = () => {
-  return get<{
-    models: addedModalList[];
-  }>('/api/model');
+  return get<AddedModalList[]>('/api/llm');
 };
 
 export const llmApi = {

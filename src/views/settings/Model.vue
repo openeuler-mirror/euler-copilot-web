@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { markRaw, onMounted, ref, watch } from 'vue';
 import ModelCard from './components/ModelCard.vue';
 import lightNull from '@/assets/svgs/light_null.svg';
-import { ElEmpty, ElMessage } from 'element-plus';
+import { ElEmpty, ElMessage, ElMessageBox } from 'element-plus';
 import AddModel, { ModelProvider } from './components/AddModel.vue';
+import { IconAlarm } from '@computing/opendesign-icons';
 import i18n from '@/i18n';
 import { api } from '@/apis';
 
@@ -14,6 +15,7 @@ interface Model {
   openaiApiKey: string;
   modelName: string;
   maxTokens: number;
+  isEditable?: boolean;
 }
 
 const { t } = i18n.global;
@@ -24,18 +26,11 @@ const modelProviders = ref<ModelProvider[]>([]);
 
 const isAddModelVisible = ref(false);
 
-async function onModelDel(modelId: string) {
-  const [err, _] = await api.deleteModel(modelId);
-  if (err) ElMessage.error(err.message);
-  else {
-    ElMessage.success('Success');
-    queryModels();
-  }
-}
 const dialogTitle = ref();
 
 const selectedModel = ref();
-function onModelEdit(model: Model) {
+function onModelEdit(model?: Model) {
+  if (!model) return;
   dialogTitle.value = t(`common.edit`, { name: t('settings.model') });
   selectedModel.value = model;
   isAddModelVisible.value = true;
@@ -62,6 +57,26 @@ async function queryModelProviders() {
 }
 
 const selectedProvider = ref<ModelProvider>();
+
+const isDeleteVisible = ref(false);
+const beDeleteModelId = ref('');
+
+async function handleDelete(modelId: string) {
+  if (!modelId) return;
+  ElMessageBox.confirm('确定删除此模型吗？', '提示', {
+    type: 'warning',
+    icon: markRaw(IconAlarm),
+  }).then(async () => {
+    const [err, _] = await api.deleteModel(modelId);
+    if (err) ElMessage.error(err.message);
+    else {
+      ElMessage.success('删除成功');
+      queryModels();
+      beDeleteModelId.value = '';
+      isDeleteVisible.value = false;
+    }
+  });
+}
 
 watch(
   () => [isAddModelVisible.value],
@@ -91,8 +106,18 @@ onMounted(() => {
       >
         <template #headerRight>
           <div class="added-model__operate">
-            <a @click="onModelEdit(item)">{{ t('common.edit') }}</a>
-            <a @click="onModelDel(item.llmId)">{{ t('common.delete') }}</a>
+            <a
+              @click="onModelEdit(item.isEditable ? item : undefined)"
+              :class="{ disabled: !item.isEditable }"
+            >
+              {{ t('common.edit') }}
+            </a>
+            <a
+              @click="handleDelete(item.isEditable ? item.llmId : '')"
+              :class="{ disabled: !item.isEditable }"
+            >
+              {{ t('common.delete') }}
+            </a>
           </div>
         </template>
       </ModelCard>
@@ -124,6 +149,20 @@ onMounted(() => {
     :model="selectedModel"
     :provider="selectedProvider"
   />
+
+  <el-dialog v-model="isDeleteVisible" title="提示" width="432">
+    确定删除此模型吗？
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="isDeleteVisible = false">
+          {{ t('common.cancel') }}
+        </el-button>
+        <el-button type="primary" @click="">
+          {{ t('common.delete') }}
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 <style lang="scss" scoped>
 .model {
@@ -138,7 +177,7 @@ onMounted(() => {
   .added-model {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    align-content: flex-start; /* 关键：子项顶部对齐 */
+    align-content: flex-start;
     gap: 16px;
     min-height: 210px;
 
@@ -148,6 +187,10 @@ onMounted(() => {
       font-size: 12px;
       line-height: 16px;
       color: rgb(99, 149, 253);
+
+      .disabled {
+        color: #d1cfcf;
+      }
 
       a {
         cursor: pointer;

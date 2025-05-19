@@ -128,8 +128,6 @@ watch(
     nextTick(() => {
       formRef.value && formRef.value.resetFields();
 
-      console.log(props.model);
-
       if (props.model) {
         const { openaiApiKey, openaiBaseUrl, maxTokens, modelName } =
           props.model;
@@ -146,6 +144,13 @@ watch(
     });
   },
 );
+
+const disabledUrl = computed(() => {
+  if (props.provider && props.provider.url) {
+    return true;
+  }
+  return false;
+});
 </script>
 <template>
   <div class="add-model-dialog">
@@ -165,6 +170,7 @@ watch(
         <el-form-item :label="t('settings.placeHolder.url')" prop="url">
           <el-input
             v-model="form.url"
+            :disabled="disabledUrl"
             :placeholder="t('settings.placeHolder.url')"
           />
         </el-form-item>
@@ -177,6 +183,8 @@ watch(
         <el-form-item label="API_Key" prop="apiKey">
           <el-input
             v-model="form.apiKey"
+            type="password"
+            show-password
             :placeholder="t('settings.placeHolder.api_key')"
           />
         </el-form-item>
