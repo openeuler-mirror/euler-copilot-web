@@ -48,6 +48,7 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
     line-height: 24px;
     font-weight: 700;
     margin-bottom: 8px;
+    color: var(--o-text-color-primary);
   }
 
   &-container {

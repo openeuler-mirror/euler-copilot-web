@@ -7,6 +7,19 @@
           {{ interPreviewInfo.name }}
         </div>
       </div>
+      <div
+        v-if="interPreviewInfo.mcps && interPreviewInfo.mcps.length"
+        class="mcp-list"
+      >
+        MCP服务
+        <img
+          class="mcp-item"
+          v-for="mcp in interPreviewInfo.mcps"
+          :key="mcp.mcpserviceId"
+          :src="mcp.icon"
+          alt=""
+        />
+      </div>
     </div>
     <div class="preMain">
       <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
@@ -23,7 +36,7 @@
           v-if="
             interPreviewInfo.name.length ||
             interPreviewInfo.description.length ||
-            connnectLinkList.length
+            connectLinkList.length
           "
         >
           <div class="preMainContentTitle" v-if="interPreviewInfo.name.length">
@@ -43,12 +56,12 @@
           >
             {{ interPreviewInfo.description }}
           </div>
-          <div class="preMainContentLink" v-if="connnectLinkList.length">
-            <el-badge :value="connnectLinkList.length" class="linkBadge">
+          <div class="preMainContentLink" v-if="connectLinkList.length">
+            <el-badge :value="connectLinkList.length" class="linkBadge">
               <div class="contentLinkTitle">相关链接</div>
             </el-badge>
             <div class="connectBox">
-              <div v-for="(connect, index) in connnectLinkList">
+              <div v-for="(connect, index) in connectLinkList">
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
                   <el-link
@@ -95,8 +108,8 @@ interface InterPreProps {
 }
 const props = withDefaults(defineProps<InterPreProps>(), {});
 const interPreviewInfo = ref();
-const recommendQuestionList = ref();
-const connnectLinkList = ref<any>([]);
+const recommendQuestionList = ref<any>([]);
+const connectLinkList = ref<any>([]);
 const emit = defineEmits(['selectQuestion']);
 
 const selectQuestions = (event) => {
@@ -108,13 +121,20 @@ const selectQuestions = (event) => {
 
 watch(
   () => props.createAppForm,
-  (newValue, oldValue) => {
+  () => {
     interPreviewInfo.value = props.createAppForm;
-    connnectLinkList.value = props.createAppForm?.links?.filter(
-      (item) => item.length,
-    );
-    recommendQuestionList.value =
-      props.createAppForm?.recommendedQuestions?.filter((item) => item.length);
+
+    if (props.createAppForm.links) {
+      connectLinkList.value = props.createAppForm.links.filter(
+        (item) => item.length,
+      );
+    }
+    if (props.createAppForm.recommendedQuestions) {
+      recommendQuestionList.value =
+        props.createAppForm?.recommendedQuestions?.filter(
+          (item) => item.length,
+        );
+    }
   },
   {
     immediate: true,
@@ -134,6 +154,24 @@ watch(
     width: 100%;
     display: flex;
     justify-content: center;
+    align-items: center;
+    position: relative;
+
+    .mcp-list {
+      position: absolute;
+      right: 103px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      color: var(--o-text-color-tertiary);
+
+      .mcp-item {
+        width: 24px;
+        height: 24px;
+        margin-left: 8px;
+        border-radius: 50%;
+      }
+    }
 
     .preTopContent {
       display: flex;

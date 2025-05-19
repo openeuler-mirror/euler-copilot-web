@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-import { addedModalList, teamKnowledgeList } from "src/apis/paths/type";
+import { AddedModalList, teamKnowledgeList } from 'src/apis/paths/type';
 
 // 更新接口
 export interface SessionItem {
@@ -18,6 +18,6 @@ export interface SessionItem {
   docCount?: number;
   appId?: string;
   debug?: boolean;
-  model?: addedModalList;
+  model?: AddedModalList;
   kbList?: teamKnowledgeList[];
 }

@@ -25,7 +25,7 @@ export default {
     placeHolder: {
       url: 'Please enter the URL',
       api_key: 'Please enter the API KEY',
-      model_name: 'Please select the model',
+      model_name: 'Please enter the model',
       max_token: 'Please enter the maximum number of tokens',
     },
   },

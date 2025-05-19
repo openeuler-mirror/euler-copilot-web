@@ -70,7 +70,9 @@ export const createSessionDebug = (params: any): Promise<[any, any]> => {
  */
 export const updateSession = (params: {
   conversationId: string;
-  title: string;
+  modelId?: string;
+  kbIds?: string[];
+  title?: string;
 }): Promise<
   [
     any,
@@ -88,6 +90,8 @@ export const updateSession = (params: {
     BASE_URL,
     {
       title: params.title,
+      modelId: params.modelId,
+      kbIds: params.kbIds,
     },
     {
       conversationId: params.conversationId,

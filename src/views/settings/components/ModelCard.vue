@@ -57,7 +57,7 @@ const cardStyles = computed<CSSProperties>(() => {
   width: 100%;
   border-radius: 8px;
   padding: 16px;
-  background-color: rgb(244, 246, 250);
+  background-color: var(--el-collapse-header-bg);
 
   .card-header {
     display: flex;
@@ -66,6 +66,7 @@ const cardStyles = computed<CSSProperties>(() => {
     &__title {
       display: flex;
       align-items: center;
+      color: var(--o-text-color-primary);
       .icon {
         width: 30px;
         height: 30px;
@@ -89,6 +90,7 @@ const cardStyles = computed<CSSProperties>(() => {
   }
 
   .card-description {
+    height: 44px;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -97,7 +99,7 @@ const cardStyles = computed<CSSProperties>(() => {
     text-overflow: ellipsis;
     line-height: 22px;
     font-size: 14px;
-    color: rgb(78, 88, 101);
+    color: var(--o-text-color-secondary);
     margin-top: 5px;
   }
 
