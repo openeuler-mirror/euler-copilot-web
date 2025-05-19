@@ -35,6 +35,8 @@ Packager:         openEuler <contact@openeuler.org>
 BuildRequires:    curl
 BuildRequires:    zstd
 
+Requires:         nginx
+
 %description
 openEuler 智能化解决方案 Web 前端
 
@@ -104,16 +106,31 @@ cat %{_sourcedir}/offline_node_modules-%{_electron_arch}.tar.zst.part0 \
     > offline_node_modules-%{_electron_arch}.tar.zst
 
 if [ -f offline_node_modules-%{_electron_arch}.tar.zst ]; then
-  zstd -d offline_node_modules-%{_electron_arch}.tar.zst -c | tar -xf -
+    zstd -d offline_node_modules-%{_electron_arch}.tar.zst -c | tar -xf -
 fi
 
 # Install pnpm packages
 # pnpm install --offline
-# Build the app
+# Build Electron app
 pnpm run package:linux
+
+# Clear dist directory
+rm -rf dist
+# Build Web app
+pnpm run build
 
 
 %install
+# Web 主包安装
+mkdir -p %{buildroot}/usr/share/nginx/html
+mkdir -p %{buildroot}/etc/nginx/conf.d
+# 拷贝 dist 和 public 内容到 nginx html 目录
+cp -a %{_builddir}/%{name}-%{version}/dist/* %{buildroot}/usr/share/nginx/html/
+cp -a %{_builddir}/%{name}-%{version}/public/* %{buildroot}/usr/share/nginx/html/
+# 拷贝 nginx 配置到 /etc/nginx/conf.d/euler-copilot-web.conf
+cp -a %{_builddir}/%{name}-%{version}/build/linux/nginx.conf.local.tmpl %{buildroot}/etc/nginx/conf.d/euler-copilot-web.conf
+
+# Electron 客户端安装
 mkdir -p %{buildroot}/opt/Intelligence
 mkdir -p %{buildroot}/usr/share/applications
 # 创建图标目录
@@ -143,13 +160,18 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 
 
 %files
-# 主包（暂时留空）
+# Web 主包安装内容
+%dir /usr/share/nginx
+%dir /usr/share/nginx/html
+%attr(0755, root, root) /usr/share/nginx/html
+%attr(0644, root, root) /usr/share/nginx/html/**
+%config(noreplace) /etc/nginx/conf.d/euler-copilot-web.conf
 
 
 %files -n euler-copilot-desktop
 # 应用安装目录及其所有内容
 %dir /opt/Intelligence
-%attr(0755, root, root) /opt/Intelligence/*
+%attr(0755, root, root) /opt/Intelligence/**
 # 桌面与图标
 %attr(0644, root, root) /usr/share/applications/euler-copilot-desktop.desktop
 %attr(0644, root, root) /usr/share/icons/hicolor/16x16/apps/euler-copilot-desktop.png
@@ -161,6 +183,14 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 %attr(0644, root, root) /usr/share/icons/hicolor/256x256/apps/euler-copilot-desktop.png
 %attr(0644, root, root) /usr/share/icons/hicolor/256x256@2/apps/euler-copilot-desktop.png
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
+
+
+%post
+#!/bin/bash
+# Web 主包安装后，检测 nginx 服务，若已运行则重启，否则跳过
+if systemctl is-active --quiet nginx; then
+    systemctl restart nginx
+fi
 
 
 %post -n euler-copilot-desktop -p /bin/sh
@@ -203,23 +233,23 @@ fi
 # Unfortunately, at the moment AppArmor doesn't have a good story for backwards compatibility.
 # https://askubuntu.com/questions/1517272/writing-a-backwards-compatible-apparmor-profile
 if apparmor_status --enabled > /dev/null 2>&1; then
-  APPARMOR_PROFILE_SOURCE='/opt/Intelligence/resources/apparmor-profile'
-  APPARMOR_PROFILE_TARGET='/etc/apparmor.d/euler-copilot-desktop'
-  if apparmor_parser --skip-kernel-load --debug "$APPARMOR_PROFILE_SOURCE" > /dev/null 2>&1; then
-    cp -f "$APPARMOR_PROFILE_SOURCE" "$APPARMOR_PROFILE_TARGET"
+    APPARMOR_PROFILE_SOURCE='/opt/Intelligence/resources/apparmor-profile'
+    APPARMOR_PROFILE_TARGET='/etc/apparmor.d/euler-copilot-desktop'
+    if apparmor_parser --skip-kernel-load --debug "$APPARMOR_PROFILE_SOURCE" > /dev/null 2>&1; then
+        cp -f "$APPARMOR_PROFILE_SOURCE" "$APPARMOR_PROFILE_TARGET"
 
-    # Updating the current AppArmor profile is not possible and probably not meaningful in a chroot'ed environment.
-    # Use cases are for example environments where images for clients are maintained.
-    # There, AppArmor might correctly be installed, but live updating makes no sense.
-    if ! { [ -x '/usr/bin/ischroot' ] && /usr/bin/ischroot; } && hash apparmor_parser 2>/dev/null; then
-      # Extra flags taken from dh_apparmor:
-      # > By using '-W -T' we ensure that any abstraction updates are also pulled in.
-      # https://wiki.debian.org/AppArmor/Contribute/FirstTimeProfileImport
-      apparmor_parser --replace --write-cache --skip-read-cache "$APPARMOR_PROFILE_TARGET"
+        # Updating the current AppArmor profile is not possible and probably not meaningful in a chroot'ed environment.
+        # Use cases are for example environments where images for clients are maintained.
+        # There, AppArmor might correctly be installed, but live updating makes no sense.
+        if ! { [ -x '/usr/bin/ischroot' ] && /usr/bin/ischroot; } && hash apparmor_parser 2>/dev/null; then
+            # Extra flags taken from dh_apparmor:
+            # > By using '-W -T' we ensure that any abstraction updates are also pulled in.
+            # https://wiki.debian.org/AppArmor/Contribute/FirstTimeProfileImport
+            apparmor_parser --replace --write-cache --skip-read-cache "$APPARMOR_PROFILE_TARGET"
+        fi
+    else
+        echo "Skipping the installation of the AppArmor profile as this version of AppArmor does not seem to support the bundled profile"
     fi
-  else
-    echo "Skipping the installation of the AppArmor profile as this version of AppArmor does not seem to support the bundled profile"
-  fi
 fi
 
 
@@ -237,7 +267,7 @@ APPARMOR_PROFILE_DEST='/etc/apparmor.d/euler-copilot-desktop'
 
 # Remove apparmor profile.
 if [ -f "$APPARMOR_PROFILE_DEST" ]; then
-  rm -f "$APPARMOR_PROFILE_DEST"
+    rm -f "$APPARMOR_PROFILE_DEST"
 fi
 
 
