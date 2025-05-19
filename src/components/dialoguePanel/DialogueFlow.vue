@@ -145,13 +145,14 @@ watch(
                       class="loading-icon"
                     />
                     <span class="title">{{ secItem.title }}</span>
-                    <span
-                      v-if="secItem.costTime"
+                    <div v-if="secItem.costTime"
                       class="time"
-                      :class="`${secItem.status}Bg`"
+                      >
+                    <span :class="`${secItem.status}Bg`"
                     >
                       {{ secItem.costTime.toFixed(3) }}s
                     </span>
+                  </div>
                   </div>
                 </template>
                 <template #icon="{ isActive }">
@@ -338,6 +339,14 @@ watch(
   .time {
     padding: 0px 12px;
     margin-left: auto;
+    span{
+      border-radius: 4px;
+      min-width: 44px;
+    width: fit-content;
+    height: 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    }
   }
 }
 .totalTime {
