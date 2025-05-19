@@ -163,7 +163,6 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 # Web 主包安装内容
 %dir /usr/share/nginx
 %dir /usr/share/nginx/html
-%attr(0755, root, root) /usr/share/nginx/html
 %attr(0644, root, root) /usr/share/nginx/html/**
 %config(noreplace) /etc/nginx/conf.d/euler-copilot-web.conf
 
