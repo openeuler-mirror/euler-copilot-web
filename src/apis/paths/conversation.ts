@@ -37,7 +37,17 @@ export const getSessionRecord = (): Promise<
  * 创建一个会话
  * @returns
  */
-export const createSession = (): Promise<
+export const createSession = ({
+  appId,
+  debug = false,
+  llm_id = '',
+  kb_ids = [],
+}: {
+  appId: string;
+  debug?: boolean;
+  llm_id?: string;
+  kb_ids?: string[];
+}): Promise<
   [
     any,
     (
@@ -48,7 +58,7 @@ export const createSession = (): Promise<
     ),
   ]
 > => {
-  return post(BASE_URL);
+  return post(BASE_URL,{appId,debug},{llm_id,kb_ids});
 };
 
 /**

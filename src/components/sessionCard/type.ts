@@ -21,3 +21,8 @@ export interface SessionItem {
   model?: AddedModalList;
   kbList?: teamKnowledgeList[];
 }
+// 新增接口
+export interface modelItem  {
+  icon: string;
+  modelName: string;
+}
