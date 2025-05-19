@@ -1016,7 +1016,6 @@ defineExpose({
   }
   .time {
     height: 16px;
-    line-height: 16px;
     padding: 0px 8px;
     border-radius: 4px;
   }
