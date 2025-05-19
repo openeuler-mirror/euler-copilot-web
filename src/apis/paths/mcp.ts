@@ -37,18 +37,26 @@ const getMcpServiceDetail = (id: string) => {
     data: string;
     mcpType: 'stdio' | 'sse' | 'stream';
     tools: {
+      id: string;
       name: string;
       description: string;
-      input_args: {
-        name: string;
-        description: string;
-        type: string;
-      }[];
-      output_args: {
-        name: string;
-        description: string;
-        type: string;
-      }[];
+      mcp_id: string;
+      input_schema: {
+        properties: {
+          [key: string]: {
+            description: string;
+            type: string;
+          };
+        };
+      };
+      output_schema: {
+        properties: {
+          [key: string]: {
+            description: string;
+            type: string;
+          };
+        };
+      };
     }[];
   }>(`${MCP_BASE_URL}/${id}`);
 };

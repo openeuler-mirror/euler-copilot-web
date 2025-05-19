@@ -14,18 +14,26 @@ interface McpDetail {
   data: string;
   mcpType: string;
   tools: {
+    id: string;
     name: string;
     description: string;
-    input_args: {
-      name: string;
-      description: string;
-      type: string;
-    }[];
-    output_args: {
-      name: string;
-      description: string;
-      type: string;
-    }[];
+    mcp_id: string;
+    input_schema: {
+      properties: {
+        [key: string]: {
+          description: string;
+          type: string;
+        };
+      };
+    };
+    output_schema: {
+      properties: {
+        [key: string]: {
+          description: string;
+          type: string;
+        };
+      };
+    };
   }[];
 }
 
@@ -48,6 +56,13 @@ async function getMcpServiceDetail(serviceId: string) {
   const [_, res] = await api.getMcpServiceDetail(serviceId);
   if (res) {
     mcpServiceDetail.value = res.result;
+    // mcpServiceDetail.value.tools.forEach((tool) => {
+    //   tool.input_schema.properties = []
+    //   for (const key in tool.input_schema.properties) {
+    //     tooo
+    //   }
+    // })
+    // console.log(mcpServiceDetail.value);
   }
 }
 
@@ -96,17 +111,20 @@ watch(
                   {{ tool.description }}
                 </span>
                 <el-collapse v-model="activeNames">
-                  <el-collapse-item name="regeocode" :icon="CaretRight">
+                  <el-collapse-item
+                    :name="`${tool.name}-regeocode`"
+                    :icon="CaretRight"
+                  >
                     <template #title>
                       <span class="collapse-title">工具入参</span>
                     </template>
                     <div
                       class="tool-parameter"
-                      v-for="(args, idx) in tool.input_args"
+                      v-for="(args, key, idx) in tool.input_schema.properties"
                       :key="idx"
                     >
                       <div class="tool-parameter__key-value">
-                        <span class="key">{{ args.name }}</span>
+                        <span class="key">{{ key }}</span>
                         <span class="type">{{ args.type }}</span>
                       </div>
                       <span class="tool-parameter__introduction">
@@ -114,18 +132,22 @@ watch(
                       </span>
                     </div>
                   </el-collapse-item>
-                  <el-collapse-item name="geocode" :icon="CaretRight">
+                  <el-collapse-item
+                    :name="`${tool.name}-geocode`"
+                    :icon="CaretRight"
+                    v-if="tool.output_schema"
+                  >
                     <template #title>
                       <span class="collapse-title">工具出参</span>
                     </template>
 
                     <div
                       class="tool-parameter"
-                      v-for="(args, idx) in tool.input_args"
+                      v-for="(args, key, idx) in tool.output_schema.properties"
                       :key="idx"
                     >
                       <div class="tool-parameter__key-value">
-                        <span class="key">{{ args.name }}</span>
+                        <span class="key">{{ key }}</span>
                         <span class="type">{{ args.type }}</span>
                       </div>
                       <span class="tool-parameter__introduction">
