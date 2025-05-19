@@ -62,7 +62,7 @@ watch(
 );
 
 const handleKnowledgeList = async () => {
-  const [_, res] = await api.getKnowledgeList({
+  const [_, res] = await api.getConvKnowledgeList({
     conversationId: currentSelectedSession.value,
     kbName: '',
   });

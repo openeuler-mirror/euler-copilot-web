@@ -85,8 +85,7 @@ export const useHistorySessionStore = defineStore(
       await getHistorySession();
       historySession.value.forEach((item) => {
         if (item.conversationId === currentSelectedSession.value) {
-          selectLLM.value = item.model;
-          console.log(selectLLM.value);
+          selectLLM.value = item.llm;
         }
       })
     };
@@ -133,7 +132,7 @@ export const useHistorySessionStore = defineStore(
             createdTime: item.createdTime,
             title: item.title,
             docCount: item.docCount || 0,
-            llm: item.model || {},
+            llm: item.llm || {},
           }));
         if (res.result.conversations.length === 0) {
           await generateSession();
