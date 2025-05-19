@@ -19,7 +19,7 @@ import {
   mcpApi,
 } from './paths';
 import { workFlowApi } from './workFlow';
-import { appCenterApi } from './appCenter';
+import { appCenterApi, promptApi, kbApi } from './appCenter';
 
 export const api = {
   ...accountApi,
@@ -33,4 +33,6 @@ export const api = {
   ...apiApi,
   ...modelApi,
   ...mcpApi,
+  ...promptApi,
+  ...kbApi,
 };
