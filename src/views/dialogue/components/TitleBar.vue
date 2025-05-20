@@ -39,7 +39,7 @@ const changeLanguagefun = (lang: "zh_cn" | "en") => {
       lang: lang,
       type: 'changeLanguage',
     };
-    iframe.contentWindow.postMessage(data, 'http://localhost:3002');
+    iframe.contentWindow.postMessage(data, iframeTarget.value);
   }
 };
 
