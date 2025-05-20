@@ -10,8 +10,6 @@ server {
     add_header Cache-Control "no-cache";
     add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: base64;";
 
-    limit_conn limitperip 50;
-
     resolver 8.8.8.8 8.8.4.4 valid=60s;
     resolver_timeout 5s;
 
