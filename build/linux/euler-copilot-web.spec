@@ -122,11 +122,11 @@ pnpm run build
 
 %install
 # Web 主包安装
-mkdir -p %{buildroot}/usr/share/nginx/html
+mkdir -p %{buildroot}/usr/share/euler-copilot-web
 mkdir -p %{buildroot}/etc/nginx/conf.d
-# 拷贝 dist 和 public 内容到 nginx html 目录
-cp -a %{_builddir}/%{name}-%{version}/dist/* %{buildroot}/usr/share/nginx/html/
-cp -a %{_builddir}/%{name}-%{version}/public/* %{buildroot}/usr/share/nginx/html/
+# 拷贝 dist 和 public 内容到 euler-copilot-web 目录
+cp -a %{_builddir}/%{name}-%{version}/dist/* %{buildroot}/usr/share/euler-copilot-web/
+cp -a %{_builddir}/%{name}-%{version}/public/* %{buildroot}/usr/share/euler-copilot-web/
 # 拷贝 nginx 配置到 /etc/nginx/conf.d/euler-copilot-web.conf
 cp -a %{_builddir}/%{name}-%{version}/build/linux/nginx.conf.local.tmpl %{buildroot}/etc/nginx/conf.d/euler-copilot-web.conf
 
@@ -161,9 +161,8 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 
 %files
 # Web 主包安装内容
-%dir /usr/share/nginx
-%dir /usr/share/nginx/html
-%attr(0644, root, root) /usr/share/nginx/html/**
+%dir /usr/share/euler-copilot-web
+%attr(0644, root, root) /usr/share/euler-copilot-web/**
 %config(noreplace) /etc/nginx/conf.d/euler-copilot-web.conf
 
 
