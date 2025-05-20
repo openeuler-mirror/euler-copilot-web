@@ -631,11 +631,9 @@ onMounted(() => {
 });
 
 watch(selectLLM, (newValue) => {
-  console.log(selectLLM);
   if (newValue) {
     selectedLLM.value.modalName = newValue.modelName;
     selectedLLM.value.icon = newValue.icon;
-    console.log(selectedLLM.value);
     selectedLLM.value = { ...selectLLM.value };
   }
 });
@@ -684,6 +682,7 @@ const getappMode = (appId: string) => {
         };
       }
     });
+    console.log("getappMode", appId, Form.value);
 };
 
 watch(
@@ -701,6 +700,18 @@ watch(
   },
   {
     immediate: true,
+    deep: true,
+  },
+);
+
+watch(
+  () => app,
+  (val) => {
+    if (app.value) {
+      user_selected_app.value = app.value.appId;
+    }
+  },
+  {
     deep: true,
   },
 );
