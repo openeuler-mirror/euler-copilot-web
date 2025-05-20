@@ -42,7 +42,7 @@
             :lazy="true"
           ></el-tab-pane>
           <el-tab-pane
-            :label="$t('semantic.my_upload')"
+            :label="$t('app.my_created')"
             name="createdByMe"
             :lazy="true"
           ></el-tab-pane>
