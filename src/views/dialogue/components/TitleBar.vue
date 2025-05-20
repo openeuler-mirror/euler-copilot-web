@@ -30,13 +30,13 @@ onMounted(async () => {
     isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
 });
 
-const changeLanguagefun = (lang: 'CN' | 'EN') => {
+const changeLanguagefun = (lang: "zh_cn" | "en") => {
   changeLanguage(lang);
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
   if (iframe?.contentWindow) {
     const data = {
-      lang: localStorage.getItem('localeLang') ?? 'CN',
+      lang: lang,
       type: 'changeLanguage',
     };
     iframe.contentWindow.postMessage(data, iframeTarget.value);
