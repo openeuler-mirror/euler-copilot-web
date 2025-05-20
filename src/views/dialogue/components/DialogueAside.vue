@@ -125,8 +125,17 @@ function checkDate(date: string | Date): string {
 
 onMounted(() => {
   getHistorySession();
-  currentLLM();
 });
+
+watch(
+  () => currentSelectedSession.value,
+  () => {
+    currentLLM();
+  },
+  {
+    immediate: true,
+  }
+);
 
 const deletedSessionName = ref('');
 const sessionList = ref();
