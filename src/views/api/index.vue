@@ -420,7 +420,6 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
       }));
     }
   }
-
   loading.value = false;
 };
 
@@ -441,9 +440,12 @@ const handleFavorite = (e, item) => {
 };
 
 const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
+  console.log(type,'type');
   if (type === 'my') {
+    apiType.value = 'my';
     queryList(pluginType.value);
   } else {
+    apiType.value = type;
     currentPage.value = 1;
     currentPageSize.value = 16;
     queryList(pluginType.value);
