@@ -81,6 +81,8 @@ export const useHistorySessionStore = defineStore(
      * 获取当前 llm 模型的数值
      */
     const currentLLM = async () => {
+      // 先置空
+      selectLLM.value = {};
       await getHistorySession();
       historySession.value.forEach((item) => {
         if (item.conversationId === currentSelectedSession.value) {
