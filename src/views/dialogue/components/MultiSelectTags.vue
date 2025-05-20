@@ -100,11 +100,9 @@ const toggleModal = () => {
 // 待优化
 const checkTagsOverflow = () => {
   const container = document.querySelector('.tags-container');
-  console.log(container, 'container');
   if (!container) return;
 
   const tags = container.querySelectorAll('.tag');
-  console.log(tags, 'tags');
   if (!tags.length) return;
 
   //重置所有标签的样式
