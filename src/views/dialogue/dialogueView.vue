@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ComputedRef, nextTick, onMounted, ref } from 'vue';
+import { computed, ComputedRef, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
 import { getBaseUrl } from 'src/utils/tools';
@@ -32,7 +32,6 @@ const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo } = useAccountStore();
 const { getHistorySession } = useHistorySessionStore();
 const { app } = storeToRefs(useSessionStore());
-const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
@@ -108,8 +107,6 @@ const formValidateStatus = ref<any>({
   kb_id: true,
 });
 
-const theme = ref(localStorage.getItem('theme') || 'light');
-
 const createApi = async () => {
   apikey.value = '';
   revoke.value = false;
@@ -173,11 +170,9 @@ onMounted(async () => {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
   const isElectron = window.navigator.userAgent.includes('Electron');
-  const isLocalhost =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-  const iframeTarget =
-    isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+  const iframeTarget = isElectron
+    ? `${baseUrl}/witchaind`
+    : `${origin}/witchaind`;
 
   if (localStorage.getItem('theme')) {
     // document.body.setAttribute(
