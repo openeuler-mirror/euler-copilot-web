@@ -114,8 +114,6 @@ fi
 # Build Electron app
 pnpm run package:linux
 
-# Clear dist directory
-rm -rf dist
 # Build Web app
 pnpm run build
 
@@ -124,10 +122,8 @@ pnpm run build
 # Web 主包安装
 mkdir -p %{buildroot}/usr/share/euler-copilot-web
 mkdir -p %{buildroot}/etc/nginx/conf.d
-# 拷贝 dist 和 public 内容到 euler-copilot-web 目录
-cp -a %{_builddir}/%{name}-%{version}/dist/* %{buildroot}/usr/share/euler-copilot-web/
-cp -a %{_builddir}/%{name}-%{version}/public/* %{buildroot}/usr/share/euler-copilot-web/
-# 拷贝 nginx 配置到 /etc/nginx/conf.d/euler-copilot-web.conf
+cp -a %{_builddir}/%{name}-%{version}/dist/. %{buildroot}/usr/share/euler-copilot-web/
+chmod -R a+rX %{buildroot}/usr/share/euler-copilot-web
 cp -a %{_builddir}/%{name}-%{version}/build/linux/nginx.conf.local.tmpl %{buildroot}/etc/nginx/conf.d/euler-copilot-web.conf
 
 # Electron 客户端安装
@@ -162,7 +158,9 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 %files
 # Web 主包安装内容
 %dir /usr/share/euler-copilot-web
-%attr(0644, root, root) /usr/share/euler-copilot-web/**
+%dir /usr/share/euler-copilot-web/assets
+%attr(0644, root, root) /usr/share/euler-copilot-web/*.*
+%attr(0644, root, root) /usr/share/euler-copilot-web/assets/*
 %config(noreplace) /etc/nginx/conf.d/euler-copilot-web.conf
 
 

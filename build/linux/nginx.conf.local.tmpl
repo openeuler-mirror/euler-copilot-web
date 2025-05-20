@@ -23,7 +23,6 @@ server {
     }
 
     location / {
-        limit_req zone=ratelimit burst=50 nodelay;
         root /usr/share/euler-copilot-web;
         try_files $uri $uri/ /index.html;
         if (!-e $request_filename) {
@@ -32,14 +31,12 @@ server {
     }
 
     location /copilot {
-        limit_req zone=ratelimit burst=50 nodelay;
         alias /usr/share/euler-copilot-web;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
 
     location /login {
-        limit_req zone=ratelimit burst=50 nodelay;
         root /usr/share/euler-copilot-web;
         try_files $uri $uri/ /index.html;
     }
@@ -57,7 +54,6 @@ server {
         proxy_intercept_errors on;
 
         error_page 404 /404.html;
-        limit_req zone=ratelimit burst=15 nodelay;
         proxy_read_timeout 500s;
         proxy_connect_timeout 500s;
 
@@ -80,5 +76,11 @@ server {
     location = /error.html {
         root /usr/share/euler-copilot-web;
         internal;
+    }
+
+    location /assets/ {
+        alias /usr/share/euler-copilot-web/assets/;
+        expires 30d;
+        add_header Cache-Control public;
     }
 }
