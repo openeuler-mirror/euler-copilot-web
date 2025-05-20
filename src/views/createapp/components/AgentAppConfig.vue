@@ -4,16 +4,14 @@ import defaultIcon from '@/assets/svgs/app_upload.svg';
 import AppInitalPreview from '@/views/dialogue/components/AppInitalPreview.vue';
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { ElMessage, FormRules, UploadProps } from 'element-plus';
-import { useRoute, useRouter } from 'vue-router';
-import PromptDrawer from './PromptDrawer.vue';
+import { useRoute } from 'vue-router';
 import DebugApp from '../components/DebugApp.vue';
 import McpDrawer from './McpDrawer.vue';
-import AssetLibraryDrawer from './AssetLibraryDrawer.vue';
 import { api } from '@/apis';
-import type { Prompt } from '@/apis/appCenter';
 import type { AddedModalList } from '@/apis/paths/type';
 import PermissionControl from './PermissionControl.vue';
 import type { Mcp } from './McpDrawer.vue';
+import CustomLoading from '../../customLoading/index.vue';
 
 const route = useRoute();
 
@@ -86,9 +84,9 @@ const rules = reactive<FormRules<typeof createAppForm>>({
   permission: [{ required: true, message: '请选择对话轮次', trigger: 'blur' }],
 });
 
-const isPromptDrawerVisible = ref(false);
 const isMcpDrawerVisible = ref(false);
-const isAssetLibraryDrawerVisible = ref(false);
+
+const loading = ref(true);
 
 async function queryAgentConfig() {
   const [, res] = await api.querySingleAppData({
@@ -104,13 +102,7 @@ async function queryAgentConfig() {
     createAppForm.dialogRounds = dialogRounds || 3;
     createAppForm.permission = permission || createAppForm.permission;
   }
-}
-
-function onPromptSelected(p: Prompt) {
-  if (p) {
-    createAppForm.prompt = p.prompt || '';
-    isPromptDrawerVisible.value = false;
-  }
+  loading.value = false;
 }
 
 function onMcpServiceSelected(mcps: Mcp[]) {
@@ -120,25 +112,10 @@ function onMcpServiceSelected(mcps: Mcp[]) {
   }
 }
 
-function onKbSelected(kbs: []) {
-  if (kbs) {
-    createAppForm.knowledge = kbs;
-    isAssetLibraryDrawerVisible.value = false;
-  }
-}
-
 function onDeleteMcp(mcp: any) {
   if (mcp) {
     createAppForm.mcps = createAppForm.mcps.filter(
       (item) => item !== mcp.mcpserviceId,
-    );
-  }
-}
-
-function onDeleteKnowledge(knowledge: any) {
-  if (knowledge) {
-    createAppForm.knowledge = createAppForm.knowledge.filter(
-      (item) => item.knowledgeId !== knowledge.knowledgeId,
     );
   }
 }
@@ -245,6 +222,7 @@ onMounted(async () => {
 </script>
 <template>
   <div class="app-wrapper">
+    <CustomLoading :loading="loading"></CustomLoading>
     <div class="agent-config">
       <div class="base-info" @click="onBaseInfoHeaderClick">
         <span>基本信息</span>
@@ -470,19 +448,11 @@ onMounted(async () => {
       </div>
     </div>
 
-    <PromptDrawer
-      v-model:visible="isPromptDrawerVisible"
-      @confirm="onPromptSelected"
-    ></PromptDrawer>
     <McpDrawer
       v-model:visible="isMcpDrawerVisible"
       :checked-list="createAppForm.mcps"
       @confirm="onMcpServiceSelected"
     ></McpDrawer>
-    <AssetLibraryDrawer
-      v-model:visible="isAssetLibraryDrawerVisible"
-      @confirm="onKbSelected"
-    ></AssetLibraryDrawer>
 
     <DebugApp
       v-model:visible="isDebugDialogVisible"
