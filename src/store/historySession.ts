@@ -98,8 +98,6 @@ export const useHistorySessionStore = defineStore(
           selectLLM.value = item.llm;
           if(item.appId){
             app.value.appId = item.appId;
-          }else{
-            app.value.appId = 'f8a0ebc4-79c4-4a81-b96b-fede6c03f309';
           }
         }
       });
