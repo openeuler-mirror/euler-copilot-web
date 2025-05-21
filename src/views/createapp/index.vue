@@ -48,11 +48,10 @@ onUnmounted(() => {
 const handlePublishApp = async () => {
   // 发布接口前，先保存界面配置与工作流
   try {
-    const res = await saveApp(appType.value as 'agent' | 'flow');
-    if (res) {
-      await api
+    await saveApp(appType.value as 'agent' | 'flow').then(() => {
+      api
         .releaseSingleAppData({
-          id: route.query?.appId as string,
+          appId: route.query?.appId as string,
         })
         .then((res) => {
           if (res[1]?.result) {
@@ -61,7 +60,7 @@ const handlePublishApp = async () => {
             loading.value = false;
           }
         });
-    }
+    });
   } catch (error) {
     ElMessage.error(`发布失败`);
   }
@@ -131,7 +130,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
   try {
     if (type === 'flow') {
       await handleCreateOrUpdateApp();
-      await workFlowRef.value.saveFlow();
+      await workFlowRef.value.saveFlow(false,true);
       ElMessage({
         showClose: true,
         message: '更新成功',
