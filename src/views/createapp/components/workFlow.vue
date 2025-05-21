@@ -603,7 +603,7 @@ const cancelConnectStatus = (e) => {
   }
 };
 
-const saveFlow = (updateNodeParameter?) => {
+const saveFlow = (updateNodeParameter?,debug?) => {
   loading.value = true;
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
@@ -667,6 +667,9 @@ const saveFlow = (updateNodeParameter?) => {
         item.description = updateNodeParameter.description;
       }
     });
+  }
+  if (debug) {
+    flowObj.value.debug = true;
   }
   // 更新最新的节点与边的数据
   api
