@@ -184,11 +184,13 @@ watch(
     </section>
   </div>
 </template>
+<style lang="scss" scoped>
+:deep(.el-collapse-item__content){
+  margin: 0px 16px 0px 0px !important;
+}
+</style>
 
 <style lang="scss">
-.el-collapse-item__content {
-  margin: 0px 16px 16px 0px;
-}
 
 .el-collapse-item:last-child {
   margin-bottom: 0px;
@@ -281,11 +283,13 @@ watch(
   height: auto;
   border-radius: 0px 0px 4px 4px;
   border: 1px solid var(--o-border-color-base);
-
   :deep(.el-collapse-item__wragop) {
     margin-top: 12px !important;
     margin-bottom: 2px !important;
   }
+  :deep(.el-collapse-item__content) {
+  margin: 0px 16px 16px 0px !important;
+}
 }
 .loading {
   display: flex;
@@ -340,10 +344,10 @@ watch(
     padding: 0px 12px;
     margin-left: auto;
     span{
-      border-radius: 4px;
-      min-width: 44px;
+    padding: 0px 4px;
+    border-radius: 4px;
+    min-width: 44px;
     width: fit-content;
-    height: 16px;
     border-radius: 4px;
     font-size: 12px;
     }
@@ -353,4 +357,57 @@ watch(
   padding: 0px 8px;
   margin-left: auto;
 }
+::v-deep(.demo-collapse) {
+        border-radius: 4px;
+        .title.el-collapse-item {
+          .loading-text {
+            display: flex;
+            text-align: left;
+            align-items: center;
+            .textTitle {
+              flex: 1;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            .totalTime {
+              min-width: 54px;
+              width: fit-content;
+              padding: 0px 8px;
+              height: 16px;
+              line-height: 16px;
+              font-size: 12px;
+              border-radius: 4px;
+            }
+            .totalTime.errorBg {
+              background-color: rgba(227, 32, 32, 0.2);
+            }
+          }
+        }
+        .normal.el-collapse-item {
+          border-bottom: 1px dashed #dfe5ef;
+          .el-collapse-item__header {
+            background-color: var(--o-bg-color-base) !important;
+            color: var(--o-text-color-primary);
+            padding-right: 0px;
+            .o-collapse-icon {
+              width: 16px;
+              height: 16px;
+            }
+            .title {
+              flex: 1;
+              text-align: left;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            &::after {
+              background-color: transparent;
+            }
+          }
+          &:last-child {
+            border-bottom: 1px solid transparent !important;
+          }
+        }
+      }
 </style>
