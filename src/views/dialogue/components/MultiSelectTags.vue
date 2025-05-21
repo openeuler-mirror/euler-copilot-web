@@ -54,6 +54,7 @@ onMounted(() => {
 watch(
   currentSelectedSession,
   () => {
+    selectedTags.value = [];
     handleKnowledgeList();
   },
   {
