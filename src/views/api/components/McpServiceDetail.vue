@@ -50,19 +50,12 @@ const activeTab = ref<'description' | 'tools'>('description');
 
 const mcpServiceDetail = ref<McpDetail>();
 
-const activeNames = ref([]);
+const activeNames = ref<string[]>([]);
 
 async function getMcpServiceDetail(serviceId: string) {
   const [_, res] = await api.getMcpServiceDetail(serviceId);
   if (res) {
     mcpServiceDetail.value = res.result;
-    // mcpServiceDetail.value.tools.forEach((tool) => {
-    //   tool.input_schema.properties = []
-    //   for (const key in tool.input_schema.properties) {
-    //     tooo
-    //   }
-    // })
-    // console.log(mcpServiceDetail.value);
   }
 }
 
@@ -72,6 +65,9 @@ watch(
     if (props.visible) {
       if (!props.serviceId) return;
       getMcpServiceDetail(props.serviceId);
+    } else {
+      mcpServiceDetail.value = undefined;
+      activeTab.value = 'description';
     }
   },
 );
@@ -81,6 +77,7 @@ watch(
     <el-drawer
       size="700"
       :model-value="visible"
+      destroy-on-close
       title="服务详情"
       @close="emits('update:visible', false)"
     >
@@ -111,12 +108,19 @@ watch(
                   {{ tool.description }}
                 </span>
                 <el-collapse v-model="activeNames">
-                  <el-collapse-item
-                    :name="`${tool.name}-regeocode`"
-                    :icon="CaretRight"
-                  >
+                  <el-collapse-item :name="`${tool.name}-regeocode`">
                     <template #title>
                       <span class="collapse-title">工具入参</span>
+                      <el-icon
+                        class="collapse-icon"
+                        :class="{
+                          'collapse-icon-active': activeNames.includes(
+                            `${tool.name}-regeocode`,
+                          ),
+                        }"
+                      >
+                        <CaretRight />
+                      </el-icon>
                     </template>
                     <div
                       class="tool-parameter"
@@ -134,11 +138,20 @@ watch(
                   </el-collapse-item>
                   <el-collapse-item
                     :name="`${tool.name}-geocode`"
-                    :icon="CaretRight"
                     v-if="tool.output_schema"
                   >
                     <template #title>
                       <span class="collapse-title">工具出参</span>
+                      <el-icon
+                        class="collapse-icon"
+                        :class="{
+                          'collapse-icon-active': activeNames.includes(
+                            `${tool.name}-geocode`,
+                          ),
+                        }"
+                      >
+                        <CaretRight />
+                      </el-icon>
                     </template>
 
                     <div

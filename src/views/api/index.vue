@@ -128,38 +128,54 @@
                   </template>
                   <template #footer>
                     <div class="apiCenterCardBottom">
-                      <div class="apiCenterCardUser">@{{ item.author }}</div>
-                      <div
-                        class="apiCenterCardOps"
-                        v-if="
-                          userinfo.user_sub === item.author ||
-                          pluginType === 'mcp'
-                        "
-                      >
-                        <div v-if="userinfo.is_admin">
-                          <el-button
-                            text
-                            @click.stop="onOpenMcpDrawer(item.serviceId)"
+                      <div class="apiCenterCardId" v-if="pluginType === 'mcp'">
+                        <span>ID: {{ item.serviceId }}</span>
+                        <el-tooltip
+                          effect="dark"
+                          :content="$t('common.copy')"
+                          placement="top"
+                        >
+                          <el-icon
+                            @click.stop="onCopyServiceId(item.serviceId)"
                           >
-                            {{ $t('semantic.interface_edit') }}
-                          </el-button>
-                          <el-button
-                            text
-                            @click.stop="handleDelApi(item.serviceId)"
-                          >
-                            {{ $t('semantic.interface_delete') }}
-                          </el-button>
-                        </div>
-
-                        <el-button
-                          v-else
-                          text
-                          @click.stop="
-                            onActiveService(item.serviceId, item.isActive)
+                            <CopyDocument />
+                          </el-icon>
+                        </el-tooltip>
+                      </div>
+                      <div class="apiCenterCardFooter">
+                        <div class="apiCenterCardUser">@{{ item.author }}</div>
+                        <div
+                          class="apiCenterCardOps"
+                          v-if="
+                            userinfo.user_sub === item.author ||
+                            pluginType === 'mcp'
                           "
                         >
-                          {{ item.isActive ? '取消激活' : '激活' }}
-                        </el-button>
+                          <div v-if="userinfo.is_admin">
+                            <el-button
+                              text
+                              @click.stop="onOpenMcpDrawer(item.serviceId)"
+                            >
+                              {{ $t('semantic.interface_edit') }}
+                            </el-button>
+                            <el-button
+                              text
+                              @click.stop="handleDelApi(item.serviceId)"
+                            >
+                              {{ $t('semantic.interface_delete') }}
+                            </el-button>
+                          </div>
+
+                          <el-button
+                            v-else
+                            text
+                            @click.stop="
+                              onActiveService(item.serviceId, item.isActive)
+                            "
+                          >
+                            {{ item.isActive ? '取消激活' : '激活' }}
+                          </el-button>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -179,12 +195,12 @@
         :title="actionName"
         :show-close="false"
         header-class="drawerHeader"
-        destory-on-close="true"
+        destroy-on-close
         :direction="direction"
         :before-close="handleClose"
       >
         <div class="drawerContent">
-          <div v-if="actions === 'upload'" style="height: 100%;">
+          <div v-if="actions === 'upload'" style="height: 100%">
             <Upload
               type="upload"
               @closeDrawer="handleClose"
@@ -248,6 +264,7 @@ import { useRouter } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
+import { CopyDocument } from '@element-plus/icons-vue';
 import Upload from '@/components/Upload/index.vue';
 import { successMsg } from 'src/components/Message';
 import { useAccountStore } from 'src/store';
@@ -257,6 +274,9 @@ import i18n from 'src/i18n';
 import CustomLoading from '../customLoading/index.vue';
 import McpDrawer from './components/McpDrawer.vue';
 import McpServiceDetailDrawer from './components/McpServiceDetail.vue';
+import { writeText } from '@/utils';
+
+const { t } = i18n.global;
 
 const mcpDrawerVisible = ref(false);
 const mcpDetailDrawerVisible = ref(false);
@@ -440,7 +460,6 @@ const handleFavorite = (e, item) => {
 };
 
 const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
-  console.log(type,'type');
   if (type === 'my') {
     apiType.value = 'my';
     queryList(pluginType.value);
@@ -451,6 +470,11 @@ const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
     queryList(pluginType.value);
   }
 };
+
+function onCopyServiceId(id: string) {
+  writeText(id);
+  successMsg(t('feedback.copied_successfully'));
+}
 
 const handleDelApi = (id: string) => {
   if (pluginType.value === 'semantic_interface') {

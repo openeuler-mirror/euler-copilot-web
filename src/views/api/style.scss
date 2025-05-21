@@ -78,7 +78,6 @@
           justify-content: space-between;
           border-radius: 8px;
           width: 320px;
-          height: 136px;
           padding: 16px;
           background-color: var(--o-bg-color-base);
           .apiCenterCardContentCollect {
@@ -105,17 +104,33 @@
           .apiCenterCardBottom {
             margin-top: 16px;
             display: flex;
-            justify-content: space-between;
-            .apiCenterCardUser {
+            flex-direction: column;
+
+            .apiCenterCardId {
               font-size: 12px;
               line-height: 16px;
+              display: flex ;
+              align-items: center;
+              justify-content: space-between;
             }
-            .apiCenterCardOps {
-              .el-button span {
-                color: #6395fd;
+            .apiCenterCardFooter {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 4px;
+
+              .apiCenterCardUser {
                 font-size: 12px;
+                line-height: 16px;
+              }
+              .apiCenterCardOps {
+                .el-button span {
+                  color: #6395fd;
+                  font-size: 12px;
+                }
               }
             }
+           
           }
         }
         .apiCenterCardSingle:hover {

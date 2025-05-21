@@ -10,6 +10,7 @@ export default {
     null: 'No Data',
     createTime: 'Create Time',
     operate: 'Operate',
+    copy: 'Copy',
   },
   settings: {
     model: 'Model',

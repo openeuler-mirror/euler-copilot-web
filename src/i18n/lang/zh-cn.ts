@@ -10,6 +10,7 @@ export default {
     null: '暂无数据',
     createTime: '创建时间',
     operate: '操作',
+    copy: '复制',
   },
   settings: {
     model: '模型',
