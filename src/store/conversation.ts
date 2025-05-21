@@ -314,8 +314,9 @@ export const useSessionStore = defineStore('conversation', () => {
               language,
               question: params.question,
               // record_id: params.qaRecordId,
-            })
-          }
+            }),
+            openWhenHidden: true,
+          },
         );
         return;
       }
@@ -333,7 +334,8 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: params.conversationId,
             debug: true,
             question: params.question,
-          })
+          }),
+          openWhenHidden: true,
         }
       );
     },
@@ -360,7 +362,8 @@ export const useSessionStore = defineStore('conversation', () => {
             groupId: params.groupId,
             question: params.question,
             record_id: params.qaRecordId,
-          })
+          }),
+          openWhenHidden: true,
         }
       );
     },
@@ -387,7 +390,8 @@ export const useSessionStore = defineStore('conversation', () => {
             language,
             question: params.question,
             record_id: params.qaRecordId,
-          })
+          }),
+          openWhenHidden: true,
         }
       );
     }
