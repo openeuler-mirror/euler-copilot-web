@@ -266,7 +266,7 @@ function ensureAppAtFirstPosition() {
   if (!app.value.appId) {
     return;
   }
-  const newApp = app.value;
+  const newApp = JSON.parse(JSON.stringify(app.value));
   const index = apps.value.findIndex((app) => app.appId === newApp.appId);
   if (index !== -1 && index !== 0) {
     const [item] = apps.value.splice(index, 1);
@@ -275,7 +275,7 @@ function ensureAppAtFirstPosition() {
     apps.value.unshift(newApp);
   }
   selectedAppId.value = app.value.appId;
-  user_selected_app.value = [app.value.appId];
+  user_selected_app.value = app.value.appId;
 }
 
 const getAppsValue = async () => {
@@ -356,12 +356,12 @@ watch(
           <transition name="collapse">
             <ul v-if="!isCollapsed" class="app-list">
               <li
-                v-for="apps in displayedApps"
-                :key="apps.appId"
-                @click="selectApp(apps.appId)"
-                :class="{ selected: selectedAppId === apps.appId }"
+                v-for="app in displayedApps"
+                :key="app.appId"
+                @click="selectApp(app.appId)"
+                :class="{ selected: selectedAppId === app.appId }"
               >
-                <span>{{ apps.name }}</span>
+                <span>{{ app.name }}</span>
               </li>
             </ul>
           </transition>
