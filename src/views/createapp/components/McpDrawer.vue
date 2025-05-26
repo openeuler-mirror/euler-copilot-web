@@ -45,12 +45,14 @@ async function queryMcpList() {
     keyword: searchKeyword.value,
   });
   if (res) {
-    mcpList.value = res.result.services.map((item) => {
-      return {
-        ...item,
-        isChecked: false,
-      };
-    });
+    mcpList.value = res.result.services
+      .filter((mcp) => mcp.isActive)
+      .map((item) => {
+        return {
+          ...item,
+          isChecked: false,
+        };
+      });
   }
 }
 

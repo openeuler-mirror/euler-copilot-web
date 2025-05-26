@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { ElMessage, FormInstance, FormRules, UploadProps } from 'element-plus';
-import { nextTick, reactive, ref, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import MonacoEditor from './MonacoEditor.vue';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
 import { api } from '@/apis';
+import i18n from 'src/i18n';
 
 interface McpDetail {
   icon: string;
@@ -23,6 +24,8 @@ const emits = defineEmits<{
   (e: 'success'): void;
 }>();
 
+const { t } = i18n.global;
+
 const form = reactive<McpDetail>({
   icon: '',
   name: '',
@@ -35,9 +38,27 @@ const formRef = ref<FormInstance>();
 const jsonEditorRef = ref();
 
 const rules = reactive<FormRules<typeof form>>({
-  icon: [{ required: true, message: '请上传MCP图标', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入MCP名称', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入MCP描述', trigger: 'blur' }],
+  icon: [
+    {
+      required: true,
+      message: t('plugin_center.please_upload_icon'),
+      trigger: 'blur',
+    },
+  ],
+  name: [
+    {
+      required: true,
+      message: t('plugin_center.please_input_mcp_name'),
+      trigger: 'blur',
+    },
+  ],
+  description: [
+    {
+      required: true,
+      message: t('plugin_center.please_select_mcp_description'),
+      trigger: 'blur',
+    },
+  ],
   type: [{ required: true }],
 });
 
@@ -114,6 +135,9 @@ watch(
     if (props.visible) {
       if (!props.serviceId) return;
       getMcpServiceDetail(props.serviceId);
+    } else {
+      formRef.value && formRef.value.resetFields();
+      jsonEditorRef.value.setJsonValue('{\n  \n}');
     }
   },
 );
@@ -122,7 +146,11 @@ watch(
   <div class="mcp-drawer">
     <el-drawer
       size="700"
-      :title="serviceId ? '编辑MCP服务' : '创建MCP服务'"
+      :title="
+        serviceId
+          ? t('plugin_center.mcp.create_mcp')
+          : t('plugin_center.mcp.edit_mcp')
+      "
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
@@ -136,7 +164,7 @@ watch(
             :model="form"
             :rules="rules"
           >
-            <el-form-item label="图标" prop="icon">
+            <el-form-item :label="t('common.icon')" prop="icon">
               <div class="upload-area">
                 <el-upload
                   class="uploader"
@@ -149,23 +177,33 @@ watch(
                     <img v-else :src="defaultIcon" />
                   </div>
                 </el-upload>
-                <span class="text">上传图标</span>
+                <span class="text">{{ t('plugin_center.upload_icon') }}</span>
               </div>
             </el-form-item>
-            <el-form-item label="MCP名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入MCP名称" />
+            <el-form-item :label="t('plugin_center.mcp.mcp_name')" prop="name">
+              <el-input
+                v-model="form.name"
+                :placeholder="t('plugin_center.please_input_mcp_name')"
+              />
             </el-form-item>
-            <el-form-item label="MCP描述" prop="description">
+            <el-form-item
+              :label="t('plugin_center.mcp.mcp_description')"
+              prop="description"
+            >
               <el-input
                 type="textarea"
                 :maxlength="1000"
                 show-word-limit
                 v-model="form.description"
                 :rows="8"
-                placeholder="请输入MCP描述"
+                :placeholder="t('plugin_center.please_select_mcp_description')"
               />
             </el-form-item>
-            <el-form-item label="MCP类型" prop="type" class="form-item">
+            <el-form-item
+              :label="t('plugin_center.mcp.mcp_type')"
+              prop="type"
+              class="form-item"
+            >
               <el-radio-group v-model="form.type">
                 <el-radio v-for="{ label, value } in mcpTypes" :value="value">
                   {{ label }}
