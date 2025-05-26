@@ -51,7 +51,7 @@ const isDebugDialogVisible = ref(false);
 
 const createAppForm = reactive<AgentConfig>({
   dialogRounds: 3,
-  icon: defaultIcon,
+  icon: '',
   name: '',
   description: '',
   model: '',
@@ -95,7 +95,7 @@ async function queryAgentConfig() {
   if (res) {
     const { name, description, permission, icon, mcpService, dialogRounds } =
       res.result;
-    createAppForm.icon = icon || defaultIcon;
+    createAppForm.icon = icon || '';
     createAppForm.name = name;
     createAppForm.description = description;
     createAppForm.mcps = mcpService || [];
@@ -254,7 +254,7 @@ onMounted(async () => {
                   :accept="'image/*'"
                 >
                   <div class="uploader-icon">
-                    <img :src="createAppForm.icon" alt="" />
+                    <img :src="createAppForm.icon || defaultIcon" alt="" />
                   </div>
                 </el-upload>
                 <span class="text">上传图标</span>

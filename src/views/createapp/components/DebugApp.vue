@@ -8,12 +8,12 @@ import {
   useChangeThemeStore,
 } from '@/store';
 import { storeToRefs } from 'pinia';
-import { computed, h, onMounted, ref, watch } from 'vue';
+import { computed, h, ref, watch } from 'vue';
 import { api } from '@/apis';
 import marked from '@/utils/marked';
 import userAvatar from '@/assets/svgs/dark_user.svg';
 import robotAvatar from '@/assets/svgs/robot.svg';
-import DefaultAgentIcon from '@/assets/svgs/default_agent_icon.svg';
+import DefaultAgentIcon from '@/assets/svgs/defaultIcon.webp';
 import SendDisabledIcon from '@/assets/svgs/send_disabled.svg';
 import SendEnableIcon from '@/assets/svgs/send_enabled.svg';
 import { fetchStream } from '@/utils/fetchStream';
