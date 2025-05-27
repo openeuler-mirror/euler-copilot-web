@@ -150,7 +150,7 @@ const checkTagsOverflow = () => {
       <div class="select-content">
         <div class="label-text" @click="toggleModal">
           <img style="width: 16px" src="@/assets/svgs/search.svg" alt="" />
-          <span>{{ $t('witChainD.Knowledge')}}</span>
+          <span>{{ $t('witChainD.knowledge')}}</span>
         </div>
         <div v-if="selectedTags.length" class="tags-container">
           <div v-for="(tag, index) in selectedTags" :key="index" class="tag">
@@ -170,7 +170,7 @@ const checkTagsOverflow = () => {
     <transition name="slide">
       <div v-if="isModalOpen" class="global-tag-modal">
         <div class="modal-header">
-          <h3>{{ $t('witChainD.Knowledge')}}</h3>
+          <h3>{{ $t('witChainD.knowledge')}}</h3>
           <button class="close-button" @click="toggleModal">×</button>
         </div>
         <div class="multi-select-list">

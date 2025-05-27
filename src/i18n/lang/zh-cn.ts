@@ -367,6 +367,7 @@ export default {
     witChainD: '资产库配置',
     witChainD_id: '资产库 ID',
     describe_the_witChainD: '请输入',
+    knowledge: '知识库',
     find_witChainD: '请输入知识库名称/ID',
     fiveKnowledge: '最多只能选择5个知识库',
   },
