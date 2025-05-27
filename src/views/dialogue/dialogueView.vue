@@ -153,11 +153,11 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
   });
   if (!_ && res) {
     localStorage.setItem('kb_id', ruleForm.kb_id || '');
-    ElMessage.success('成功');
+    ElMessage.success(i18n.global.t('app.successfully'));
     KnowledgeVisible.value = false;
   } else {
     ruleForm.kb_id = '';
-    ElMessage.error('失败');
+    ElMessage.error(i18n.global.t('app.Failed'));
     KnowledgeVisible.value = false;
   }
 };

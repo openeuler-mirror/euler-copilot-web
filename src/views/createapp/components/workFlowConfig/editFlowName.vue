@@ -2,7 +2,7 @@
   <el-dialog
     v-model="workFlowDiaVisible"
     @close="onCancel"
-    title="编辑工作流"
+    :title="$t('flow.edit_flow')"
     class="workFlowDia"
   >
     <el-form
@@ -13,22 +13,22 @@
       label-width="120px"
       label-position="left"
     >
-      <el-form-item prop="name" label="工作流名称">
+      <el-form-item prop="name" :label="$t('flow.flow_name')">
         <el-input
           v-model="workFlowData.name"
-          placeholder="请输入"
+          :placeholder="$t('semantic.pleaseEnter')"
           maxlength="20"
           class="w320 o-validate-input"
           clearable
         ></el-input>
       </el-form-item>
-      <el-form-item prop="description" label="工作流描述">
+      <el-form-item prop="description" :label="$t('flow.flow_description')">
         <el-input
           type="textarea"
           show-word-limit
           maxlength="150"
           v-model="workFlowData.description"
-          placeholder="请输入"
+          :placeholder="$t('semantic.pleaseEnter')"
           class="w320 workFlowDesc o-validate-input"
           clearable
         ></el-input>
@@ -43,10 +43,10 @@
           :disabled="isDisabled"
           @click="handleSubmit(workFlowForm)"
         >
-          确定
+          {{ $t('semantic.submit') }}
         </el-button>
         <el-button class="o-dlg-btn" size="small" @click="onCancel">
-          取消
+          {{ $t('semantic.cancel') }}
         </el-button>
       </span>
     </template>
@@ -56,6 +56,7 @@
 import { ref, watch} from 'vue';
 import { api } from 'src/apis';
 import { ElMessage, FormInstance } from 'element-plus';
+import i18n from 'src/i18n';
 const workFlowDiaVisible = ref(true);
 const isDisabled = ref(false);
 const props = defineProps({
@@ -111,7 +112,7 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
       });
       // 如果与已有名称重复，则提示
       if (isMultNameFlag) {
-        ElMessage.warning('当前应用下已有该工作流名称，请修改名称');
+        ElMessage.warning(i18n.global.t('app.pleasemodifyTheName'));
         return;
       }
       flow.value.name = workFlowData.value.name;

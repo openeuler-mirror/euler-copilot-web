@@ -10,6 +10,7 @@ import { ElMessage } from 'element-plus';
 import { IconSuccess, IconRemind } from '@computing/opendesign-icons';
 import AgentAppConfig from './components/AgentAppConfig.vue';
 
+import i18n from 'src/i18n';
 const router = useRouter();
 const route = useRoute();
 const publishStatus = ref('未发布');
@@ -55,14 +56,14 @@ const handlePublishApp = async () => {
         })
         .then((res) => {
           if (res[1]?.result) {
-            ElMessage.success('发布成功');
+            ElMessage.success($t('app.publishSuccess'));
             router.push(`/app`);
             loading.value = false;
           }
         });
     });
   } catch (error) {
-    ElMessage.error(`发布失败`);
+    ElMessage.error($t('app.publishFailed'));
   }
 };
 
@@ -198,18 +199,18 @@ function onDebugSuccess(status: boolean) {
             class="createAppContainerMenuCenter"
             @click="handleJumperAppCenter"
           >
-            应用中心
+            {{ $t('menu.app_center') }}
           </span>
           <span>/</span>
           <span class="createAppContainerMenuText">
-            {{ appType === 'agent' ? '创建智能体应用' : '创建工作流应用' }}
+            {{ appType === 'agent' ? $t('app.agent_app') : $t('app.mcp_app') }}
           </span>
         </div>
         <div
           class="createAppContainerStatus"
           :class="{ debugSuccess: publishStatus === '已发布' }"
         >
-          {{ publishStatus }}
+          {{ $t('app.app_published') }}
         </div>
       </div>
       <div class="createAppContainerType" v-if="appType !== 'agent'">
@@ -218,8 +219,7 @@ function onDebugSuccess(status: boolean) {
           :class="{ createAppBtnActive: createAppType === 'appConfig' }"
           @click="handleChangeAppType('appConfig')"
         >
-          <div>界面配置</div>
-
+          <div>{{ $t('app.app_config') }}</div>
           <el-icon v-if="appFormValidate">
             <IconSuccess />
           </el-icon>
@@ -232,7 +232,7 @@ function onDebugSuccess(status: boolean) {
           :class="{ createAppBtnActive: createAppType !== 'appConfig' }"
           @click="handleChangeAppType('workFlow')"
         >
-          <div>工作流编排</div>
+          <div>{{ $t('flow.edit_workflow') }}</div>
           <el-icon v-if="publishValidate">
             <IconSuccess />
           </el-icon>
@@ -269,19 +269,17 @@ function onDebugSuccess(status: boolean) {
     </div>
 
     <div class="createAppContainerFooter">
-      <el-button @click="handleJumperAppCenter">取消</el-button>
+      <el-button @click="handleJumperAppCenter">{{ $t('semantic.cancel') }}</el-button>
       <el-button
         @click="saveApp(appType as 'agent' | 'flow')"
         :disabled="createAppType === 'appConfig' ? !appFormValidate : false"
       >
-        保存
+      {{ $t('semantic.save') }}
       </el-button>
-      <el-button :disabled="appType !== 'agent'" @click="onDebugClick">
-        调试
-      </el-button>
+      <el-button :disabled="true">{{ $t('semantic.preview') }}</el-button>
       <el-tooltip
         :disabled="publishValidate"
-        content="需要当前应用中所有工作流调试成功才能发布应用"
+        :content="$t('semantic.publish_condition')"
         placement="top"
       >
         <!-- 需要多一层，不然影响当前el-tooltip显示content -->
@@ -291,7 +289,7 @@ function onDebugSuccess(status: boolean) {
             :disabled="!publishValidate"
             @click="handlePublishApp()"
           >
-            发布
+            {{ $t('semantic.publish')}}
           </el-button>
         </div>
       </el-tooltip>
