@@ -12,6 +12,8 @@ export default {
     operate: '操作',
     copy: '复制',
     icon: '图标',
+    tip: '提示',
+    delete_success: '删除成功',
   },
   settings: {
     model: '模型',
@@ -82,7 +84,7 @@ export default {
     author: '创建人',
     mcp: {
       installing: '安装中',
-      installFailed: '安装失败',
+      install_failed: '安装失败',
       create_mcp: '创建MCP服务',
       edit_mcp: '编辑MCP服务',
       mcp_name: 'MCP名称',
@@ -100,6 +102,8 @@ export default {
     server_description: '描述',
     tool_input_schema: '工具入参',
     tool_output_schema: '工具出参',
+    confirm_delete_interface: '确定删除此接口吗?',
+    confirm_delete_server: '确定删除此服务吗?',
   },
   app: {
     app_center: '应用中心',
