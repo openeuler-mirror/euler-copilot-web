@@ -58,7 +58,7 @@ onMounted(() => {
   <div class="asset-drawer">
     <el-drawer
       size="700"
-      :title="$t('witChainD.Knowledge')"
+      :title="$t('witChainD.knowledge')"
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
