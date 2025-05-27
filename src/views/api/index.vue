@@ -433,6 +433,10 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
     [apiType.value]: true,
   };
   if (type === 'semantic_interface') {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
     payload[apiType.value] = true;
     const [, res] = await api.queryApiList({
       page: currentPage.value,
@@ -519,35 +523,27 @@ function onCopyServiceId(id: string) {
 }
 
 const handleDelApi = (id: string) => {
-  if (pluginType.value === 'semantic_interface') {
-    ElMessageBox.confirm('确定删除此接口吗？', '提示', {
-      type: 'warning',
-      icon: markRaw(IconAlarm),
-    }).then(() => {
-      api
-        .deleteSingleApiData({
-          serviceId: id,
-        })
-        .then((res) => {
-          if (res[1]) {
-            successMsg('删除成功');
-            queryList(pluginType.value);
-          }
-        });
-    });
-  } else if (pluginType.value === 'mcp') {
-    ElMessageBox.confirm('确定删除此服务吗？', '提示', {
-      type: 'warning',
-      icon: markRaw(IconAlarm),
-    }).then(() => {
-      api.deleteMcpService(id).then((res) => {
+  const message =
+    pluginType.value === 'semantic_interface'
+      ? t('plugin_center.confirm_delete_interface')
+      : t('plugin_center.confirm_delete_server');
+  ElMessageBox.confirm(message, t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
+    type: 'warning',
+    icon: markRaw(IconAlarm),
+  }).then(() => {
+    api
+      .deleteSingleApiData({
+        serviceId: id,
+      })
+      .then((res) => {
         if (res[1]) {
-          successMsg('删除成功');
+          successMsg(t('common.delete_success'));
           queryList(pluginType.value);
         }
       });
-    });
-  }
+  });
 };
 
 async function onActiveService(serviceId: string, active: boolean = true) {

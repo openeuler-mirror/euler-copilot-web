@@ -12,6 +12,8 @@ export default {
     operate: 'Operate',
     copy: 'Copy',
     icon: 'Icon',
+    tip: 'Tip',
+    delete_success: 'Delete successfully',
   },
   settings: {
     model: 'Model',
@@ -95,6 +97,8 @@ export default {
     server_description: 'Server Description',
     tool_input_schema: 'Tool Input Schema',
     tool_output_schema: 'Tool Output Schema',
+    confirm_delete_interface: 'Are you sure to delete this interface?',
+    confirm_delete_server: 'Are you sure to delete this server?',
   },
   app: {
     app_center: 'App Center',
