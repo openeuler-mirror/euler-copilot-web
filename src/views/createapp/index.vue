@@ -203,7 +203,7 @@ function onDebugSuccess(status: boolean) {
           </span>
           <span>/</span>
           <span class="createAppContainerMenuText">
-            {{ appType === 'agent' ? '创建智能体应用' : '创建工作流应用' }}
+            {{ appType === 'agent' ? $t('app.agent_app') : $t('app.mcp_app') }}
           </span>
         </div>
         <div
