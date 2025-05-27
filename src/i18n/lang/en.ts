@@ -1,5 +1,3 @@
-import { link } from "fs";
-
 export default {
   common: {
     confirm: 'Confirm',
