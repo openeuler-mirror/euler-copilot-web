@@ -523,47 +523,27 @@ function onCopyServiceId(id: string) {
 }
 
 const handleDelApi = (id: string) => {
-  if (pluginType.value === 'semantic_interface') {
-    ElMessageBox.confirm(
-      t('plugin_center.confirm_delete_interface'),
-      t('common.tip'),
-      {
-        confirmButtonText: t('common.confirm'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning',
-        icon: markRaw(IconAlarm),
-      },
-    ).then(() => {
-      api
-        .deleteSingleApiData({
-          serviceId: id,
-        })
-        .then((res) => {
-          if (res[1]) {
-            successMsg(t('common.delete_success'));
-            queryList(pluginType.value);
-          }
-        });
-    });
-  } else if (pluginType.value === 'mcp') {
-    ElMessageBox.confirm(
-      t('plugin_center.confirm_delete_server'),
-      t('common.tip'),
-      {
-        confirmButtonText: t('common.confirm'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning',
-        icon: markRaw(IconAlarm),
-      },
-    ).then(() => {
-      api.deleteMcpService(id).then((res) => {
+  const message =
+    pluginType.value === 'semantic_interface'
+      ? t('plugin_center.confirm_delete_interface')
+      : t('plugin_center.confirm_delete_server');
+  ElMessageBox.confirm(message, t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
+    type: 'warning',
+    icon: markRaw(IconAlarm),
+  }).then(() => {
+    api
+      .deleteSingleApiData({
+        serviceId: id,
+      })
+      .then((res) => {
         if (res[1]) {
           successMsg(t('common.delete_success'));
           queryList(pluginType.value);
         }
       });
-    });
-  }
+  });
 };
 
 async function onActiveService(serviceId: string, active: boolean = true) {
