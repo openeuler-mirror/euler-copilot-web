@@ -120,11 +120,11 @@ watch(
 const handleCopy = (code) => {
   // 判断是否有值
   if (!code) {
-    errorMsg('无可复制的信息');
+    errorMsg($t('feedback.noCopyMessage'));
     return;
   }
   writeText(yaml.dump(code));
-  successMsg('复制成功');
+  successMsg($t('feedback.copied_successfully'));
 };
 </script>
 <style lang="scss">

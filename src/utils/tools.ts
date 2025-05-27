@@ -69,7 +69,7 @@ export const writeText = (text: string): void => {
     textArea.focus();
     textArea.select();
     new Promise<void>((res, rej) => {
-      document.execCommand('copy') ? res() : rej(new Error('复制失败'));
+      document.execCommand('copy') ? res() : rej(new Error(i18n.global.t('semantic.copyFailed')));
       textArea.remove();
     });
   }

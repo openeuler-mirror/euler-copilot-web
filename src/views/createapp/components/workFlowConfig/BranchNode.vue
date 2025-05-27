@@ -119,10 +119,10 @@ const editYaml = (nodeName, nodeDesc, yamlCode) => {
                 )
               "
             >
-              编辑
+              {{ $t('semantic.edit') }}
             </el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">
-              删除
+              {{ $t('semantic.interface_delete') }}
             </el-button>
           </el-popover>
         </div>

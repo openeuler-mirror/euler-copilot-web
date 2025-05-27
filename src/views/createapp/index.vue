@@ -8,6 +8,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { IconSuccess, IconRemind } from '@computing/opendesign-icons';
+import i18n from 'src/i18n';
 const router = useRouter();
 const route = useRoute();
 const publishStatus = ref('未发布');
@@ -50,14 +51,14 @@ const handlePulishApp = async () => {
         })
         .then((res) => {
           if (res[1]?.result) {
-            ElMessage.success('发布成功');
+            ElMessage.success($t('appCenter.publishSuccess'));
             router.push(`/app`);
             loading.value = false;
           }
         });
     })
     .catch((error) => {
-      ElMessage.error(`发布失败: ${error.message}`);
+      ElMessage.error(`$t('appCenter.publishFailed'): ${error.message}`);
     });
 };
 
@@ -134,7 +135,7 @@ const saveConfigOrFlow = async () => {
   await workFlowRef.value.saveFlow();
   ElMessage({
     showClose: true,
-    message: '更新成功',
+    message: i18n.global.t('app.updateSuccessfully'),
     icon: IconSuccess,
     customClass: 'o-message--success',
     duration: 2000,
@@ -161,16 +162,16 @@ const handleJumperAppCenter = () => {
             class="createAppContainerMenuCenter"
             @click="handleJumperAppCenter"
           >
-            应用中心
+            {{ $t('menu.app_center') }}
           </span>
           <span>/</span>
-          <span class="createAppContainerMenuText">创建应用</span>
+          <span class="createAppContainerMenuText">{{ $t('app.create_app') }}</span>
         </div>
         <div
           class="createAppContainerStatus"
           :class="{ debugSuccess: publishStatus === '已发布' }"
         >
-          {{ publishStatus }}
+          {{ $t('app.app_published') }}
         </div>
       </div>
       <div class="createAppContainerType">
@@ -179,8 +180,7 @@ const handleJumperAppCenter = () => {
           :class="{ createAppBtnActive: createAppType === 'appConfig' }"
           @click="handleChangeAppType('appConfig')"
         >
-          <div>界面配置</div>
-
+          <div>{{ $t('app.app_config') }}</div>
           <el-icon v-if="appFormValidate">
             <IconSuccess />
           </el-icon>
@@ -193,7 +193,7 @@ const handleJumperAppCenter = () => {
           :class="{ createAppBtnActive: createAppType !== 'appConfig' }"
           @click="handleChangeAppType('workFlow')"
         >
-          <div>工作流编排</div>
+          <div>{{ $t('flow.edit_workflow') }}</div>
           <el-icon v-if="publishValidate">
             <IconSuccess />
           </el-icon>
@@ -222,17 +222,17 @@ const handleJumperAppCenter = () => {
       />
     </div>
     <div class="createAppContainerFooter">
-      <el-button @click="handleJumperAppCenter">取消</el-button>
+      <el-button @click="handleJumperAppCenter">{{ $t('semantic.cancel') }}</el-button>
       <el-button
         @click="saveConfigOrFlow"
         :disabled="createAppType === 'appConfig' ? !appFormValidate : false"
       >
-        保存
+      {{ $t('semantic.save') }}
       </el-button>
-      <el-button :disabled="true">预览</el-button>
+      <el-button :disabled="true">{{ $t('semantic.preview') }}</el-button>
       <el-tooltip
         :disabled="publishValidate"
-        content="需要当前应用中所有工作流调试成功才能发布应用"
+        :content="$t('semantic.publish_condition')"
         placement="top"
       >
         <!-- 需要多一层，不然影响当前el-tooltip显示content -->
@@ -242,7 +242,7 @@ const handleJumperAppCenter = () => {
             :disabled="!publishValidate"
             @click="handlePulishApp()"
           >
-            发布
+            {{ $t('semantic.publish')}}
           </el-button>
         </div>
       </el-tooltip>
