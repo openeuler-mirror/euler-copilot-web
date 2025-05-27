@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { CaretRight, CirclePlus } from '@element-plus/icons-vue';
-import defaultIcon from '@/assets/svgs/app_upload.svg';
 import AppInitalPreview from '@/views/dialogue/components/AppInitalPreview.vue';
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { ElMessage, FormRules, UploadProps } from 'element-plus';
@@ -51,7 +50,7 @@ const isDebugDialogVisible = ref(false);
 
 const createAppForm = reactive<AgentConfig>({
   dialogRounds: 3,
-  icon: defaultIcon,
+  icon: '',
   name: '',
   description: '',
   model: '',
@@ -95,7 +94,7 @@ async function queryAgentConfig() {
   if (res) {
     const { name, description, permission, icon, mcpService, dialogRounds } =
       res.result;
-    createAppForm.icon = icon || defaultIcon;
+    createAppForm.icon = icon || '';
     createAppForm.name = name;
     createAppForm.description = description;
     createAppForm.mcps = mcpService || [];
@@ -254,7 +253,12 @@ onMounted(async () => {
                   :accept="'image/*'"
                 >
                   <div class="uploader-icon">
-                    <img :src="createAppForm.icon" alt="" />
+                    <img
+                      v-if="createAppForm.icon"
+                      :src="createAppForm.icon"
+                      alt=""
+                    />
+                    <div v-else class="defaultIcon"></div>
                   </div>
                 </el-upload>
                 <span class="text">上传图标</span>
@@ -317,7 +321,7 @@ onMounted(async () => {
                       :src="
                         modelOptions.find(
                           (item) => item.llmId === createAppForm.model,
-                        )?.icon || defaultIcon
+                        )?.icon || ''
                       "
                       alt=""
                     />
@@ -389,7 +393,7 @@ onMounted(async () => {
                 <div class="mcp-list">
                   <template
                     v-for="item in selectedMcpService"
-                    :keys="item.mcpserviceId"
+                    :key="item.mcpserviceId"
                   >
                     <div class="mcp-item">
                       <div class="mcp-content">
@@ -541,6 +545,14 @@ onMounted(async () => {
               height: 48px;
               border-radius: 50%;
             }
+            .defaultIcon {
+              width: 48px;
+              height: 48px;
+              background: url('@/assets/svgs/app_upload.svg');
+              &:hover {
+                background: url('@/assets/svgs/app_upload_hover.svg');
+              }
+            }
             &::after {
               content: '';
               display: inline-block;
@@ -548,8 +560,8 @@ onMounted(async () => {
               height: 16px;
               background-image: url('@/assets/svgs/upload_icon.svg');
               position: absolute;
-              right: 2px;
-              bottom: 12px;
+              right: 0px;
+              bottom: 0px;
             }
           }
         }

@@ -31,13 +31,9 @@ const iframeTarget = ref<string>('');
 async function getIframeTarget() {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
-  // Electron 环境和本地开发环境的判断
+  // Electron 环境的判断
   const isElectron = window.navigator.userAgent.includes('Electron');
-  const isLocalhost =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-  const target =
-    isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+  const target = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
   return target;
 }
 
