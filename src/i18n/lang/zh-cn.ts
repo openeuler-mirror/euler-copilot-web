@@ -137,6 +137,7 @@ export default {
     ask_me_anything: '在此输入您想了解的内容,输入Shift+Enter换行',
     you_might_want_to_know: '你可能想问',
     close: '关闭',
+    confirm: '确定',
     email1: '联系邮箱',
     email2: 'contact@openeuler.io',
     opinions: '所有内容均由人工智能输出，仅供参考，不代表我们的态度和观点',
@@ -300,6 +301,8 @@ export default {
     witChainD: '资产库配置',
     witChainD_id: '资产库id',
     describe_the_witChainD: '请输入',
+    find_witChainD: '请输入知识库名称/ID',
+    fiveKnowledge: '最多只能选择5个知识库',
   },
   flow: {
     flow_start: '工作流进行中',

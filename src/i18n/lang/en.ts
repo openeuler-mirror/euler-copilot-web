@@ -139,6 +139,7 @@ export default {
       'Ask me anything about openEuler. Press Shift+Enter to start a new line.',
     you_might_want_to_know: 'You might want to know:',
     close: 'Close',
+    confirm: 'Confirm',
     email1: 'Email:',
     email2: 'contact@openeuler.io',
     opinions:
@@ -311,6 +312,9 @@ export default {
     witChainD: 'WitChainD',
     witChainD_id: 'id',
     describe_the_witChainD: 'Please enter witChainD id',
+    find_witChainD: 'Please enter witChainD name/id',
+    knowledge: 'Knowledge',
+    fiveKnowledge: 'You can select up to 5 knowledge bases',
   },
   flow: {
     flow_start: 'Workflow in progress',
