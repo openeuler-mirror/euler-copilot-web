@@ -309,16 +309,9 @@ defineExpose({
   <CustomLoading :loading="loading"></CustomLoading>
   <!-- 将基本信息collapse提出 -->
   <div class="appConfig">
-    <div
-      class="baseInfoTitle"
-      :class="{ activeCollapse: activeNames.includes(1) }"
-      @click="changeActiveName"
-    >
-      <span>基本信息</span>
-      <el-icon
-        :class="{ 'is-active': activeNames.includes(1) }"
-        class="el-collapse-item__arrow"
-      >
+    <div class="baseInfoTitle" :class="{ 'activeCollapse': activeNames.includes(1) }" @click="changeActiveName">
+      <span>{{ $t('semantic.baseMessage') }}</span>
+      <el-icon :class="{ 'is-active': activeNames.includes(1) }" class="el-collapse-item__arrow">
         <IconCaretRight />
       </el-icon>
     </div>
@@ -337,7 +330,7 @@ defineExpose({
       >
         <el-collapse-item title="Consistency" :name="1">
           <template #title>
-            <span>基本信息</span>
+            <span>{{ $t('semantic.baseMessage') }}</span>
             <el-icon
               class="el-collapse-item__arrow"
               :class="{ 'is-active': activeNames.includes(1) }"
@@ -345,7 +338,7 @@ defineExpose({
               <IconCaretRight />
             </el-icon>
           </template>
-          <el-form-item label="图标" prop="icon" class="notRequired">
+          <el-form-item :label="$t('semantic.icon')" prop="icon" class="notRequired">
             <div class="uploadArea">
               <el-upload
                 class="placeIcon avatar-uploader"
@@ -364,7 +357,7 @@ defineExpose({
                 <div v-else class="defaultIcon"></div>
                 <div class="uploadIcon"></div>
               </el-upload>
-              <span class="text">上传图标</span>
+              <span class="text">{{ $t('semantic.interface_upload')}}</span>
             </div>
           </el-form-item>
           <el-form-item label="应用名称" prop="name">
@@ -373,7 +366,7 @@ defineExpose({
               maxlength="20"
               v-model="createAppForm.name"
               clearable
-              placeholder="请输入"
+              :placeholder="$t('semantic.pleaseEnter')"
             ></el-input>
           </el-form-item>
           <el-form-item label="应用简介" prop="description">
@@ -384,7 +377,7 @@ defineExpose({
               place
               clearable
               type="textarea"
-              placeholder="请输入"
+              :placeholder="$t('semantic.pleaseEnter')"
               @keydown.enter="handleTextareaEnter"
             ></el-input>
           </el-form-item>
@@ -406,7 +399,7 @@ defineExpose({
                 maxlength="200"
                 :class="{ validUrl: checkUrl(createAppForm.links[index]) }"
                 v-model="createAppForm.links[index]"
-                placeholder="请输入"
+                :placeholder="$t('semantic.pleaseEnter')"
                 clearable
               ></el-input>
               <el-icon class="delIcon" @click="delConnectItem(index)">
@@ -438,7 +431,7 @@ defineExpose({
                 class="w320"
                 maxlength="30"
                 v-model="createAppForm.recommendedQuestions[index]"
-                placeholder="请输入"
+                :placeholder="$t('semantic.pleaseEnter')"
                 clearable
               ></el-input>
               <el-icon class="delIcon" @click="delRecommendItem(index)">
@@ -555,7 +548,7 @@ defineExpose({
     </el-form>
   </div>
   <div class="createAppContainerMainBox">
-    <div class="previewTitle">界面预览</div>
+    <div class="previewTitle">{{ $t("app.ui_preview") }}</div>
     <div class="createAppContainerMainRight" :class="themeStore.theme">
       <AppInitalPreview :createAppForm="createAppForm" />
     </div>

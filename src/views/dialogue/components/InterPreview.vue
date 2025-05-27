@@ -42,11 +42,11 @@
           <div class="preMainContentTitle" v-if="interPreviewInfo.name.length">
             <div class="greetDes">
               <div class="greetDesContent">
-                你好，我是
+                {{ $t("main.describe1") }}
                 <p class="greetDesAppName greetDesContent">
                   {{ interPreviewInfo.name }}
                 </p>
-                ，很高兴为你服务
+                {{ $t("main.describe2") }}
               </div>
             </div>
           </div>

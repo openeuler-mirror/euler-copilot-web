@@ -49,7 +49,7 @@ const handleIframeLoad = () => {
 
 // 处理iframe错误
 const handleIframeError = (error: Event) => {
-  console.error('iframe加载错误:', error);
+  console.error('iframe loading error:', error);
   // 可以在这里添加重试逻辑
 };
 
@@ -68,7 +68,7 @@ const sendMessageToIframe = async (stopActive: boolean) => {
       iframeTarget.value,
     );
   } catch (error) {
-    console.error('发送消息到iframe失败:', error);
+    console.error('send Message to iframe error:', error);
   }
 };
 
@@ -108,7 +108,7 @@ onMounted(async () => {
   const iframe = iframeRef.value;
   if (iframe) {
     iframe.onerror = (error) => {
-      console.error('iframe加载失败:', error);
+      console.error('iframe loading error:', error);
     };
   }
 });
