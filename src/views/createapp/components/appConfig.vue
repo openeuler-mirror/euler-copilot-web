@@ -346,7 +346,7 @@ defineExpose({
               <span class="text">{{ $t('semantic.interface_upload')}}</span>
             </div>
           </el-form-item>
-          <el-form-item label="应用名称" prop="name">
+          <el-form-item :label="$t('app.app_name')" prop="name">
             <el-input
               class="w320"
               maxlength="20"
@@ -355,7 +355,7 @@ defineExpose({
               :placeholder="$t('semantic.pleaseEnter')"
             ></el-input>
           </el-form-item>
-          <el-form-item label="应用简介" prop="description">
+          <el-form-item :label="$t('app.app_introduction')" prop="description">
             <el-input
               class="w320 h80"
               v-model="createAppForm.description"
@@ -368,16 +368,16 @@ defineExpose({
             ></el-input>
           </el-form-item>
           <!-- 这里notRequired样式,在局部的通过校验时，控制局部的样式为正常。links为空时通过校验 -->
-          <el-form-item label="相关链接" prop="links" class="notRequired">
+          <el-form-item :label="$t('app.link')" prop="links" class="notRequired">
             <div class="linkLine">
               <el-button
                 :icon="IconPlusCircle"
                 @click="addLink"
                 :disabled="createAppForm.links.length > 4"
               >
-                添加链接
+                {{ $t('app.addLink') }}
               </el-button>
-              <span class="linkText">最多添加5个链接</span>
+              <span class="linkText">{{  $t('app.addFiveLinks') }}</span>
             </div>
             <div class="linkArea" v-for="(item, index) in createAppForm.links">
               <el-input
@@ -395,7 +395,7 @@ defineExpose({
           </el-form-item>
 
           <el-form-item
-            label="推荐问题"
+            :label="$t('main.question')"
             prop="recommendedQuestions"
             class="notRequired"
           >
@@ -405,9 +405,9 @@ defineExpose({
                 @click="addRecommond"
                 :disabled="createAppForm.recommendedQuestions.length > 2"
               >
-                添加问题
+                {{ $t('main.addQuestion') }}
               </el-button>
-              <span class="linkText">最多添加3个问题</span>
+              <span class="linkText">{{ $t('main.addFiveQuestions') }}</span>
             </div>
             <div
               class="linkArea"
@@ -428,7 +428,7 @@ defineExpose({
         </el-collapse-item>
         <el-collapse-item class="chatsCollapse" title="Consistency" :name="2">
           <template #title>
-            <span>多轮对话</span>
+            <span>{{ $t('app.multi_Dialogue')}}</span>
             <el-icon
               class="el-collapse-item__arrow"
               :class="{ 'is-active': activeNames.includes(2) }"
@@ -436,7 +436,7 @@ defineExpose({
               <IconCaretRight />
             </el-icon>
           </template>
-          <el-form-item label="请选择对话轮次" prop="dialogRounds">
+          <el-form-item :label="$t('app.multi_Dialogue_select')" prop="dialogRounds">
             <div class="multiSessionItem">
               <el-input-number
                 v-model="createAppForm.dialogRounds"
@@ -451,7 +451,7 @@ defineExpose({
         </el-collapse-item>
         <el-collapse-item title="Consistency" :name="3">
           <template #title>
-            <span>权限配置</span>
+            <span>{{ $t('app.permissionConfiguration') }}</span>
             <el-icon
               class="el-collapse-item__arrow"
               :class="{ 'is-active': activeNames.includes(3) }"
@@ -459,7 +459,7 @@ defineExpose({
               <IconCaretRight />
             </el-icon>
           </template>
-          <el-form-item label="权限" prop="permission" class="permissionItem">
+          <el-form-item :label="$t('app.permission')" prop="permission" class="permissionItem">
             <div class="permissionSelect">
               <el-radio-group v-model="createAppForm.permission.visibility">
                 <el-radio
@@ -477,14 +477,14 @@ defineExpose({
             >
               <div class="permissionChoice">
                 <div class="perimissionChoiceTitle">
-                  <div>可选</div>
+                  <div>{{ $t('app.optional') }}</div>
                   <div class="choiceNum">{{ curPersonList.length }}</div>
                 </div>
                 <el-input
                   ref="inputRef"
                   v-model="searchName"
                   class="o-style-search permissionInputSearch"
-                  placeholder="搜索用户"
+                  :placeholder="$t('app.searchUser')"
                   @input="searchPerson"
                   clearable
                   :prefix-icon="IconSearch"
@@ -506,7 +506,7 @@ defineExpose({
               </div>
               <div class="permissionChoice">
                 <div class="perimissionChoiceTitle">
-                  <div>已选</div>
+                  <div>{{ $t('app.selected')}}</div>
                   <div class="choiceNum">
                     {{ createAppForm.permission.authorizedUsers.length }}
                   </div>

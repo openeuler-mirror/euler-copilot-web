@@ -105,7 +105,12 @@ export default {
     failed: 'Failed',
     inputContent:"Input content",
     outputContent:"Output content",
-    
+    link: 'Related links',
+    addLink: 'Add link',
+    addFiveLinks: 'Up to 5 links can be added',
+    optional: 'Optional',
+    searchUser: 'Search user',
+    selected: 'Selected',
   },
   main: {
     describe1: "Hi! I'm",
@@ -120,6 +125,8 @@ export default {
     openEuler_use_cases: 'AI容器栈智能助手',
     openEuler_use_cases_describe: 'AI容器栈',
     question: 'Recommendation qustions',
+    addQuestion: 'Add question',
+    addFiveQuestions: 'Up to 5 questions can be added',
     smart_shell_describe:
       'Experience the future of OSs with our smart shell! Use natural language to diagnose and optimize your system.',
     try_app: 'Enter the App Center',
@@ -130,6 +137,7 @@ export default {
       'Ask me anything about openEuler. Press Shift+Enter to start a new line.',
     you_might_want_to_know: 'You might want to know:',
     close: 'Close',
+    confirm: 'Confirm',
     email1: 'Email:',
     email2: 'contact@openeuler.io',
     opinions:
@@ -302,6 +310,9 @@ export default {
     witChainD: 'WitChainD',
     witChainD_id: 'id',
     describe_the_witChainD: 'Please enter witChainD id',
+    find_witChainD: 'Please enter witChainD name/id',
+    knowledge: 'Knowledge',
+    fiveKnowledge: 'You can select up to 5 knowledge bases',
   },
   flow: {
     flow_start: 'Workflow in progress',

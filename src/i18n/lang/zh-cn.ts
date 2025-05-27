@@ -106,6 +106,12 @@ export default {
     failed: '失败',
     inputContent:"输入内容",
     outputContent:"输出内容",
+    link: '相关链接',
+    addLink: '添加链接',
+    addFiveLinks: '最多添加5个链接',
+    optional: '可选',
+    searchUser: '搜索用户',
+    selected: '已选',
   },
   main: {
     describe1: '你好，我是',
@@ -120,6 +126,8 @@ export default {
     openEuler_use_cases: 'AI容器栈智能助手',
     openEuler_use_cases_describe: 'AI容器栈',
     question: '推荐问题',
+    addQuestion: '添加问题',
+    addFiveQuestions: '最多添加5个问题',
     smart_shell_describe:
       '欢迎探索首款自然语言交互的智能操作系统：一句话，即享智能诊断与优化',
     try_app: '进入应用中心',
@@ -129,6 +137,7 @@ export default {
     ask_me_anything: '在此输入您想了解的内容,输入Shift+Enter换行',
     you_might_want_to_know: '你可能想问',
     close: '关闭',
+    confirm: '确定',
     email1: '联系邮箱',
     email2: 'contact@openeuler.io',
     opinions: '所有内容均由人工智能输出，仅供参考，不代表我们的态度和观点',
@@ -292,6 +301,8 @@ export default {
     witChainD: '资产库配置',
     witChainD_id: '资产库id',
     describe_the_witChainD: '请输入',
+    find_witChainD: '请输入知识库名称/ID',
+    fiveKnowledge: '最多只能选择5个知识库',
   },
   flow: {
     flow_start: '工作流进行中',
