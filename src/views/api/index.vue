@@ -20,21 +20,22 @@
                 :suffix-icon="IconCaretDown"
               >
                 <el-option :label="$t('semantic.all_select')" value="all" />
-                <el-option label="插件名称" value="name" />
-                <el-option label="创建人" value="author" />
+                <el-option
+                  :label="$t('plugin_center.plugin_name')"
+                  value="name"
+                />
+                <el-option :label="$t('plugin_center.author')" value="author" />
               </el-select>
             </template>
           </el-input>
 
           <el-popover
-            placement="bottom"
-            width="102"
             :popper-style="{
-              minWidth: '100px',
               transform: 'translateY(-10px)',
               padding: '4px 0px',
             }"
             trigger="click"
+            placement="bottom-start"
             :show-arrow="false"
           >
             <template #reference>
@@ -109,11 +110,9 @@
                   :description="item.description"
                   :icon="item.icon"
                 >
-                  <template
-                    #topRight
-                    v-if="pluginType === 'semantic_interface'"
-                  >
+                  <template #topRight>
                     <div
+                      v-if="pluginType === 'semantic_interface'"
                       class="apiCenterCardContentCollect"
                       :class="
                         !item.published && apiType === 'createdByMe'
@@ -124,6 +123,24 @@
                     >
                       <IconFavorite v-if="item.favorited" class="apiFavorite" />
                       <IconUnfavorite v-else />
+                    </div>
+                    <div v-else-if="pluginType === 'mcp'">
+                      <div v-if="item.status === 'installing'" class="loading">
+                        <img
+                          src="@/assets/images/loading.png"
+                          alt=""
+                          class="loading-anime-icon"
+                        />
+                        <div class="loading-text">
+                          {{ t('plugin_center.mcp.installing') }}
+                        </div>
+                      </div>
+                      <div v-else-if="item.status === 'failed'" class="failed">
+                        <img src="@/assets/svgs/error.svg" alt="" />
+                        <div class="failed-text">
+                          {{ t('plugin_center.mcp.install_failed') }}
+                        </div>
+                      </div>
                     </div>
                   </template>
                   <template #footer>
@@ -151,30 +168,36 @@
                             pluginType === 'mcp'
                           "
                         >
-                          <div v-if="userinfo.is_admin">
+                          <div v-if="item.status !== 'installing'">
+                            <div v-if="userinfo.is_admin">
+                              <el-button
+                                text
+                                @click.stop="onOpenMcpDrawer(item.serviceId)"
+                              >
+                                {{ $t('semantic.interface_edit') }}
+                              </el-button>
+                              <el-button
+                                text
+                                @click.stop="handleDelApi(item.serviceId)"
+                              >
+                                {{ $t('semantic.interface_delete') }}
+                              </el-button>
+                            </div>
+
                             <el-button
+                              v-else
                               text
-                              @click.stop="onOpenMcpDrawer(item.serviceId)"
+                              @click.stop="
+                                onActiveService(item.serviceId, item.isActive)
+                              "
                             >
-                              {{ $t('semantic.interface_edit') }}
-                            </el-button>
-                            <el-button
-                              text
-                              @click.stop="handleDelApi(item.serviceId)"
-                            >
-                              {{ $t('semantic.interface_delete') }}
+                              {{
+                                item.isActive
+                                  ? t('plugin_center.mcp.activate')
+                                  : t('plugin_center.mcp.deactivate')
+                              }}
                             </el-button>
                           </div>
-
-                          <el-button
-                            v-else
-                            text
-                            @click.stop="
-                              onActiveService(item.serviceId, item.isActive)
-                            "
-                          >
-                            {{ item.isActive ? '取消激活' : '激活' }}
-                          </el-button>
                         </div>
                       </div>
                     </div>
@@ -259,8 +282,7 @@ import {
 } from '@computing/opendesign-icons';
 import './style.scss';
 import PluginCard from './components/PluginCard.vue';
-import { ref, onMounted, watch, markRaw } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, watch, markRaw, onBeforeUnmount } from 'vue';
 import { api } from 'src/apis';
 import { ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
@@ -312,14 +334,13 @@ const pluginLists = ref<
     name: string;
     published?: boolean;
     isActive?: boolean;
+    status?: 'installing' | 'ready' | 'failed';
   }[]
 >([]);
 
-const apiList = ref();
 const drawer = ref(false);
 const direction = ref('rtl');
 const actionName = ref('');
-const router = useRouter();
 const actions = ref();
 const pluginType = ref<'semantic_interface' | 'mcp'>('semantic_interface');
 const apiType = ref('my');
@@ -403,6 +424,7 @@ const handleClose = () => {
   queryList(pluginType.value);
 };
 
+let timer: NodeJS.Timeout | null = null;
 const queryList = async (type: 'semantic_interface' | 'mcp') => {
   loading.value = true;
   const payload = {
@@ -424,24 +446,44 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
       loading.value = false;
     }
   } else if (type === 'mcp') {
-    const [_, res] = await api.getMcpList({
-      page: currentPage.value,
-      pageSize: currentPageSize.value,
-      ...(payload as any),
-    });
-    if (res) {
-      pluginLists.value = res.result.services.map((item) => ({
+    queryMcpServices();
+    timer = setInterval(() => {
+      queryMcpServices();
+    }, 3000);
+  }
+};
+
+async function queryMcpServices() {
+  const [_, res] = await api.getMcpList({
+    page: currentPage.value,
+    pageSize: currentPageSize.value,
+    searchType: apiSearchType.value,
+    keyword: apiSearchValue.value || undefined,
+    [apiType.value]: true,
+  });
+  if (res) {
+    let installingCount = 0;
+    pluginLists.value = res.result.services.map((item) => {
+      if (item.status === 'installing') {
+        installingCount++;
+      }
+      return {
         serviceId: item.mcpserviceId,
         description: item.description,
         icon: item.icon,
         author: item.author,
         name: item.name,
         isActive: item.isActive,
-      }));
+        status: item.status,
+      };
+    });
+    if (installingCount === 0 && timer) {
+      clearInterval(timer);
+      timer = null;
     }
+    loading.value = false;
   }
-  loading.value = false;
-};
+}
 
 const handleFavorite = (e, item) => {
   // 未发布的不可收藏
@@ -534,6 +576,13 @@ watch(
 onMounted(() => {
   queryList(pluginType.value);
 });
+
+onBeforeUnmount(() => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+});
 </script>
 <style lang="scss" scoped>
 .create-button__icon {
@@ -591,6 +640,50 @@ onMounted(() => {
   }
   .noClick {
     cursor: not-allowed;
+  }
+  .loading,
+  .failed {
+    display: flex;
+    height: auto;
+    width: 100%;
+    background-color: linear-gradient(
+      127.95deg,
+      rgba(109, 227, 250, 0.2) -1.967%,
+      rgba(90, 179, 255, 0.2) 98.202%
+    );
+    border-radius: 8px;
+    border-top-left-radius: 0px;
+    margin-left: 8px;
+    flex-wrap: nowrap;
+    gap: 2px;
+    @keyframes rotate-img {
+      from {
+        transform: rotate(0);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+
+    &-anime-icon {
+      width: 16px;
+      height: 16px;
+      align-items: center;
+      align-self: center;
+      animation: rotate-img 1s infinite linear;
+    }
+
+    &-text {
+      font-size: 12px;
+      color: var(--o-text-color-primary);
+      white-space: nowrap;
+    }
   }
 }
 

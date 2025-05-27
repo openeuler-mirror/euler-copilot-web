@@ -22,6 +22,7 @@ const getMcpList = (params: {
         icon: string;
         author: string;
         isActive: boolean;
+        status: 'installing' | 'ready' | 'failed';
       },
     ];
     totalModels: number;

@@ -5,6 +5,7 @@ import { api } from '@/apis';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
 import lightNull from '@/assets/svgs/light_null.svg';
 import { ElEmpty } from 'element-plus';
+import i18n from 'src/i18n';
 
 interface McpDetail {
   serviceId: string;
@@ -46,6 +47,8 @@ const emits = defineEmits<{
   (e: 'update:visible', visible: boolean): void;
 }>();
 
+const { t } = i18n.global;
+
 const activeTab = ref<'description' | 'tools'>('description');
 
 const mcpServiceDetail = ref<McpDetail>();
@@ -78,7 +81,7 @@ watch(
       size="700"
       :model-value="visible"
       destroy-on-close
-      title="服务详情"
+      :title="t('plugin_center.server_detail')"
       @close="emits('update:visible', false)"
     >
       <div class="content" v-if="mcpServiceDetail">
@@ -92,12 +95,20 @@ watch(
 
         <div class="detail">
           <el-tabs v-model="activeTab" class="settings-tabs">
-            <el-tab-pane label="描述" name="description" :lazy="true">
+            <el-tab-pane
+              :label="t('plugin_center.server_description')"
+              name="description"
+              :lazy="true"
+            >
               <div class="description">
                 {{ mcpServiceDetail.description }}
               </div>
             </el-tab-pane>
-            <el-tab-pane label="工具" name="tools" :lazy="true">
+            <el-tab-pane
+              :label="t('plugin_center.server_tool')"
+              name="tools"
+              :lazy="true"
+            >
               <div
                 class="tool"
                 v-if="mcpServiceDetail.tools.length"
@@ -110,7 +121,9 @@ watch(
                 <el-collapse v-model="activeNames">
                   <el-collapse-item :name="`${tool.name}-regeocode`">
                     <template #title>
-                      <span class="collapse-title">工具入参</span>
+                      <span class="collapse-title">
+                        {{ t('plugin_center.tool_input_schema') }}
+                      </span>
                       <el-icon
                         class="collapse-icon"
                         :class="{
@@ -141,7 +154,9 @@ watch(
                     v-if="tool.output_schema"
                   >
                     <template #title>
-                      <span class="collapse-title">工具出参</span>
+                      <span class="collapse-title">
+                        {{ t('plugin_center.tool_output_schema') }}
+                      </span>
                       <el-icon
                         class="collapse-icon"
                         :class="{
@@ -180,7 +195,9 @@ watch(
         </div>
       </div>
       <template #footer>
-        <el-button @click="emits('update:visible', false)">关闭</el-button>
+        <el-button @click="emits('update:visible', false)">
+          {{ t('common.close') }}
+        </el-button>
       </template>
     </el-drawer>
   </div>
@@ -230,6 +247,7 @@ watch(
       --o-tabs-line-height: 32px;
       --o-tabs-color_active: rgb(99, 149, 253);
       --o-text-color-secondary: #000;
+      --o-tabs-item-max-width: none;
 
       .description {
         height: 100%;
