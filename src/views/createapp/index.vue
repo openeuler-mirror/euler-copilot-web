@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '../styles/createApp.scss';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
 import CustomLoading from '../customLoading/index.vue';
@@ -9,8 +9,9 @@ import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { IconSuccess, IconRemind } from '@computing/opendesign-icons';
 import AgentAppConfig from './components/AgentAppConfig.vue';
-
 import i18n from 'src/i18n';
+
+const { t } = i18n.global;
 const router = useRouter();
 const route = useRoute();
 const publishStatus = ref('未发布');
@@ -56,14 +57,14 @@ const handlePublishApp = async () => {
         })
         .then((res) => {
           if (res[1]?.result) {
-            ElMessage.success($t('app.publishSuccess'));
+            ElMessage.success(t('app.publishSuccess'));
             router.push(`/app`);
             loading.value = false;
           }
         });
     });
   } catch (error) {
-    ElMessage.error($t('app.publishFailed'));
+    ElMessage.error(t('app.publishFailed'));
   }
 };
 
@@ -131,10 +132,10 @@ const saveApp = async (type: 'agent' | 'flow') => {
   try {
     if (type === 'flow') {
       await handleCreateOrUpdateApp();
-      await workFlowRef.value.saveFlow(false,true);
+      await workFlowRef.value.saveFlow(false, true);
       ElMessage({
         showClose: true,
-        message: '更新成功',
+        message: t('app.updateSuccessfully'),
         icon: IconSuccess,
         customClass: 'o-message--success',
         duration: 2000,
@@ -155,7 +156,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
       if (res) {
         ElMessage({
           showClose: true,
-          message: '更新成功',
+          message: t('app.updateSuccessfully'),
           icon: IconSuccess,
           customClass: 'o-message--success',
           duration: 2000,
@@ -269,12 +270,14 @@ function onDebugSuccess(status: boolean) {
     </div>
 
     <div class="createAppContainerFooter">
-      <el-button @click="handleJumperAppCenter">{{ $t('semantic.cancel') }}</el-button>
+      <el-button @click="handleJumperAppCenter">
+        {{ $t('semantic.cancel') }}
+      </el-button>
       <el-button
         @click="saveApp(appType as 'agent' | 'flow')"
         :disabled="createAppType === 'appConfig' ? !appFormValidate : false"
       >
-      {{ $t('semantic.save') }}
+        {{ $t('semantic.save') }}
       </el-button>
       <el-button :disabled="true">{{ $t('semantic.preview') }}</el-button>
       <el-tooltip
@@ -289,7 +292,7 @@ function onDebugSuccess(status: boolean) {
             :disabled="!publishValidate"
             @click="handlePublishApp()"
           >
-            {{ $t('semantic.publish')}}
+            {{ $t('semantic.publish') }}
           </el-button>
         </div>
       </el-tooltip>
