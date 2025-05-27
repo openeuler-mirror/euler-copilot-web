@@ -11,7 +11,9 @@ import type { AddedModalList } from '@/apis/paths/type';
 import PermissionControl from './PermissionControl.vue';
 import type { Mcp } from './McpDrawer.vue';
 import CustomLoading from '../../customLoading/index.vue';
+import i18n from '@/i18n';
 
+const { t } = i18n.global;
 const route = useRoute();
 
 interface AgentConfig {
@@ -72,15 +74,21 @@ const selectedMcpService = computed<Mcp[]>(() =>
 );
 
 const rules = reactive<FormRules<typeof createAppForm>>({
-  name: [{ required: true, message: '请输入智能体名称', trigger: 'blur' }],
+  name: [{ required: true, message: t('app.appName_input'), trigger: 'blur' }],
   description: [
-    { required: true, message: '请输入智能体简介', trigger: 'blur' },
+    { required: true, message: t('app.appDescription_input'), trigger: 'blur' },
   ],
-  model: [{ required: true, message: '请选择模型', trigger: 'blur' }],
+  model: [
+    { required: true, message: t('app.modelSelected_input'), trigger: 'blur' },
+  ],
   dialogRounds: [
-    { required: true, message: '请选择对话轮次', trigger: 'blur' },
+    {
+      required: true,
+      message: t('app.multi_Dialogue_select'),
+      trigger: 'blur',
+    },
   ],
-  permission: [{ required: true, message: '请选择对话轮次', trigger: 'blur' }],
+  permission: [{ required: true }],
 });
 
 const isMcpDrawerVisible = ref(false);
@@ -224,7 +232,7 @@ onMounted(async () => {
     <CustomLoading :loading="loading"></CustomLoading>
     <div class="agent-config">
       <div class="base-info" @click="onBaseInfoHeaderClick">
-        <span>基本信息</span>
+        <span>{{ t('semantic.baseMessage') }}</span>
         <el-icon
           class="collapse-icon"
           :class="{
@@ -244,7 +252,7 @@ onMounted(async () => {
       >
         <el-collapse v-model="activeName">
           <el-collapse-item class="hide-header" name="base">
-            <el-form-item label="图标" prop="icon">
+            <el-form-item :label="t('common.icon')" prop="icon">
               <div class="upload-area">
                 <el-upload
                   class="uploader"
@@ -261,33 +269,33 @@ onMounted(async () => {
                     <div v-else class="defaultIcon"></div>
                   </div>
                 </el-upload>
-                <span class="text">上传图标</span>
+                <span class="text">{{ t('plugin_center.upload_icon') }}</span>
               </div>
             </el-form-item>
 
-            <el-form-item label="智能体名称" prop="name">
+            <el-form-item :label="t('app.appName')" prop="name">
               <el-input
                 v-model="createAppForm.name"
-                placeholder="请输入智能体名称"
+                :placeholder="t('app.appName_input')"
               ></el-input>
             </el-form-item>
 
-            <el-form-item label="智能体简介" prop="description">
+            <el-form-item :label="t('app.appDescription')" prop="description">
               <el-input
                 v-model="createAppForm.description"
                 type="textarea"
                 :maxlength="150"
                 show-word-limit
                 :rows="4"
-                placeholder="请输入智能体简介"
+                :placeholder="t('app.appDescription_input')"
               ></el-input>
             </el-form-item>
 
-            <el-form-item label="模型选择" prop="model">
+            <el-form-item :label="t('app.modelSelected')" prop="model">
               <el-select
                 v-model="createAppForm.model"
                 style="width: 100%"
-                placeholder="请选择模型"
+                :placeholder="t('app.modelSelected_input')"
               >
                 <el-option
                   v-for="model in modelOptions"
@@ -340,7 +348,7 @@ onMounted(async () => {
 
           <el-collapse-item name="multipleRounds">
             <template #title>
-              <span class="collapse-title">多轮对话</span>
+              <span class="collapse-title">{{ t('app.multi_Dialogue') }}</span>
               <el-icon
                 class="collapse-icon"
                 :class="{
@@ -350,7 +358,10 @@ onMounted(async () => {
                 <CaretRight />
               </el-icon>
             </template>
-            <el-form-item label="请选择对话轮次" prop="dialogRounds">
+            <el-form-item
+              :label="t('app.multi_Dialogue_select')"
+              prop="dialogRounds"
+            >
               <div class="multi-session">
                 <el-input-number
                   v-model="createAppForm.dialogRounds"
@@ -366,7 +377,9 @@ onMounted(async () => {
 
           <el-collapse-item name="ability">
             <template #title>
-              <span class="collapse-title">能力配置</span>
+              <span class="collapse-title">
+                {{ t('app.ability_Configuration') }}
+              </span>
               <el-icon
                 class="collapse-icon"
                 :class="{
@@ -376,7 +389,7 @@ onMounted(async () => {
                 <CaretRight />
               </el-icon>
             </template>
-            <el-form-item label="MCP服务" prop="mcps">
+            <el-form-item :label="t('app.MCPService')" prop="mcps">
               <div class="mcp-adder">
                 <div class="mcp-button">
                   <el-button
@@ -384,7 +397,7 @@ onMounted(async () => {
                     text
                     @click="isMcpDrawerVisible = true"
                   >
-                    添加MCP服务
+                    {{ t('app.MCPService_add') }}
                   </el-button>
                   <span class="mcp-count">
                     {{ createAppForm.mcps.length }}/5
@@ -400,7 +413,7 @@ onMounted(async () => {
                         <img :src="item.icon" alt="" />
                         <span>{{ item.name }}</span>
                       </div>
-                      <el-tooltip content="删除" placement="top">
+                      <el-tooltip :content="t('common.delete')" placement="top">
                         <img
                           src="@/assets/svgs/light_delete.svg"
                           alt=""
@@ -416,7 +429,9 @@ onMounted(async () => {
 
           <el-collapse-item name="permissions">
             <template #title>
-              <span class="collapse-title">权限配置</span>
+              <span class="collapse-title">
+                {{ t('app.permissionConfiguration') }}
+              </span>
               <el-icon
                 class="collapse-icon"
                 :class="{
@@ -426,7 +441,11 @@ onMounted(async () => {
                 <CaretRight />
               </el-icon>
             </template>
-            <el-form-item label="权限" prop="permission" class="permissionItem">
+            <el-form-item
+              :label="t('app.permission')"
+              prop="permission"
+              class="permissionItem"
+            >
               <PermissionControl
                 v-model:visibility="createAppForm.permission.visibility as any"
                 :optional-list="
@@ -444,7 +463,7 @@ onMounted(async () => {
     </div>
 
     <div class="agent-config-preview">
-      <div class="preview-title">界面预览</div>
+      <div class="preview-title">{{ t('app.ui_preview') }}</div>
       <div class="preview-content">
         <AppInitalPreview
           :createAppForm="{ ...createAppForm, ...{ mcps: selectedMcpService } }"

@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { Close, CirclePlus, Search } from '@element-plus/icons-vue';
+import { Search } from '@element-plus/icons-vue';
 import { ref, onMounted, watch } from 'vue';
-import NewPrompt from './NewOrEditPrompt.vue';
 import { api } from '@/apis';
 import { ElMessage } from 'element-plus';
+import i18n from '@/i18n';
+
+const { t } = i18n.global;
 
 export interface Mcp {
   mcpserviceId: string;
@@ -63,7 +65,7 @@ function onMcpItemClick(item: McpWithChecked) {
 function onConfirm() {
   const checkedMcpList = mcpList.value.filter((item) => item.isChecked);
   if (checkedMcpList.length > 5) {
-    ElMessage.error('最多只能选择5个MCP服务');
+    ElMessage.error(t('semantic.max_select_mcp_server', { num: 5 }));
     return;
   }
   emits('confirm', checkedMcpList);
@@ -89,7 +91,7 @@ onMounted(() => {
   <div class="prompt-drawer">
     <el-drawer
       size="700"
-      title="MCP服务"
+      :title="t('semantic.mcp_service')"
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
@@ -98,7 +100,7 @@ onMounted(() => {
           <el-input
             v-model="searchKeyword"
             type="search"
-            placeholder="搜索"
+            :placeholder="t('common.search')"
             :suffix-icon="Search"
             @change="queryMcpList"
           ></el-input>
@@ -119,8 +121,12 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <el-button @click="emits('update:visible', false)">关闭</el-button>
-        <el-button type="primary" @click="onConfirm">确认</el-button>
+        <el-button @click="emits('update:visible', false)">
+          {{ t('common.cancel') }}
+        </el-button>
+        <el-button type="primary" @click="onConfirm">
+          {{ t('common.confirm') }}
+        </el-button>
       </template>
     </el-drawer>
   </div>
