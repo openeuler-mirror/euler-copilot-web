@@ -1,3 +1,5 @@
+import { link } from "fs";
+
 export default {
   common: {
     confirm: 'Confirm',
@@ -165,7 +167,12 @@ export default {
     failed: 'Failed',
     inputContent:"Input content",
     outputContent:"Output content",
-    
+    link: 'Related links',
+    addLink: 'Add link',
+    addFiveLinks: 'Up to 5 links can be added',
+    optional: 'Optional',
+    searchUser: 'Search user',
+    selected: 'Selected',
   },
   main: {
     describe1: "Hi! I'm",
@@ -180,6 +187,8 @@ export default {
     openEuler_use_cases: 'AI容器栈智能助手',
     openEuler_use_cases_describe: 'AI容器栈',
     question: 'Recommendation qustions',
+    addQuestion: 'Add question',
+    addFiveQuestions: 'Up to 5 questions can be added',
     smart_shell_describe:
       'Experience the future of OSs with our smart shell! Use natural language to diagnose and optimize your system.',
     try_app: 'Enter the App Center',
