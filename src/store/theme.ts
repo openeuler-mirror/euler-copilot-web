@@ -5,7 +5,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 export const useChangeThemeStore = defineStore(
   'theme',
   () => {
-    const theme = ref<'dark' | 'light'>();
+    const theme = ref<'dark' | 'light'>('light');
 
     function updateTheme(t: 'dark' | 'light') {
       theme.value = t;

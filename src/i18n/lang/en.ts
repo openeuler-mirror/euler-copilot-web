@@ -118,6 +118,8 @@ export default {
   },
   app: {
     app_center: 'App Center',
+    flow: 'Flow',
+    agent: 'Agent',
     all_select: 'All',
     app_name: 'App name',
     app_introduction: 'App introduction',
@@ -145,6 +147,7 @@ export default {
     app_config: 'App Config',
     agent_app: 'Agent App',
     mcp_app: 'MCP App',
+    confirm_delete_app: 'Are you sure to delete this application?',
     create_or_edit_workflow_first: 'Please create/edit a workflow first',
     ui_preview: 'UI Preview',
     appName: 'Agent Name',

@@ -92,8 +92,7 @@ watch(
 
     // 等待DOM更新完成
     await nextTick();
-
-    if (isIframeLoaded.value) {
+    if (isIframeLoaded.value && iframeTarget.value) {
       sendMessageToIframe(!isWitchaindRoute);
       const token = localStorage.getItem('ECSESSION') ?? '';
       sendTokenToIframe(token);

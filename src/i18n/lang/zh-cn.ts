@@ -117,6 +117,8 @@ export default {
   },
   app: {
     app_center: '应用中心',
+    flow: '工作流',
+    agent: '智能体',
     all_select: '全部',
     app_name: '应用名称',
     app_introduction: '应用简介',
@@ -144,6 +146,7 @@ export default {
     app_config: '界面配置',
     agent_app: '创建智能体应用',
     mcp_app: '创建工作流应用',
+    confirm_delete_app: '确定删除此应用吗?',
     create_or_edit_workflow_first: '请先创建/编辑工作流',
     ui_preview: '界面预览',
     appName: '智能体名称',

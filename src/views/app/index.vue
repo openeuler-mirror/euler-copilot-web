@@ -17,8 +17,8 @@
               :suffix-icon="IconCaretDown"
             >
               <el-option :label="$t('app.all_select')" value="all" />
-              <el-option label="工作流" value="flow" />
-              <el-option label="智能体" value="agent" />
+              <el-option :label="$t('app.flow')" value="flow" />
+              <el-option :label="$t('app.agent')" value="agent" />
             </el-select>
           </template>
         </el-input>
@@ -96,7 +96,11 @@
                         : 'appTypeName__agent'
                     "
                   >
-                    {{ appItem.appType === 'flow' ? '工作流' : '智能体' }}
+                    {{
+                      appItem.appType === 'flow'
+                        ? $t('app.flow')
+                        : $t('app.agent')
+                    }}
                   </span>
                 </div>
                 <div class="appCenterCardContentDes">
@@ -145,7 +149,7 @@
     </div>
     <SelectAppTypeDialog
       v-model:visible="isSelectAppTypeDialogVisible"
-      title="创建应用"
+      :title="$t('app.create_app')"
       @select-type="handleCreateApp"
     />
   </div>
@@ -170,6 +174,7 @@ import DefaultAppIcon from '../../assets/svgs/defaultIcon.webp';
 import CustomLoading from '../customLoading/index.vue';
 import SelectAppTypeDialog from './components/SelectAppTypeDialog.vue';
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
+import { useI18n } from 'vue-i18n';
 
 interface App {
   appId: string;
@@ -183,6 +188,7 @@ interface App {
 }
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const publishStatus = ref('未发布');
@@ -302,7 +308,9 @@ const handleSearchAppList = (type) => {
 
 const handleDelApp = (e, item) => {
   e.stopPropagation();
-  ElMessageBox.confirm('确定删除此应用吗？', '提示', {
+  ElMessageBox.confirm(t('app.confirm_delete_app'), t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(() => {
@@ -314,7 +322,7 @@ const handleDelApp = (e, item) => {
         if (res[1]) {
           ElMessage({
             showClose: true,
-            message: '删除成功',
+            message: t('common.delete_success'),
             icon: IconSuccess,
             customClass: 'o-message--success',
             duration: 3000,
