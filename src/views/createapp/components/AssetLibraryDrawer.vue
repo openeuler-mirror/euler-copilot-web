@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue';
 import { api } from '@/apis';
 import type { KnowledgeBase } from '@/apis/appCenter/knowledge';
 import { ElMessage } from 'element-plus';
+import i18n from '@/i18n';
 
 defineProps<{
   visible: boolean;
@@ -109,8 +110,12 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <el-button @click="emits('update:visible', false)">{{ $t('main.close')}}</el-button>
-        <el-button type="primary" @click="onConfirm">{{ $t('main.confirm')}}</el-button>
+        <el-button @click="emits('update:visible', false)">
+          {{ $t('main.close') }}
+        </el-button>
+        <el-button type="primary" @click="onConfirm">
+          {{ $t('main.confirm') }}
+        </el-button>
       </template>
     </el-drawer>
   </div>

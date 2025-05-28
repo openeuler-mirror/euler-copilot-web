@@ -34,7 +34,7 @@ const isCreateApp = ref(props?.isCreateApp);
 const selectedLLM = ref({});
 const handleChangeMode = (val: string) => {
   selectedLLM.value = val;
-  };
+};
 // const isCreateApp = ref(true);
 const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
@@ -682,7 +682,6 @@ const getappMode = (appId: string) => {
         };
       }
     });
-    console.log("getappMode", appId, Form.value);
 };
 
 watch(
@@ -848,7 +847,7 @@ watch(
               </template>
             </el-dropdown>
           </div>
-          <MultiSelectTags @updateValue="handleUpdate" :PropselectedTags="PropselectedTags" />
+          <MultiSelectTags @updateValue="handleUpdate" />
         </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
