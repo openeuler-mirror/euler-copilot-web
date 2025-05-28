@@ -254,7 +254,7 @@ const handleParamsQueryAppList = (params?: any) => {
     payload[appType.value] = true;
   }
   handleQueryAppList({
-    searchType: appSearchType.value,
+    appType: appSearchType.value !== 'all' ? appSearchType.value : undefined,
     keyword: appSearchValue.value,
     ...payload,
     ...params,
