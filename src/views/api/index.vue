@@ -103,7 +103,11 @@
             ></el-tab-pane>
           </el-tabs>
           <div class="apiCenterCardBox" v-if="pluginLists.length">
-            <div v-for="item in pluginLists" class="apiCenterCardSingle">
+            <div
+              v-for="item in pluginLists"
+              :key="item.serviceId"
+              class="apiCenterCardSingle"
+            >
               <div @click="openSidebar('get', item.serviceId, pluginType)">
                 <PluginCard
                   :name="item.name"
@@ -169,7 +173,19 @@
                           "
                         >
                           <div v-if="item.status !== 'installing'">
-                            <div v-if="userinfo.is_admin">
+                            <div>
+                              <el-button
+                                text
+                                @click.stop="
+                                  onActiveService(item.serviceId, item.isActive)
+                                "
+                              >
+                                {{
+                                  item.isActive
+                                    ? t('plugin_center.mcp.activate')
+                                    : t('plugin_center.mcp.deactivate')
+                                }}
+                              </el-button>
                               <el-button
                                 text
                                 @click.stop="onOpenMcpDrawer(item.serviceId)"
@@ -183,20 +199,6 @@
                                 {{ $t('semantic.interface_delete') }}
                               </el-button>
                             </div>
-
-                            <el-button
-                              v-else
-                              text
-                              @click.stop="
-                                onActiveService(item.serviceId, item.isActive)
-                              "
-                            >
-                              {{
-                                item.isActive
-                                  ? t('plugin_center.mcp.activate')
-                                  : t('plugin_center.mcp.deactivate')
-                              }}
-                            </el-button>
                           </div>
                         </div>
                       </div>
