@@ -190,7 +190,7 @@ watch(
 }
 </style>
 
-<style lang="scss">
+<style lang="scss" scope>
 
 .el-collapse-item:last-child {
   margin-bottom: 0px;
@@ -231,6 +231,12 @@ watch(
     background-color: var(--o-bg-color-light2) !important;
   }
 }
+:deep(.el-collapse .o-nest-collapse){
+  &:last-child {
+    border-bottom: none!important;
+    background-color: beige!important;
+  }
+}
 .title {
   .el-collapse-item__wrap {
     background-color: var(--o-bg-color-light2);
@@ -249,13 +255,11 @@ watch(
   }
   .el-collapse-item__arrow.is-active {
     transform: rotate(90deg);
-    top: 3px;
     padding-left: 3px;
   }
 }
 .el-collapse-item__arrow.is-active {
   transform: rotate(90deg);
-  top: 3px;
   padding-left: 3px;
 }
 .el-collapse-item__arrow {
