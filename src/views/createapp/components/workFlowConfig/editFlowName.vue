@@ -136,6 +136,7 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
 .workFlowDia.el-dialog {
   padding: 0px;
   width: 560px;
+  top: calc(50% - 300px);
   .el-form {
     margin-top: 0px;
     .el-form-item {

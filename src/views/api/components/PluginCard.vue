@@ -34,7 +34,7 @@ const props = defineProps<CardInfo>();
 .plugin-card {
   display: flex;
   .plugin-card-icon {
-    margin-right: 18px;
+    margin-right: 16px;
     display: flex;
     align-items: start;
     .menu-icon {

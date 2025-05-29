@@ -592,7 +592,11 @@ onBeforeUnmount(() => {
 }
 .drawerHeader {
   color: pink;
+  background-color: #5481de !important;
   margin-bottom: 0px !important;
+  .header{
+    background-color: pink;
+  }
 }
 .drawerContent {
   overflow-y: auto;
@@ -604,6 +608,8 @@ onBeforeUnmount(() => {
   &::v-deep(.el-drawer__header) {
     margin-bottom: 0px !important;
     color: var(--o-text-color-primary) !important;
+    margin: 24px !important;
+    padding: 24px !important;
   }
 }
 .apiCenterCardSingle {
@@ -689,8 +695,8 @@ img {
   width: 100%;
   max-width: 430px;
 }
-.el-drawer__header {
-  padding: 24px 24px 16px;
+:deep(.el-drawer__header) {
+  padding: 24px 24px 16px !important;
   margin-bottom: 0px;
   .drawerHeader {
     width: 100%;
@@ -701,9 +707,12 @@ img {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .el-drawer__title{
+    color: var(--o-text-color-primary) !important; 
+  }
 }
 :deep(.el-drawer__body) {
-  padding: 8px 24px 16px !important;
+  padding: 0px 24px 16px !important;
   .drawerBody {
     height: 100%;
     textarea {

@@ -209,7 +209,10 @@ const updateNodeYaml = () => {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" scoped> 
+:deep(.el-collapse-item__arrow .is-active){ 
+    top: 0px !important; 
+}
 .yamlMonacoEditor {
   height: 400px;
 }
