@@ -24,7 +24,7 @@ import { useI18n } from 'vue-i18n';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import appIcon from '@/assets/svgs/myApp.svg';
-import { IconChevronUp } from '@computing/opendesign-icons';
+import { IconCaretRight, IconChevronUp,IconChevronDown } from '@computing/opendesign-icons';
 import router from 'src/router';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
@@ -423,19 +423,19 @@ watch(
             />
           </div>
           <ul v-if="filteredHistorySessions.length">
-            <ElCollapse v-model="activeNames">
+            <el-collapse v-model="activeNames"
+            class="o-hpc-collapse"
+            :prefix-icon="IconChevronDown">
               <template v-for="item in filteredHistorySessions" :key="item.key">
-                <ElCollapseItem :name="item.key">
+                <el-collapse-item :name="item.key">
                   <template #title>
-                    {{ item.title }}
-                  </template>
-                  <template #icon="{ isActive }">
-                    <el-icon v-if="isActive" :size="16">
-                      <CaretBottom />
+                    <el-icon 
+                    class="el-collapse-item__arrow"
+                    :class="{ 'is-active': activeNames.includes(item.key) }"
+                    >
+                      <IconCaretRight></IconCaretRight>
                     </el-icon>
-                    <el-icon v-else :size="16">
-                      <CaretRight />
-                    </el-icon>
+                    <span class="el-collapse-item__title">{{ item.title }}</span>
                   </template>
                   <template
                     v-for="session in item.list"
@@ -447,9 +447,9 @@ watch(
                       @deleteOne="deleteOne"
                     />
                   </template>
-                </ElCollapseItem>
+                </el-collapse-item>
               </template>
-            </ElCollapse>
+            </el-collapse>
           </ul>
 
           <div v-else class="history-record-null">
@@ -510,6 +510,16 @@ watch(
   </aside>
 </template>
 <style lang="scss" scoped>
+:deep(.el-collapse-item__title){
+  // flex: 1 0 90%;
+  line-height: 18px !important;
+}
+:deep(.el-collapse-item__arrow.is-active) {
+    height: 56px;
+    list-style: 56px;
+    transform: rotate(90deg);
+    padding-left: 3px;
+}
 :deep(.el-collapse-item__content) {
   border-bottom: none;
   padding-bottom: 0px;

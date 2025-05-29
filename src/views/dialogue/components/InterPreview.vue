@@ -341,8 +341,7 @@ watch(
             padding: 8px 16px;
             background-color: var(--o-bg-color-base);
             .vue-text {
-              // color: #4e5865;
-              color: #d3dce9;
+              color: var(--o-question-color);
             }
           }
         }

@@ -374,7 +374,7 @@ onMounted(() => {
 .el-collapse-item__title{
   display: block;
   position: relative;
-  left: -3px;
+  left: 4px;
 }
 .code-container {
   height: calc(100% - 48px);

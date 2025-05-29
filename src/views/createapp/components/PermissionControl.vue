@@ -125,9 +125,15 @@ const filteredOptionalList = computed(() => {
 </template>
 <style lang="scss" scoped>
 .permission-control {
+  .permission-control__radio {
+    margin-bottom: 8px !important;
+  }
   :deep(.el-radio-group) {
+    margin-top: 8px !important;
     .el-radio {
       margin-right: 22px;
+      line-height: 16px;
+      height: 16px;
     }
   }
 
