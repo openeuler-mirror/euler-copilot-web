@@ -59,7 +59,7 @@ body[theme='dark'] {
     rgba(28, 57, 81, 0.929) 98.202%
   );
   --o-api-description: rgb(211, 220, 233);
-  --el-drawer-padding-primary: 24px;
+  --el-drawer-padding-primary: 24px !important;
   // 这里是不同种类的debug图标
   --flow-debug-default: url('../../assets/svgs/dark_debug.svg');
   --flow-debug-hover: url('../../assets/svgs/dark_debug_hover.svg');
@@ -140,6 +140,7 @@ body[theme='light'] {
   --expand-fold-active: url('../../assets/svgs/light_expand_fold_active.svg');
   --o-scrollbar-thumb: #c3cedf;
   --o-apiBox-bg: rgb(253, 254, 255);
+  --el-drawer-padding-primary: 24px !important;
 }
 
 body {
@@ -149,7 +150,6 @@ body {
     background-color: #6395fd !important;
     font-weight: normal !important;
   }
-  --el-drawer-padding-primary: 24px;
   // 悬浮优先级高于选中
   .el-select-dropdown__item:hover {
     background-color: #7aa5ff !important;

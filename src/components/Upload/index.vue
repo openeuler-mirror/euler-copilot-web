@@ -325,14 +325,14 @@ onMounted(() => {
         :name="item.name"
       >
         <template #title>
-          <span>{{ item.name }}</span>
-          <!-- 这里接口返回的需要限制最大位数 -->
           <el-icon
             class="el-collapse-item__arrow"
             :class="{ 'is-active': activeServiceNameList.includes(item.name) }"
           >
             <IconCaretRight></IconCaretRight>
           </el-icon>
+          <span class="el-collapse-item__title">{{ item.name }}</span>
+          <!-- 这里接口返回的需要限制最大位数 -->
         </template>
         <div class="o-collapse-content">
           <div class="itemTitle">
@@ -371,6 +371,11 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.el-collapse-item__title{
+  display: block;
+  position: relative;
+  left: -3px;
+}
 .code-container {
   height: calc(100% - 48px);
 }
@@ -511,6 +516,7 @@ onMounted(() => {
   :deep(.el-collapse-item__header) {
     background-color: var(--el-collapse-header-bg) !important;
     height: 32px;
+    padding: 8px 12px !important;
     border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
   }
@@ -520,12 +526,17 @@ onMounted(() => {
     border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
   }
+  :deep(.el-collapse-item__wrap){
+    border-bottom: 1px solid var(--el-collapse-border) !important;
+    border-bottom-color: var(--el-collapse-border) !important;
+  }
 }
 
 .o-collapse-content {
-  padding-left: 18px;
+  padding: 8px 32px 0px;
+  padding-left: 32px;
   .subName {
-    margin-top: 8px;
+    margin-bottom: 8px;
     width: 100%;
     line-height: 16px;
     display: flex;
