@@ -198,6 +198,7 @@
       }
       .appCenterNoData {
         top: calc(50% - 80px);
+        position: relative;
         display: flex;
         flex-direction: column;
         gap: 8px;

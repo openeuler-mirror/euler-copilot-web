@@ -264,7 +264,7 @@ watch(
           line-height: 24px;
           margin-top: 8px;
           margin-bottom: 20px;
-          color: var(--o-text-color-primary);
+          color: var(--o-text-color-secondary);
         }
         .preMainContentLink {
           .contentLinkTitle {
@@ -341,7 +341,8 @@ watch(
             padding: 8px 16px;
             background-color: var(--o-bg-color-base);
             .vue-text {
-              color: #4e5865;
+              // color: #4e5865;
+              color: #d3dce9;
             }
           }
         }
