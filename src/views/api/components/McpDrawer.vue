@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ElMessage, FormInstance, FormRules, UploadProps } from 'element-plus';
-import { reactive, ref, watch } from 'vue';
+import { nextTick, reactive, ref, watch } from 'vue';
 import MonacoEditor from './MonacoEditor.vue';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
 import { api } from '@/apis';
@@ -25,6 +25,28 @@ const emits = defineEmits<{
 }>();
 
 const { t } = i18n.global;
+
+const COMMAND_TEMPLATE = {
+  command: '',
+  args: [],
+  env: [],
+  autoApprove: [],
+  autoInstall: true,
+  disabled: false,
+};
+const URL_TEMPLATE = {
+  url: '',
+  env: [],
+  autoApprove: [],
+  autoInstall: true,
+  disabled: false,
+};
+
+const mcpConfigTemplate = {
+  stdio: COMMAND_TEMPLATE,
+  sse: URL_TEMPLATE,
+  stream: URL_TEMPLATE,
+};
 
 const form = reactive<McpDetail>({
   icon: '',
@@ -129,15 +151,26 @@ async function getMcpServiceDetail(serviceId: string) {
   }
 }
 
+async function setMcpConfig(type: string) {
+  jsonEditorRef.value.setJsonValue(
+    JSON.stringify(mcpConfigTemplate[type], null, 2),
+  );
+}
+
 watch(
   () => props.visible,
   () => {
     if (props.visible) {
-      if (!props.serviceId) return;
+      if (!props.serviceId) {
+        nextTick(() => {
+          setMcpConfig(form.type);
+        });
+        return;
+      }
       getMcpServiceDetail(props.serviceId);
     } else {
       formRef.value && formRef.value.resetFields();
-      jsonEditorRef.value.setJsonValue('{\n  \n}');
+      setMcpConfig(form.type);
     }
   },
 );
@@ -147,7 +180,7 @@ watch(
     <el-drawer
       size="700"
       :title="
-        serviceId
+        !serviceId
           ? t('plugin_center.mcp.create_mcp')
           : t('plugin_center.mcp.edit_mcp')
       "
@@ -204,7 +237,7 @@ watch(
               prop="type"
               class="form-item"
             >
-              <el-radio-group v-model="form.type">
+              <el-radio-group v-model="form.type" @change="setMcpConfig">
                 <el-radio v-for="{ label, value } in mcpTypes" :value="value">
                   {{ label }}
                 </el-radio>
