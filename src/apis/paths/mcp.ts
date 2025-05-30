@@ -70,7 +70,7 @@ const createOrUpdateMcpService = (params: {
   config: string;
   mcpType: 'stdio' | 'sse' | 'stream';
 }) => {
-  return post<{}>(`${MCP_BASE_URL}`, params);
+  return post(`${MCP_BASE_URL}`, params);
 };
 
 const deleteMcpService = (id: string) => {

@@ -42,11 +42,11 @@
           <div class="preMainContentTitle" v-if="interPreviewInfo.name.length">
             <div class="greetDes">
               <div class="greetDesContent">
-                {{ $t("main.describe1") }}
+                {{ $t('main.describe1') }}
                 <p class="greetDesAppName greetDesContent">
                   {{ interPreviewInfo.name }}
                 </p>
-                {{ $t("main.describe2") }}
+                {{ $t('main.describe2') }}
               </div>
             </div>
           </div>
@@ -61,7 +61,7 @@
               <div class="contentLinkTitle">相关链接</div>
             </el-badge>
             <div class="connectBox">
-              <div v-for="(connect, index) in connectLinkList">
+              <div v-for="(connect, index) in connectLinkList" :key="index">
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
                   <el-link
@@ -84,7 +84,7 @@
         <div class="preFooter" v-if="recommendQuestionList.length">
           <div class="preFooterTitle">推荐问题：</div>
           <div class="preFooterContent">
-            <div v-for="ques in recommendQuestionList">
+            <div v-for="(ques, idx) in recommendQuestionList" :key="idx">
               <div
                 class="preFooterContentQues"
                 v-if="ques.length"
