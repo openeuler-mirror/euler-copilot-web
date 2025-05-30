@@ -194,7 +194,7 @@
                               </el-button>
                               <el-button
                                 text
-                                @click.stop="handleDelApi(item.serviceId)"
+                                @click.stop="handleDelPlugin(item.serviceId)"
                               >
                                 {{ $t('semantic.interface_delete') }}
                               </el-button>
@@ -460,7 +460,7 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
 };
 
 async function queryMcpServices() {
-  const [_, res] = await api.getMcpList({
+  const [, res] = await api.getMcpList({
     page: currentPage.value,
     pageSize: currentPageSize.value,
     searchType: apiSearchType.value,
@@ -502,7 +502,7 @@ const handleFavorite = (e, item) => {
       serviceId: item.serviceId,
       favorited: !item.favorited,
     })
-    .then((res) => {
+    .then(() => {
       queryList(pluginType.value);
     });
 };
@@ -524,7 +524,7 @@ function onCopyServiceId(id: string) {
   successMsg(t('feedback.copied_successfully'));
 }
 
-const handleDelApi = (id: string) => {
+const handleDelPlugin = async (id: string) => {
   const message =
     pluginType.value === 'semantic_interface'
       ? t('plugin_center.confirm_delete_interface')
@@ -534,22 +534,22 @@ const handleDelApi = (id: string) => {
     cancelButtonText: t('common.cancel'),
     type: 'warning',
     icon: markRaw(IconAlarm),
-  }).then(() => {
-    api
-      .deleteSingleApiData({
-        serviceId: id,
-      })
-      .then((res) => {
-        if (res[1]) {
-          successMsg(t('common.delete_success'));
-          queryList(pluginType.value);
-        }
-      });
+  }).then(async () => {
+    const [, res] =
+      pluginType.value === 'semantic_interface'
+        ? await api.deleteSingleApiData({
+            serviceId: id,
+          })
+        : await api.deleteMcpService(id);
+    if (res) {
+      successMsg(t('common.delete_success'));
+      queryList(pluginType.value);
+    }
   });
 };
 
 async function onActiveService(serviceId: string, active: boolean = true) {
-  const [_, res] = await api.activeMcpService(serviceId, !active);
+  const [, res] = await api.activeMcpService(serviceId, !active);
   if (res) {
     queryList(pluginType.value);
   }
@@ -594,7 +594,7 @@ onBeforeUnmount(() => {
   color: pink;
   background-color: #5481de !important;
   margin-bottom: 0px !important;
-  .header{
+  .header {
     background-color: pink;
   }
 }
@@ -707,8 +707,8 @@ img {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .el-drawer__title{
-    color: var(--o-text-color-primary) !important; 
+  .el-drawer__title {
+    color: var(--o-text-color-primary) !important;
   }
 }
 :deep(.el-drawer__body) {

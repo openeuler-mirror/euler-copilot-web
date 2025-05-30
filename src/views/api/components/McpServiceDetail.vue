@@ -56,7 +56,7 @@ const mcpServiceDetail = ref<McpDetail>();
 const activeNames = ref<string[]>([]);
 
 async function getMcpServiceDetail(serviceId: string) {
-  const [_, res] = await api.getMcpServiceDetail(serviceId);
+  const [, res] = await api.getMcpServiceDetail(serviceId);
   if (res) {
     mcpServiceDetail.value = res.result;
   }
@@ -109,86 +109,91 @@ watch(
               name="tools"
               :lazy="true"
             >
-              <div
-                class="tool"
-                v-if="mcpServiceDetail.tools.length"
-                v-for="tool in mcpServiceDetail.tools"
-              >
-                <p class="tool_name">{{ tool.name }}</p>
-                <span class="tool-description">
-                  {{ tool.description }}
-                </span>
-                <el-collapse v-model="activeNames">
-                  <el-collapse-item :name="`${tool.name}-regeocode`">
-                    <template #title>
-                      <span class="collapse-title">
-                        {{ t('plugin_center.tool_input_schema') }}
-                      </span>
-                      <el-icon
-                        class="collapse-icon"
-                        :class="{
-                          'collapse-icon-active': activeNames.includes(
-                            `${tool.name}-regeocode`,
-                          ),
-                        }"
+              <div v-if="mcpServiceDetail.tools.length">
+                <div
+                  class="tool"
+                  v-for="tool in mcpServiceDetail.tools"
+                  :key="tool.id"
+                >
+                  <p class="tool_name">{{ tool.name }}</p>
+                  <span class="tool-description">
+                    {{ tool.description }}
+                  </span>
+                  <el-collapse v-model="activeNames">
+                    <el-collapse-item :name="`${tool.name}-regeocode`">
+                      <template #title>
+                        <span class="collapse-title">
+                          {{ t('plugin_center.tool_input_schema') }}
+                        </span>
+                        <el-icon
+                          class="collapse-icon"
+                          :class="{
+                            'collapse-icon-active': activeNames.includes(
+                              `${tool.name}-regeocode`,
+                            ),
+                          }"
+                        >
+                          <CaretRight />
+                        </el-icon>
+                      </template>
+                      <div
+                        class="tool-parameter"
+                        v-for="(args, key, idx) in tool.input_schema.properties"
+                        :key="idx"
                       >
-                        <CaretRight />
-                      </el-icon>
-                    </template>
-                    <div
-                      class="tool-parameter"
-                      v-for="(args, key, idx) in tool.input_schema.properties"
-                      :key="idx"
-                    >
-                      <div class="tool-parameter__key-value">
-                        <span class="key">{{ key }}</span>
-                        <span class="type">{{ args.type }}</span>
+                        <div class="tool-parameter__key-value">
+                          <span class="key">{{ key }}</span>
+                          <span class="type">{{ args.type }}</span>
+                        </div>
+                        <span class="tool-parameter__introduction">
+                          {{ args.description }}
+                        </span>
                       </div>
-                      <span class="tool-parameter__introduction">
-                        {{ args.description }}
-                      </span>
-                    </div>
-                  </el-collapse-item>
-                  <el-collapse-item
-                    :name="`${tool.name}-geocode`"
-                    v-if="tool.output_schema"
-                  >
-                    <template #title>
-                      <span class="collapse-title">
-                        {{ t('plugin_center.tool_output_schema') }}
-                      </span>
-                      <el-icon
-                        class="collapse-icon"
-                        :class="{
-                          'collapse-icon-active': activeNames.includes(
-                            `${tool.name}-geocode`,
-                          ),
-                        }"
-                      >
-                        <CaretRight />
-                      </el-icon>
-                    </template>
+                    </el-collapse-item>
+                    <el-collapse-item
+                      :name="`${tool.name}-geocode`"
+                      v-if="tool.output_schema"
+                    >
+                      <template #title>
+                        <span class="collapse-title">
+                          {{ t('plugin_center.tool_output_schema') }}
+                        </span>
+                        <el-icon
+                          class="collapse-icon"
+                          :class="{
+                            'collapse-icon-active': activeNames.includes(
+                              `${tool.name}-geocode`,
+                            ),
+                          }"
+                        >
+                          <CaretRight />
+                        </el-icon>
+                      </template>
 
-                    <div
-                      class="tool-parameter"
-                      v-for="(args, key, idx) in tool.output_schema.properties"
-                      :key="idx"
-                    >
-                      <div class="tool-parameter__key-value">
-                        <span class="key">{{ key }}</span>
-                        <span class="type">{{ args.type }}</span>
+                      <div
+                        class="tool-parameter"
+                        v-for="(args, key, idx) in tool.output_schema
+                          .properties"
+                        :key="idx"
+                      >
+                        <div class="tool-parameter__key-value">
+                          <span class="key">{{ key }}</span>
+                          <span class="type">{{ args.type }}</span>
+                        </div>
+                        <span class="tool-parameter__introduction">
+                          {{ args.description }}
+                        </span>
                       </div>
-                      <span class="tool-parameter__introduction">
-                        {{ args.description }}
-                      </span>
-                    </div>
-                  </el-collapse-item>
-                </el-collapse>
+                    </el-collapse-item>
+                  </el-collapse>
+                </div>
               </div>
+
               <ElEmpty
                 v-else
                 :image="lightNull"
                 :description="$t('common.null')"
+                style="height: 100%"
               />
             </el-tab-pane>
           </el-tabs>
@@ -205,7 +210,6 @@ watch(
 <style lang="scss" scoped>
 .content {
   height: calc(100% - 24px);
-  margin-top: 16px;
   .overview {
     display: flex;
     align-items: center;
@@ -227,6 +231,7 @@ watch(
     }
     .desc {
       max-width: 550px;
+      margin-top: 8px;
       font-size: 14px;
       line-height: 22px;
       font-weight: 400;
@@ -237,7 +242,7 @@ watch(
     }
   }
   .detail {
-    margin-top: 16px;
+    margin-top: 22px;
     height: calc(100% - 40px);
     .settings-tabs {
       height: 100%;
@@ -256,10 +261,11 @@ watch(
         font-weight: 400;
         color: rgb(78, 88, 101);
         word-break: break-all;
+        font-size: 12px;
       }
 
       :deep(.el-tabs__content) {
-        padding: 8px 0;
+        padding: 16px 0;
         height: 100%;
         .el-tab-pane {
           height: 100%;

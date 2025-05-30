@@ -12,6 +12,7 @@ import PermissionControl from './PermissionControl.vue';
 import type { Mcp } from './McpDrawer.vue';
 import CustomLoading from '../../customLoading/index.vue';
 import i18n from '@/i18n';
+import defaultIcon from '@/assets/svgs/defaultIcon.webp';
 
 const { t } = i18n.global;
 const route = useRoute();
@@ -33,7 +34,7 @@ interface AgentConfig {
 
 const props = withDefaults(
   defineProps<{
-    handleValidateContent: Function;
+    handleValidateContent: (val: any) => void;
     onDebug: (status: boolean) => void;
   }>(),
   {},
@@ -74,18 +75,12 @@ const selectedMcpService = computed<Mcp[]>(() =>
 );
 
 const rules = reactive<FormRules<typeof createAppForm>>({
-  name: [{ required: true, message: t('app.appName_input'), trigger: 'blur' }],
-  description: [
-    { required: true, message: t('app.appDescription_input'), trigger: 'blur' },
-  ],
-  model: [
-    { required: true, message: t('app.modelSelected_input'), trigger: 'blur' },
-  ],
+  description: [{ required: true, message: t('app.appDescription_input') }],
+  model: [{ required: true, message: t('app.modelSelected_input') }],
   dialogRounds: [
     {
       required: true,
       message: t('app.multi_Dialogue_select'),
-      trigger: 'blur',
     },
   ],
   permission: [{ required: true }],
@@ -277,6 +272,7 @@ onMounted(async () => {
               <el-input
                 v-model="createAppForm.name"
                 :placeholder="t('app.appName_input')"
+                validate-event
               ></el-input>
             </el-form-item>
 
@@ -288,6 +284,7 @@ onMounted(async () => {
                 show-word-limit
                 :rows="4"
                 :placeholder="t('app.appDescription_input')"
+                validate-event
               ></el-input>
             </el-form-item>
 
@@ -466,7 +463,10 @@ onMounted(async () => {
       <div class="preview-title">{{ t('app.ui_preview') }}</div>
       <div class="preview-content">
         <AppInitalPreview
-          :createAppForm="{ ...createAppForm, ...{ mcps: selectedMcpService } }"
+          :createAppForm="{
+            ...createAppForm,
+            ...{ mcps: selectedMcpService, icon: defaultIcon },
+          }"
         />
       </div>
     </div>
@@ -567,9 +567,12 @@ onMounted(async () => {
             .defaultIcon {
               width: 48px;
               height: 48px;
-              background: url('@/assets/svgs/app_upload.svg');
+              background-image: url('@/assets/svgs/defaultIcon.webp');
+              background-size: cover;
+              background-repeat: no-repeat;
+              background-position: center;
               &:hover {
-                background: url('@/assets/svgs/app_upload_hover.svg');
+                background-image: url('@/assets/svgs/defaultIcon.webp');
               }
             }
             &::after {

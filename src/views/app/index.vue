@@ -84,7 +84,7 @@
                       v-if="appItem.favorited"
                       class="appFavorite"
                     />
-                    <IconUnfavorite v-else="appItem.favorited" />
+                    <IconUnfavorite v-else />
                   </div>
                 </div>
                 <div class="appType">
@@ -154,6 +154,7 @@
     />
   </div>
 </template>
+
 <script setup lang="ts">
 import {
   IconCaretDown,
@@ -191,7 +192,6 @@ const router = useRouter();
 const { t } = useI18n();
 
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
-const publishStatus = ref('未发布');
 const appType = ref('my');
 const appSearchValue = ref();
 const appList = ref<App[]>([]);
@@ -228,7 +228,7 @@ const getImgBg = (appItem) => {
 const handleCreateApp = async (appType: 'flow' | 'agent') => {
   const [, res] = await api.createOrUpdateApp({
     appType,
-    name: '默认应用',
+    name: appType === 'flow' ? '默认应用' : '智能体01',
     description: '我的应用',
   });
 
@@ -288,7 +288,7 @@ const handleFavorite = (e, item) => {
       id: item.appId,
       favorited: !item.favorited,
     })
-    .then((res) => {
+    .then(() => {
       handleParamsQueryAppList();
     });
 };

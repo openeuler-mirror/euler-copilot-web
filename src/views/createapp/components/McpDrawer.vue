@@ -4,6 +4,8 @@ import { ref, onMounted, watch } from 'vue';
 import { api } from '@/apis';
 import { ElMessage } from 'element-plus';
 import i18n from '@/i18n';
+import { ElEmpty } from 'element-plus';
+import lightNull from '@/assets/svgs/light_null.svg';
 
 const { t } = i18n.global;
 
@@ -106,7 +108,7 @@ onMounted(() => {
           ></el-input>
         </div>
 
-        <div class="mcp-list">
+        <div class="mcp-list" v-if="mcpList.length">
           <template v-for="item in mcpList" :key="item.id">
             <div class="mcp-item" @click="onMcpItemClick(item)">
               <el-checkbox v-model="item.isChecked" @click.stop />
@@ -118,6 +120,12 @@ onMounted(() => {
             </div>
           </template>
         </div>
+        <ElEmpty
+          v-else
+          :image="lightNull"
+          :description="$t('common.null')"
+          style="height: 100%"
+        />
       </div>
 
       <template #footer>

@@ -24,7 +24,11 @@ import { useI18n } from 'vue-i18n';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import appIcon from '@/assets/svgs/myApp.svg';
-import { IconCaretRight, IconChevronUp,IconChevronDown } from '@computing/opendesign-icons';
+import {
+  IconCaretRight,
+  IconChevronUp,
+  IconChevronDown,
+} from '@computing/opendesign-icons';
 import router from 'src/router';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
@@ -50,7 +54,8 @@ const {
   currentSelectedSession,
 } = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
-const { getHistorySession, createNewSession, currentLLM } = useHistorySessionStore();
+const { getHistorySession, createNewSession, currentLLM } =
+  useHistorySessionStore();
 const { userinfo } = storeToRefs(useAccountStore());
 const deleteType = ref(true);
 // 搜索的关键词
@@ -134,7 +139,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 const deletedSessionName = ref('');
@@ -423,19 +428,23 @@ watch(
             />
           </div>
           <ul v-if="filteredHistorySessions.length">
-            <el-collapse v-model="activeNames"
-            class="o-hpc-collapse"
-            :prefix-icon="IconChevronDown">
+            <el-collapse
+              v-model="activeNames"
+              class="o-hpc-collapse"
+              :prefix-icon="IconChevronDown"
+            >
               <template v-for="item in filteredHistorySessions" :key="item.key">
                 <el-collapse-item :name="item.key">
                   <template #title>
-                    <el-icon 
-                    class="el-collapse-item__arrow"
-                    :class="{ 'is-active': activeNames.includes(item.key) }"
+                    <el-icon
+                      class="el-collapse-item__arrow"
+                      :class="{ 'is-active': activeNames.includes(item.key) }"
                     >
                       <IconCaretRight></IconCaretRight>
                     </el-icon>
-                    <span class="el-collapse-item__title">{{ item.title }}</span>
+                    <span class="el-collapse-item__title">
+                      {{ item.title }}
+                    </span>
                   </template>
                   <template
                     v-for="session in item.list"
@@ -510,15 +519,12 @@ watch(
   </aside>
 </template>
 <style lang="scss" scoped>
-:deep(.el-collapse-item__title){
-  // flex: 1 0 90%;
+:deep(.el-collapse-item__title) {
   line-height: 18px !important;
 }
 :deep(.el-collapse-item__arrow.is-active) {
-    height: 56px;
-    list-style: 56px;
-    transform: rotate(90deg);
-    padding-left: 3px;
+  transform: rotate(90deg);
+  padding-left: 3px;
 }
 :deep(.el-collapse-item__content) {
   border-bottom: none;
@@ -528,8 +534,6 @@ watch(
 
 :deep(.el-collapse-item__header) {
   display: flex;
-  flex-direction: row-reverse;
-  justify-content: flex-end;
   align-items: center;
   height: 16px;
   margin-bottom: 8px;
