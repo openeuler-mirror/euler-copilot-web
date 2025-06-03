@@ -63,7 +63,7 @@ const handlePublishApp = async () => {
           }
         });
     });
-  } catch (error) {
+  } catch {
     ElMessage.error(t('app.publishFailed'));
   }
 };
@@ -143,7 +143,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
     } else if (type === 'agent') {
       const formData = agentAppConfigRef.value.createAppForm;
       if (!formData) return;
-      const [_, res] = await api.createOrUpdateApp({
+      const [, res] = await api.createOrUpdateApp({
         appId: route.query?.appId as string,
         appType: type,
         icon: formData.icon,
@@ -164,7 +164,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
       }
     }
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -181,7 +181,7 @@ const handleJumperAppCenter = () => {
 
 const agentAppConfigRef = ref();
 function onDebugClick() {
-  if (agentAppConfigRef) {
+  if (agentAppConfigRef.value) {
     agentAppConfigRef.value.openDebugDialog();
   }
 }
@@ -279,7 +279,9 @@ function onDebugSuccess(status: boolean) {
       >
         {{ $t('semantic.save') }}
       </el-button>
-      <el-button :disabled="true">{{ $t('semantic.preview') }}</el-button>
+      <el-button :disabled="appType !== 'agent'" @click="onDebugClick">
+        {{ appType === 'flow' ? $t('semantic.preview') : $t('flow.debug') }}
+      </el-button>
       <el-tooltip
         :disabled="publishValidate"
         :content="$t('semantic.publish_condition')"

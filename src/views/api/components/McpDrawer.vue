@@ -123,7 +123,7 @@ async function onConfirm(formEl: FormInstance | undefined) {
   if (json) form.mcpConfig = json;
   await formEl.validate(async (valid) => {
     if (!valid) return;
-    const [_, res] = await api.createOrUpdateMcpService({
+    const [, res] = await api.createOrUpdateMcpService({
       serviceId: props.serviceId || undefined,
       icon: form.icon,
       name: form.name,
@@ -132,14 +132,16 @@ async function onConfirm(formEl: FormInstance | undefined) {
       mcpType: form.type,
     });
 
-    formEl.resetFields();
-    jsonEditorRef.value.setJsonValue('{\n  \n}');
-    emits('success');
+    if (res) {
+      formEl.resetFields();
+      jsonEditorRef.value.setJsonValue('{\n  \n}');
+      emits('success');
+    }
   });
 }
 
 async function getMcpServiceDetail(serviceId: string) {
-  const [_, res] = await api.getMcpServiceDetail(serviceId);
+  const [, res] = await api.getMcpServiceDetail(serviceId);
   if (res) {
     const { icon, name, description, data, mcpType } = res.result;
     form.icon = icon;
@@ -169,7 +171,7 @@ watch(
       }
       getMcpServiceDetail(props.serviceId);
     } else {
-      formRef.value && formRef.value.resetFields();
+      if (formRef.value) formRef.value.resetFields();
       setMcpConfig(form.type);
     }
   },
@@ -238,7 +240,11 @@ watch(
               class="form-item"
             >
               <el-radio-group v-model="form.type" @change="setMcpConfig">
-                <el-radio v-for="{ label, value } in mcpTypes" :value="value">
+                <el-radio
+                  v-for="{ label, value } in mcpTypes"
+                  :value="value"
+                  :key="value"
+                >
                   {{ label }}
                 </el-radio>
               </el-radio-group>
@@ -264,6 +270,8 @@ watch(
 <style lang="scss" scoped>
 .mcp-drawer {
   :deep(.el-drawer) {
+    top: 48px;
+    height: calc(100vh - 48px);
     .el-drawer__header {
       color: #000;
       font-weight: 700;
@@ -303,7 +311,7 @@ watch(
 
         .editor {
           width: 100%;
-          max-height: 440px;
+          height: 450px;
           flex: 1;
           border: 1px solid rgb(195, 206, 223);
         }
