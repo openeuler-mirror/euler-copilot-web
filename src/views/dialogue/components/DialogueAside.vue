@@ -910,6 +910,7 @@ watch(
       margin-top: 8px;
       margin-bottom: 8px;
       & span {
+        font-weight: 500;
         color: var(--o-text-color-secondary);
       }
     }

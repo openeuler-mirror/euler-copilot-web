@@ -149,7 +149,7 @@ const checkTagsOverflow = () => {
     <div class="multi-select-box">
       <div class="select-content">
         <div class="label-text" @click="toggleModal">
-          <img style="width: 16px" src="@/assets/svgs/search.svg" alt="" />
+          <img class="label-img" style="width: 16px" src="@/assets/svgs/dark_knowledge.svg" alt="" />
           <span>{{ $t('witChainD.knowledge')}}</span>
         </div>
         <div v-if="selectedTags.length" class="tags-container">
@@ -359,8 +359,15 @@ const checkTagsOverflow = () => {
   display: flex;
   line-height: 32px;
   margin-left: 16px;
-  img {
-    margin-right: 6px;
+  .label-img {
+    width: 8px;
+    margin-right: 4px;
+  }
+  .label-img:hover {
+    content: url(../../../assets/svgs/dark_knowledge_hover.svg);
+  }
+  .label-img:active {
+    content: url(../../../assets/svgs/dark_knowledge_select.svg);
   }
 }
 .tags-container {

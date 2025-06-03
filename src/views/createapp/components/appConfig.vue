@@ -208,6 +208,7 @@ onMounted(() => {
           };
           publishStatus.value = appInfo.published;
           flowDataList.value = appInfo.workflows;
+          emits('getPublishStatus', publishStatus.value);
           emits('getFlowList', flowDataList.value);
         }
         loading.value = false;

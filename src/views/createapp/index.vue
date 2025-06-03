@@ -172,6 +172,8 @@ const saveApp = async (type: 'agent' | 'flow') => {
 const getPublishStatus = (status) => {
   if (status) {
     publishStatus.value = '已发布';
+  }else {
+    publishStatus.value = '未发布';
   }
 };
 
@@ -211,7 +213,7 @@ function onDebugSuccess(status: boolean) {
           class="createAppContainerStatus"
           :class="{ debugSuccess: publishStatus === '已发布' }"
         >
-          {{ $t('app.app_published') }}
+        {{publishStatus === '已发布' ? $t('app.app_published') : $t('app.unpublished') }}
         </div>
       </div>
       <div class="createAppContainerType" v-if="appType !== 'agent'">
