@@ -19,8 +19,7 @@ BuildArch:        aarch64 x86_64
 Name:             euler-copilot-web
 Version:          0.9.6
 Release:          1%{?dist}
-License:          MulanPSL-2.0 
-Group:            Applications/Utilities
+License:          MulanPSL-2.0
 Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
 Source1:          offline_node_modules-%{_electron_arch}.tar.zst.part0
@@ -35,12 +34,22 @@ Packager:         openEuler <contact@openeuler.org>
 BuildRequires:    curl
 BuildRequires:    zstd
 
-Requires:         nginx
-
 %description
 openEuler 智能化解决方案 Web 前端
 
+
+%package -n       euler-copilot-web-nginx-config
+# nginx 配置文件
+Summary:          openEuler 智能化解决方案前端 nginx 配置
+Requires:         nginx
+Requires:         euler-copilot-web = %{version}-%{release}
+
+%description -n   euler-copilot-web-nginx-config
+openEuler 智能化解决方案前端的 nginx 配置文件，适用于 Web 前端部署。
+
 %package -n       euler-copilot-desktop
+# Electron 客户端
+Group:            Applications/Utilities
 Summary:          openEuler 智能化解决方案桌面客户端
 Requires:         at-spi2-core
 Requires:         gtk3
@@ -119,11 +128,14 @@ pnpm run build
 
 
 %install
+
 # Web 主包安装
 mkdir -p %{buildroot}/usr/share/euler-copilot-web
-mkdir -p %{buildroot}/etc/nginx/conf.d
 cp -a %{_builddir}/%{name}-%{version}/dist/. %{buildroot}/usr/share/euler-copilot-web/
 chmod -R a+rX %{buildroot}/usr/share/euler-copilot-web
+
+# nginx 配置子包安装
+mkdir -p %{buildroot}/etc/nginx/conf.d
 cp -a %{_builddir}/%{name}-%{version}/build/linux/nginx.conf.local.tmpl %{buildroot}/etc/nginx/conf.d/euler-copilot-web.conf
 
 # Electron 客户端安装
@@ -161,6 +173,10 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 %dir /usr/share/euler-copilot-web/assets
 %attr(0644, root, root) /usr/share/euler-copilot-web/*.*
 %attr(0644, root, root) /usr/share/euler-copilot-web/assets/*
+
+
+%files -n euler-copilot-web-nginx-config
+# nginx 配置文件
 %config(noreplace) /etc/nginx/conf.d/euler-copilot-web.conf
 
 
@@ -181,9 +197,10 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
 
 
-%post
+# nginx 配置子包安装后重启 nginx
+%post -n euler-copilot-web-nginx-config
 #!/bin/bash
-# Web 主包安装后，检测 nginx 服务，若已运行则重启，否则跳过
+# 安装后检测 nginx 服务，若已运行则重启，否则跳过
 if systemctl is-active --quiet nginx; then
     systemctl restart nginx
 fi
@@ -268,5 +285,8 @@ fi
 
 
 %changelog
+* Tue Jun 03 2025 openEuler <contact@openeuler.org> - 0.9.6-2
+- 拆分 nginx 配置和重启服务到 euler-copilot-web-nginx-config 子包
+
 * Thu Apr 17 2025 openEuler <contact@openeuler.org> - 0.9.6-1
 - Initial release
