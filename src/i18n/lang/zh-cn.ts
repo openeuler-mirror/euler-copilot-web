@@ -98,6 +98,7 @@ export default {
       create_mcp: '创建MCP服务',
       edit_mcp: '编辑MCP服务',
       mcp_name: 'MCP名称',
+      mcp_overview: 'MCP简述',
       mcp_description: 'MCP描述',
       mcp_type: 'MCP类型',
       activate: '激活',
@@ -106,6 +107,7 @@ export default {
     upload_icon: '上传图标',
     please_upload_icon: '请上传图标',
     please_input_mcp_name: '请输入MCP名称',
+    please_input_mcp_overview: '请输入MCP简述',
     please_select_mcp_description: '请选择MCP描述',
     server_detail: '服务详情',
     server_tool: '工具',
@@ -114,6 +116,7 @@ export default {
     tool_output_schema: '工具出参',
     confirm_delete_interface: '确定删除此接口吗?',
     confirm_delete_server: '确定删除此服务吗?',
+    no_brief_description_yet: '暂无简述',
   },
   app: {
     app_center: '应用中心',

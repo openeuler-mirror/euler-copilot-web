@@ -11,6 +11,7 @@ interface McpDetail {
   serviceId: string;
   icon: string;
   name: string;
+  overview: string;
   description: string;
   data: string;
   mcpType: string;
@@ -89,7 +90,12 @@ watch(
           <img :src="mcpServiceDetail.icon || defaultIcon" alt="" />
           <div class="overview-text">
             <p class="name">{{ mcpServiceDetail.name }}</p>
-            <p class="desc">{{ mcpServiceDetail.description }}</p>
+            <p class="brief-description">
+              {{
+                mcpServiceDetail.overview ||
+                t('plugin_center.no_brief_description_yet')
+              }}
+            </p>
           </div>
         </div>
 
@@ -229,7 +235,7 @@ watch(
       font-weight: 700;
       line-height: 24px;
     }
-    .desc {
+    .brief-description {
       max-width: 550px;
       margin-top: 8px;
       font-size: 14px;

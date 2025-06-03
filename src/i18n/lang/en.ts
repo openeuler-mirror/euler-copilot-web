@@ -99,6 +99,7 @@ export default {
       create_mcp: 'Create MCP',
       edit_mcp: 'Edit MCP',
       mcp_name: 'MCP Name',
+      mcp_overview: 'MCP Overview',
       mcp_description: 'MCP Description',
       mcp_type: 'MCP Type',
       activate: 'Activate',
@@ -107,6 +108,7 @@ export default {
     upload_icon: 'Upload Icon',
     please_upload_icon: 'Please upload icon',
     please_input_mcp_name: 'Please input MCP name',
+    please_input_mcp_overview: 'Please input MCP overview',
     please_select_mcp_description: 'Please select MCP description',
     server_detail: 'Server Details',
     server_tool: 'Server Tools',
@@ -115,6 +117,7 @@ export default {
     tool_output_schema: 'Tool Output Schema',
     confirm_delete_interface: 'Are you sure to delete this interface?',
     confirm_delete_server: 'Are you sure to delete this server?',
+    no_brief_description_yet: 'No brief description yet',
   },
   app: {
     app_center: 'App Center',

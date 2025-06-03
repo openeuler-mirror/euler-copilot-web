@@ -9,6 +9,7 @@ import i18n from 'src/i18n';
 interface McpDetail {
   icon: string;
   name: string;
+  overview: string;
   description: string;
   type: 'stdio' | 'sse' | 'stream';
   mcpConfig: string;
@@ -51,6 +52,7 @@ const mcpConfigTemplate = {
 const form = reactive<McpDetail>({
   icon: '',
   name: '',
+  overview: '',
   description: '',
   type: 'stdio',
   mcpConfig: '',
@@ -64,6 +66,13 @@ const rules = reactive<FormRules<typeof form>>({
     {
       required: true,
       message: t('plugin_center.please_upload_icon'),
+      trigger: 'blur',
+    },
+  ],
+  overview: [
+    {
+      required: true,
+      message: t('plugin_center.please_input_mcp_overview'),
       trigger: 'blur',
     },
   ],
@@ -125,6 +134,7 @@ async function onConfirm(formEl: FormInstance | undefined) {
     if (!valid) return;
     const [, res] = await api.createOrUpdateMcpService({
       serviceId: props.serviceId || undefined,
+      overview: form.overview,
       icon: form.icon,
       name: form.name,
       description: form.description,
@@ -222,6 +232,15 @@ watch(
               />
             </el-form-item>
             <el-form-item
+              :label="t('plugin_center.mcp.mcp_overview')"
+              prop="overview"
+            >
+              <el-input
+                v-model="form.overview"
+                :placeholder="t('plugin_center.please_input_mcp_overview')"
+              />
+            </el-form-item>
+            <el-form-item
               :label="t('plugin_center.mcp.mcp_description')"
               prop="description"
             >
@@ -279,7 +298,7 @@ watch(
       margin: 0;
     }
     .el-drawer__body {
-      padding: 0 24px;
+      padding: 0px 24px 16px;
     }
     .el-drawer__footer {
       padding: 0;
@@ -289,7 +308,7 @@ watch(
   }
 }
 .wrapper {
-  height: calc(100% - 38px);
+  height: 100%;
   display: flex;
   flex-direction: column;
   .content {
@@ -300,6 +319,9 @@ watch(
       display: flex;
       flex-direction: column;
       justify-content: start;
+      :deep(.el-form-item:last-child) {
+        margin-bottom: 0px;
+      }
       .form-item {
         flex: 1;
         :deep(.el-form-item__content) {
@@ -313,7 +335,6 @@ watch(
           width: 100%;
           height: 450px;
           flex: 1;
-          border: 1px solid rgb(195, 206, 223);
         }
       }
     }

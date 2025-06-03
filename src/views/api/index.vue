@@ -712,7 +712,7 @@ img {
   }
 }
 :deep(.el-drawer__body) {
-  padding: 0px 24px 16px !important;
+  padding: 0px 24px 16px;
   .drawerBody {
     height: 100%;
     textarea {
