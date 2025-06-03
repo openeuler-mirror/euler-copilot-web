@@ -62,6 +62,7 @@ export const useSessionStore = defineStore('conversation', () => {
   const app = ref<AppShowType>({
     appId: '',
     name: '',
+    selectedAppId: '',
   });
   const appList = ref<Application[]>();
   // ai回复是否还在生成中
