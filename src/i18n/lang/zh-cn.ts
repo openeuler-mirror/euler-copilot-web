@@ -184,7 +184,7 @@ export default {
     describe1: '你好，我是',
     describe2: '，很高兴为你服务',
     left_describe: '热门应用',
-    os_knowledge: 'CVE热修复智能助手',
+    os_knowledge: 'CVE热修复助手',
     os_knowledge_describe: 'CVE热修复',
     openEuler_expertise: '智能诊断智能助手',
     openEuler_expertise_describe: '智能诊断',

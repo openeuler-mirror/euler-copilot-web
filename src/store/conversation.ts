@@ -62,6 +62,7 @@ export const useSessionStore = defineStore('conversation', () => {
   const app = ref<AppShowType>({
     appId: '',
     name: '',
+    selectedAppId: '',
   });
   const appList = ref<Application[]>();
   // ai回复是否还在生成中
@@ -253,7 +254,8 @@ export const useSessionStore = defineStore('conversation', () => {
           conversationItem.echartsObj = message.content.option;
           break;
         case 'document.add':
-          dataTransfers.documentAdd(conversationItem, message);
+          // 遇到文档添加事件，先省略
+          // dataTransfers.documentAdd(conversationItem, message);
           break;
         case 'Suggestion':
           dataTransfers.suggestionFunc(conversationItem, message);
