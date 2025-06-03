@@ -364,6 +364,8 @@ watch(
 }
 .mcp-drawer {
   :deep(.el-drawer) {
+    top: 48px;
+    height: calc(100vh - 48px);
     .el-drawer__header {
       color: #000;
       font-weight: 700;

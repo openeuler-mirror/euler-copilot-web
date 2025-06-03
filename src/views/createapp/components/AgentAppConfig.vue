@@ -75,6 +75,7 @@ const selectedMcpService = computed<Mcp[]>(() =>
 );
 
 const rules = reactive<FormRules<typeof createAppForm>>({
+  name: [{ required: true, message: t('app.appName_input') }],
   description: [{ required: true, message: t('app.appDescription_input') }],
   model: [{ required: true, message: t('app.modelSelected_input') }],
   dialogRounds: [
@@ -94,6 +95,8 @@ async function queryAgentConfig() {
   const [, res] = await api.querySingleAppData({
     id: route.query?.appId as string,
   });
+  createAppFormRef.value?.clearValidate();
+
   if (res) {
     const { name, description, permission, icon, mcpService, dialogRounds } =
       res.result;
@@ -193,16 +196,20 @@ const createAppFormRef = ref();
 watch(
   () => createAppForm,
   async () => {
+    if (createAppForm.name === '') {
+      return;
+    }
+
     if (createAppFormRef.value && props.handleValidateContent) {
       try {
         const validate = await createAppFormRef.value.validate();
         props.handleValidateContent(validate);
-      } catch (error) {
+      } catch {
         props.handleValidateContent(false);
       }
     }
   },
-  { deep: true, immediate: true },
+  { deep: true },
 );
 
 function onDebugSuccess(status: boolean) {
@@ -272,7 +279,7 @@ onMounted(async () => {
               <el-input
                 v-model="createAppForm.name"
                 :placeholder="t('app.appName_input')"
-                validate-event
+                :validate-event="false"
               ></el-input>
             </el-form-item>
 
