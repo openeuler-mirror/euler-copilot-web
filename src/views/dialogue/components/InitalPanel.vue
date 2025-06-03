@@ -2,11 +2,10 @@
 import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
 import { IconLoad } from '@computing/opendesign-icons';
-import { useChangeThemeStore } from 'src/store';
 import router from 'src/router';
-const themeStore = useChangeThemeStore();
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
+import defaultIcon from '@/assets/svgs/defaultIcon.webp';
 
 const route = useRoute();
 const appName = ref();
@@ -91,8 +90,7 @@ onMounted(() => {
               :key="item.key"
               :style="item.style"
             >
-              <img v-if="themeStore.theme === 'dark'" :src="item.iconDark" />
-              <img v-else :src="item.icon" alt="" />
+              <img :src="defaultIcon" alt="" />
               <div class="eg-list-item__text">
                 <p>{{ $t('main.' + item.key) }}</p>
                 <span class="eg-list-item__text-desc">
@@ -348,8 +346,8 @@ onMounted(() => {
         }
 
         img {
-          width: 37px;
-          height: 37px;
+          width: 32px;
+          height: 32px;
           margin: 16px 8px 32px 16px;
         }
 
