@@ -34,7 +34,7 @@ const isCreateApp = ref(props?.isCreateApp);
 const selectedLLM = ref({});
 const handleChangeMode = (val: string) => {
   selectedLLM.value = val;
-  };
+};
 // const isCreateApp = ref(true);
 const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
@@ -631,11 +631,9 @@ onMounted(() => {
 });
 
 watch(selectLLM, (newValue) => {
-  console.log(selectLLM);
   if (newValue) {
     selectedLLM.value.modalName = newValue.modelName;
     selectedLLM.value.icon = newValue.icon;
-    console.log(selectedLLM.value);
     selectedLLM.value = { ...selectLLM.value };
   }
 });
@@ -701,6 +699,18 @@ watch(
   },
   {
     immediate: true,
+    deep: true,
+  },
+);
+
+watch(
+  () => app,
+  (val) => {
+    if (app.value) {
+      user_selected_app.value = app.value.appId;
+    }
+  },
+  {
     deep: true,
   },
 );
@@ -837,7 +847,7 @@ watch(
               </template>
             </el-dropdown>
           </div>
-          <MultiSelectTags @updateValue="handleUpdate" :PropselectedTags="PropselectedTags" />
+          <MultiSelectTags @updateValue="handleUpdate" />
         </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->

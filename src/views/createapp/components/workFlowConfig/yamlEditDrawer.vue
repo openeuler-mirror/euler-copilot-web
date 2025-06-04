@@ -9,7 +9,7 @@
       :before-close="closeDrawer"
     >
       <template #header>
-        <div class="drawerHeader">步骤配置-{{ yamlNodeName }}</div>
+        <div class="drawerHeader">{{$t('flow.step_configuration')}}-{{ yamlNodeName }}</div>
       </template>
       <template #default>
         <div class="drawerBody">
@@ -27,7 +27,7 @@
                 >
                   <IconCaretRight />
                 </el-icon>
-                <span>{{ item.title }}</span>
+                <span>{{ $t(item.title) }}</span>
               </template>
               <div
                 class="yamlMonacoEditor"
@@ -59,22 +59,22 @@
                   :rules="yamlBaseInfoRule"
                   label-position="left"
                 >
-                  <el-form-item prop="name" label="接口名称">
+                  <el-form-item prop="name" :label="$t('semantic.interface_name')">
                     <el-input
                       v-model="yamlExpress[0].name"
-                      placeholder="请输入"
+                      :placeholder="$t('semantic.pleaseEnter')"
                       maxlength="20"
                       class="o-validate-input"
                       clearable
                     ></el-input>
                   </el-form-item>
-                  <el-form-item prop="description" label="接口描述">
+                  <el-form-item prop="description" :label="$t('semantic.interface_introduction')">
                     <el-input
                       type="textarea"
                       show-word-limit
                       maxlength="150"
                       v-model="yamlExpress[0].description"
-                      placeholder="请输入"
+                      :placeholder="$t('semantic.pleaseEnter')"
                       class="workFlowDesc o-validate-input"
                       clearable
                     ></el-input>
@@ -87,13 +87,13 @@
       </template>
       <template #footer>
         <div class="drawerFooter">
-          <el-button @click="closeDrawer">关闭</el-button>
+          <el-button @click="closeDrawer">{{ $t('main.close') }}</el-button>
           <el-button
             :disabled="infoDisabled"
             type="primary"
             @click="updateNodeYaml"
           >
-            完成
+            {{ $t('semantic.submit') }}
           </el-button>
         </div>
       </template>
@@ -108,6 +108,7 @@ import yaml from 'js-yaml';
 import { ElMessage } from 'element-plus';
 import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
 import YamlContentOutput  from 'src/components/yamloutput/yamlContentOutput.jsx';
+import i18n from 'src/i18n';
 const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
@@ -115,19 +116,19 @@ const yamlNodeName = ref();
 const infoDisabled = ref(true);
 const yamlExpress = ref([
   {
-    title: '基本信息',
+    title:'semantic.baseMessage',
     type: '',
     name: '',
     description: '',
   },
   {
-    title: '输入内容',
+    title: 'app.inputContent',
     type: 'yamlEdit',
     yamlCode: '',
     disabled: false,
   },
   {
-    title: '输出内容',
+    title: 'app.outputContent',
     type: 'yamlEdit',
     yamlCode: '',
     disabled: true,
@@ -203,12 +204,15 @@ const updateNodeYaml = () => {
     );
     closeDrawer();
   } catch (error) {
-    ElMessage.error('请检查格式是否正确');
+    ElMessage.error(i18n.global.t('semantic.checkFormat'));
   }
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" scoped> 
+:deep(.el-collapse-item__arrow .is-active){ 
+    top: 0px !important; 
+}
 .yamlMonacoEditor {
   height: 400px;
 }

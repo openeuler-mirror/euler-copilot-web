@@ -184,11 +184,13 @@ watch(
     </section>
   </div>
 </template>
-
-<style lang="scss">
-.el-collapse-item__content {
-  margin: 0px 16px 16px 0px;
+<style lang="scss" scoped>
+:deep(.el-collapse-item__content){
+  margin: 0px 16px 0px 0px !important;
 }
+</style>
+
+<style lang="scss" scope>
 
 .el-collapse-item:last-child {
   margin-bottom: 0px;
@@ -229,6 +231,12 @@ watch(
     background-color: var(--o-bg-color-light2) !important;
   }
 }
+:deep(.el-collapse .o-nest-collapse){
+  &:last-child {
+    border-bottom: none!important;
+    background-color: beige!important;
+  }
+}
 .title {
   .el-collapse-item__wrap {
     background-color: var(--o-bg-color-light2);
@@ -247,13 +255,11 @@ watch(
   }
   .el-collapse-item__arrow.is-active {
     transform: rotate(90deg);
-    top: 3px;
     padding-left: 3px;
   }
 }
 .el-collapse-item__arrow.is-active {
   transform: rotate(90deg);
-  top: 3px;
   padding-left: 3px;
 }
 .el-collapse-item__arrow {
@@ -281,11 +287,13 @@ watch(
   height: auto;
   border-radius: 0px 0px 4px 4px;
   border: 1px solid var(--o-border-color-base);
-
   :deep(.el-collapse-item__wragop) {
     margin-top: 12px !important;
     margin-bottom: 2px !important;
   }
+  :deep(.el-collapse-item__content) {
+  margin: 0px 16px 16px 0px !important;
+}
 }
 .loading {
   display: flex;
@@ -340,17 +348,25 @@ watch(
     padding: 0px 12px;
     margin-left: auto;
     span{
-      border-radius: 4px;
-      min-width: 44px;
+    padding: 0px 4px;
+    border-radius: 4px;
+    min-width: 44px;
     width: fit-content;
-    height: 16px;
     border-radius: 4px;
     font-size: 12px;
     }
   }
 }
-.totalTime {
-  padding: 0px 8px;
-  margin-left: auto;
-}
+            .totalTime {
+              min-width: 54px;
+              width: fit-content;
+              padding: 0px 8px;
+              height: 16px;
+              line-height: 16px;
+              font-size: 12px;
+              border-radius: 4px;
+            }
+            .totalTime.errorBg {
+              background-color: rgba(227, 32, 32, 0.2);
+            }
 </style>

@@ -21,6 +21,14 @@ export interface HistorySessionItem {
   title: string;
   createdTime: string | Date;
   docCount: number;
+  appId: string;
+  debug: boolean;
+  kbList: string[];
+  llm:{
+    icon: string;
+    modelName: string;
+    llmId: string;
+  }
 }
 
 export const useHistorySessionStore = defineStore(
@@ -32,6 +40,7 @@ export const useHistorySessionStore = defineStore(
     const user_selected_app = ref<string>();
     const selectLLM = ref();
     const currentSelectedSession = ref<string>('');
+    const { app } = storeToRefs(useSessionStore());
     /**
      * 选择历史会话
      * @param conversationId 会话id
@@ -81,10 +90,15 @@ export const useHistorySessionStore = defineStore(
      * 获取当前 llm 模型的数值
      */
     const currentLLM = async () => {
+      // 先置空
+      selectLLM.value = {};
       await getHistorySession();
       historySession.value.forEach((item) => {
         if (item.conversationId === currentSelectedSession.value) {
           selectLLM.value = item.llm;
+          if(item.appId){
+            app.value.appId = item.appId;
+          }
         }
       });
     };

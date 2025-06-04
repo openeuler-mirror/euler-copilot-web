@@ -74,9 +74,9 @@ export const deleteSingleAppData = (params: {
  * @returns
  */
 export const releaseSingleAppData = (params: {
-  id: string;
+  appId: string;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return post(`/api/app/${params.id}`, params);
+  return post(`/api/app/${params.appId}`);
 };
 
 /**

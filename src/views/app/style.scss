@@ -64,9 +64,6 @@
     .appCenterCardContainer {
       padding-top: 4px;
       width: 1340px;
-      max-height: calc(100vh - 370px);
-      min-height: calc(100vh - 370px);
-      overflow-y: auto;
       .appCenterCardBox {
         margin-top: 16px;
         width: fit-content;
@@ -74,6 +71,9 @@
         flex-wrap: wrap;
         box-sizing: border-box;
         gap: 16px;
+        max-height: calc(100vh - 370px);
+        min-height: calc(100vh - 370px);
+        overflow-y: auto;
         .appCenterCardSingle {
           box-sizing: border-box;
           border: 1px solid transparent;
@@ -119,7 +119,7 @@
                   line-height: 24px;
                   font-weight: 700;
                 }
-                
+
                 .appCenterCardContentCollect {
                   width: 24px;
                   height: 24px;
@@ -150,16 +150,16 @@
                   border-radius: 2px;
                 }
                 .appTypeName__flow {
-                  color:rgb(109,71,245) ;
+                  color: rgb(109, 71, 245);
                   background-color: rgb(109, 71, 245, 0.15);
                 }
                 .appTypeName__agent {
-                  color:rgb(249,118,17);
+                  color: rgb(249, 118, 17);
                   background-color: rgb(249, 118, 17, 0.15);
                 }
               }
               .appCenterCardContentDes {
-                .vue-text{
+                .vue-text {
                   cursor: pointer !important;
                   color: var(--o-api-description);
                 }
@@ -179,7 +179,6 @@
             }
             .appCenterCardOps {
               .el-button span {
-                color: #6395fd;
                 font-size: 12px;
               }
             }
@@ -197,6 +196,8 @@
         }
       }
       .appCenterNoData {
+        top: calc(50% - 80px);
+        position: relative;
         display: flex;
         flex-direction: column;
         gap: 8px;

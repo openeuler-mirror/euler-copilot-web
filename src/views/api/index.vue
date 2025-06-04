@@ -20,21 +20,22 @@
                 :suffix-icon="IconCaretDown"
               >
                 <el-option :label="$t('semantic.all_select')" value="all" />
-                <el-option label="插件名称" value="name" />
-                <el-option label="创建人" value="author" />
+                <el-option
+                  :label="$t('plugin_center.plugin_name')"
+                  value="name"
+                />
+                <el-option :label="$t('plugin_center.author')" value="author" />
               </el-select>
             </template>
           </el-input>
 
           <el-popover
-            placement="bottom"
-            width="102"
             :popper-style="{
-              minWidth: '100px',
               transform: 'translateY(-10px)',
               padding: '4px 0px',
             }"
             trigger="click"
+            placement="bottom-start"
             :show-arrow="false"
           >
             <template #reference>
@@ -102,18 +103,20 @@
             ></el-tab-pane>
           </el-tabs>
           <div class="apiCenterCardBox" v-if="pluginLists.length">
-            <div v-for="item in pluginLists" class="apiCenterCardSingle">
+            <div
+              v-for="item in pluginLists"
+              :key="item.serviceId"
+              class="apiCenterCardSingle"
+            >
               <div @click="openSidebar('get', item.serviceId, pluginType)">
                 <PluginCard
                   :name="item.name"
                   :description="item.description"
                   :icon="item.icon"
                 >
-                  <template
-                    #topRight
-                    v-if="pluginType === 'semantic_interface'"
-                  >
+                  <template #topRight>
                     <div
+                      v-if="pluginType === 'semantic_interface'"
                       class="apiCenterCardContentCollect"
                       :class="
                         !item.published && apiType === 'createdByMe'
@@ -125,41 +128,79 @@
                       <IconFavorite v-if="item.favorited" class="apiFavorite" />
                       <IconUnfavorite v-else />
                     </div>
+                    <div v-else-if="pluginType === 'mcp'">
+                      <div v-if="item.status === 'installing'" class="loading">
+                        <img
+                          src="@/assets/images/loading.png"
+                          alt=""
+                          class="loading-anime-icon"
+                        />
+                        <div class="loading-text">
+                          {{ t('plugin_center.mcp.installing') }}
+                        </div>
+                      </div>
+                      <div v-else-if="item.status === 'failed'" class="failed">
+                        <img src="@/assets/svgs/error.svg" alt="" />
+                        <div class="failed-text">
+                          {{ t('plugin_center.mcp.install_failed') }}
+                        </div>
+                      </div>
+                    </div>
                   </template>
                   <template #footer>
                     <div class="apiCenterCardBottom">
-                      <div class="apiCenterCardUser">@{{ item.author }}</div>
-                      <div
-                        class="apiCenterCardOps"
-                        v-if="
-                          userinfo.user_sub === item.author ||
-                          pluginType === 'mcp'
-                        "
-                      >
-                        <div v-if="userinfo.is_admin">
-                          <el-button
-                            text
-                            @click.stop="onOpenMcpDrawer(item.serviceId)"
+                      <div class="apiCenterCardId" v-if="pluginType === 'mcp'">
+                        <span>ID: {{ item.serviceId }}</span>
+                        <el-tooltip
+                          effect="dark"
+                          :content="$t('common.copy')"
+                          placement="top"
+                        >
+                          <el-icon
+                            @click.stop="onCopyServiceId(item.serviceId)"
                           >
-                            {{ $t('semantic.interface_edit') }}
-                          </el-button>
-                          <el-button
-                            text
-                            @click.stop="handleDelApi(item.serviceId)"
-                          >
-                            {{ $t('semantic.interface_delete') }}
-                          </el-button>
-                        </div>
-
-                        <el-button
-                          v-else
-                          text
-                          @click.stop="
-                            onActiveService(item.serviceId, item.isActive)
+                            <CopyDocument />
+                          </el-icon>
+                        </el-tooltip>
+                      </div>
+                      <div class="apiCenterCardFooter">
+                        <div class="apiCenterCardUser">@{{ item.author }}</div>
+                        <div
+                          class="apiCenterCardOps"
+                          v-if="
+                            userinfo.user_sub === item.author ||
+                            pluginType === 'mcp'
                           "
                         >
-                          {{ item.isActive ? '取消激活' : '激活' }}
-                        </el-button>
+                          <div v-if="item.status !== 'installing'">
+                            <div>
+                              <el-button
+                                text
+                                @click.stop="
+                                  onActiveService(item.serviceId, item.isActive)
+                                "
+                              >
+                                {{
+                                  item.isActive
+                                    ? t('plugin_center.mcp.activate')
+                                    : t('plugin_center.mcp.deactivate')
+                                }}
+                              </el-button>
+                              <el-button
+                                text
+                                @click.stop="onOpenMcpDrawer(item.serviceId)"
+                              >
+                                {{ $t('semantic.interface_edit') }}
+                              </el-button>
+                              <el-button
+                                text
+                                @click.stop="handleDelPlugin(item.serviceId)"
+                              >
+                                {{ $t('semantic.interface_delete') }}
+                              </el-button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -179,12 +220,12 @@
         :title="actionName"
         :show-close="false"
         header-class="drawerHeader"
-        destory-on-close="true"
+        destroy-on-close
         :direction="direction"
         :before-close="handleClose"
       >
         <div class="drawerContent">
-          <div v-if="actions === 'upload'" style="height: 100%;">
+          <div v-if="actions === 'upload'" style="height: 100%">
             <Upload
               type="upload"
               @closeDrawer="handleClose"
@@ -243,11 +284,11 @@ import {
 } from '@computing/opendesign-icons';
 import './style.scss';
 import PluginCard from './components/PluginCard.vue';
-import { ref, onMounted, watch, markRaw } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, watch, markRaw, onBeforeUnmount } from 'vue';
 import { api } from 'src/apis';
 import { ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
+import { CopyDocument } from '@element-plus/icons-vue';
 import Upload from '@/components/Upload/index.vue';
 import { successMsg } from 'src/components/Message';
 import { useAccountStore } from 'src/store';
@@ -257,6 +298,9 @@ import i18n from 'src/i18n';
 import CustomLoading from '../customLoading/index.vue';
 import McpDrawer from './components/McpDrawer.vue';
 import McpServiceDetailDrawer from './components/McpServiceDetail.vue';
+import { writeText } from '@/utils';
+
+const { t } = i18n.global;
 
 const mcpDrawerVisible = ref(false);
 const mcpDetailDrawerVisible = ref(false);
@@ -292,14 +336,13 @@ const pluginLists = ref<
     name: string;
     published?: boolean;
     isActive?: boolean;
+    status?: 'installing' | 'ready' | 'failed';
   }[]
 >([]);
 
-const apiList = ref();
 const drawer = ref(false);
 const direction = ref('rtl');
 const actionName = ref('');
-const router = useRouter();
 const actions = ref();
 const pluginType = ref<'semantic_interface' | 'mcp'>('semantic_interface');
 const apiType = ref('my');
@@ -383,6 +426,7 @@ const handleClose = () => {
   queryList(pluginType.value);
 };
 
+let timer: NodeJS.Timeout | null = null;
 const queryList = async (type: 'semantic_interface' | 'mcp') => {
   loading.value = true;
   const payload = {
@@ -391,6 +435,10 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
     [apiType.value]: true,
   };
   if (type === 'semantic_interface') {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
     payload[apiType.value] = true;
     const [, res] = await api.queryApiList({
       page: currentPage.value,
@@ -404,25 +452,44 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
       loading.value = false;
     }
   } else if (type === 'mcp') {
-    const [_, res] = await api.getMcpList({
-      page: currentPage.value,
-      pageSize: currentPageSize.value,
-      ...(payload as any),
-    });
-    if (res) {
-      pluginLists.value = res.result.services.map((item) => ({
+    queryMcpServices();
+    timer = setInterval(() => {
+      queryMcpServices();
+    }, 3000);
+  }
+};
+
+async function queryMcpServices() {
+  const [, res] = await api.getMcpList({
+    page: currentPage.value,
+    pageSize: currentPageSize.value,
+    searchType: apiSearchType.value,
+    keyword: apiSearchValue.value || undefined,
+    [apiType.value]: true,
+  });
+  if (res) {
+    let installingCount = 0;
+    pluginLists.value = res.result.services.map((item) => {
+      if (item.status === 'installing') {
+        installingCount++;
+      }
+      return {
         serviceId: item.mcpserviceId,
         description: item.description,
         icon: item.icon,
         author: item.author,
         name: item.name,
         isActive: item.isActive,
-      }));
+        status: item.status,
+      };
+    });
+    if (installingCount === 0 && timer) {
+      clearInterval(timer);
+      timer = null;
     }
+    loading.value = false;
   }
-
-  loading.value = false;
-};
+}
 
 const handleFavorite = (e, item) => {
   // 未发布的不可收藏
@@ -435,55 +502,54 @@ const handleFavorite = (e, item) => {
       serviceId: item.serviceId,
       favorited: !item.favorited,
     })
-    .then((res) => {
+    .then(() => {
       queryList(pluginType.value);
     });
 };
 
 const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
   if (type === 'my') {
+    apiType.value = 'my';
     queryList(pluginType.value);
   } else {
+    apiType.value = type;
     currentPage.value = 1;
     currentPageSize.value = 16;
     queryList(pluginType.value);
   }
 };
 
-const handleDelApi = (id: string) => {
-  if (pluginType.value === 'semantic_interface') {
-    ElMessageBox.confirm('确定删除此接口吗？', '提示', {
-      type: 'warning',
-      icon: markRaw(IconAlarm),
-    }).then(() => {
-      api
-        .deleteSingleApiData({
-          serviceId: id,
-        })
-        .then((res) => {
-          if (res[1]) {
-            successMsg('删除成功');
-            queryList(pluginType.value);
-          }
-        });
-    });
-  } else if (pluginType.value === 'mcp') {
-    ElMessageBox.confirm('确定删除此服务吗？', '提示', {
-      type: 'warning',
-      icon: markRaw(IconAlarm),
-    }).then(() => {
-      api.deleteMcpService(id).then((res) => {
-        if (res[1]) {
-          successMsg('删除成功');
-          queryList(pluginType.value);
-        }
-      });
-    });
-  }
+function onCopyServiceId(id: string) {
+  writeText(id);
+  successMsg(t('feedback.copied_successfully'));
+}
+
+const handleDelPlugin = async (id: string) => {
+  const message =
+    pluginType.value === 'semantic_interface'
+      ? t('plugin_center.confirm_delete_interface')
+      : t('plugin_center.confirm_delete_server');
+  ElMessageBox.confirm(message, t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
+    type: 'warning',
+    icon: markRaw(IconAlarm),
+  }).then(async () => {
+    const [, res] =
+      pluginType.value === 'semantic_interface'
+        ? await api.deleteSingleApiData({
+            serviceId: id,
+          })
+        : await api.deleteMcpService(id);
+    if (res) {
+      successMsg(t('common.delete_success'));
+      queryList(pluginType.value);
+    }
+  });
 };
 
 async function onActiveService(serviceId: string, active: boolean = true) {
-  const [_, res] = await api.activeMcpService(serviceId, !active);
+  const [, res] = await api.activeMcpService(serviceId, !active);
   if (res) {
     queryList(pluginType.value);
   }
@@ -508,6 +574,13 @@ watch(
 onMounted(() => {
   queryList(pluginType.value);
 });
+
+onBeforeUnmount(() => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+});
 </script>
 <style lang="scss" scoped>
 .create-button__icon {
@@ -519,7 +592,11 @@ onMounted(() => {
 }
 .drawerHeader {
   color: pink;
+  background-color: #5481de !important;
   margin-bottom: 0px !important;
+  .header {
+    background-color: pink;
+  }
 }
 .drawerContent {
   overflow-y: auto;
@@ -531,6 +608,8 @@ onMounted(() => {
   &::v-deep(.el-drawer__header) {
     margin-bottom: 0px !important;
     color: var(--o-text-color-primary) !important;
+    margin: 24px !important;
+    padding: 24px !important;
   }
 }
 .apiCenterCardSingle {
@@ -566,14 +645,58 @@ onMounted(() => {
   .noClick {
     cursor: not-allowed;
   }
+  .loading,
+  .failed {
+    display: flex;
+    height: auto;
+    width: 100%;
+    background-color: linear-gradient(
+      127.95deg,
+      rgba(109, 227, 250, 0.2) -1.967%,
+      rgba(90, 179, 255, 0.2) 98.202%
+    );
+    border-radius: 8px;
+    border-top-left-radius: 0px;
+    margin-left: 8px;
+    flex-wrap: nowrap;
+    gap: 2px;
+    @keyframes rotate-img {
+      from {
+        transform: rotate(0);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+
+    &-anime-icon {
+      width: 16px;
+      height: 16px;
+      align-items: center;
+      align-self: center;
+      animation: rotate-img 1s infinite linear;
+    }
+
+    &-text {
+      font-size: 12px;
+      color: var(--o-text-color-primary);
+      white-space: nowrap;
+    }
+  }
 }
 
 img {
   width: 100%;
   max-width: 430px;
 }
-.el-drawer__header {
-  padding: 24px 24px 16px;
+:deep(.el-drawer__header) {
+  padding: 24px 24px 16px !important;
   margin-bottom: 0px;
   .drawerHeader {
     width: 100%;
@@ -584,9 +707,12 @@ img {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .el-drawer__title {
+    color: var(--o-text-color-primary) !important;
+  }
 }
 :deep(.el-drawer__body) {
-  padding: 8px 24px 16px !important;
+  padding: 0px 24px 16px;
   .drawerBody {
     height: 100%;
     textarea {

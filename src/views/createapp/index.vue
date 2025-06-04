@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '../styles/createApp.scss';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import AppConfig from './components/appConfig.vue';
 import WorkFlow from './components/workFlow.vue';
 import CustomLoading from '../customLoading/index.vue';
@@ -9,7 +9,9 @@ import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { IconSuccess, IconRemind } from '@computing/opendesign-icons';
 import AgentAppConfig from './components/AgentAppConfig.vue';
+import i18n from 'src/i18n';
 
+const { t } = i18n.global;
 const router = useRouter();
 const route = useRoute();
 const publishStatus = ref('未发布');
@@ -48,22 +50,21 @@ onUnmounted(() => {
 const handlePublishApp = async () => {
   // 发布接口前，先保存界面配置与工作流
   try {
-    const res = await saveApp(appType.value as 'agent' | 'flow');
-    if (res) {
-      await api
+    await saveApp(appType.value as 'agent' | 'flow').then(() => {
+      api
         .releaseSingleAppData({
-          id: route.query?.appId as string,
+          appId: route.query?.appId as string,
         })
         .then((res) => {
           if (res[1]?.result) {
-            ElMessage.success('发布成功');
+            ElMessage.success(t('app.publishSuccess'));
             router.push(`/app`);
             loading.value = false;
           }
         });
-    }
-  } catch (error) {
-    ElMessage.error(`发布失败`);
+    });
+  } catch {
+    ElMessage.error(t('app.publishFailed'));
   }
 };
 
@@ -131,10 +132,10 @@ const saveApp = async (type: 'agent' | 'flow') => {
   try {
     if (type === 'flow') {
       await handleCreateOrUpdateApp();
-      await workFlowRef.value.saveFlow();
+      await workFlowRef.value.saveFlow(false, true);
       ElMessage({
         showClose: true,
-        message: '更新成功',
+        message: t('app.updateSuccessfully'),
         icon: IconSuccess,
         customClass: 'o-message--success',
         duration: 2000,
@@ -142,7 +143,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
     } else if (type === 'agent') {
       const formData = agentAppConfigRef.value.createAppForm;
       if (!formData) return;
-      const [_, res] = await api.createOrUpdateApp({
+      const [, res] = await api.createOrUpdateApp({
         appId: route.query?.appId as string,
         appType: type,
         icon: formData.icon,
@@ -155,7 +156,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
       if (res) {
         ElMessage({
           showClose: true,
-          message: '更新成功',
+          message: t('app.updateSuccessfully'),
           icon: IconSuccess,
           customClass: 'o-message--success',
           duration: 2000,
@@ -163,7 +164,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
       }
     }
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -171,6 +172,8 @@ const saveApp = async (type: 'agent' | 'flow') => {
 const getPublishStatus = (status) => {
   if (status) {
     publishStatus.value = '已发布';
+  }else {
+    publishStatus.value = '未发布';
   }
 };
 
@@ -180,7 +183,7 @@ const handleJumperAppCenter = () => {
 
 const agentAppConfigRef = ref();
 function onDebugClick() {
-  if (agentAppConfigRef) {
+  if (agentAppConfigRef.value) {
     agentAppConfigRef.value.openDebugDialog();
   }
 }
@@ -199,18 +202,18 @@ function onDebugSuccess(status: boolean) {
             class="createAppContainerMenuCenter"
             @click="handleJumperAppCenter"
           >
-            应用中心
+            {{ $t('menu.app_center') }}
           </span>
           <span>/</span>
           <span class="createAppContainerMenuText">
-            {{ appType === 'agent' ? '创建智能体应用' : '创建工作流应用' }}
+            {{ appType === 'agent' ? $t('app.agent_app') : $t('app.mcp_app') }}
           </span>
         </div>
         <div
           class="createAppContainerStatus"
           :class="{ debugSuccess: publishStatus === '已发布' }"
         >
-          {{ publishStatus }}
+        {{publishStatus === '已发布' ? $t('app.app_published') : $t('app.unpublished') }}
         </div>
       </div>
       <div class="createAppContainerType" v-if="appType !== 'agent'">
@@ -219,8 +222,7 @@ function onDebugSuccess(status: boolean) {
           :class="{ createAppBtnActive: createAppType === 'appConfig' }"
           @click="handleChangeAppType('appConfig')"
         >
-          <div>界面配置</div>
-
+          <div>{{ $t('app.app_config') }}</div>
           <el-icon v-if="appFormValidate">
             <IconSuccess />
           </el-icon>
@@ -233,7 +235,7 @@ function onDebugSuccess(status: boolean) {
           :class="{ createAppBtnActive: createAppType !== 'appConfig' }"
           @click="handleChangeAppType('workFlow')"
         >
-          <div>工作流编排</div>
+          <div>{{ $t('flow.edit_workflow') }}</div>
           <el-icon v-if="publishValidate">
             <IconSuccess />
           </el-icon>
@@ -270,19 +272,21 @@ function onDebugSuccess(status: boolean) {
     </div>
 
     <div class="createAppContainerFooter">
-      <el-button @click="handleJumperAppCenter">取消</el-button>
+      <el-button @click="handleJumperAppCenter">
+        {{ $t('semantic.cancel') }}
+      </el-button>
       <el-button
         @click="saveApp(appType as 'agent' | 'flow')"
         :disabled="createAppType === 'appConfig' ? !appFormValidate : false"
       >
-        保存
+        {{ $t('semantic.save') }}
       </el-button>
       <el-button :disabled="appType !== 'agent'" @click="onDebugClick">
-        调试
+        {{ appType === 'flow' ? $t('semantic.preview') : $t('flow.debug') }}
       </el-button>
       <el-tooltip
         :disabled="publishValidate"
-        content="需要当前应用中所有工作流调试成功才能发布应用"
+        :content="$t('semantic.publish_condition')"
         placement="top"
       >
         <!-- 需要多一层，不然影响当前el-tooltip显示content -->
@@ -292,7 +296,7 @@ function onDebugSuccess(status: boolean) {
             :disabled="!publishValidate"
             @click="handlePublishApp()"
           >
-            发布
+            {{ $t('semantic.publish') }}
           </el-button>
         </div>
       </el-tooltip>

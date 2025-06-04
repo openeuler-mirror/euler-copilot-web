@@ -1,0 +1,86 @@
+server {
+    listen 8080 default_server;
+    server_name _;
+    charset utf-8;
+
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options nosniff;
+    add_header Referrer-Policy "no-referrer";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; always";
+    add_header Cache-Control "no-cache";
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: base64;";
+
+    resolver 8.8.8.8 8.8.4.4 valid=60s;
+    resolver_timeout 5s;
+
+    if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$) {
+        return 444;
+    }
+
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    location / {
+        root /usr/share/euler-copilot-web;
+        try_files $uri $uri/ /index.html;
+        if (!-e $request_filename) {
+            return 404;
+        }
+    }
+
+    location /copilot {
+        alias /usr/share/euler-copilot-web;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /login {
+        root /usr/share/euler-copilot-web;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/health_check {
+        deny all;
+        return 404;
+    }
+
+    location /api/ {
+        proxy_set_header X-Forwarded-For $http_x_real_ip;
+        add_header Cache-Control "no-cache,no-store,must-revalidate";
+        add_header X-Accel-Buffering no;
+        proxy_buffering off;
+        proxy_intercept_errors on;
+
+        error_page 404 /404.html;
+        proxy_read_timeout 500s;
+        proxy_connect_timeout 500s;
+
+        proxy_pass http://127.0.0.1:8002/api/;
+    }
+
+    error_page 401 402 403 405 406 407 413 414 /error.html;
+    error_page 404 /404.html;
+    error_page 500 501 502 503 504 505 /error.html;
+
+    location = /404 {
+        return 404;
+    }
+
+    location = /404.html {
+        root /usr/share/euler-copilot-web;
+        internal;
+    }
+
+    location = /error.html {
+        root /usr/share/euler-copilot-web;
+        internal;
+    }
+
+    location /assets/ {
+        alias /usr/share/euler-copilot-web/assets/;
+        expires 30d;
+        add_header Cache-Control public;
+    }
+}

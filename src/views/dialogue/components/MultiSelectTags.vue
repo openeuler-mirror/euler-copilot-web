@@ -54,6 +54,7 @@ onMounted(() => {
 watch(
   currentSelectedSession,
   () => {
+    selectedTags.value = [];
     handleKnowledgeList();
   },
   {
@@ -100,11 +101,9 @@ const toggleModal = () => {
 // 待优化
 const checkTagsOverflow = () => {
   const container = document.querySelector('.tags-container');
-  console.log(container, 'container');
   if (!container) return;
 
   const tags = container.querySelectorAll('.tag');
-  console.log(tags, 'tags');
   if (!tags.length) return;
 
   //重置所有标签的样式
@@ -150,8 +149,8 @@ const checkTagsOverflow = () => {
     <div class="multi-select-box">
       <div class="select-content">
         <div class="label-text" @click="toggleModal">
-          <img style="width: 16px" src="@/assets/svgs/search.svg" alt="" />
-          <span>知识库</span>
+          <img class="label-img" style="width: 16px" src="@/assets/svgs/dark_knowledge.svg" alt="" />
+          <span>{{ $t('witChainD.knowledge')}}</span>
         </div>
         <div v-if="selectedTags.length" class="tags-container">
           <div v-for="(tag, index) in selectedTags" :key="index" class="tag">
@@ -171,7 +170,7 @@ const checkTagsOverflow = () => {
     <transition name="slide">
       <div v-if="isModalOpen" class="global-tag-modal">
         <div class="modal-header">
-          <h3>知识库</h3>
+          <h3>{{ $t('witChainD.knowledge')}}</h3>
           <button class="close-button" @click="toggleModal">×</button>
         </div>
         <div class="multi-select-list">
@@ -360,8 +359,15 @@ const checkTagsOverflow = () => {
   display: flex;
   line-height: 32px;
   margin-left: 16px;
-  img {
-    margin-right: 6px;
+  .label-img {
+    width: 8px;
+    margin-right: 4px;
+  }
+  .label-img:hover {
+    content: url(../../../assets/svgs/dark_knowledge_hover.svg);
+  }
+  .label-img:active {
+    content: url(../../../assets/svgs/dark_knowledge_select.svg);
   }
 }
 .tags-container {

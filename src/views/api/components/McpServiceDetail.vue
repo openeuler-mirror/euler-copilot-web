@@ -5,11 +5,13 @@ import { api } from '@/apis';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
 import lightNull from '@/assets/svgs/light_null.svg';
 import { ElEmpty } from 'element-plus';
+import i18n from 'src/i18n';
 
 interface McpDetail {
   serviceId: string;
   icon: string;
   name: string;
+  overview: string;
   description: string;
   data: string;
   mcpType: string;
@@ -46,23 +48,18 @@ const emits = defineEmits<{
   (e: 'update:visible', visible: boolean): void;
 }>();
 
+const { t } = i18n.global;
+
 const activeTab = ref<'description' | 'tools'>('description');
 
 const mcpServiceDetail = ref<McpDetail>();
 
-const activeNames = ref([]);
+const activeNames = ref<string[]>([]);
 
 async function getMcpServiceDetail(serviceId: string) {
-  const [_, res] = await api.getMcpServiceDetail(serviceId);
+  const [, res] = await api.getMcpServiceDetail(serviceId);
   if (res) {
     mcpServiceDetail.value = res.result;
-    // mcpServiceDetail.value.tools.forEach((tool) => {
-    //   tool.input_schema.properties = []
-    //   for (const key in tool.input_schema.properties) {
-    //     tooo
-    //   }
-    // })
-    // console.log(mcpServiceDetail.value);
   }
 }
 
@@ -72,6 +69,9 @@ watch(
     if (props.visible) {
       if (!props.serviceId) return;
       getMcpServiceDetail(props.serviceId);
+    } else {
+      mcpServiceDetail.value = undefined;
+      activeTab.value = 'description';
     }
   },
 );
@@ -81,7 +81,8 @@ watch(
     <el-drawer
       size="700"
       :model-value="visible"
-      title="服务详情"
+      destroy-on-close
+      :title="t('plugin_center.server_detail')"
       @close="emits('update:visible', false)"
     >
       <div class="content" v-if="mcpServiceDetail">
@@ -89,85 +90,125 @@ watch(
           <img :src="mcpServiceDetail.icon || defaultIcon" alt="" />
           <div class="overview-text">
             <p class="name">{{ mcpServiceDetail.name }}</p>
-            <p class="desc">{{ mcpServiceDetail.description }}</p>
+            <p class="brief-description">
+              {{
+                mcpServiceDetail.overview ||
+                t('plugin_center.no_brief_description_yet')
+              }}
+            </p>
           </div>
         </div>
 
         <div class="detail">
           <el-tabs v-model="activeTab" class="settings-tabs">
-            <el-tab-pane label="描述" name="description" :lazy="true">
+            <el-tab-pane
+              :label="t('plugin_center.server_description')"
+              name="description"
+              :lazy="true"
+            >
               <div class="description">
                 {{ mcpServiceDetail.description }}
               </div>
             </el-tab-pane>
-            <el-tab-pane label="工具" name="tools" :lazy="true">
-              <div
-                class="tool"
-                v-if="mcpServiceDetail.tools.length"
-                v-for="tool in mcpServiceDetail.tools"
-              >
-                <p class="tool_name">{{ tool.name }}</p>
-                <span class="tool-description">
-                  {{ tool.description }}
-                </span>
-                <el-collapse v-model="activeNames">
-                  <el-collapse-item
-                    :name="`${tool.name}-regeocode`"
-                    :icon="CaretRight"
-                  >
-                    <template #title>
-                      <span class="collapse-title">工具入参</span>
-                    </template>
-                    <div
-                      class="tool-parameter"
-                      v-for="(args, key, idx) in tool.input_schema.properties"
-                      :key="idx"
-                    >
-                      <div class="tool-parameter__key-value">
-                        <span class="key">{{ key }}</span>
-                        <span class="type">{{ args.type }}</span>
+            <el-tab-pane
+              :label="t('plugin_center.server_tool')"
+              name="tools"
+              :lazy="true"
+            >
+              <div v-if="mcpServiceDetail.tools.length">
+                <div
+                  class="tool"
+                  v-for="tool in mcpServiceDetail.tools"
+                  :key="tool.id"
+                >
+                  <p class="tool_name">{{ tool.name }}</p>
+                  <span class="tool-description">
+                    {{ tool.description }}
+                  </span>
+                  <el-collapse v-model="activeNames">
+                    <el-collapse-item :name="`${tool.name}-regeocode`">
+                      <template #title>
+                        <span class="collapse-title">
+                          {{ t('plugin_center.tool_input_schema') }}
+                        </span>
+                        <el-icon
+                          class="collapse-icon"
+                          :class="{
+                            'collapse-icon-active': activeNames.includes(
+                              `${tool.name}-regeocode`,
+                            ),
+                          }"
+                        >
+                          <CaretRight />
+                        </el-icon>
+                      </template>
+                      <div
+                        class="tool-parameter"
+                        v-for="(args, key, idx) in tool.input_schema.properties"
+                        :key="idx"
+                      >
+                        <div class="tool-parameter__key-value">
+                          <span class="key">{{ key }}</span>
+                          <span class="type">{{ args.type }}</span>
+                        </div>
+                        <span class="tool-parameter__introduction">
+                          {{ args.description }}
+                        </span>
                       </div>
-                      <span class="tool-parameter__introduction">
-                        {{ args.description }}
-                      </span>
-                    </div>
-                  </el-collapse-item>
-                  <el-collapse-item
-                    :name="`${tool.name}-geocode`"
-                    :icon="CaretRight"
-                    v-if="tool.output_schema"
-                  >
-                    <template #title>
-                      <span class="collapse-title">工具出参</span>
-                    </template>
+                    </el-collapse-item>
+                    <el-collapse-item
+                      :name="`${tool.name}-geocode`"
+                      v-if="tool.output_schema"
+                    >
+                      <template #title>
+                        <span class="collapse-title">
+                          {{ t('plugin_center.tool_output_schema') }}
+                        </span>
+                        <el-icon
+                          class="collapse-icon"
+                          :class="{
+                            'collapse-icon-active': activeNames.includes(
+                              `${tool.name}-geocode`,
+                            ),
+                          }"
+                        >
+                          <CaretRight />
+                        </el-icon>
+                      </template>
 
-                    <div
-                      class="tool-parameter"
-                      v-for="(args, key, idx) in tool.output_schema.properties"
-                      :key="idx"
-                    >
-                      <div class="tool-parameter__key-value">
-                        <span class="key">{{ key }}</span>
-                        <span class="type">{{ args.type }}</span>
+                      <div
+                        class="tool-parameter"
+                        v-for="(args, key, idx) in tool.output_schema
+                          .properties"
+                        :key="idx"
+                      >
+                        <div class="tool-parameter__key-value">
+                          <span class="key">{{ key }}</span>
+                          <span class="type">{{ args.type }}</span>
+                        </div>
+                        <span class="tool-parameter__introduction">
+                          {{ args.description }}
+                        </span>
                       </div>
-                      <span class="tool-parameter__introduction">
-                        {{ args.description }}
-                      </span>
-                    </div>
-                  </el-collapse-item>
-                </el-collapse>
+                    </el-collapse-item>
+                  </el-collapse>
+                </div>
               </div>
+
               <ElEmpty
                 v-else
                 :image="lightNull"
                 :description="$t('common.null')"
+                style="height: 100%"
               />
             </el-tab-pane>
           </el-tabs>
         </div>
       </div>
       <template #footer>
-        <el-button @click="emits('update:visible', false)">关闭</el-button>
+        <el-button @click="emits('update:visible', false)">
+          {{ t('common.close') }}
+        </el-button>
       </template>
     </el-drawer>
   </div>
@@ -175,7 +216,6 @@ watch(
 <style lang="scss" scoped>
 .content {
   height: calc(100% - 24px);
-  margin-top: 16px;
   .overview {
     display: flex;
     align-items: center;
@@ -195,8 +235,9 @@ watch(
       font-weight: 700;
       line-height: 24px;
     }
-    .desc {
+    .brief-description {
       max-width: 550px;
+      margin-top: 8px;
       font-size: 14px;
       line-height: 22px;
       font-weight: 400;
@@ -207,7 +248,7 @@ watch(
     }
   }
   .detail {
-    margin-top: 16px;
+    margin-top: 22px;
     height: calc(100% - 40px);
     .settings-tabs {
       height: 100%;
@@ -217,6 +258,7 @@ watch(
       --o-tabs-line-height: 32px;
       --o-tabs-color_active: rgb(99, 149, 253);
       --o-text-color-secondary: #000;
+      --o-tabs-item-max-width: none;
 
       .description {
         height: 100%;
@@ -225,10 +267,11 @@ watch(
         font-weight: 400;
         color: rgb(78, 88, 101);
         word-break: break-all;
+        font-size: 12px;
       }
 
       :deep(.el-tabs__content) {
-        padding: 8px 0;
+        padding: 16px 0;
         height: 100%;
         .el-tab-pane {
           height: 100%;
@@ -327,6 +370,8 @@ watch(
 }
 .mcp-drawer {
   :deep(.el-drawer) {
+    top: 48px;
+    height: calc(100vh - 48px);
     .el-drawer__header {
       color: #000;
       font-weight: 700;

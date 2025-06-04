@@ -1,5 +1,16 @@
 :root {
   --el-color-primary: #0077ff;
+  .el-button {
+    --o-button-color_label: #6395fd;
+    --o-button-color_label_hover: #7aa5ff;
+  }
+  .el-message-box__container {
+    display: flex;
+    align-items: center;
+    .el-message-box__message {
+      padding: 0;
+    }
+  }
 }
 
 .euler-copilot-message-box {

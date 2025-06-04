@@ -42,11 +42,11 @@
           <div class="preMainContentTitle" v-if="interPreviewInfo.name.length">
             <div class="greetDes">
               <div class="greetDesContent">
-                你好，我是
+                {{ $t('main.describe1') }}
                 <p class="greetDesAppName greetDesContent">
                   {{ interPreviewInfo.name }}
                 </p>
-                ，很高兴为你服务
+                {{ $t('main.describe2') }}
               </div>
             </div>
           </div>
@@ -61,7 +61,7 @@
               <div class="contentLinkTitle">相关链接</div>
             </el-badge>
             <div class="connectBox">
-              <div v-for="(connect, index) in connectLinkList">
+              <div v-for="(connect, index) in connectLinkList" :key="index">
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
                   <el-link
@@ -84,7 +84,7 @@
         <div class="preFooter" v-if="recommendQuestionList.length">
           <div class="preFooterTitle">推荐问题：</div>
           <div class="preFooterContent">
-            <div v-for="ques in recommendQuestionList">
+            <div v-for="(ques, idx) in recommendQuestionList" :key="idx">
               <div
                 class="preFooterContentQues"
                 v-if="ques.length"
@@ -264,7 +264,7 @@ watch(
           line-height: 24px;
           margin-top: 8px;
           margin-bottom: 20px;
-          color: var(--o-text-color-primary);
+          color: var(--o-text-color-secondary);
         }
         .preMainContentLink {
           .contentLinkTitle {
@@ -341,7 +341,7 @@ watch(
             padding: 8px 16px;
             background-color: var(--o-bg-color-base);
             .vue-text {
-              color: #4e5865;
+              color: var(--o-question-color);
             }
           }
         }

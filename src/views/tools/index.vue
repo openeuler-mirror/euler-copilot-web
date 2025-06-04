@@ -31,13 +31,9 @@ const iframeTarget = ref<string>('');
 async function getIframeTarget() {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
-  // Electron 环境和本地开发环境的判断
+  // Electron 环境的判断
   const isElectron = window.navigator.userAgent.includes('Electron');
-  const isLocalhost =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-  const target =
-    isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+  const target = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
   return target;
 }
 
@@ -53,7 +49,7 @@ const handleIframeLoad = () => {
 
 // 处理iframe错误
 const handleIframeError = (error: Event) => {
-  console.error('iframe加载错误:', error);
+  console.error('iframe loading error:', error);
   // 可以在这里添加重试逻辑
 };
 
@@ -72,7 +68,7 @@ const sendMessageToIframe = async (stopActive: boolean) => {
       iframeTarget.value,
     );
   } catch (error) {
-    console.error('发送消息到iframe失败:', error);
+    console.error('send Message to iframe error:', error);
   }
 };
 
@@ -96,8 +92,7 @@ watch(
 
     // 等待DOM更新完成
     await nextTick();
-
-    if (isIframeLoaded.value) {
+    if (isIframeLoaded.value && iframeTarget.value) {
       sendMessageToIframe(!isWitchaindRoute);
       const token = localStorage.getItem('ECSESSION') ?? '';
       sendTokenToIframe(token);
@@ -112,7 +107,7 @@ onMounted(async () => {
   const iframe = iframeRef.value;
   if (iframe) {
     iframe.onerror = (error) => {
-      console.error('iframe加载失败:', error);
+      console.error('iframe loading error:', error);
     };
   }
 });

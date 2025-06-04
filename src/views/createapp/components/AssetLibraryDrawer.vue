@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue';
 import { api } from '@/apis';
 import type { KnowledgeBase } from '@/apis/appCenter/knowledge';
 import { ElMessage } from 'element-plus';
+import i18n from '@/i18n';
 
 defineProps<{
   visible: boolean;
@@ -44,7 +45,7 @@ function onConfirm() {
     .flatMap((item) => item.kbList)
     .filter((item) => item.isChecked);
   if (checkedKbList.length > 5) {
-    ElMessage.error('最多只能选择5个知识库');
+    ElMessage.error(i18n.global.t('witChainD.fiveKnowledge'));
     return;
   }
   emits('confirm', checkedKbList);
@@ -58,7 +59,7 @@ onMounted(() => {
   <div class="asset-drawer">
     <el-drawer
       size="700"
-      title="知识库"
+      :title="$t('witChainD.knowledge')"
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
@@ -67,7 +68,7 @@ onMounted(() => {
           <el-input
             v-model="searchKeyword"
             type="search"
-            placeholder="搜索"
+            :placeholder="$t('common.search')"
             :suffix-icon="Search"
           ></el-input>
         </div>
@@ -109,8 +110,12 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <el-button @click="emits('update:visible', false)">关闭</el-button>
-        <el-button type="primary" @click="onConfirm">确认</el-button>
+        <el-button @click="emits('update:visible', false)">
+          {{ $t('main.close') }}
+        </el-button>
+        <el-button type="primary" @click="onConfirm">
+          {{ $t('main.confirm') }}
+        </el-button>
       </template>
     </el-drawer>
   </div>

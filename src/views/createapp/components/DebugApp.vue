@@ -8,18 +8,20 @@ import {
   useChangeThemeStore,
 } from '@/store';
 import { storeToRefs } from 'pinia';
-import { computed, h, onMounted, ref, watch } from 'vue';
+import { computed, h, ref, watch } from 'vue';
 import { api } from '@/apis';
 import marked from '@/utils/marked';
 import userAvatar from '@/assets/svgs/dark_user.svg';
 import robotAvatar from '@/assets/svgs/robot.svg';
-import DefaultAgentIcon from '@/assets/svgs/default_agent_icon.svg';
+import DefaultAgentIcon from '@/assets/svgs/defaultIcon.webp';
 import SendDisabledIcon from '@/assets/svgs/send_disabled.svg';
 import SendEnableIcon from '@/assets/svgs/send_enabled.svg';
 import { fetchStream } from '@/utils/fetchStream';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
 import dayjs from 'dayjs';
 import { useRoute } from 'vue-router';
+
+let isDebugSuccess = false;
 
 interface DebugConfig {
   name: string;
@@ -150,8 +152,6 @@ function useStream() {
         return;
       }
 
-      emits('success', true);
-
       for await (const chunk of fetchStream({
         readableStream: resp.body!,
       })) {
@@ -173,6 +173,7 @@ function useStream() {
           }, 100);
           break;
         }
+
         let conversation = conversations.value.find((item) => item.id === cId);
 
         setConversations(chunk.data, q, conversation);
@@ -263,6 +264,10 @@ function useConversations() {
       }
     }
     if (event === 'text.add') {
+      if (!isDebugSuccess) {
+        isDebugSuccess = true;
+        emits('success', true);
+      }
       const c = conversations.value[conversations.value.length - 1];
       c.answer[c.answerIndex].content += content.text;
       c.answer[c.answerIndex].metadata = metadata;

@@ -17,8 +17,8 @@
               :suffix-icon="IconCaretDown"
             >
               <el-option :label="$t('app.all_select')" value="all" />
-              <el-option label="工作流" value="flow" />
-              <el-option label="智能体" value="agent" />
+              <el-option :label="$t('app.flow')" value="flow" />
+              <el-option :label="$t('app.agent')" value="agent" />
             </el-select>
           </template>
         </el-input>
@@ -42,7 +42,7 @@
             :lazy="true"
           ></el-tab-pane>
           <el-tab-pane
-            :label="$t('semantic.my_upload')"
+            :label="$t('app.my_created')"
             name="createdByMe"
             :lazy="true"
           ></el-tab-pane>
@@ -84,7 +84,7 @@
                       v-if="appItem.favorited"
                       class="appFavorite"
                     />
-                    <IconUnfavorite v-else="appItem.favorited" />
+                    <IconUnfavorite v-else />
                   </div>
                 </div>
                 <div class="appType">
@@ -96,7 +96,11 @@
                         : 'appTypeName__agent'
                     "
                   >
-                    {{ appItem.appType === 'flow' ? '工作流' : '智能体' }}
+                    {{
+                      appItem.appType === 'flow'
+                        ? $t('app.flow')
+                        : $t('app.agent')
+                    }}
                   </span>
                 </div>
                 <div class="appCenterCardContentDes">
@@ -145,11 +149,12 @@
     </div>
     <SelectAppTypeDialog
       v-model:visible="isSelectAppTypeDialogVisible"
-      title="创建应用"
+      :title="$t('app.create_app')"
       @select-type="handleCreateApp"
     />
   </div>
 </template>
+
 <script setup lang="ts">
 import {
   IconCaretDown,
@@ -170,6 +175,7 @@ import DefaultAppIcon from '../../assets/svgs/defaultIcon.webp';
 import CustomLoading from '../customLoading/index.vue';
 import SelectAppTypeDialog from './components/SelectAppTypeDialog.vue';
 import TextMoreTootip from '@/components/textMoreTootip/index.vue';
+import { useI18n } from 'vue-i18n';
 
 interface App {
   appId: string;
@@ -183,9 +189,9 @@ interface App {
 }
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
-const publishStatus = ref('未发布');
 const appType = ref('my');
 const appSearchValue = ref();
 const appList = ref<App[]>([]);
@@ -222,7 +228,7 @@ const getImgBg = (appItem) => {
 const handleCreateApp = async (appType: 'flow' | 'agent') => {
   const [, res] = await api.createOrUpdateApp({
     appType,
-    name: '默认应用',
+    name: appType === 'flow' ? '默认应用' : '智能体01',
     description: '我的应用',
   });
 
@@ -248,7 +254,7 @@ const handleParamsQueryAppList = (params?: any) => {
     payload[appType.value] = true;
   }
   handleQueryAppList({
-    searchType: appSearchType.value,
+    appType: appSearchType.value !== 'all' ? appSearchType.value : undefined,
     keyword: appSearchValue.value,
     ...payload,
     ...params,
@@ -282,7 +288,7 @@ const handleFavorite = (e, item) => {
       id: item.appId,
       favorited: !item.favorited,
     })
-    .then((res) => {
+    .then(() => {
       handleParamsQueryAppList();
     });
 };
@@ -302,7 +308,9 @@ const handleSearchAppList = (type) => {
 
 const handleDelApp = (e, item) => {
   e.stopPropagation();
-  ElMessageBox.confirm('确定删除此应用吗？', '提示', {
+  ElMessageBox.confirm(t('app.confirm_delete_app'), t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(() => {
@@ -314,7 +322,7 @@ const handleDelApp = (e, item) => {
         if (res[1]) {
           ElMessage({
             showClose: true,
-            message: '删除成功',
+            message: t('common.delete_success'),
             icon: IconSuccess,
             customClass: 'o-message--success',
             duration: 3000,

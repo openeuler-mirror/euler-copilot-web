@@ -22,6 +22,7 @@ const getMcpList = (params: {
         icon: string;
         author: string;
         isActive: boolean;
+        status: 'installing' | 'ready' | 'failed';
       },
     ];
     totalModels: number;
@@ -33,6 +34,7 @@ const getMcpServiceDetail = (id: string) => {
     serviceId: string;
     icon: string;
     name: string;
+    overview: string;
     description: string;
     data: string;
     mcpType: 'stdio' | 'sse' | 'stream';
@@ -65,11 +67,12 @@ const createOrUpdateMcpService = (params: {
   serviceId?: string;
   icon: string;
   name: string;
+  overview: string;
   description: string;
   config: string;
   mcpType: 'stdio' | 'sse' | 'stream';
 }) => {
-  return post<{}>(`${MCP_BASE_URL}`, params);
+  return post(`${MCP_BASE_URL}`, params);
 };
 
 const deleteMcpService = (id: string) => {
