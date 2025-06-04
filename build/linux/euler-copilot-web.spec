@@ -18,7 +18,7 @@ AutoReq: no
 BuildArch:        aarch64 x86_64
 Name:             euler-copilot-web
 Version:          0.9.6
-Release:          1%{?dist}
+Release:          2%{?dist}
 License:          MulanPSL-2.0
 Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
@@ -34,18 +34,10 @@ Packager:         openEuler <contact@openeuler.org>
 BuildRequires:    curl
 BuildRequires:    zstd
 
+Requires:         nginx
+
 %description
 openEuler 智能化解决方案 Web 前端
-
-
-%package -n       euler-copilot-web-nginx-config
-# nginx 配置文件
-Summary:          openEuler 智能化解决方案前端 nginx 配置
-Requires:         nginx
-Requires:         euler-copilot-web = %{version}-%{release}
-
-%description -n   euler-copilot-web-nginx-config
-openEuler 智能化解决方案前端的 nginx 配置文件，适用于 Web 前端部署。
 
 %package -n       euler-copilot-desktop
 # Electron 客户端
@@ -134,7 +126,7 @@ mkdir -p %{buildroot}/usr/share/euler-copilot-web
 cp -a %{_builddir}/%{name}-%{version}/dist/. %{buildroot}/usr/share/euler-copilot-web/
 chmod -R a+rX %{buildroot}/usr/share/euler-copilot-web
 
-# nginx 配置子包安装
+# nginx 配置安装
 mkdir -p %{buildroot}/etc/nginx/conf.d
 cp -a %{_builddir}/%{name}-%{version}/build/linux/nginx.conf.local.tmpl %{buildroot}/etc/nginx/conf.d/euler-copilot-web.conf
 
@@ -173,10 +165,6 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 %dir /usr/share/euler-copilot-web/assets
 %attr(0644, root, root) /usr/share/euler-copilot-web/*.*
 %attr(0644, root, root) /usr/share/euler-copilot-web/assets/*
-
-
-%files -n euler-copilot-web-nginx-config
-# nginx 配置文件
 %config(noreplace) /etc/nginx/conf.d/euler-copilot-web.conf
 
 
@@ -197,13 +185,49 @@ cp -a %{_builddir}/%{name}-%{version}/build/icons/512x512.png %{buildroot}/usr/s
 %attr(0644, root, root) /usr/share/icons/hicolor/512x512/apps/euler-copilot-desktop.png
 
 
-# nginx 配置子包安装后重启 nginx
-%post -n euler-copilot-web-nginx-config
+%post
 #!/bin/bash
-# 安装后检测 nginx 服务，若已运行则重启，否则跳过
-if systemctl is-active --quiet nginx; then
-    systemctl restart nginx
-fi
+echo "========================================================================"
+echo "openEuler Intelligence 前端服务安装完成！"
+echo ""
+echo "已安装 nginx 配置文件: /etc/nginx/conf.d/euler-copilot-web.conf"
+echo "Web 文件安装目录: /usr/share/euler-copilot-web"
+echo ""
+echo "服务配置信息："
+echo "  - Web 服务端口: 8080"
+echo "  - 访问路径:"
+echo "    * 主页: http://your-server:8080/"
+echo "    * 登录页: http://your-server:8080/login"
+echo "  - API 代理: http://your-server:8080/api/ -> http://127.0.0.1:8002/api/"
+echo "  - 静态资源: /assets/ (30天缓存)"
+echo ""
+echo "安全特性: XSS防护、内容类型保护、HSTS、CSP策略已启用"
+echo ""
+echo "请检查配置文件并手动启动或重启 nginx 服务："
+echo "  # systemctl start nginx   (首次启动)"
+echo "  # systemctl restart nginx (重启服务)"
+echo "  # systemctl enable nginx  (开机自启)"
+echo ""
+echo "注意: 请确保后端 API 服务在 127.0.0.1:8002 端口运行"
+echo "========================================================================"
+
+
+%postun
+#!/bin/bash
+echo "========================================================================"
+echo "openEuler Intelligence 前端服务已卸载！"
+echo ""
+echo "已移除的文件："
+echo "  - Web 文件目录: /usr/share/euler-copilot-web"
+echo "  - nginx 配置文件: /etc/nginx/conf.d/euler-copilot-web.conf"
+echo ""
+echo "服务影响："
+echo "  - Web 服务 (端口 8080) 已停止"
+echo "  - 如需继续使用 nginx，请手动重启服务:"
+echo "    # systemctl restart nginx"
+echo ""
+echo "注意: 若过去已手动安装 nginx，nginx 服务本身未被卸载，仅移除了相关配置"
+echo "========================================================================"
 
 
 %post -n euler-copilot-desktop -p /bin/sh
@@ -285,8 +309,8 @@ fi
 
 
 %changelog
-* Tue Jun 03 2025 openEuler <contact@openeuler.org> - 0.9.6-2
-- 拆分 nginx 配置和重启服务到 euler-copilot-web-nginx-config 子包
+* Tue Jun 04 2025 openEuler <contact@openeuler.org> - 0.9.6-2
+- 增加安装后提示信息
 
 * Thu Apr 17 2025 openEuler <contact@openeuler.org> - 0.9.6-1
 - Initial release
