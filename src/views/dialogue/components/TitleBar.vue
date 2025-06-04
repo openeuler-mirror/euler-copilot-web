@@ -45,7 +45,17 @@ const { theme } = storeToRefs(useChangeThemeStore());
 
 const changeTheme = () => {
   const { updateTheme } = useChangeThemeStore();
-  updateTheme(theme.value === 'light' ? 'dark' : 'light');
+  const newTheme = theme.value === 'light' ? 'dark' : 'light';
+  updateTheme(newTheme);
+  // 同步主题到iframe
+  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
+  if (iframe?.contentWindow) {
+    const data = {
+      theme: newTheme,
+      type: 'changeTheme',
+    };
+    iframe.contentWindow.postMessage(data, iframeTarget.value);
+  }
 };
 
 const logoutHandler = () => {
