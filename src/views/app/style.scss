@@ -69,10 +69,10 @@
         width: fit-content;
         display: flex;
         flex-wrap: wrap;
+        align-content: flex-start;
         box-sizing: border-box;
         gap: 16px;
-        max-height: calc(100vh - 370px);
-        min-height: calc(100vh - 370px);
+        height: calc(100vh - 370px);
         overflow-y: auto;
         .appCenterCardSingle {
           box-sizing: border-box;

@@ -26,6 +26,7 @@ export default {
     new_api_key: '新建 API KEY',
     secret_key: '密钥',
     secret_key_desc: '密钥描述',
+    confirm_to_delete: '确定删除此模型吗？',
     placeHolder: {
       url: '请输入 URL',
       api_key: '请输入 API KEY',

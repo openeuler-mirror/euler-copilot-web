@@ -157,8 +157,11 @@
       border-radius: 4px;
     }
     .stancesName {
-      flex: 1;
+      width: 100%;
       text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     &:hover {
       background-color: var(--flow-bg-color);
@@ -349,7 +352,7 @@
             rgba(90, 179, 255, 0.15)
           );
         }
-        .warnTiangleIcon{
+        .warnTiangleIcon {
           font-size: 20px;
         }
         .warnTiangleIcon svg path {
@@ -402,7 +405,7 @@
         font-size: 12px;
         color: var(--o-text-color-tertiary);
       }
-      .descSign{
+      .descSign {
         color: red !important;
         font-weight: 600 !important;
       }
@@ -512,7 +515,7 @@
   .nodeIdShow {
     display: flex;
     align-items: center;
-    width: 50%;
+    gap: 8px;
     .nodeIdText {
       flex: 1;
       color: #575d6c;

@@ -1,11 +1,14 @@
 <script lang="ts" setup>
 import { CaretRight } from '@element-plus/icons-vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { api } from '@/apis';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
 import lightNull from '@/assets/svgs/light_null.svg';
+import DarkNull from '@/assets/svgs/dark_null.svg';
 import { ElEmpty } from 'element-plus';
 import i18n from 'src/i18n';
+import { useChangeThemeStore } from '@/store';
+import { storeToRefs } from 'pinia';
 
 interface McpDetail {
   serviceId: string;
@@ -49,6 +52,12 @@ const emits = defineEmits<{
 }>();
 
 const { t } = i18n.global;
+
+const { theme } = storeToRefs(useChangeThemeStore());
+
+const emptyImg = computed(() =>
+  theme.value === 'light' ? lightNull : DarkNull,
+);
 
 const activeTab = ref<'description' | 'tools'>('description');
 
@@ -197,7 +206,7 @@ watch(
 
               <ElEmpty
                 v-else
-                :image="lightNull"
+                :image="emptyImg"
                 :description="$t('common.null')"
                 style="height: 100%"
               />

@@ -26,6 +26,7 @@ export default {
     new_api_key: 'New API KEY',
     secret_key: 'Secret Key',
     secret_key_desc: 'Description',
+    confirm_to_delete: 'Confirm to delete this model?',
     placeHolder: {
       url: 'Please enter the URL',
       api_key: 'Please enter the API KEY',

@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import * as monaco from 'monaco-editor';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { useChangeThemeStore } from '@/store';
 
 const props = defineProps<{
   code?: string;
@@ -13,6 +15,8 @@ defineExpose({
   getJsonValue,
   setJsonValue,
 });
+
+const { theme } = storeToRefs(useChangeThemeStore());
 
 const monacoEditorRef = ref<HTMLElement | null>(null);
 let editor: monaco.editor.IStandaloneCodeEditor | undefined = undefined;
@@ -44,7 +48,7 @@ function initMonacoEditor() {
   editor = monaco.editor.create(monacoEditorRef.value, {
     value: props.code || '{\n  \n}',
     language: 'json',
-    theme: 'vs',
+    theme: theme.value === 'dark' ? 'vs-dark' : 'vs',
     tabSize: 4,
     automaticLayout: true,
     insertSpaces: true,
@@ -53,6 +57,21 @@ function initMonacoEditor() {
   });
 }
 
+watch(
+  () => theme.value,
+  () => {
+    if (editor) {
+      editor.updateOptions({
+        theme: theme.value === 'dark' ? 'vs-dark' : 'vs',
+      });
+    }
+  },
+  {
+    deep: true,
+    immediate: true,
+  },
+);
+
 onMounted(() => {
   initMonacoEditor();
 });
@@ -60,6 +79,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (editor) {
     editor.dispose();
+    editor = undefined;
   }
 });
 </script>
@@ -69,7 +89,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .editor-container {
   width: 100%;
-  height: 100%;
+  height: 355px;
 
   :deep(.monaco-editor) {
     outline: none;

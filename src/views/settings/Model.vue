@@ -1,12 +1,15 @@
 <script lang="ts" setup>
-import { markRaw, onMounted, ref, watch } from 'vue';
+import { computed, markRaw, onMounted, ref, watch } from 'vue';
 import ModelCard from './components/ModelCard.vue';
 import lightNull from '@/assets/svgs/light_null.svg';
+import DarkNull from '@/assets/svgs/dark_null.svg';
 import { ElEmpty, ElMessage, ElMessageBox } from 'element-plus';
 import AddModel, { ModelProvider } from './components/AddModel.vue';
 import { IconAlarm } from '@computing/opendesign-icons';
 import i18n from '@/i18n';
 import { api } from '@/apis';
+import { storeToRefs } from 'pinia';
+import { useChangeThemeStore } from '@/store';
 
 interface Model {
   llmId: string;
@@ -19,6 +22,12 @@ interface Model {
 }
 
 const { t } = i18n.global;
+
+const { theme } = storeToRefs(useChangeThemeStore());
+
+const emptyImg = computed(() =>
+  theme.value === 'light' ? lightNull : DarkNull,
+);
 
 const models = ref<Model[]>([]);
 
@@ -63,14 +72,16 @@ const beDeleteModelId = ref('');
 
 async function handleDelete(modelId: string) {
   if (!modelId) return;
-  ElMessageBox.confirm('确定删除此模型吗？', '提示', {
+  ElMessageBox.confirm(t('settings.confirm_to_delete'), t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(async () => {
-    const [err, _] = await api.deleteModel(modelId);
+    const [err] = await api.deleteModel(modelId);
     if (err) ElMessage.error(err.message);
     else {
-      ElMessage.success('删除成功');
+      ElMessage.success(t('common.delete_success'));
       queryModels();
       beDeleteModelId.value = '';
       isDeleteVisible.value = false;
@@ -102,6 +113,7 @@ onMounted(() => {
         v-for="item in models"
         :name="item.modelName"
         :icon="item.icon"
+        :key="item.llmId"
         size="small"
       >
         <template #headerRight>
@@ -131,6 +143,7 @@ onMounted(() => {
         :name="item.provider"
         :icon="item.icon"
         :description="item.description"
+        :key="item.provider"
       >
         <template #cardFooter>
           <div class="model-provider-footer">
@@ -139,7 +152,7 @@ onMounted(() => {
         </template>
       </ModelCard>
     </div>
-    <ElEmpty v-else :image="lightNull" :description="t('common.null')" />
+    <ElEmpty v-else :image="emptyImg" :description="t('common.null')" />
   </div>
 
   <AddModel
@@ -149,20 +162,6 @@ onMounted(() => {
     :model="selectedModel"
     :provider="selectedProvider"
   />
-
-  <el-dialog v-model="isDeleteVisible" title="提示" width="432">
-    确定删除此模型吗？
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="isDeleteVisible = false">
-          {{ t('common.cancel') }}
-        </el-button>
-        <el-button type="primary" @click="">
-          {{ t('common.delete') }}
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
 </template>
 <style lang="scss" scoped>
 .model {
