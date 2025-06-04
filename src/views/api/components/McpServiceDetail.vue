@@ -243,6 +243,7 @@ watch(
       font-size: 16px;
       font-weight: 700;
       line-height: 24px;
+      color: var(--o-text-color-primary);
     }
     .brief-description {
       max-width: 550px;
@@ -266,7 +267,6 @@ watch(
       --o-tabs-item-padding: 5px 16px 0 5px;
       --o-tabs-line-height: 32px;
       --o-tabs-color_active: rgb(99, 149, 253);
-      --o-text-color-secondary: #000;
       --o-tabs-item-max-width: none;
 
       .description {

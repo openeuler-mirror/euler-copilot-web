@@ -168,14 +168,12 @@
                         <div class="apiCenterCardUser">@{{ item.author }}</div>
                         <div
                           class="apiCenterCardOps"
-                          v-if="
-                            userinfo.user_sub === item.author ||
-                            pluginType === 'mcp'
-                          "
+                          v-if="userinfo.user_sub === item.author"
                         >
                           <div v-if="item.status !== 'installing'">
                             <div>
                               <el-button
+                                v-if="pluginType === 'mcp'"
                                 text
                                 @click.stop="
                                   onActiveService(item.serviceId, item.isActive)
@@ -189,7 +187,13 @@
                               </el-button>
                               <el-button
                                 text
-                                @click.stop="onOpenMcpDrawer(item.serviceId)"
+                                @click.stop="
+                                  openSidebar(
+                                    'edit',
+                                    item.serviceId,
+                                    pluginType,
+                                  )
+                                "
                               >
                                 {{ $t('semantic.interface_edit') }}
                               </el-button>
@@ -226,24 +230,23 @@
         :before-close="handleClose"
       >
         <div class="drawerContent">
-          <div v-if="actions === 'upload'" style="height: 100%">
+          <div style="height: 100%">
             <Upload
+              v-if="actions === 'upload'"
               type="upload"
               @closeDrawer="handleClose"
               :serviceId="selectedServiceId"
             />
-          </div>
-          <div v-if="actions === 'get'">
             <Upload
+              v-if="actions === 'get'"
               type="get"
               @closeDrawer="handleClose"
               :serviceId="selectedServiceId"
               :getServiceJson="getServiceJson"
               :getServiceName="getServiceName"
             />
-          </div>
-          <div v-if="actions === 'edit'">
             <Upload
+              v-if="actions === 'edit'"
               type="edit"
               @closeDrawer="handleClose"
               :serviceId="selectedServiceId"
@@ -416,6 +419,10 @@ const openSidebar = (
   } else if (type === 'mcp') {
     selectedServiceId.value = id;
     if (action === 'edit') {
+      if (id) {
+        selectedServiceId.value = id;
+      }
+      createPopover.value?.hide();
       mcpDrawerVisible.value = true;
     } else if (action === 'get') {
       mcpDetailDrawerVisible.value = true;
