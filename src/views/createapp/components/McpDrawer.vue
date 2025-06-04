@@ -1,11 +1,14 @@
 <script lang="ts" setup>
 import { Search } from '@element-plus/icons-vue';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { api } from '@/apis';
 import { ElMessage } from 'element-plus';
 import i18n from '@/i18n';
 import { ElEmpty } from 'element-plus';
 import lightNull from '@/assets/svgs/light_null.svg';
+import DarkNull from '@/assets/svgs/dark_null.svg';
+import { storeToRefs } from 'pinia';
+import { useChangeThemeStore } from '@/store';
 
 const { t } = i18n.global;
 
@@ -36,6 +39,12 @@ const emits = defineEmits<{
   (e: 'update:visible', visible: boolean): void;
   (e: 'confirm', mcpList: Mcp[]): void;
 }>();
+
+const { theme } = storeToRefs(useChangeThemeStore());
+
+const emptyImg = computed(() =>
+  theme.value === 'light' ? lightNull : DarkNull,
+);
 
 const mcpList = ref<McpWithChecked[]>([]);
 
@@ -122,7 +131,7 @@ onMounted(() => {
         </div>
         <ElEmpty
           v-else
-          :image="lightNull"
+          :image="emptyImg"
           :description="$t('common.null')"
           style="height: 100%"
         />

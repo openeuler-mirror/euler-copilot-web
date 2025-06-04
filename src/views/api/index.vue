@@ -30,6 +30,7 @@
           </el-input>
 
           <el-popover
+            ref="createPopover"
             :popper-style="{
               transform: 'translateY(-10px)',
               padding: '4px 0px',
@@ -302,6 +303,8 @@ import { writeText } from '@/utils';
 
 const { t } = i18n.global;
 
+const createPopover = ref();
+
 const mcpDrawerVisible = ref(false);
 const mcpDetailDrawerVisible = ref(false);
 
@@ -309,6 +312,7 @@ function onOpenMcpDrawer(id?: string) {
   if (id) {
     selectedServiceId.value = id;
   }
+  createPopover.value?.hide();
   mcpDrawerVisible.value = true;
 }
 
@@ -391,6 +395,7 @@ const openSidebar = (
   id: string,
   type: 'semantic_interface' | 'mcp',
 ) => {
+  createPopover.value?.hide();
   if (type === 'semantic_interface') {
     drawer.value = true;
     actions.value = action;

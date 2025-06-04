@@ -333,8 +333,6 @@ watch(
 
         .editor {
           width: 100%;
-          height: 450px;
-          flex: 1;
         }
       }
     }
