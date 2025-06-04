@@ -1,10 +1,11 @@
 [Desktop Entry]
 Name=openEuler Intelligence
+Name[zh_CN]=openEuler 智能化解决方案
 Exec=/opt/Intelligence/euler-copilot-desktop %U
 Terminal=false
 Type=Application
 Icon=euler-copilot-desktop
-StartupWMClass=Intelligence
+StartupWMClass=openEuler Intelligence
 Comment=openEuler Intelligence Desktop Client
 Comment[zh]=openEuler 智能化解决方案桌面客户端
 Comment[zh_CN]=openEuler 智能化解决方案桌面客户端
@@ -13,4 +14,4 @@ Comment[zh_HK]=openEuler 智能化解決方案桌面應用程式
 Comment[zh_HK.UTF-8]=openEuler 智能化解決方案桌面應用程式
 Comment[zh_TW]=openEuler 智能化解決方案桌面軟體
 Comment[zh_TW.UTF-8]=openEuler 智能化解決方案桌面軟體
-Categories=Utility;
+Categories=Development;Utility;Network;
