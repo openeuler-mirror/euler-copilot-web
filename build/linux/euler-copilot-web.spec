@@ -309,7 +309,7 @@ fi
 
 
 %changelog
-* Tue Jun 04 2025 openEuler <contact@openeuler.org> - 0.9.6-2
+* Wed Jun 04 2025 openEuler <contact@openeuler.org> - 0.9.6-2
 - 增加安装后提示信息
 
 * Thu Apr 17 2025 openEuler <contact@openeuler.org> - 0.9.6-1
