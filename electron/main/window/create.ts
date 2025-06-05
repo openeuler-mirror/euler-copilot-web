@@ -11,7 +11,7 @@ import path from 'node:path';
 import * as electron from 'electron';
 import { BrowserWindow, app, ipcMain, Menu } from 'electron';
 import { options as allWindow } from './options';
-import { updateConf } from '../common/conf';
+import { updateConf } from '../common/cache-conf';
 import { isLinux } from '../common/platform';
 
 // 存储所有创建的窗口实例，用于全局访问

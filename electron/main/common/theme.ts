@@ -8,7 +8,7 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { nativeTheme } from 'electron';
-import { updateConf } from './conf';
+import { updateConf } from './cache-conf';
 
 export type ThemeType = 'system' | 'light' | 'dark';
 
