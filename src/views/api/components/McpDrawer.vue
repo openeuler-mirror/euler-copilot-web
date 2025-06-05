@@ -30,14 +30,14 @@ const { t } = i18n.global;
 const COMMAND_TEMPLATE = {
   command: '',
   args: [],
-  env: [],
+  env: {},
   autoApprove: [],
   autoInstall: true,
   disabled: false,
 };
 const URL_TEMPLATE = {
   url: '',
-  env: [],
+  env: {},
   autoApprove: [],
   autoInstall: true,
   disabled: false,
