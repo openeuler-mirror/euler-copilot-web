@@ -43,13 +43,13 @@ export function createWelcomeWindow(): BrowserWindow {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, '../../preload/welcome.js'), // 欢迎界面专用预加载脚本
+      preload: path.join(__dirname, '../preload/welcome.js'), // 欢迎界面专用预加载脚本
     },
     show: false,
   });
 
   // 加载欢迎界面的 HTML 文件
-  welcomeWindow.loadFile(path.join(__dirname, '../../welcome/index.html'));
+  welcomeWindow.loadFile(path.join(__dirname, '../welcome/index.html'));
 
   // 开发模式下可以打开开发者工具
   if (process.env.NODE_ENV === 'development') {
