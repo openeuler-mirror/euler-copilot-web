@@ -8,13 +8,14 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import { app, session, ipcMain, Menu, BrowserWindow } from 'electron';
-import { createDefaultWindow, createChatWindow, createTray } from './window';
-import { cachePath, commonCacheConfPath } from './common/conf';
 import {
-  mkdirpIgnoreError,
-  getUserDefinedConf,
-  ensureConfigFile,
-} from './common/fs-utils';
+  createDefaultWindow,
+  createChatWindow,
+  createTray,
+  checkAndShowWelcomeIfNeeded,
+} from './window';
+import { cachePath, commonCacheConfPath } from './common/cache-conf';
+import { mkdirpIgnoreError, getUserDefinedConf } from './common/fs-utils';
 import { getOsLocale, resolveNlsConfiguration } from './common/locale';
 import { resolveThemeConfiguration, setApplicationTheme } from './common/theme';
 import { productObj } from './common/product';
@@ -25,8 +26,6 @@ import {
 } from './common/shortcuts';
 import { buildAppMenu } from './common/menu';
 import { registerIpcListeners } from './common/ipc';
-import * as path from 'node:path';
-import { homedir } from 'node:os';
 
 // 允许本地部署时使用无效证书，仅在 Electron 主进程下生效
 if (process.versions.electron) {
@@ -41,30 +40,6 @@ let isQuitting = false;
 
 // 获取系统语言环境
 const osLocale = getOsLocale();
-
-// 启动时确保 smart-shell.json 存在
-const configDir = path.join(
-  process.platform === 'linux'
-    ? path.join(
-        process.env['XDG_CONFIG_HOME'] || path.join(homedir(), '.config'),
-      )
-    : path.join(homedir(), '.config'),
-  'eulercopilot',
-);
-const configPath = path.join(configDir, 'smart-shell.json');
-const defaultConfig = {
-  backend: 'openai',
-  openai: {
-    base_url: '',
-    model: '',
-    api_key: '',
-  },
-  eulercopilot: {
-    base_url: 'https://www.eulercopilot.local',
-    api_key: '',
-  },
-};
-ensureConfigFile(configPath, defaultConfig);
 
 // 应用初始化
 app.once('ready', () => {
@@ -113,6 +88,28 @@ app.on('activate', () => {
  */
 async function onReady() {
   try {
+    // 检查配置文件是否存在，如果不存在则显示欢迎界面
+    const shouldShowWelcome = checkAndShowWelcomeIfNeeded();
+
+    if (shouldShowWelcome) {
+      console.log('First time startup, showing welcome window');
+      // 如果是首次启动，显示欢迎界面后等待用户完成配置
+      // 用户完成配置时会触发 continueAppStartup 函数
+      return;
+    }
+
+    // 继续正常的应用启动流程
+    await continueAppStartup();
+  } catch (error) {
+    console.error('Application startup error:', error);
+  }
+}
+
+/**
+ * 继续应用启动（在配置完成后调用）
+ */
+export async function continueAppStartup() {
+  try {
     // 初始化缓存目录和配置
     await mkdirpIgnoreError(cachePath);
     const commonCacheConf = await getUserDefinedConf(commonCacheConfPath);
@@ -155,7 +152,7 @@ async function onReady() {
       );
     }
   } catch (error) {
-    console.error('Application startup error:', error);
+    console.error('Continue app startup error:', error);
   }
 }
 
@@ -210,45 +207,3 @@ async function startup() {
     chatWindow.hide();
   });
 }
-
-// 定义配置类型，避免使用 any
-interface Config {
-  backend: string;
-  openai: {
-    base_url: string;
-    model: string;
-    api_key: string;
-  };
-  eulercopilot: {
-    base_url: string;
-    api_key: string;
-  };
-}
-
-// 注册获取代理URL的IPC
-ipcMain.handle('copilot:get-proxy-url', async () => {
-  try {
-    // 兼容Linux/macOS，配置文件路径
-    const configDir = path.join(
-      process.platform === 'linux'
-        ? path.join(
-            process.env['XDG_CONFIG_HOME'] || path.join(homedir(), '.config'),
-          )
-        : path.join(homedir(), '.config'),
-      'eulercopilot',
-    );
-    const configPath = path.join(configDir, 'smart-shell.json');
-    const confRaw = getUserDefinedConf(configPath);
-    const conf = confRaw as unknown as Config | undefined;
-    if (
-      conf &&
-      conf.eulercopilot &&
-      typeof conf.eulercopilot.base_url === 'string'
-    ) {
-      return conf.eulercopilot.base_url || '';
-    }
-    return '';
-  } catch {
-    return '';
-  }
-});

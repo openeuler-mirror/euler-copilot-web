@@ -11,9 +11,27 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { createDefaultWindow, createChatWindow } from './create';
 import { createTray } from './tray'; // 导入createTray函数
+import {
+  createWelcomeWindow,
+  showWelcomeWindow,
+  hideWelcomeWindow,
+  closeWelcomeWindow,
+  checkAndShowWelcomeIfNeeded,
+  completeWelcomeFlow,
+} from './welcome';
 
 // 重新导出以便在index.ts中使用
-export { createDefaultWindow, createChatWindow, createTray };
+export {
+  createDefaultWindow,
+  createChatWindow,
+  createTray,
+  createWelcomeWindow,
+  showWelcomeWindow,
+  hideWelcomeWindow,
+  closeWelcomeWindow,
+  checkAndShowWelcomeIfNeeded,
+  completeWelcomeFlow,
+};
 
 // 存储所有窗口引用
 const allWindows: BrowserWindow[] = [];

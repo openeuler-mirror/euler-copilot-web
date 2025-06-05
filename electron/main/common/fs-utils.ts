@@ -8,7 +8,6 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 import fs from 'node:fs';
-import path from 'node:path';
 
 /**
  * 创建目录（如果不存在）
@@ -49,24 +48,5 @@ export function getUserDefinedConf(dir: string): Record<string, unknown> {
   } catch {
     // Ignore error
     return {};
-  }
-}
-
-/**
- * 检查配置文件是否存在，不存在则创建默认内容
- * @param filePath 配置文件路径
- * @param defaultContent 默认内容对象
- */
-export function ensureConfigFile(filePath: string, defaultContent: object) {
-  try {
-    const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(defaultContent, null, 4));
-    }
-  } catch {
-    // ignore
   }
 }

@@ -69,7 +69,11 @@ export const writeText = (text: string): void => {
     textArea.focus();
     textArea.select();
     new Promise<void>((res, rej) => {
-      document.execCommand('copy') ? res() : rej(new Error(i18n.global.t('semantic.copyFailed')));
+      if (document.execCommand('copy')) {
+        res();
+      } else {
+        rej(new Error(i18n.global.t('semantic.copyFailed')));
+      }
       textArea.remove();
     });
   }
@@ -80,13 +84,17 @@ export const writeText = (text: string): void => {
  */
 export async function getBaseProxyUrl(): Promise<string> {
   // Electron 生产环境（file:协议）读取配置
-  if (
-    window.eulercopilot &&
-    typeof window.eulercopilot.ipcRenderer?.getProxyUrl === 'function' &&
-    window.location.protocol === 'file:'
-  ) {
-    const url = await window.eulercopilot.ipcRenderer.getProxyUrl();
-    if (url) return url;
+  if (window.eulercopilot && window.location.protocol === 'file:') {
+    try {
+      if (typeof window.eulercopilot.config?.get === 'function') {
+        const config = await window.eulercopilot.config.get();
+        if (config?.base_url) {
+          return config.base_url;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get base URL from config:', error);
+    }
   }
   // 本地开发环境（localhost:3000），直接返回空字符串，确保 axios 只拼接 path
   if (window.location.hostname === 'localhost') {
@@ -102,13 +110,19 @@ export async function getBaseProxyUrl(): Promise<string> {
  */
 export async function getBaseUrl(): Promise<string> {
   // Electron 生产环境（file:协议）读取配置
-  if (
-    window.eulercopilot &&
-    typeof window.eulercopilot.ipcRenderer?.getProxyUrl === 'function'
-  ) {
-    const url = await window.eulercopilot.ipcRenderer.getProxyUrl();
-    if (url) return url;
+  if (window.eulercopilot) {
+    try {
+      if (typeof window.eulercopilot.config?.get === 'function') {
+        const config = await window.eulercopilot.config.get();
+        if (config?.base_url) {
+          return config.base_url;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get base URL from config:', error);
+    }
   }
+
   // VITE_BASE_API_URL 未定义时返回空字符串
   const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
   return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';

@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import { app } from 'electron';
 import type { INLSConfiguration } from './nls';
-import { updateConf } from './conf';
+import { updateConf } from './cache-conf';
 
 /**
  * 处理中文语言环境
