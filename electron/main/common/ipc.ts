@@ -194,7 +194,7 @@ async function validateServerConnection(url: string): Promise<{
     const requestModule = isHttps ? https : http;
 
     return new Promise((resolve) => {
-      const timeout = 10000; // 10秒超时
+      const timeout = 1500; // 1.5秒超时
 
       const options = {
         hostname: parsedUrl.hostname,

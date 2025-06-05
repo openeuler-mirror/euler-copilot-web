@@ -7,158 +7,131 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { ipcRenderer, contextBridge } from 'electron';
 
-function validateIPC(channel: string): true | never {
-  if (!channel || !channel.startsWith('copilot:')) {
-    // 允许窗口状态变化事件通过验证
-    if (
-      channel === 'window-maximized-change' ||
-      channel === 'window-is-maximized'
-    ) {
-      return true;
-    }
-    throw new Error(`Unsupported event IPC channel '${channel}'`);
-  }
+import { contextBridge } from 'electron';
+import {
+  safeIPC,
+  sharedConfigAPI,
+  windowAPI,
+  systemAPI,
+  themeAPI,
+  utilsAPI,
+} from './shared';
+import type { DesktopConfig } from './types';
 
-  return true;
-}
+/**
+ * 主窗口 preload 脚本
+ * 提供主应用所需的所有 API
+ */
 
 const globals = {
-  ipcRenderer: {
-    invoke(channel: string, ...args: any[]): Promise<any> {
-      validateIPC(channel);
-      return ipcRenderer.invoke(channel, ...args);
-    },
+  // 原始 IPC 接口（兼容性）
+  ipcRenderer: safeIPC,
 
-    // 添加事件监听方法
-    on(channel: string, listener: (...args: any[]) => void): void {
-      validateIPC(channel);
-      ipcRenderer.on(channel, (event, ...args) => listener(...args));
-    },
-
-    // 添加一次性事件监听方法
-    once(channel: string, listener: (...args: any[]) => void): void {
-      validateIPC(channel);
-      ipcRenderer.once(channel, (event, ...args) => listener(...args));
-    },
-
-    // 添加移除特定事件监听器的方法
-    removeListener(channel: string, listener: (...args: any[]) => void): void {
-      validateIPC(channel);
-      ipcRenderer.removeListener(channel, listener);
-    },
-
-    // 添加移除所有事件监听器的方法
-    removeAllListeners(channel: string): void {
-      validateIPC(channel);
-      ipcRenderer.removeAllListeners(channel);
-    },
-  },
-
-  // 配置管理 API
+  // 配置管理（主程序完整功能）
   config: {
-    // 获取完整配置
-    get: async (): Promise<any> => {
-      return await ipcRenderer.invoke('copilot:get-config');
+    /**
+     * 获取当前配置
+     */
+    get: async (): Promise<DesktopConfig | null> => {
+      try {
+        return await safeIPC.invoke('copilot:get-config');
+      } catch (error) {
+        console.error('Failed to get config:', error);
+        return null;
+      }
     },
 
-    // 更新配置（部分更新）
-    update: async (updates: Record<string, any>): Promise<any> => {
-      return await ipcRenderer.invoke('copilot:update-config', updates);
+    /**
+     * 更新配置
+     */
+    update: async (
+      updates: Partial<DesktopConfig>,
+    ): Promise<DesktopConfig | null> => {
+      try {
+        return await safeIPC.invoke('copilot:update-config', updates);
+      } catch (error) {
+        console.error('Failed to update config:', error);
+        return null;
+      }
     },
 
-    // 重置配置
-    reset: async (): Promise<any> => {
-      return await ipcRenderer.invoke('copilot:reset-config');
+    /**
+     * 重置配置为默认值
+     */
+    reset: async (): Promise<DesktopConfig | null> => {
+      try {
+        return await safeIPC.invoke('copilot:reset-config');
+      } catch (error) {
+        console.error('Failed to reset config:', error);
+        return null;
+      }
     },
 
-    // 设置代理 URL
-    setProxyUrl: async (url: string): Promise<boolean> => {
-      return await ipcRenderer.invoke('copilot:set-proxy-url', url);
-    },
+    /**
+     * 设置代理URL
+     */
+    setProxyUrl: sharedConfigAPI.setProxyUrl,
 
-    // 获取代理 URL
+    /**
+     * 获取代理URL
+     */
     getProxyUrl: async (): Promise<string> => {
-      return await ipcRenderer.invoke('copilot:get-proxy-url');
+      try {
+        return await safeIPC.invoke('copilot:get-proxy-url');
+      } catch (error) {
+        console.error('Failed to get proxy URL:', error);
+        return '';
+      }
     },
+
+    /**
+     * 验证服务器连接（统一接口）
+     */
+    validateServer: sharedConfigAPI.validateServer,
   },
 
-  // 欢迎界面 API
-  welcome: {
-    // 显示欢迎界面
-    show: async (): Promise<boolean> => {
-      return await ipcRenderer.invoke('copilot:show-welcome');
-    },
-
-    // 完成欢迎流程
-    complete: async (): Promise<boolean> => {
-      return await ipcRenderer.invoke('copilot:complete-welcome');
-    },
-  },
-
-  // 窗口控制 API
+  // 窗口控制
   window: {
-    // 窗口控制
+    // 统一的窗口控制接口
     control: async (
       command: 'minimize' | 'maximize' | 'close',
     ): Promise<void> => {
-      return await ipcRenderer.invoke('copilot:window-control', command);
+      switch (command) {
+        case 'minimize':
+          return await windowAPI.minimize();
+        case 'maximize':
+          return await windowAPI.maximize();
+        case 'close':
+          return await windowAPI.close();
+        default:
+          throw new Error(`Unknown window command: ${command}`);
+      }
     },
 
-    // 检查窗口是否最大化
-    isMaximized: async (): Promise<boolean> => {
-      return await ipcRenderer.invoke('copilot:window-is-maximized');
-    },
-
-    // 监听窗口最大化状态变化
-    onMaximizedChange: (callback: (isMaximized: boolean) => void): void => {
-      ipcRenderer.on('window-maximized-change', (event, isMaximized) =>
-        callback(isMaximized),
-      );
-    },
-
-    // 移除窗口最大化状态变化监听
-    offMaximizedChange: (): void => {
-      ipcRenderer.removeAllListeners('window-maximized-change');
-    },
+    // 单独的方法（向后兼容）
+    ...windowAPI,
   },
 
-  // 主题 API
-  theme: {
-    // 切换主题
-    toggle: async (): Promise<any> => {
-      return await ipcRenderer.invoke('copilot:toggle');
-    },
+  // 主题管理
+  theme: themeAPI,
 
-    // 设置系统主题
-    setSystem: async (): Promise<any> => {
-      return await ipcRenderer.invoke('copilot:system');
-    },
-  },
+  // 系统信息
+  process: systemAPI,
 
-  process: {
-    get platform() {
-      return process.platform;
-    },
-    get arch() {
-      return process.arch;
-    },
-    get versions() {
-      return process.versions;
-    },
-    get env() {
-      return { ...process.env };
-    },
-  },
+  // 实用工具
+  utils: utilsAPI,
 };
 
+// 暴露 API 到渲染进程
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('eulercopilot', globals);
   } catch (error) {
-    console.error(error);
+    console.error('Failed to expose main API:', error);
   }
 } else {
   (window as any).eulercopilot = globals;
 }
+
+console.log('Main preload script loaded');
