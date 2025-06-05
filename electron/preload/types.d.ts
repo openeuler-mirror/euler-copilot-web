@@ -10,8 +10,15 @@ export interface DesktopConfig {
   [key: string]: any;
 }
 
+export interface ServerValidationResult {
+  isValid: boolean;
+  error?: string;
+  status?: number;
+  responseTime?: number;
+}
+
 export interface DesktopAppAPI {
-  // IPC 渲染器
+  // IPC 渲染器（原始接口）
   ipcRenderer: {
     invoke(channel: string, ...args: any[]): Promise<any>;
     on(channel: string, listener: (...args: any[]) => void): void;
@@ -22,22 +29,20 @@ export interface DesktopAppAPI {
 
   // 配置管理
   config: {
-    get(): Promise<DesktopConfig>;
-    update(updates: Partial<DesktopConfig>): Promise<DesktopConfig>;
-    reset(): Promise<DesktopConfig>;
+    get(): Promise<DesktopConfig | null>;
+    update(updates: Partial<DesktopConfig>): Promise<DesktopConfig | null>;
+    reset(): Promise<DesktopConfig | null>;
     setProxyUrl(url: string): Promise<boolean>;
     getProxyUrl(): Promise<string>;
-  };
-
-  // 欢迎界面
-  welcome: {
-    show(): Promise<boolean>;
-    complete(): Promise<boolean>;
+    validateServer(url: string): Promise<ServerValidationResult>;
   };
 
   // 窗口控制
   window: {
     control(command: 'minimize' | 'maximize' | 'close'): Promise<void>;
+    close(): Promise<void>;
+    minimize(): Promise<void>;
+    maximize(): Promise<void>;
     isMaximized(): Promise<boolean>;
     onMaximizedChange(callback: (isMaximized: boolean) => void): void;
     offMaximizedChange(): void;
@@ -54,29 +59,29 @@ export interface DesktopAppAPI {
     platform: string;
     arch: string;
     versions: NodeJS.ProcessVersions;
-    env: Record<string, string>;
+    env: Record<string, string | undefined>;
+  };
+
+  // 实用工具
+  utils: {
+    isValidUrl(url: string): boolean;
+    formatUrl(url: string): string;
+    delay(ms: number): Promise<void>;
   };
 }
 
 export interface DesktopAppWelcomeAPI {
-  // 配置管理
+  // 配置管理（代理设置和服务器验证，欢迎界面功能）
   config: {
-    get(): Promise<DesktopConfig | null>;
-    update(updates: Partial<DesktopConfig>): Promise<DesktopConfig | null>;
-    reset(): Promise<DesktopConfig | null>;
-    validateServer(url: string): Promise<boolean>;
+    setProxyUrl(url: string): Promise<boolean>;
+    validateServer(url: string): Promise<ServerValidationResult>;
   };
 
   // 欢迎流程
   welcome: {
+    show(): Promise<boolean>;
     complete(): Promise<boolean>;
     cancel(): Promise<void>;
-  };
-
-  // 窗口控制
-  window: {
-    close(): Promise<void>;
-    minimize(): Promise<void>;
   };
 
   // 系统信息
@@ -84,6 +89,7 @@ export interface DesktopAppWelcomeAPI {
     platform: string;
     arch: string;
     versions: NodeJS.ProcessVersions;
+    env: Record<string, string | undefined>;
   };
 
   // 实用工具
