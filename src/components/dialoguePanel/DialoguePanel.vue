@@ -458,7 +458,7 @@ const { sendQuestion } = useSessionStore();
 
 const chatWithParams = async () => {
   visible.value = false;
-  const question = conversationList.value[props.cid - 1].message;
+  const question = conversationList.value[props.cid - 1].message as string;
   const flowId = conversationList.value[props.cid].flowdata.flowId;
   await sendQuestion(
     undefined,

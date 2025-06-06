@@ -638,7 +638,7 @@ export const useSessionStore = defineStore('conversation', () => {
    */
   const reGenerateAnswer = (
     cid: number,
-    user_selected_app: any[],
+    user_selected_app: string,
     type?: string,
   ): void => {
     const answerInd = conversationList.value.findIndex(

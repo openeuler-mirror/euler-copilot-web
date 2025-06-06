@@ -90,6 +90,10 @@ const workFlowRules = ref({
 const flow = ref(props.flowObj);
 const onCancel = () => {
   isDisabled.value = false;
+  workFlowData.value = {
+    name: '',
+    description: '',
+  }
   emits('handleClose',flow.value.flowId);
 };
 watch(() => props.flowObj,

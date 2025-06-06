@@ -135,6 +135,7 @@ export const useHistorySessionStore = defineStore(
      * @returns
      */
     const getHistorySession = async (): Promise<void> => {
+      const conversationId = localStorage.getItem("conversationId");
       const [err, res] = await api.getSessionRecord();
       const { conversationList } = storeToRefs(useSessionStore());
       if (!err && res) {
@@ -146,7 +147,7 @@ export const useHistorySessionStore = defineStore(
             title: item.title,
             docCount: item.docCount || 0,
             llm: item.llm || {},
-          }));
+          })).filter((item) => item.conversationId !== conversationId);
         if (res.result.conversations.length === 0) {
           await generateSession();
         }

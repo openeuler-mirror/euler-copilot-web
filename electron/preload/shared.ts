@@ -24,7 +24,8 @@ export function validateIPC(channel: string): true | never {
     // 允许窗口状态变化事件通过验证
     if (
       channel === 'window-maximized-change' ||
-      channel === 'window-is-maximized'
+      channel === 'window-is-maximized' ||
+      channel === 'clean:storage'
     ) {
       return true;
     }

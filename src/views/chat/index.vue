@@ -12,14 +12,28 @@ import {
   onBeforeMount,
   onBeforeUnmount,
   h,
-  nextTick,
+  watch,
+  onMounted,
 } from 'vue';
 import { fetchStream } from '@/utils/fetchStream';
 import marked from '@/utils/marked';
 import { useHistorySessionStore, useLangStore } from '@/store';
 import { storeToRefs } from 'pinia';
-
+import { getCookie } from '@/apis/tools';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
+import { api } from 'src/apis';
+
+onMounted(() => {
+  if (window.eulercopilot?.chat?.onCleanStorage) {
+    window.eulercopilot.chat.onCleanStorage(() => {
+      //恢复初始状态
+      conversations.value = [];
+      isStreaming.value = false;
+    });
+  } else {
+    console.error('Electron IPC not available');
+  }
+});
 
 const headerStyles = computed(() => {
   if (window.eulercopilot.process.platform === 'win32') {
@@ -28,6 +42,8 @@ const headerStyles = computed(() => {
     return { paddingRight: '120px' };
   } else if (window.eulercopilot.process.platform === 'darwin') {
     return { paddingLeft: 'calc(50% - 60px)' };
+  } else {
+    return {};
   }
 });
 
@@ -50,6 +66,13 @@ const { scrollToBottom } = useScrollBottom(chatContainerRef, {
   threshold: 15,
 });
 
+function newChat() {
+  //恢复初始状态
+  localStorage.removeItem('conversationId');
+  conversations.value = [];
+  isStreaming.value = false;
+}
+
 function useStream() {
   const isStreaming = ref(false);
 
@@ -58,11 +81,23 @@ function useStream() {
     cId: string,
     lang: 'zh' | 'en' = 'zh',
   ) => {
-    const headers = {};
-    headers['Content-Type'] = 'application/json; charset=UTF-8';
+    const localEc = window.localStorage?.getItem('ECSESSION');
+    const headers = {
+      user: JSON.stringify({ userName: 'openEuler' }),
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-CSRF-Token': getCookie('_csrf_tk') || '',
+      // 从 localStorage 获取 ECSESSION 并设置 Authorization
+      ...(localEc ? { Authorization: `Bearer ${localEc}` } : {}),
+    };
     const body = {
       question: q,
       conversationId: cId,
+      app: {
+        appId: '',
+        flowId: '',
+        params: {},
+        auth: {},
+      },
       language: lang,
       features: {
         context_num: 2,
@@ -74,7 +109,6 @@ function useStream() {
       body: JSON.stringify(body),
       headers,
     });
-
     for await (const chunk of fetchStream({
       readableStream: resp.body!,
     })) {
@@ -154,7 +188,7 @@ function useConversations() {
   return { conversations, setConversations };
 }
 
-function onSend(q: string) {
+async function onSend(q: string) {
   conversations.value.push({
     id: `user-${conversations.value.length / 2 + 1}`,
     content: q,
@@ -162,11 +196,33 @@ function onSend(q: string) {
   });
   isStreaming.value = true;
   scrollToBottom(true);
-  queryStream(q, currentSelectedSession.value, language.value as 'zh' | 'en');
+  console.log('onSend', currentSelectedSession.value);
+  let p = {
+    appId: '',
+    debug: false,
+    llm_id: '',
+    kb_ids: [],
+  };
+  const conversationId = localStorage.getItem('conversationId') || '';
+  if (!conversationId) {
+    await api.createSession(p).then((res) => {
+      localStorage.setItem('conversationId', res[1].result.conversationId);
+      queryStream(q, res[1].result.conversationId, language.value as 'zh' | 'en');
+    });
+  } else {
+    queryStream(q, conversationId, language.value as 'zh' | 'en');
+  }
 }
 
 const markedContent = computed(
   () => (text: string) => marked.parse(text) as string,
+);
+
+watch(
+  () => currentSelectedSession,
+  () => {
+    console.log('onSend', currentSelectedSession.value);
+  },
 );
 
 function renderMarkdown(text: string) {
@@ -269,7 +325,7 @@ onBeforeUnmount(() => {
         </div>
         <Welcome class="welcome" v-else />
 
-        <Sender :is-streaming="isStreaming" @send="onSend" class="sender" />
+        <Sender :is-streaming="isStreaming" @newChat="newChat" @send="onSend" class="sender" />
       </div>
 
       <CommonFooter />

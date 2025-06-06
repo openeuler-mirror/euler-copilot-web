@@ -196,8 +196,8 @@ const appType = ref('my');
 const appSearchValue = ref();
 const appList = ref<App[]>([]);
 const pagination = ref({
-  pageSizes: [16, 32, 64],
-  layout: 'total,sizes,prev,pager,next,jumper',
+  pageSizes: [],
+  layout: 'total,prev,pager,next,jumper',
 });
 const { userinfo } = storeToRefs(useAccountStore());
 const currentPage = ref<number>(1);

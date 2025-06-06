@@ -53,3 +53,111 @@ export const EG_LIST: EgItem[] = [
     insertMessage: 'openEuler_use_cases_describe',
   },
 ];
+
+export const questions = [
+  {
+    groupId: 0,
+    id: 1,
+    question: 'open_euler_community_edition_categories',
+  },
+  {
+    groupId: 0,
+    id: 2,
+    question: 'lts_release_cycle_and_support',
+  },
+  {
+    groupId: 0,
+    id: 3,
+    question: 'innovation_release_cycle_and_support',
+  },
+  {
+    groupId: 0,
+    id: 4,
+    question: 'container_cloud_platform_solution',
+  },
+  {
+    groupId: 1,
+    id: 5,
+    question: 'sec_gear_main_functions',
+  },
+  {
+    groupId: 1,
+    id: 6,
+    question: 'dde_description',
+  },
+  {
+    groupId: 1,
+    id: 7,
+    question: 'lustre_description',
+  },
+  {
+    groupId: 2,
+    id: 8,
+    question: 'open_euler_testing_management_platform',
+  },
+  {
+    groupId: 2,
+    id: 9,
+    question: 'open_euler_pkgship',
+  },
+  {
+    groupId: 2,
+    id: 10,
+    question: 'open_euler_software_package_introduction_principles',
+  },
+  {
+    groupId: 2,
+    id: 11,
+    question: 'download_rpm_without_installing',
+  },
+  {
+    groupId: 3,
+    id: 12,
+    question: 'count_the_occurrences_of_the_hello',
+  },
+  {
+    groupId: 3,
+    id: 13,
+    question: 'convert_uppercase_to_lowercase',
+  },
+  {
+    groupId: 3,
+    id: 14,
+    question: 'list_files_with_specific_permissions',
+  },
+  {
+    groupId: 3,
+    id: 15,
+    question: 'search_error_keyword_with_context',
+  },
+  {
+    groupId: 4,
+    id: 16,
+    question: 'clear_dependencies_for_software_package',
+  },
+  {
+    groupId: 4,
+    id: 17,
+    question: 'gpgcheck_purpose_in_dnf',
+  },
+  {
+    groupId: 4,
+    id: 18,
+    question: 'installonly_limit_function_in_dnf',
+  },
+  {
+    groupId: 4,
+    id: 19,
+    question: 'clean_requirement_on_remove_function_in_dnf',
+  },
+  {
+    groupId: 5,
+    id: 20,
+    question: 'hunan_tobacco_monopoly_applications_on_openeuler',
+  },
+  {
+    groupId: 5,
+    id: 21,
+    question: 'xsky_applications_on_openeuler',
+  },
+];

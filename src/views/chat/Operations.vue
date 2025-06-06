@@ -23,9 +23,6 @@ const changeTheme = (e: PointerEvent) => {
         <img id="moon-icon" src="@/assets/svgs/moon.svg" alt="" />
       </div>
     </div>
-    <div class="settings">
-      <img src="@/assets/svgs/settings.svg" />
-    </div>
   </div>
 </template>
 

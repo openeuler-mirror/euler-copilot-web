@@ -50,6 +50,7 @@ export interface UserConversationItem {
   message: string;
   createdAt?: string | Date;
   params?: any;
+  flowdata?: any;
 }
 
 export interface FlowType {

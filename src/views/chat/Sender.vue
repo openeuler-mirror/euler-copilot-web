@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
+import CopilotIconSelected from '@/assets/svgs/routerCopilotSelected.svg';
 
 const props = defineProps<{
   isStreaming: boolean;
@@ -7,6 +8,7 @@ const props = defineProps<{
 
 const emits = defineEmits<{
   (e: 'send', q: string): void;
+  (e: 'newChat'): void;
 }>();
 
 const senderInput = ref('');
@@ -29,8 +31,8 @@ function onSendClick() {
 
 <template>
   <div class="sender">
-    <div class="create-button">
-      <img src="@/assets/svgs/create.svg" alt="" />
+    <div class="create-button" @click="emits('newChat')">
+      <img :src=CopilotIconSelected alt="" />
     </div>
     <div class="chat-sender">
       <textarea

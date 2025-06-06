@@ -202,7 +202,13 @@ async function startup() {
     if (isQuitting) {
       return;
     }
-    // 否则阻止关闭，只是隐藏窗口
+    // 触发窗口隐藏事件
+    chatWindow.webContents.send('clean:storage');
+    // 清除localStorage中的conversationId
+    win.webContents.executeJavaScript(`
+    localStorage.removeItem('conversationId');
+    true;
+  `);
     event.preventDefault();
     chatWindow.hide();
   });

@@ -361,8 +361,8 @@ const apiSearchValue = ref();
 const getServiceName = ref('');
 const { userinfo } = storeToRefs(useAccountStore());
 const pagination = ref({
-  pageSizes: [16, 32, 64],
-  layout: 'total,sizes,prev,pager,next,jumper',
+  pageSizes: [],
+  layout: 'total,prev,pager,next,jumper',
 });
 const currentPage = ref(1);
 const totalCount = ref(0);
