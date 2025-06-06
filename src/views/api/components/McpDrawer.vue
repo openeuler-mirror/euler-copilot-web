@@ -151,11 +151,12 @@ async function onConfirm(formEl: FormInstance | undefined) {
 }
 
 async function getMcpServiceDetail(serviceId: string) {
-  const [, res] = await api.getMcpServiceDetail(serviceId);
+  const [, res] = await api.getMcpServiceDetail(serviceId, true);
   if (res) {
-    const { icon, name, description, data, mcpType } = res.result;
+    const { icon, name, description, data, mcpType, overview } = res.result;
     form.icon = icon;
     form.name = name;
+    form.overview = overview;
     form.description = description;
     form.type = mcpType;
     form.mcpConfig = data;

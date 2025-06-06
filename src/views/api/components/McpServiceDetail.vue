@@ -9,6 +9,7 @@ import { ElEmpty } from 'element-plus';
 import i18n from 'src/i18n';
 import { useChangeThemeStore } from '@/store';
 import { storeToRefs } from 'pinia';
+import marked from '@/utils/marked';
 
 interface McpDetail {
   serviceId: string;
@@ -115,9 +116,10 @@ watch(
               name="description"
               :lazy="true"
             >
-              <div class="description">
-                {{ mcpServiceDetail.description }}
-              </div>
+              <div
+                class="description"
+                v-html="marked.parse(mcpServiceDetail.description)"
+              ></div>
             </el-tab-pane>
             <el-tab-pane
               :label="t('plugin_center.server_tool')"
