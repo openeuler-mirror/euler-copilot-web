@@ -56,7 +56,7 @@ export const options: allWindowType = {
       minHeight: 810,
       titleBarStyle: 'hidden',
       resizable: true,
-      show: true,
+      show: false,
       alwaysOnTop: false,
       useContentSize: true,
       ...getLinuxSpecificOptions(),
