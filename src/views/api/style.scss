@@ -33,7 +33,6 @@
         margin-left: 8px;
         border-radius: 4px;
       }
-      
     }
 
     .apiCenterType {
@@ -57,19 +56,18 @@
       }
     }
     .apiCenterCardContainer {
-      max-width: 1336px;
-      max-height: calc(100vh - 370px);
-      min-height: calc(100vh - 370px);
-      min-width: 1336px;
-      overflow-y: auto;
+      width: 1336px;
       .apiCenterCardBox {
+        height: calc(100vh - 370px);
+        overflow-y: auto;
         width: fit-content;
         display: flex;
         flex-wrap: wrap;
         box-sizing: border-box;
         gap: 16px;
-        margin-top: 16px;
+        padding-top: 16px;
         .apiCenterCardSingle {
+          height: fit-content;
           box-sizing: border-box;
           border: 1px solid transparent;
           cursor: pointer;
@@ -107,11 +105,10 @@
             flex-direction: column;
             color: #8d98aa;
 
-
             .apiCenterCardId {
               font-size: 12px;
               line-height: 16px;
-              display: flex ;
+              display: flex;
               align-items: center;
               justify-content: space-between;
             }
@@ -126,13 +123,19 @@
                 line-height: 16px;
               }
               .apiCenterCardOps {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .deleteAndEdit {
+                  display: flex;
+                  align-items: center;
+                }
                 .el-button span {
                   color: #6395fd;
                   font-size: 12px;
                 }
               }
             }
-           
           }
         }
         .apiCenterCardSingle:hover {
