@@ -84,6 +84,7 @@ const globals = {
         return '';
       }
     },
+
     /**
      * 验证服务器连接（统一接口）
      */
@@ -121,15 +122,15 @@ const globals = {
   // 实用工具
   utils: utilsAPI,
 
-  // chat事件
-  chat:{
-      /**
+  // 快捷聊天
+  chat: {
+    /**
      * 清理数据
      */
-    onCleanStorage(callback):void {
-      safeIPC.on('clean:storage', (_event, value) => callback(value))
+    onCleanStorage(callback): void {
+      safeIPC.on('clean:storage', (_event, value) => callback(value));
     },
-  } 
+  },
 };
 
 // 暴露 API 到渲染进程
