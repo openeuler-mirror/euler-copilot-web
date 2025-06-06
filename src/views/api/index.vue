@@ -168,42 +168,43 @@
                         <div class="apiCenterCardUser">@{{ item.author }}</div>
                         <div
                           class="apiCenterCardOps"
-                          v-if="userinfo.user_sub === item.author"
+                          v-if="item.status !== 'installing'"
                         >
-                          <div v-if="item.status !== 'installing'">
-                            <div>
-                              <el-button
-                                v-if="pluginType === 'mcp'"
-                                text
-                                @click.stop="
-                                  onActiveService(item.serviceId, item.isActive)
-                                "
-                              >
-                                {{
-                                  item.isActive
-                                    ? t('plugin_center.mcp.deactivate')
-                                    : t('plugin_center.mcp.activate')
-                                }}
-                              </el-button>
-                              <el-button
-                                text
-                                @click.stop="
-                                  openSidebar(
-                                    'edit',
-                                    item.serviceId,
-                                    pluginType,
-                                  )
-                                "
-                              >
-                                {{ $t('semantic.interface_edit') }}
-                              </el-button>
-                              <el-button
-                                text
-                                @click.stop="handleDelPlugin(item.serviceId)"
-                              >
-                                {{ $t('semantic.interface_delete') }}
-                              </el-button>
-                            </div>
+                          <el-button
+                            v-if="pluginType === 'mcp'"
+                            text
+                            @click.stop="
+                              onActiveService(item.serviceId, item.isActive)
+                            "
+                          >
+                            {{
+                              item.isActive
+                                ? t('plugin_center.mcp.deactivate')
+                                : t('plugin_center.mcp.activate')
+                            }}
+                          </el-button>
+                          <div
+                            v-if="
+                              (userinfo.user_sub === item.author &&
+                                pluginType !== 'mcp') ||
+                              userinfo.is_admin
+                            "
+                            class="deleteAndEdit"
+                          >
+                            <el-button
+                              text
+                              @click.stop="
+                                openSidebar('edit', item.serviceId, pluginType)
+                              "
+                            >
+                              {{ $t('semantic.interface_edit') }}
+                            </el-button>
+                            <el-button
+                              text
+                              @click.stop="handleDelPlugin(item.serviceId)"
+                            >
+                              {{ $t('semantic.interface_delete') }}
+                            </el-button>
                           </div>
                         </div>
                       </div>
