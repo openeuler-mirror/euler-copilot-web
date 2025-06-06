@@ -29,7 +29,7 @@ const getMcpList = (params: {
   }>(MCP_BASE_URL, params);
 };
 
-const getMcpServiceDetail = (id: string) => {
+const getMcpServiceDetail = (id: string, edit?: boolean) => {
   return get<{
     serviceId: string;
     icon: string;
@@ -60,7 +60,7 @@ const getMcpServiceDetail = (id: string) => {
         };
       };
     }[];
-  }>(`${MCP_BASE_URL}/${id}`);
+  }>(`${MCP_BASE_URL}/${id}`, { edit });
 };
 
 const createOrUpdateMcpService = (params: {

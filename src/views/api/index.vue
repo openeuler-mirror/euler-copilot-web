@@ -181,8 +181,8 @@
                               >
                                 {{
                                   item.isActive
-                                    ? t('plugin_center.mcp.activate')
-                                    : t('plugin_center.mcp.deactivate')
+                                    ? t('plugin_center.mcp.deactivate')
+                                    : t('plugin_center.mcp.activate')
                                 }}
                               </el-button>
                               <el-button
