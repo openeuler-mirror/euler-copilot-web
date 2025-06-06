@@ -25,6 +25,7 @@ export function createWindow(
   const win = new BrowserWindow({
     ...options,
     webPreferences: {
+      webSecurity: false, // 禁用安全策略（不推荐）
       nodeIntegration: true,
       contextIsolation: false,
       preload: path.join(__dirname, '../preload/index.js'),

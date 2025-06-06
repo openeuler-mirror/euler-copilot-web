@@ -23,14 +23,13 @@ onMounted(async () => {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
   const isElectron = window.navigator.userAgent.includes('Electron');
-  const isLocalhost =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-  iframeTarget.value =
-    isElectron || isLocalhost ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+  iframeTarget.value = 'http://localhost:3002/witchaind/' 
+  // isElectron
+    // ? `${baseUrl}/witchaind`
+    // : `${origin}/witchaind`;
 });
 
-const changeLanguagefun = (lang: "zh_cn" | "en") => {
+const changeLanguagefun = (lang: 'zh_cn' | 'en') => {
   changeLanguage(lang);
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');

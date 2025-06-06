@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="html-root">
+
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎使用 openEuler Intelligence</title>
+</head>
+
+<body>
+    <div class="welcome-container">
+            <div class="welcome-title">
+                欢迎使用
+                <img src="../../src/assets/images/logo-euler-copilot.png" alt="" />
+            </div>
+            <div class="welcome-content">
+                <div class="welcome-content-item">
+                    <img src="../../src/assets/svgs/local_deploy.svg" alt="" />
+                    后端本地部署
+                </div>
+                <div class="welcome-content-item">
+                    <img src="../../src/assets/svgs/online_service.svg" alt="" />
+                    后端在线服务
+                </div>
+            </div>
+        </div>
+</body>
+<style lang="css">
+    body{
+        margin: 0;
+    }
+    .welcome-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-size: 24px;
+        color: #333;
+        background-image:url("../../src/assets/images/welcome_bg.webp");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .welcome-title {
+            display: flex;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 36px;
+            font-family: 'HarmonyOS  Sans SC';
+            margin-bottom: 72px;
+
+            img {
+                width: 330px;
+            }
+        }
+
+        .welcome-content {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+
+            .welcome-content-item {
+                padding: 48px 75px 32px;
+                border-radius: 16px;
+                background-color: rgba(255, 255, 255, 0.7);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+
+                img{
+                    margin-bottom: 32px;
+                    width: 72px;
+                }
+
+            }
+        }
+
+    }
+</style>
+
+</html>
