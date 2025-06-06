@@ -204,11 +204,11 @@ async function startup() {
     }
     // 触发窗口隐藏事件
     chatWindow.webContents.send('clean:storage');
-    // 清除localStorage中的conversationId
+    // 清除 localStorage 中的 conversationId
     win.webContents.executeJavaScript(`
-    localStorage.removeItem('conversationId');
-    true;
-  `);
+      localStorage.removeItem('conversationId');
+      true;
+    `);
     event.preventDefault();
     chatWindow.hide();
   });

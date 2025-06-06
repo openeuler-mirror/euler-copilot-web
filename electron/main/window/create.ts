@@ -171,9 +171,17 @@ export function createDefaultWindow(): BrowserWindow {
 
   defaultWindow = createWindow(defaultWindowOptions, hash, 'mainWindow');
 
-  // 设置窗口标题
+  // 开发模式下可以打开开发者工具
+  if (process.env.NODE_ENV === 'development') {
+    defaultWindow.webContents.openDevTools({ mode: 'detach' });
+  }
+
+  // 设置窗口标题并显示窗口
   defaultWindow.webContents.on('did-finish-load', () => {
     defaultWindow?.setTitle('openEuler 智能化解决方案');
+    if (defaultWindow && !defaultWindow.isDestroyed()) {
+      defaultWindow.show();
+    }
   });
 
   return defaultWindow;

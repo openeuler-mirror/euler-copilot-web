@@ -35,7 +35,6 @@ export interface DesktopAppAPI {
     setProxyUrl(url: string): Promise<boolean>;
     getProxyUrl(): Promise<string>;
     validateServer(url: string): Promise<ServerValidationResult>;
-    onCleanStorage(fun: () => void):void;
   };
 
   // 窗口控制
@@ -70,9 +69,10 @@ export interface DesktopAppAPI {
     delay(ms: number): Promise<void>;
   };
 
-  chat:{
-    onCleanStorage(fun: () => void):void;
-  }
+  // 快捷聊天
+  chat: {
+    onCleanStorage(fun: () => void): void;
+  };
 }
 
 export interface DesktopAppWelcomeAPI {

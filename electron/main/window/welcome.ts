@@ -37,8 +37,8 @@ export function createWelcomeWindow(): BrowserWindow {
     resizable: false,
     maximizable: false,
     minimizable: false,
-    modal: true,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
+    frame: false,
     title: '欢迎使用',
     webPreferences: {
       nodeIntegration: false,
