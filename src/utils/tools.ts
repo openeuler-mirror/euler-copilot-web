@@ -122,7 +122,6 @@ export async function getBaseUrl(): Promise<string> {
       console.warn('Failed to get base URL from config:', error);
     }
   }
-
   // VITE_BASE_API_URL 未定义时返回空字符串
   const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
   return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';

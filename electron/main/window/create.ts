@@ -141,6 +141,7 @@ function setupWindowOpenHandler(win: BrowserWindow) {
 }
 
 let defaultWindow: BrowserWindow | null = null;
+let chatWindow: BrowserWindow | null = null;
 
 /**
  * 获取窗口标题栏的样式配置
@@ -157,6 +158,10 @@ function getDefaultTitleBarOverlay(
   };
 }
 
+/**
+ * 创建默认窗口
+ * 仅在第一次调用时创建，后续调用返回已创建的窗口实例
+ */
 export function createDefaultWindow(): BrowserWindow {
   if (defaultWindow) return defaultWindow;
 
@@ -187,12 +192,47 @@ export function createDefaultWindow(): BrowserWindow {
   return defaultWindow;
 }
 
-let chatWindow: BrowserWindow | null = null;
+/**
+ * 计算聊天窗口默认位置
+ */
+function getDefaultChatWindowPosition(
+  windowWidth: number,
+  windowHeight: number,
+) {
+  const rightOffset = 24; // 右侧间距
+  // 获取主显示器的工作区尺寸
+  const primaryDisplay = electron.screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } =
+    primaryDisplay.workAreaSize;
+
+  // x坐标：屏幕宽度 - 窗口宽度 - 右侧间距
+  const x = screenWidth - windowWidth - rightOffset;
+
+  // y坐标：上下居中
+  const y = Math.round((screenHeight - windowHeight) / 2);
+
+  return { x, y };
+}
+
+/**
+ * 创建聊天窗口
+ * 仅在第一次调用时创建，后续调用返回已创建的窗口实例
+ */
 export function createChatWindow(): BrowserWindow {
   if (chatWindow) return chatWindow;
   const hash = allWindow.chatWindow.hash;
-  const chatWindowOptions = allWindow.chatWindow.window;
+  const chatWindowOptions = { ...allWindow.chatWindow.window };
   const theme = process.env.EULERCOPILOT_THEME || 'light';
+
+  // 计算窗口位置
+  const { x, y } = getDefaultChatWindowPosition(
+    chatWindowOptions.width || 680,
+    chatWindowOptions.height || 960,
+  );
+
+  // 设置窗口位置
+  chatWindowOptions.x = x;
+  chatWindowOptions.y = y;
 
   // 仅在非Linux平台设置titleBarOverlay
   if (!isLinux) {
