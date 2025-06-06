@@ -38,7 +38,10 @@ const preloadEntries: PreloadEntry[] = [
 ];
 
 function createRollupConfig(entry: PreloadEntry): RollupOptions {
-  const compilationInclude = ['electron/**/*.ts'];
+  const compilationInclude = [
+    'electron/preload/**/*.ts',
+    'electron/main/**/*.ts',
+  ];
 
   const plugins: any[] = [
     nodeResolve({
@@ -75,7 +78,6 @@ function createRollupConfig(entry: PreloadEntry): RollupOptions {
         targets: [
           { src: 'build/trayTemplate.png', dest: 'dist' },
           { src: 'build/tray.png', dest: 'dist' },
-          { src: 'electron/welcome', dest: 'dist' }, // 复制 welcome 文件夹
         ],
       }),
     );
