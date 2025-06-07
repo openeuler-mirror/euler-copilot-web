@@ -10,7 +10,7 @@
         <img :src="logoImage" alt="" />
       </div>
       <div class="welcome-detail-content">
-        <div class="welcome-detail-content-item" @click="handleLocalDeploy">
+        <div class="welcome-detail-content-item" :class = "isLinux?'':'item-disabled'" @click="handleLocalDeploy">
           <img :src="localDeployIcon" alt="" />
           <span class="welcome-detail-content-item-text">后端本地部署</span>
         </div>
@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, Ref } from 'vue';
+import { computed, onMounted, Ref } from 'vue';
 import 'element-plus/dist/index.css';
 import logoImage from './assets/images/logo-euler-copilot.png';
 import welcomeBgImage from './assets/images/welcome_bg.webp';
@@ -56,8 +56,25 @@ import localDeploy from './localDeploy.vue';
 
 type activePageType = 'localDeploy' | 'onlineService' | 'welcome';
 const avtivePage: Ref<activePageType> = ref('welcome');
+  const platform = ref<'linux' | 'darwin' | 'windows' | 'unknown'>('unknown');
+
+onMounted(() => {
+  if (window.eulercopilotWelcome && window.eulercopilotWelcome.system) {
+    platform.value = window.eulercopilotWelcome.system.platform as 'linux' | 'darwin'| 'unknown';
+  } else {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Linux')) platform.value = 'linux';
+    else if (userAgent.includes('Mac')) platform.value = 'darwin';
+  }
+  console.log('系统平台:', platform.value);
+});
+
+const isLinux = computed(() => ['linux', 'darwin'].includes(platform.value));
 // 处理本地部署选择
 const handleLocalDeploy = async () => {
+  if(!isLinux.value){
+    return;
+  }
   console.log('选择本地部署');
   avtivePage.value = 'localDeploy';
 };
@@ -139,7 +156,7 @@ onMounted(() => {
         height: 214px;
         cursor: pointer;
 
-        &:hover {
+        &:hover:not(.item-disabled) {
           border: 2px solid rgb(99, 149, 253);
           width: 266px;
           height: 210px;
@@ -156,6 +173,12 @@ onMounted(() => {
           font-size: 20px;
           line-height: 30px;
         }
+      }
+
+      .item-disabled{
+        background-color: rgba(212, 212, 212, 0.7);
+        cursor: not-allowed !important;
+        
       }
     }
   }
