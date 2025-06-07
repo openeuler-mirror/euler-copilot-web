@@ -1,5 +1,13 @@
 <template>
-  <div v-if="isTimeLine">
+  <div class="welcome-detail-title">
+    <div @click="handleBack" class="back-btn">
+      <img :src="leftArrowIcon" alt="" />
+      <span class="back-btn-text">返回</span>
+    </div>
+    <span class="divider"></span>
+    <div class="welcome-detail-title-text">后端在线服务</div>
+  </div>
+  <div v-if="!isTimeLine">
     <el-form
       ref="ruleFormRef"
       label-position="left"
@@ -59,18 +67,18 @@
         <el-input placeholder="请输入" v-model="embeddingRuleForm.apiKey" />
       </el-form-item>
     </el-form>
+    <div class="submit-btn">
+      <el-button
+        type="primary"
+        :disabled="isConfirmDisabled"
+        @click="handleConfirm"
+      >
+        确定
+      </el-button>
+    </div>
   </div>
   <div v-else>
     <TimeLine />
-  </div>
-  <div class="submit-btn">
-    <el-button
-      type="primary"
-      :disabled="isConfirmDisabled"
-      @click="handleConfirm"
-    >
-      确定
-    </el-button>
   </div>
 </template>
 <script lang="ts" setup>
@@ -79,6 +87,13 @@ import type { FormInstance, FormRules } from 'element-plus';
 import copyIcon from './assets/svgs/copy_icon.svg';
 import successIcon from './assets/svgs/success.svg';
 import TimeLine from './timeLine.vue';
+import leftArrowIcon from './assets/svgs/left_arrow.svg';
+const props = withDefaults(
+  defineProps<{
+    back: Function;
+  }>(),
+  {},
+);
 
 interface RuleForm {
   url: string;
@@ -112,6 +127,7 @@ const rules = reactive<FormRules<RuleForm>>({
   modelName: [{ required: true, message: '请输入模型名称', trigger: 'blur' }],
   apiKey: [{ required: true, message: '请输入API_Key', trigger: 'blur' }],
 });
+
 
 watch(
   [() => ruleForm, () => embeddingRuleForm],
@@ -165,6 +181,15 @@ const handleConfirm = async () => {
 
   console.log('表单验证成功:', { ruleForm, embeddingRuleForm });
 };
+const handleBack = () => {
+    if(isTimeLine.value){
+        isTimeLine.value = false;
+    }else{
+        props.back();
+    }
+};
+
+
 </script>
 
 <style lang="scss" scoped>
@@ -192,6 +217,9 @@ const handleConfirm = async () => {
   button {
     padding: 8px 25px;
   }
+}
+.el-input__wrapper {
+  background-color: none !important;
 }
 .el-form-item.is-error .el-input__wrapper {
   background-color: rgb(247, 193, 193);

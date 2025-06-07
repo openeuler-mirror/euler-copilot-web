@@ -21,21 +21,11 @@
       </div>
     </div>
     <div v-else class="welcome-detail">
-      <div class="welcome-detail-title">
-        <div @click="handleBack" class="back-btn">
-          <img :src="leftArrowIcon" alt="" />
-          <span class="back-btn-text">返回</span>
-        </div>
-        <span class="divider"></span>
-        <div class="welcome-detail-title-text">
-          {{ avtivePage === 'localDeploy' ? '后端本地部署' : '后端在线服务' }}
-        </div>
-      </div>
       <div v-if="avtivePage === 'localDeploy'" class="local-deploy">
-        <localDeploy />
+        <localDeploy :back="handleBack" />
       </div>
       <div v-if="avtivePage === 'onlineService'" class="online-service">
-        <OnlineService />
+        <OnlineService :back="handleBack" />
       </div>
     </div>
   </div>
@@ -49,7 +39,6 @@ import welcomeBgImage from './assets/images/welcome_bg.webp';
 import localDeployIcon from './assets/svgs/local_deploy.svg';
 import onlineServiceIcon from './assets/svgs/online_service.svg';
 import closeIcon from './assets/svgs/close.svg';
-import leftArrowIcon from './assets/svgs/left_arrow.svg';
 import { ref } from 'vue';
 import OnlineService from './onlineService.vue';
 import localDeploy from './localDeploy.vue';
@@ -104,7 +93,7 @@ onMounted(() => {
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .welcome-container {
   height: 100vh;
   font-size: 24px;
