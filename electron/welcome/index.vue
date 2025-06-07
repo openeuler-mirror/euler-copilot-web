@@ -117,6 +117,7 @@ onMounted(() => {
   .welcome-page {
     .welcome-title {
       display: flex;
+      justify-content: center;
       text-align: center;
       font-size: 28px;
       font-weight: 700;

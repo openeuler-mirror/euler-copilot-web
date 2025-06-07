@@ -67,8 +67,8 @@ const checkUrlValid = (_rule, value, callback) => {
 };
 const rules = reactive<FormRules<RuleForm>>({
   url: [
-    { required: true, message: '请输入后端服务链接', trigger: 'blur' },
-    { type: 'url', message: '请输入有效的URL', trigger: ['change'] },
+    { required: true, message: '请输入后端服务链接', trigger: 'change' },
+    { type: 'url', message: '请输入有效的URL', trigger: ['blur'] },
     { validator: checkUrlValid, trigger: ['blur'] },
   ],
 });
@@ -122,5 +122,11 @@ const handleBack = () => {
   button {
     padding: 8px 25px;
   }
+}
+.el-form-item:not(.is-error) .el-input__wrapper {
+  background-color: transparent !important;
+}
+.el-form-item.is-error .el-input__wrapper {
+  background-color: rgb(247, 193, 193);
 }
 </style>

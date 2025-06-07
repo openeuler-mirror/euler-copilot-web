@@ -52,6 +52,7 @@
               content="复用大模型相同链接"
               placement="top"
               effect="light"
+              popper-class="url-icon-tooltip"
             >
               <el-icon class="el-input__icon" @click="copyText(ruleForm)">
                 <img :src="copyIcon" alt="copy" width="16" height="16" />
@@ -121,11 +122,11 @@ const isTimeLine = ref(false);
 
 const rules = reactive<FormRules<RuleForm>>({
   url: [
-    { required: true, message: '请输入后端服务链接', trigger: 'blur' },
-    { type: 'url', message: '请输入有效的URL', trigger: ['blur', 'change'] },
+    { required: true, message: '请输入URL', trigger: 'change' },
+    { type: 'url', message: '请输入有效的URL', trigger: 'blur' },
   ],
-  modelName: [{ required: true, message: '请输入模型名称', trigger: 'blur' }],
-  apiKey: [{ required: true, message: '请输入API_Key', trigger: 'blur' }],
+  modelName: [{ required: true, message: '请输入模型名称', trigger: 'change' }],
+  apiKey: [{ required: true, message: '请输入API_Key', trigger: 'change' }],
 });
 
 
@@ -192,7 +193,19 @@ const handleBack = () => {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+/* 自定义el-tooltip的背景色为绿色 */
+.url-icon-tooltip.el-popper.is-light {
+  background-color: rgb(244,246,250) !important;
+  border-color: rgb(223,229,239) !important;
+  box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%);
+}
+.url-icon-tooltip.el-popper.is-light .el-popper__arrow::before {
+  background-color: rgb(244,246,250) !important;
+  border-color: rgb(223,229,239) !important;
+  border-left-color: transparent !important;
+  border-top-color: transparent !important;
+}
 .model-ruleForm {
   margin: 0 48px 0 40px;
   .model-title {
@@ -218,8 +231,8 @@ const handleBack = () => {
     padding: 8px 25px;
   }
 }
-.el-input__wrapper {
-  background-color: none !important;
+.el-form-item:not(.is-error) .el-input__wrapper {
+  background-color: transparent !important;
 }
 .el-form-item.is-error .el-input__wrapper {
   background-color: rgb(247, 193, 193);

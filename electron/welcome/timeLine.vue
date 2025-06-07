@@ -66,12 +66,12 @@ const activities: any[] = [
 
 // 计算属性：检查是否所有活动都成功
 const allSuccess = computed(() => {
-  return activities.every(activity => activity.status === 'success');
+  return activities.every(activity => activity.type === 'success');
 });
 
 // 计算属性：检查是否存在失败的活动
 const hasFailed = computed(() => {
-  return activities.some(activity => activity.status === 'failed');
+  return activities.some(activity => activity.type === 'failed');
 });
 
 const handleStop = () => {
@@ -167,11 +167,6 @@ const handleFinish = () => {
   /* 成功状态 - 绿色连接线 */
   :deep(.timeline-status-success .el-timeline-item__tail) {
     border-left-color: #67c23a !important;
-  }
-
-  /* 危险状态 - 红色连接线 */
-  :deep(.timeline-status-failed .el-timeline-item__tail) {
-    border-left-color: #f56c6c !important;
   }
 
   /* 主要状态 - 蓝色连接线 */
