@@ -32,12 +32,16 @@
         <span v-if="activity.type === 'running'">安装中</span>
       </el-card>
     </el-timeline-item>
-</el-timeline>
-<div class="submit-btn">
-    <el-button v-if="allSuccess" type="primary" @click="handleFinish">完成</el-button>
-    <el-button v-else-if="hasFailed" type="primary" @click="handleRetry">重试</el-button>
+  </el-timeline>
+  <div class="submit-btn">
+    <el-button v-if="allSuccess" type="primary" @click="handleFinish">
+      完成
+    </el-button>
+    <el-button v-else-if="hasFailed" type="primary" @click="handleRetry">
+      重试
+    </el-button>
     <el-button v-else type="primary" @click="handleStop">停止安装</el-button>
-    </div>
+  </div>
 </template>
 <script lang="ts" setup>
 import { computed } from 'vue';
@@ -47,43 +51,39 @@ import loadingIcon from './assets/svgs/upload-loading.svg';
 
 const activities: any[] = [
   {
-    content: '数据服务',
+    content: '数据库服务',
     type: 'running',
   },
   {
-    content: 'authhub 服务',
+    content: 'AuthHub 服务',
     // type: 'success',
   },
   {
-    content: 'intelligence 服务',
+    content: 'Intelligence 服务',
     // type: 'failed',
   },
   {
-    content: '配置文件初始化&服务器启动成功',
+    content: '配置文件初始化 & 服务启动',
     // type: 'success',
   },
 ];
 
 // 计算属性：检查是否所有活动都成功
 const allSuccess = computed(() => {
-  return activities.every(activity => activity.type === 'success');
+  return activities.every((activity) => activity.status === 'success');
 });
 
 // 计算属性：检查是否存在失败的活动
 const hasFailed = computed(() => {
-  return activities.some(activity => activity.type === 'failed');
+  return activities.some((activity) => activity.status === 'failed');
 });
 
-const handleStop = () => {
-}
-const handleRetry = () => {
-}
-const handleFinish = () => {
-}
-
+const handleStop = () => {};
+const handleRetry = () => {};
+const handleFinish = () => {};
 </script>
 
-<style lang="scss" scoped >
+<style lang="scss" scoped>
 .submit-btn {
   width: 100vw;
   display: flex;
@@ -169,6 +169,11 @@ const handleFinish = () => {
     border-left-color: #67c23a !important;
   }
 
+  /* 危险状态 - 红色连接线 */
+  :deep(.timeline-status-failed .el-timeline-item__tail) {
+    border-left-color: #f56c6c !important;
+  }
+
   /* 主要状态 - 蓝色连接线 */
   :deep(.timeline-status-running .el-timeline-item__tail) {
     border-left-color: #409eff !important;
@@ -184,10 +189,10 @@ const handleFinish = () => {
     display: none !important;
   }
   :deep(.el-timeline-item__tail) {
-    left:9px;
+    left: 9px;
     transform: translateY(35px);
   }
-  :deep(.el-timeline-item__center:first-child .el-timeline-item__tail){
+  :deep(.el-timeline-item__center:first-child .el-timeline-item__tail) {
     height: 100% !important;
     top: 0 !important;
   }
