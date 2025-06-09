@@ -196,6 +196,7 @@ onMounted(() => {
     color: var(--o-text-color-secondary);
   }
   .question-des {
+    font-size: 14px;
     color: var(--o-text-color-primary);
   }
 }

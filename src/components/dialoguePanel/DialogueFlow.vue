@@ -231,10 +231,9 @@ watch(
     background-color: var(--o-bg-color-light2) !important;
   }
 }
-:deep(.el-collapse .o-nest-collapse){
-  &:last-child {
+.o-nest-collapse {
+  .el-collapse-item:last-child {
     border-bottom: none!important;
-    background-color: beige!important;
   }
 }
 .title {
@@ -293,6 +292,7 @@ watch(
   }
   :deep(.el-collapse-item__content) {
   margin: 0px 16px 16px 0px !important;
+
 }
 }
 .loading {

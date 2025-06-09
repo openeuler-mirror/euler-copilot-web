@@ -247,6 +247,7 @@ const updateNodeYaml = () => {
   width: 700px !important;
   height: calc(100% - 48px);
   .el-drawer__header {
+    font-weight: 700;
     padding: 24px 24px 16px;
     margin-bottom: 0px;
     .drawerHeader {

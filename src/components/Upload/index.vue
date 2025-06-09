@@ -387,8 +387,8 @@ onMounted(() => {
   margin-bottom: 8px;
 }
 .json-container {
-  max-height: 80%;
-  overflow-y: hidden;
+  max-height: calc(100% - 8px);
+  overflow-y: scroll;
 }
 .v-codemirror {
   height: 100%;

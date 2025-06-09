@@ -135,7 +135,9 @@ onMounted(() => {
 watch(
   () => currentSelectedSession.value,
   () => {
-    currentLLM();
+    if(currentSelectedSession.value) {
+      currentLLM();
+    }
   },
   {
     immediate: true,
@@ -192,6 +194,7 @@ const deleteSession = async () => {
       historySession.value = [];
       isBatchDeletion.value = false;
     } else {
+      console.log('删除会话时候记录');
       getHistorySession();
       isBatchDeletion.value = false;
     }
@@ -252,6 +255,14 @@ const displayedApps = computed(() => {
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
+
+const handleNewChat = () => {
+  selectedAppId.value = '';
+  user_selected_app.value = '';
+  app.value.selectedAppId = '';
+  app.value.appId = '';
+  createNewSession();
+}
 
 const selectApp = (id) => {
   if (selectedAppId.value === id) {
@@ -341,7 +352,7 @@ watch(
     </ElTooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
-        <ElButton class="create-button" @click="createNewSession">
+        <ElButton class="create-button" @click="handleNewChat">
           <img class="create-button__icon" src="@/assets/svgs/create.svg" />
           <span>{{ $t('history.new_chat') }}</span>
         </ElButton>
@@ -910,8 +921,8 @@ watch(
       margin-top: 8px;
       margin-bottom: 8px;
       & span {
-        font-weight: 500;
-        color: var(--o-text-color-secondary);
+        font-weight: 700;
+        color: var(--o-text-color-record-number);
       }
     }
   }

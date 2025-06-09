@@ -200,7 +200,7 @@ watch(
   }
 
   .preMain {
-    padding-left: 40px;
+    justify-content: center;
     display: flex;
     gap: 16px;
 
@@ -226,6 +226,7 @@ watch(
     }
     .preMainContanter {
       width: calc(100% - 166px);
+      max-width: calc(1000px - 46px);
       display: flex;
       flex-direction: column;
       gap: 16px;

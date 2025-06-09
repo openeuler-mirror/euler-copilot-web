@@ -214,8 +214,6 @@
   }
 }
 .dialogue-panel {
-  // padding-right: 25px;
-  // padding: 0px 15%;
   width: 1000px;
   &__user {
     position: relative;
@@ -223,7 +221,7 @@
 
     &-time {
       display: flex;
-      padding-left: calc(50% - 37px);
+      justify-content: center;
       color: #8d98aa;
       font-size: 12px;
       margin-top: 16px;
@@ -559,6 +557,7 @@
   }
 }
 .centerTimeStyle {
+  color: var(--o-question-color) !important;
   width: 136px;
   line-height: 20px;
   padding: 0 8px;

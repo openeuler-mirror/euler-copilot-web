@@ -150,6 +150,7 @@ export const useHistorySessionStore = defineStore(
           })).filter((item) => item.conversationId !== conversationId);
         if (res.result.conversations.length === 0) {
           await generateSession();
+          return;
         }
         if (!currentSelectedSession.value) {
           currentSelectedSession.value =

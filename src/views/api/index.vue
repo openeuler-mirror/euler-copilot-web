@@ -709,7 +709,8 @@ img {
   max-width: 430px;
 }
 :deep(.el-drawer__header) {
-  padding: 24px 24px 16px !important;
+  padding: 24px 24px 8px !important;
+  font-weight: 700;
   margin-bottom: 0px;
   .drawerHeader {
     width: 100%;
