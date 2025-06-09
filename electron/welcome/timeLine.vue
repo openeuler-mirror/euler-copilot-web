@@ -57,7 +57,7 @@ import i18n from './lang/index';
 // 活动列表（与部署服务的步骤对应）
 const activities = ref([
   {
-    content: '准备安装环境',
+    content: i18n.global.t('localDeploy.prepareEnv'),
     type: 'default', // default, running, success, failed
     step: 'preparing-environment',
   },

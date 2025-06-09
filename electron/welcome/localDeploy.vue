@@ -71,7 +71,10 @@
         prop="url"
         label-position="left"
       >
-        <el-input placeholder="请输入" v-model="embeddingRuleForm.url">
+        <el-input
+          :placeholder="$t('welcome.pleaseInput')"
+          v-model="embeddingRuleForm.url"
+        >
           <template #suffix>
             <el-tooltip
               :content="$t('localDeploy.copyTip')"
