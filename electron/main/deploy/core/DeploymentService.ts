@@ -69,6 +69,7 @@ export class DeploymentService {
   private statusCallback?: (status: DeploymentStatus) => void;
   private abortController?: AbortController;
   private currentProcess?: any;
+  private sudoSessionActive: boolean = false;
 
   constructor() {
     this.cachePath = getCachePath();
@@ -136,13 +137,16 @@ export class DeploymentService {
       // 1. 检查环境
       await this.checkEnvironment();
 
-      // 2. 克隆仓库
+      // 2. 在Linux系统上，一次性获取sudo权限并保持会话
+      await this.initializeSudoSession();
+
+      // 3. 克隆仓库
       await this.cloneRepository();
 
-      // 3. 配置 values.yaml
+      // 4. 配置 values.yaml
       await this.configureValues(params);
 
-      // 4. 执行部署脚本中的工具安装部分（如果需要）
+      // 5. 执行部署脚本中的工具安装部分（如果需要）
       await this.installTools();
 
       // 更新准备环境完成状态
@@ -179,6 +183,7 @@ export class DeploymentService {
       // 清理资源
       this.abortController = undefined;
       this.currentProcess = undefined;
+      this.sudoSessionActive = false; // 重置sudo会话状态
     }
   }
 
@@ -323,7 +328,7 @@ export class DeploymentService {
 
     // 检查脚本文件是否存在
     if (fs.existsSync(toolsScriptPath)) {
-      // 构建需要权限的命令
+      // 构建需要权限的命令，使用已建立的sudo会话
       const command = this.buildRootCommand(toolsScriptPath);
 
       // 执行脚本
@@ -399,6 +404,11 @@ export class DeploymentService {
       // 检查脚本文件是否存在
       if (!fs.existsSync(scriptPath)) {
         throw new Error(`脚本文件不存在: ${scriptPath}`);
+      }
+
+      // 在执行脚本前刷新sudo会话（除第一个脚本外）
+      if (i > 0) {
+        await this.refreshSudoSession();
       }
 
       // 准备环境变量
@@ -517,21 +527,87 @@ export class DeploymentService {
   }
 
   /**
-   * 构建需要 root 权限的命令
+   * 初始化sudo会话，一次性获取权限并保持会话
    */
-  private buildRootCommand(
-    scriptPath: string,
-    useInputRedirection?: boolean,
-    inputData?: string,
-  ): string {
-    // 在 Linux 系统上，如果不是 root 用户，使用图形化 sudo 工具
-    const needsSudo =
-      process.platform === 'linux' && process.getuid && process.getuid() !== 0;
+  private async initializeSudoSession(): Promise<void> {
+    // 只在 Linux 系统上需要sudo会话
+    if (process.platform !== 'linux') {
+      return;
+    }
 
-    // 获取合适的图形化 sudo 工具
-    const getSudoCommand = (): string => {
-      if (!needsSudo) return '';
+    // 检查是否为root用户，如果是则不需要sudo
+    if (process.getuid && process.getuid() === 0) {
+      this.sudoSessionActive = true;
+      return;
+    }
 
+    this.updateStatus({
+      status: 'preparing',
+      message: '获取管理员权限...',
+      currentStep: 'preparing-environment',
+    });
+
+    try {
+      // 使用pkexec或其他图形化sudo工具一次性获取权限
+      // 这里执行一个简单的sudo命令来激活会话
+      const sudoCommand = this.getSudoCommand();
+      await execAsyncWithAbort(
+        `${sudoCommand}true`,
+        { timeout: 30000 }, // 30秒超时，给用户足够时间输入密码
+        this.abortController?.signal,
+      );
+
+      this.sudoSessionActive = true;
+
+      this.updateStatus({
+        message: '管理员权限获取成功',
+        currentStep: 'preparing-environment',
+      });
+    } catch (error) {
+      throw new Error(
+        `获取管理员权限失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 刷新sudo会话时间戳，延长会话时间
+   */
+  private async refreshSudoSession(): Promise<void> {
+    if (process.platform !== 'linux' || !this.sudoSessionActive) {
+      return;
+    }
+
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return;
+    }
+
+    try {
+      // 使用 sudo -v 刷新时间戳，无需重新输入密码
+      await execAsyncWithAbort(
+        'sudo -v',
+        { timeout: 5000 },
+        this.abortController?.signal,
+      );
+    } catch (error) {
+      // 如果刷新失败，可能需要重新获取权限
+      console.warn('刷新sudo会话失败，可能需要重新输入密码:', error);
+      this.sudoSessionActive = false;
+    }
+  }
+
+  /**
+   * 获取合适的sudo命令前缀
+   */
+  private getSudoCommand(): string {
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return '';
+    }
+
+    // 在Linux系统上使用图形化sudo工具
+    if (process.platform === 'linux') {
       // 构建完整的环境变量，确保 PATH 包含常用的系统路径
       const currentPath = process.env.PATH || '';
       const additionalPaths = [
@@ -554,18 +630,32 @@ export class DeploymentService {
       // 优先使用 pkexec（现代 Linux 桌面环境的标准）
       // 传递必要的环境变量，包括完整的 PATH
       return `pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY PATH="${fullPath}" `;
-    };
+    }
 
-    const sudoCommand = getSudoCommand();
+    return '';
+  }
 
-    let command = sudoCommand;
-    command += `chmod +x "${scriptPath}" && `;
-    command += sudoCommand;
+  /**
+   * 构建需要 root 权限的命令（优化版本，减少密码输入）
+   */
+  private buildRootCommand(
+    scriptPath: string,
+    useInputRedirection?: boolean,
+    inputData?: string,
+  ): string {
+    // 获取sudo命令前缀
+    const sudoCommand = this.getSudoCommand();
 
+    let command = '';
+
+    // 给脚本添加执行权限
+    command += `${sudoCommand}chmod +x "${scriptPath}"`;
+
+    // 执行脚本
     if (useInputRedirection && inputData) {
-      command += `bash -c 'echo "${inputData}" | bash "${scriptPath}"'`;
+      command += ` && ${sudoCommand}bash -c 'echo "${inputData}" | bash "${scriptPath}"'`;
     } else {
-      command += `bash "${scriptPath}"`;
+      command += ` && ${sudoCommand}bash "${scriptPath}"`;
     }
 
     return command;
