@@ -19,6 +19,10 @@ export interface EnvironmentCheckResult {
   success: boolean;
   errors: string[];
   warnings: string[];
+  missingBasicTools: string[];
+  missingK8sTools: string[];
+  needsBasicToolsInstall: boolean;
+  needsK8sToolsInstall: boolean;
 }
 
 /**
@@ -35,6 +39,10 @@ export class EnvironmentChecker {
       success: true,
       errors: [],
       warnings: [],
+      missingBasicTools: [],
+      missingK8sTools: [],
+      needsBasicToolsInstall: false,
+      needsK8sToolsInstall: false,
     };
 
     // 检查主机名
@@ -77,7 +85,22 @@ export class EnvironmentChecker {
 
     // 检查必需的系统工具
     try {
-      await this.checkRequiredTools();
+      const toolsCheckResult = await this.checkRequiredTools();
+      result.missingBasicTools = toolsCheckResult.missingBasicTools;
+      result.missingK8sTools = toolsCheckResult.missingK8sTools;
+      result.needsBasicToolsInstall = toolsCheckResult.needsBasicToolsInstall;
+      result.needsK8sToolsInstall = toolsCheckResult.needsK8sToolsInstall;
+
+      if (toolsCheckResult.missingBasicTools.length > 0) {
+        result.warnings.push(
+          `缺少基础工具: ${toolsCheckResult.missingBasicTools.join(', ')}，将通过 DNF 自动安装`,
+        );
+      }
+      if (toolsCheckResult.missingK8sTools.length > 0) {
+        result.warnings.push(
+          `缺少 K8s 工具: ${toolsCheckResult.missingK8sTools.join(', ')}，将通过 install-tools 脚本安装`,
+        );
+      }
     } catch (error) {
       result.errors.push(`系统工具检查: ${error}`);
       result.success = false;
@@ -204,20 +227,72 @@ export class EnvironmentChecker {
   /**
    * 检查必需的系统工具
    */
-  private async checkRequiredTools(): Promise<void> {
-    const requiredTools = ['git', 'curl', 'docker', 'kubectl', 'helm'];
-    const missingTools: string[] = [];
+  private async checkRequiredTools(): Promise<{
+    missingBasicTools: string[];
+    missingK8sTools: string[];
+    needsBasicToolsInstall: boolean;
+    needsK8sToolsInstall: boolean;
+  }> {
+    // 基础工具：通过 DNF 安装
+    const basicTools = ['git', 'curl', 'docker'];
+    // K8s 工具：通过 2-install-tools 脚本安装
+    const k8sTools = ['kubectl', 'helm'];
 
-    for (const tool of requiredTools) {
+    const missingBasicTools: string[] = [];
+    const missingK8sTools: string[] = [];
+
+    // 检查基础工具
+    for (const tool of basicTools) {
       try {
         await execAsync(`which ${tool}`);
       } catch {
-        missingTools.push(tool);
+        missingBasicTools.push(tool);
       }
     }
 
-    if (missingTools.length > 0) {
-      throw new Error(`缺少必需工具: ${missingTools.join(', ')}`);
+    // 检查 K8s 工具
+    for (const tool of k8sTools) {
+      try {
+        await execAsync(`which ${tool}`);
+      } catch {
+        missingK8sTools.push(tool);
+      }
+    }
+
+    return {
+      missingBasicTools,
+      missingK8sTools,
+      needsBasicToolsInstall: missingBasicTools.length > 0,
+      needsK8sToolsInstall: missingK8sTools.length > 0,
+    };
+  }
+
+  /**
+   * 通过 DNF 安装基础工具
+   */
+  async installBasicTools(missingTools: string[]): Promise<void> {
+    if (missingTools.length === 0) {
+      return;
+    }
+
+    // 构建 DNF 安装命令
+    let installCommand = `dnf install -y ${missingTools.join(' ')}`;
+
+    // 在 Linux 系统上，如果不是 root 用户，使用图形化 sudo 工具
+    const needsSudo =
+      process.platform === 'linux' && process.getuid && process.getuid() !== 0;
+
+    if (needsSudo) {
+      // 使用 pkexec 或 sudo 获取权限
+      installCommand = `pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY ${installCommand}`;
+    }
+
+    try {
+      await execAsync(installCommand, { timeout: 300000 }); // 5分钟超时
+    } catch (error) {
+      throw new Error(
+        `安装基础工具失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

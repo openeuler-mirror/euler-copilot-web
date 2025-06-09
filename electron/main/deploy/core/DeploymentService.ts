@@ -17,7 +17,10 @@ import type {
   DeploymentParams,
   DeploymentStatus,
 } from '../types/deployment.types';
-import { EnvironmentChecker } from './EnvironmentChecker';
+import {
+  EnvironmentChecker,
+  type EnvironmentCheckResult,
+} from './EnvironmentChecker';
 import { ValuesYamlManager } from './ValuesYamlManager';
 
 const execAsync = promisify(exec);
@@ -30,10 +33,10 @@ export class DeploymentService {
   private deploymentPath: string;
   private environmentChecker: EnvironmentChecker;
   private valuesYamlManager: ValuesYamlManager;
+  private environmentCheckResult?: EnvironmentCheckResult;
   private currentStatus: DeploymentStatus = {
     status: 'idle',
     message: '',
-    progress: 0,
     currentStep: 'idle',
   };
   private statusCallback?: (status: DeploymentStatus) => void;
@@ -95,7 +98,6 @@ export class DeploymentService {
       this.updateStatus({
         status: 'preparing',
         message: '准备安装环境...',
-        progress: 0,
         currentStep: 'preparing-environment',
       });
 
@@ -108,13 +110,12 @@ export class DeploymentService {
       // 3. 配置 values.yaml
       await this.configureValues(params);
 
-      // 4. 执行部署脚本中的工具安装部分
+      // 4. 执行部署脚本中的工具安装部分（如果需要）
       await this.installTools();
 
       // 更新准备环境完成状态
       this.updateStatus({
         message: '准备安装环境完成',
-        progress: 25,
         currentStep: 'environment-ready',
       });
 
@@ -124,14 +125,12 @@ export class DeploymentService {
       this.updateStatus({
         status: 'success',
         message: '部署完成！',
-        progress: 100,
         currentStep: 'completed',
       });
     } catch (error) {
       this.updateStatus({
         status: 'error',
         message: `部署失败: ${error instanceof Error ? error.message : String(error)}`,
-        progress: 0,
         currentStep: 'failed',
       });
       throw error;
@@ -145,7 +144,6 @@ export class DeploymentService {
     this.updateStatus({
       status: 'preparing',
       message: '检查系统环境...',
-      progress: 10,
       currentStep: 'preparing-environment',
     });
 
@@ -153,13 +151,34 @@ export class DeploymentService {
     await this.checkRootPermission();
 
     const checkResult = await this.environmentChecker.checkAll();
+
+    // 安装缺失的基础工具
+    if (checkResult.needsBasicToolsInstall) {
+      this.updateStatus({
+        message: '安装缺失的基础工具...',
+        currentStep: 'preparing-environment',
+      });
+
+      await this.environmentChecker.installBasicTools(
+        checkResult.missingBasicTools,
+      );
+
+      this.updateStatus({
+        message: '基础工具安装完成',
+        currentStep: 'preparing-environment',
+      });
+    }
+
+    // 检查是否有严重错误
     if (!checkResult.success) {
       throw new Error(`环境检查失败: ${checkResult.errors.join(', ')}`);
     }
 
+    // 存储检查结果，用于后续决定是否需要执行 2-install-tools
+    this.environmentCheckResult = checkResult;
+
     this.updateStatus({
       message: '环境检查通过',
-      progress: 20,
       currentStep: 'preparing-environment',
     });
   }
@@ -171,7 +190,6 @@ export class DeploymentService {
     this.updateStatus({
       status: 'cloning',
       message: '克隆部署仓库...',
-      progress: 30,
       currentStep: 'preparing-environment',
     });
 
@@ -188,7 +206,6 @@ export class DeploymentService {
       await execAsync('git pull origin master', { cwd: this.deploymentPath });
       this.updateStatus({
         message: '更新部署仓库完成',
-        progress: 40,
         currentStep: 'preparing-environment',
       });
     } else {
@@ -202,7 +219,6 @@ export class DeploymentService {
       );
       this.updateStatus({
         message: '克隆部署仓库完成',
-        progress: 40,
         currentStep: 'preparing-environment',
       });
     }
@@ -215,7 +231,6 @@ export class DeploymentService {
     this.updateStatus({
       status: 'configuring',
       message: '配置部署参数...',
-      progress: 50,
       currentStep: 'preparing-environment',
     });
 
@@ -227,7 +242,6 @@ export class DeploymentService {
 
     this.updateStatus({
       message: '配置部署参数完成',
-      progress: 60,
       currentStep: 'preparing-environment',
     });
   }
@@ -236,11 +250,19 @@ export class DeploymentService {
    * 安装工具（准备环境的一部分）
    */
   private async installTools(): Promise<void> {
+    // 检查是否需要安装 K8s 工具
+    if (!this.environmentCheckResult?.needsK8sToolsInstall) {
+      this.updateStatus({
+        message: 'K8s 工具已存在，跳过工具安装',
+        currentStep: 'preparing-environment',
+      });
+      return;
+    }
+
     this.updateStatus({
       status: 'preparing',
-      message: '安装必要工具...',
-      progress: 15,
-      currentStep: 'installing-tools',
+      message: '安装 K8s 工具 (kubectl, helm)...',
+      currentStep: 'preparing-environment',
     });
 
     const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
@@ -262,9 +284,8 @@ export class DeploymentService {
     }
 
     this.updateStatus({
-      message: '工具安装完成',
-      progress: 20,
-      currentStep: 'installing-tools',
+      message: 'K8s 工具安装完成',
+      currentStep: 'preparing-environment',
     });
   }
 
@@ -281,8 +302,6 @@ export class DeploymentService {
         path: '6-install-databases/install_databases.sh',
         displayName: '数据库服务',
         step: 'install-databases',
-        progressStart: 30,
-        progressEnd: 50,
         envVars: {},
       },
       {
@@ -290,8 +309,6 @@ export class DeploymentService {
         path: '7-install-authhub/install_authhub.sh',
         displayName: 'AuthHub 服务',
         step: 'install-authhub',
-        progressStart: 50,
-        progressEnd: 75,
         envVars: {
           // 通过环境变量或输入重定向避免交互
           AUTHHUB_DOMAIN: 'authhub.eulercopilot.local',
@@ -303,8 +320,6 @@ export class DeploymentService {
         path: '8-install-EulerCopilot/install_eulercopilot.sh',
         displayName: 'Intelligence 服务',
         step: 'install-intelligence',
-        progressStart: 75,
-        progressEnd: 95,
         envVars: {
           // install_eulercopilot.sh 已支持这些环境变量
           EULERCOPILOT_DOMAIN: 'www.eulercopilot.local',
@@ -322,7 +337,6 @@ export class DeploymentService {
       this.updateStatus({
         status: 'deploying',
         message: `正在安装 ${script.displayName}...`,
-        progress: script.progressStart,
         currentStep: script.step,
       });
 
@@ -356,7 +370,6 @@ export class DeploymentService {
       // 更新完成状态
       this.updateStatus({
         message: `${script.displayName} 安装完成`,
-        progress: script.progressEnd,
         currentStep: script.step,
       });
     }
@@ -476,7 +489,6 @@ export class DeploymentService {
     this.updateStatus({
       status: 'idle',
       message: '部署已停止',
-      progress: 0,
       currentStep: 'stopped',
     });
   }
@@ -491,8 +503,7 @@ export class DeploymentService {
     this.updateStatus({
       status: 'idle',
       message: '清理完成',
-      progress: 0,
-      currentStep: 'cleaned',
+      currentStep: 'idle',
     });
   }
 }

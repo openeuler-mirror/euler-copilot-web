@@ -50,7 +50,6 @@ export interface DeploymentStatus {
     | 'success'
     | 'error';
   message: string;
-  progress: number;
   currentStep?: string;
   estimatedTime?: number;
 }
