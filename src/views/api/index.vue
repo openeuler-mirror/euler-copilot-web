@@ -447,11 +447,11 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
     keyword: apiSearchValue.value || undefined,
     [apiType.value]: true,
   };
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
   if (type === 'semantic_interface') {
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
     payload[apiType.value] = true;
     const [, res] = await api.queryApiList({
       page: currentPage.value,

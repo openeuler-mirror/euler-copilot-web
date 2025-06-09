@@ -73,24 +73,18 @@ const handleValidateContent = (valid: boolean) => {
 };
 
 // 获取当前的应用中的各flowsDebug的情况
-const updateFlowsDebug = (status?) => {
+const updateFlowsDebug = (status?: boolean, flow?: any) => {
   // 如果status为false,直接置为False不再调接口
+
   if (status === false) {
     publishValidate.value = false;
     //在修改工作流以及界面配置时，需要重新校验工作流，状态置为未发布
     publishStatus.value = '未发布';
     return;
   }
-  api
-    .querySingleAppData({
-      id: route.query?.appId as string,
-    })
-    .then((res) => {
-      if (res?.[1]?.result) {
-        const flowDataList = res?.[1]?.result?.workflows || [];
-        judgeAppFlowsDebug(flowDataList);
-      }
-    });
+  if (flow) {
+    judgeAppFlowsDebug(flow);
+  }
 };
 
 // 获取工作流列表
@@ -172,7 +166,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
 const getPublishStatus = (status) => {
   if (status) {
     publishStatus.value = '已发布';
-  }else {
+  } else {
     publishStatus.value = '未发布';
   }
 };
@@ -213,7 +207,11 @@ function onDebugSuccess(status: boolean) {
           class="createAppContainerStatus"
           :class="{ debugSuccess: publishStatus === '已发布' }"
         >
-        {{publishStatus === '已发布' ? $t('app.app_published') : $t('app.unpublished') }}
+          {{
+            publishStatus === '已发布'
+              ? $t('app.app_published')
+              : $t('app.unpublished')
+          }}
         </div>
       </div>
       <div class="createAppContainerType" v-if="appType !== 'agent'">
