@@ -62,6 +62,7 @@
         overflow-y: auto;
         width: fit-content;
         display: flex;
+        align-content: flex-start;
         flex-wrap: wrap;
         box-sizing: border-box;
         gap: 16px;

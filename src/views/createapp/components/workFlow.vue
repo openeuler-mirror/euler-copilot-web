@@ -376,8 +376,9 @@ const queryFlow = (deal: string) => {
               choiceFlowId(workFlowList.value[0]);
             }
           }
+          const flowDataList = res?.[1]?.result?.workflows || [];
           // 更新当前publish状态
-          emits('updateFlowsDebug');
+          emits('updateFlowsDebug', '', flowDataList);
           updateFlowsDebugStatus.value = true;
         }
         loading.value = false;
