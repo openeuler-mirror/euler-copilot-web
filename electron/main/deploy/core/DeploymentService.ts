@@ -455,6 +455,7 @@ export class DeploymentService {
       status: 'idle',
       message: '部署已停止',
       progress: 0,
+      currentStep: 'stopped',
     });
   }
 
@@ -469,6 +470,7 @@ export class DeploymentService {
       status: 'idle',
       message: '清理完成',
       progress: 0,
+      currentStep: 'cleaned',
     });
   }
 }

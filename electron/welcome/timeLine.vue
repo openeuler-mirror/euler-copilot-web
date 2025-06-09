@@ -98,6 +98,12 @@ const hasFailed = computed(() => {
 
 // 更新活动状态
 const updateActivitiesStatus = (status: any) => {
+  // 防止 status 为 undefined 或 null
+  if (!status) {
+    console.warn('状态更新时收到 undefined/null 状态');
+    return;
+  }
+
   const { currentStep } = status;
 
   if (status.status === 'error') {
@@ -169,8 +175,13 @@ const updateActivitiesStatus = (status: any) => {
 // 状态监听器
 const onDeploymentStatusChange = (status: any) => {
   console.log('部署状态更新:', status);
-  deploymentStatus.value = status;
-  updateActivitiesStatus(status);
+  // 防止状态为 undefined 时的错误
+  if (status) {
+    deploymentStatus.value = status;
+    updateActivitiesStatus(status);
+  } else {
+    console.warn('收到空的部署状态更新');
+  }
 };
 
 // 处理停止安装
