@@ -34,6 +34,7 @@ export class DeploymentService {
     status: 'idle',
     message: '',
     progress: 0,
+    currentStep: 'idle',
   };
   private statusCallback?: (status: DeploymentStatus) => void;
 
@@ -133,6 +134,7 @@ export class DeploymentService {
       status: 'preparing',
       message: '检查系统环境...',
       progress: 10,
+      currentStep: 'checking-environment',
     });
 
     // 检查 root 权限（仅限 Linux）
@@ -146,6 +148,7 @@ export class DeploymentService {
     this.updateStatus({
       message: '环境检查通过',
       progress: 20,
+      currentStep: 'environment-checked',
     });
   }
 
@@ -157,6 +160,7 @@ export class DeploymentService {
       status: 'cloning',
       message: '克隆部署仓库...',
       progress: 30,
+      currentStep: 'cloning-repository',
     });
 
     // 确保部署目录的父目录存在
@@ -173,6 +177,7 @@ export class DeploymentService {
       this.updateStatus({
         message: '更新部署仓库完成',
         progress: 40,
+        currentStep: 'repository-updated',
       });
     } else {
       // 不存在，克隆仓库
@@ -186,6 +191,7 @@ export class DeploymentService {
       this.updateStatus({
         message: '克隆部署仓库完成',
         progress: 40,
+        currentStep: 'repository-cloned',
       });
     }
   }
@@ -198,6 +204,7 @@ export class DeploymentService {
       status: 'configuring',
       message: '配置部署参数...',
       progress: 50,
+      currentStep: 'configuring-values',
     });
 
     const valuesPath = path.join(
@@ -209,6 +216,7 @@ export class DeploymentService {
     this.updateStatus({
       message: '配置部署参数完成',
       progress: 60,
+      currentStep: 'values-configured',
     });
   }
 
@@ -244,6 +252,7 @@ export class DeploymentService {
     this.updateStatus({
       message: '工具安装完成',
       progress: 20,
+      currentStep: 'tools-installed',
     });
   }
 
@@ -336,6 +345,7 @@ export class DeploymentService {
       this.updateStatus({
         message: `${script.displayName} 安装完成`,
         progress: script.progressEnd,
+        currentStep: `${script.step}-completed`,
       });
     }
   }

@@ -104,7 +104,8 @@ const updateActivitiesStatus = (status: any) => {
     return;
   }
 
-  const { currentStep } = status;
+  // 安全地获取 currentStep，避免解构错误
+  const currentStep = status.currentStep || '';
 
   if (status.status === 'error') {
     // 错误状态：所有未完成的步骤标记为失败
