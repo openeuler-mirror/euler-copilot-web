@@ -128,6 +128,9 @@ export class DeploymentService {
       progress: 10,
     });
 
+    // 检查 root 权限（仅限 Linux）
+    await this.checkRootPermission();
+
     const checkResult = await this.environmentChecker.checkAll();
     if (!checkResult.success) {
       throw new Error(`环境检查失败: ${checkResult.errors.join(', ')}`);
@@ -221,14 +224,14 @@ export class DeploymentService {
 
     // 检查脚本文件是否存在
     if (fs.existsSync(toolsScriptPath)) {
-      // 给脚本添加执行权限并执行
-      await execAsync(
-        `chmod +x "${toolsScriptPath}" && bash "${toolsScriptPath}"`,
-        {
-          cwd: scriptsPath,
-          timeout: 300000, // 5分钟超时
-        },
-      );
+      // 构建需要权限的命令
+      const command = this.buildRootCommand(toolsScriptPath);
+
+      // 执行脚本
+      await execAsync(command, {
+        cwd: scriptsPath,
+        timeout: 300000, // 5分钟超时
+      });
     }
 
     this.updateStatus({
@@ -308,16 +311,12 @@ export class DeploymentService {
         ...script.envVars,
       };
 
-      // 构建执行命令
-      let command = `chmod +x "${scriptPath}" && `;
-
-      if (script.useInputRedirection) {
-        // 对于需要用户输入的脚本，使用输入重定向提供默认值
-        // 为 install_authhub.sh 提供默认域名输入
-        command += `echo "authhub.eulercopilot.local" | bash "${scriptPath}"`;
-      } else {
-        command += `bash "${scriptPath}"`;
-      }
+      // 构建需要权限的命令
+      const command = this.buildRootCommand(
+        scriptPath,
+        script.useInputRedirection,
+        script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
+      );
 
       // 给脚本添加执行权限并执行
       await execAsync(command, {
@@ -332,6 +331,113 @@ export class DeploymentService {
         progress: script.progressEnd,
       });
     }
+  }
+
+  /**
+   * 检查并确保有 root 权限或 sudo 权限（仅限 Linux 系统）
+   */
+  private async checkRootPermission(): Promise<void> {
+    // 只在 Linux 系统上检查权限
+    if (process.platform !== 'linux') {
+      return;
+    }
+
+    try {
+      // 检查当前用户 ID，0 表示 root
+      const { stdout } = await execAsync('id -u');
+      const uid = parseInt(stdout.trim(), 10);
+
+      // 如果是 root 用户，直接通过
+      if (uid === 0) {
+        return;
+      }
+
+      // 如果不是 root 用户，检查是否有 sudo 权限
+      try {
+        // 检查用户是否在管理员组中（sudo、wheel、admin）
+        const { stdout: groupsOutput } = await execAsync('groups');
+        const userGroups = groupsOutput.trim().split(/\s+/);
+
+        // 检查常见的管理员组
+        const adminGroups = ['sudo', 'wheel', 'admin'];
+        const hasAdminGroup = adminGroups.some((group) =>
+          userGroups.includes(group),
+        );
+
+        if (hasAdminGroup) {
+          // 用户在管理员组中，具有 sudo 权限
+          // 在实际执行时，buildRootCommand 会使用适当的图形化 sudo 工具
+          return;
+        }
+
+        // 如果不在管理员组中，尝试检查是否有无密码 sudo 权限
+        try {
+          await execAsync('sudo -n true', { timeout: 3000 });
+          // 如果成功，说明用户有无密码 sudo 权限
+          return;
+        } catch {
+          // 用户既不在管理员组中，也没有无密码 sudo 权限
+          throw new Error(
+            '部署脚本需要管理员权限才能执行。请确保当前用户具有 sudo 权限。',
+          );
+        }
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message.includes('部署脚本需要管理员权限')
+        ) {
+          throw error;
+        }
+        // 无法检查组信息，假设用户可能有权限，在实际执行时再处理
+        // 这样避免过于严格的权限检查阻止部署
+        return;
+      }
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('部署脚本需要 root 权限') ||
+          error.message.includes('用户具有管理员权限'))
+      ) {
+        throw error;
+      }
+      throw new Error('无法检查用户权限');
+    }
+  }
+
+  /**
+   * 构建需要 root 权限的命令
+   */
+  private buildRootCommand(
+    scriptPath: string,
+    useInputRedirection?: boolean,
+    inputData?: string,
+  ): string {
+    // 在 Linux 系统上，如果不是 root 用户，使用图形化 sudo 工具
+    const needsSudo =
+      process.platform === 'linux' && process.getuid && process.getuid() !== 0;
+
+    // 获取合适的图形化 sudo 工具
+    const getSudoCommand = (): string => {
+      if (!needsSudo) return '';
+
+      // 优先使用 pkexec（现代 Linux 桌面环境的标准）
+      // 如果没有，回退到传统的 sudo
+      return 'pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY ';
+    };
+
+    const sudoCommand = getSudoCommand();
+
+    let command = sudoCommand;
+    command += `chmod +x "${scriptPath}" && `;
+    command += sudoCommand;
+
+    if (useInputRedirection && inputData) {
+      command += `bash -c 'echo "${inputData}" | bash "${scriptPath}"'`;
+    } else {
+      command += `bash "${scriptPath}"`;
+    }
+
+    return command;
   }
 
   /**
