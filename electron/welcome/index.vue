@@ -43,17 +43,21 @@ import welcomeBgImage from './assets/images/welcome_bg.webp';
 import localDeployIcon from './assets/svgs/local_deploy.svg';
 import onlineServiceIcon from './assets/svgs/online_service.svg';
 import closeIcon from './assets/svgs/close.svg';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import OnlineService from './onlineService.vue';
 import localDeploy from './localDeploy.vue';
-import { isLinux } from '../main/common/platform';
 
 type activePageType = 'localDeploy' | 'onlineService' | 'welcome';
 const avtivePage: Ref<activePageType> = ref('welcome');
 
+// 通过预加载脚本获取平台信息
+const isLinux = computed(() => {
+  return window.eulercopilotWelcome?.system?.platform === 'linux';
+});
+
 // 处理本地部署选择
 const handleLocalDeploy = async () => {
-  if (!isLinux) {
+  if (!isLinux.value) {
     return;
   }
   console.log('选择本地部署');
