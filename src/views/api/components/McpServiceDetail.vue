@@ -274,11 +274,26 @@ watch(
       .description {
         height: 100%;
         overflow: scroll;
-        line-height: 22px;
-        font-weight: 400;
-        color: rgb(78, 88, 101);
         word-break: break-all;
-        font-size: 12px;
+      }
+
+      :deep(.description) {
+        h1:not(:first-child),
+        h2:not(:first-child),
+        h3:not(:first-child),
+        h4:not(:first-child),
+        h5:not(:first-child),
+        h6:not(:first-child) {
+          margin-top: 16px;
+        }
+        p {
+          font-size: 12px;
+          line-height: 16px;
+          color: rgb(78, 88, 101);
+        }
+        p:not(:first-child) {
+          margin-top: 8px;
+        }
       }
 
       :deep(.el-tabs__content) {
@@ -388,9 +403,6 @@ watch(
       font-weight: 700;
       padding: 24px 24px 16px 24px;
       margin: 0;
-    }
-    .el-drawer__body {
-      padding: 0 24px;
     }
     .el-drawer__footer {
       padding: 0;
