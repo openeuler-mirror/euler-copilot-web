@@ -462,9 +462,28 @@ export class DeploymentService {
     const getSudoCommand = (): string => {
       if (!needsSudo) return '';
 
+      // 构建完整的环境变量，确保 PATH 包含常用的系统路径
+      const currentPath = process.env.PATH || '';
+      const additionalPaths = [
+        '/usr/local/bin',
+        '/usr/bin',
+        '/bin',
+        '/usr/sbin',
+        '/sbin',
+      ];
+
+      // 确保所有常用路径都在 PATH 中
+      const pathArray = currentPath.split(':');
+      additionalPaths.forEach((path) => {
+        if (!pathArray.includes(path)) {
+          pathArray.push(path);
+        }
+      });
+      const fullPath = pathArray.join(':');
+
       // 优先使用 pkexec（现代 Linux 桌面环境的标准）
-      // 如果没有，回退到传统的 sudo
-      return 'pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY ';
+      // 传递必要的环境变量，包括完整的 PATH
+      return `pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY PATH="${fullPath}" `;
     };
 
     const sudoCommand = getSudoCommand();
