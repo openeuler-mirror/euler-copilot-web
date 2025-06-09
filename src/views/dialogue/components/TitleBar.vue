@@ -136,14 +136,6 @@ const headerStyles = computed<CSSProperties>(() => {
         >
           {{ $t('Login.logout') }}
         </div>
-        <div class="divider"></div>
-        <div class="exit-button lang-button" @click="apikeyVisible = true">
-          API KEY
-        </div>
-        <div class="divider"></div>
-        <div class="exit-button lang-button" @click="KnowledgeVisible = true">
-          {{ i18n.global.t('witChainD.witChainD') }}
-        </div>
       </el-popover>
     </div>
   </header>
