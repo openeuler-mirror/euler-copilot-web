@@ -9,7 +9,6 @@ import { getCachePath } from '../../common/cache-conf';
 import type {
   DeploymentParams,
   DeploymentStatus,
-  DeploymentConfig,
 } from '../types/deployment.types';
 import { EnvironmentChecker } from './EnvironmentChecker';
 import { ValuesYamlManager } from './ValuesYamlManager';
@@ -72,10 +71,12 @@ export class DeploymentService {
    */
   async startDeployment(params: DeploymentParams): Promise<void> {
     try {
+      // 第一阶段：准备安装环境
       this.updateStatus({
         status: 'preparing',
-        message: '准备部署环境...',
+        message: '准备安装环境...',
         progress: 0,
+        currentStep: 'preparing-environment',
       });
 
       // 1. 检查环境
@@ -87,19 +88,31 @@ export class DeploymentService {
       // 3. 配置 values.yaml
       await this.configureValues(params);
 
-      // 4. 执行部署脚本
+      // 4. 执行部署脚本中的工具安装部分
+      await this.installTools();
+
+      // 更新准备环境完成状态
+      this.updateStatus({
+        message: '准备安装环境完成',
+        progress: 25,
+        currentStep: 'environment-ready',
+      });
+
+      // 第二到第四阶段：按顺序安装各个服务
       await this.executeDeploymentScripts();
 
       this.updateStatus({
         status: 'success',
         message: '部署完成！',
         progress: 100,
+        currentStep: 'completed',
       });
     } catch (error) {
       this.updateStatus({
         status: 'error',
         message: `部署失败: ${error instanceof Error ? error.message : String(error)}`,
         progress: 0,
+        currentStep: 'failed',
       });
       throw error;
     }
@@ -190,25 +203,71 @@ export class DeploymentService {
   }
 
   /**
+   * 安装工具（准备环境的一部分）
+   */
+  private async installTools(): Promise<void> {
+    this.updateStatus({
+      status: 'preparing',
+      message: '安装必要工具...',
+      progress: 15,
+      currentStep: 'installing-tools',
+    });
+
+    const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
+    const toolsScriptPath = path.join(
+      scriptsPath,
+      '2-install-tools/install_tools.sh',
+    );
+
+    // 检查脚本文件是否存在
+    if (fs.existsSync(toolsScriptPath)) {
+      // 给脚本添加执行权限并执行
+      await execAsync(
+        `chmod +x "${toolsScriptPath}" && bash "${toolsScriptPath}"`,
+        {
+          cwd: scriptsPath,
+          timeout: 300000, // 5分钟超时
+        },
+      );
+    }
+
+    this.updateStatus({
+      message: '工具安装完成',
+      progress: 20,
+    });
+  }
+
+  /**
    * 执行部署脚本
    */
   private async executeDeploymentScripts(): Promise<void> {
     const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
 
-    // 按照需求只执行指定的脚本
+    // 按照 timeLine.vue 中的步骤定义，执行指定的脚本（排除工具安装，因为已在准备环境阶段执行）
     const scripts = [
-      { name: '2-install-tools', path: '2-install-tools/install_tools.sh' },
       {
         name: '6-install-databases',
         path: '6-install-databases/install_databases.sh',
+        displayName: '数据库服务',
+        step: 'install-databases',
+        progressStart: 30,
+        progressEnd: 50,
       },
       {
         name: '7-install-authhub',
         path: '7-install-authhub/install_authhub.sh',
+        displayName: 'AuthHub 服务',
+        step: 'install-authhub',
+        progressStart: 50,
+        progressEnd: 75,
       },
       {
         name: '8-install-EulerCopilot',
         path: '8-install-EulerCopilot/install_eulercopilot.sh',
+        displayName: 'Intelligence 服务',
+        step: 'install-intelligence',
+        progressStart: 75,
+        progressEnd: 95,
       },
     ];
 
@@ -217,8 +276,9 @@ export class DeploymentService {
 
       this.updateStatus({
         status: 'deploying',
-        message: `执行 ${script.name}...`,
-        progress: 70 + i * 7,
+        message: `正在安装 ${script.displayName}...`,
+        progress: script.progressStart,
+        currentStep: script.step,
       });
 
       const scriptPath = path.join(scriptsPath, script.path);
@@ -232,6 +292,12 @@ export class DeploymentService {
       await execAsync(`chmod +x "${scriptPath}" && bash "${scriptPath}"`, {
         cwd: scriptsPath,
         timeout: 300000, // 5分钟超时
+      });
+
+      // 更新完成状态
+      this.updateStatus({
+        message: `${script.displayName} 安装完成`,
+        progress: script.progressEnd,
       });
     }
   }

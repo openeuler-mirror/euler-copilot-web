@@ -22,14 +22,35 @@
         {{ $t('localDeploy.model') }}
         <img :src="successIcon" alt="success" width="16" height="16" />
       </div>
-      <el-form-item :label="$t('localDeploy.url')" prop="url" label-position="left">
-        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="ruleForm.url" />
+      <el-form-item
+        :label="$t('localDeploy.url')"
+        prop="url"
+        label-position="left"
+      >
+        <el-input
+          :placeholder="$t('welcome.pleaseInput')"
+          v-model="ruleForm.url"
+        />
       </el-form-item>
-      <el-form-item :label="$t('localDeploy.modelName')" prop="modelName" label-position="left">
-        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="ruleForm.modelName" />
+      <el-form-item
+        :label="$t('localDeploy.modelName')"
+        prop="modelName"
+        label-position="left"
+      >
+        <el-input
+          :placeholder="$t('welcome.pleaseInput')"
+          v-model="ruleForm.modelName"
+        />
       </el-form-item>
-      <el-form-item :label="$t('localDeploy.apiKey')" prop="apiKey" label-position="left">
-        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="ruleForm.apiKey" />
+      <el-form-item
+        :label="$t('localDeploy.apiKey')"
+        prop="apiKey"
+        label-position="left"
+      >
+        <el-input
+          :placeholder="$t('welcome.pleaseInput')"
+          v-model="ruleForm.apiKey"
+        />
       </el-form-item>
     </el-form>
     <el-form
@@ -45,7 +66,11 @@
         {{ $t('localDeploy.embeddingModel') }}
         <img :src="successIcon" alt="success" width="16" height="16" />
       </div>
-      <el-form-item :label="$t('localDeploy.url')" prop="url" label-position="left">
+      <el-form-item
+        :label="$t('localDeploy.url')"
+        prop="url"
+        label-position="left"
+      >
         <el-input placeholder="请输入" v-model="embeddingRuleForm.url">
           <template #suffix>
             <el-tooltip
@@ -61,11 +86,25 @@
           </template>
         </el-input>
       </el-form-item>
-        <el-form-item :label="$t('localDeploy.modelName')" prop="modelName" label-position="left">
-          <el-input :placeholder="$t('welcome.pleaseInput')" v-model="embeddingRuleForm.modelName" />
+      <el-form-item
+        :label="$t('localDeploy.modelName')"
+        prop="modelName"
+        label-position="left"
+      >
+        <el-input
+          :placeholder="$t('welcome.pleaseInput')"
+          v-model="embeddingRuleForm.modelName"
+        />
       </el-form-item>
-      <el-form-item :label="$t('localDeploy.apiKey')" prop="apiKey" label-position="left">
-        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="embeddingRuleForm.apiKey" />
+      <el-form-item
+        :label="$t('localDeploy.apiKey')"
+        prop="apiKey"
+        label-position="left"
+      >
+        <el-input
+          :placeholder="$t('welcome.pleaseInput')"
+          v-model="embeddingRuleForm.apiKey"
+        />
       </el-form-item>
     </el-form>
     <div class="submit-btn">
@@ -93,7 +132,7 @@ import i18n from './lang/index';
 
 const props = withDefaults(
   defineProps<{
-    back: Function;
+    back: () => void;
   }>(),
   {},
 );
@@ -124,13 +163,37 @@ const isTimeLine = ref(false);
 
 const rules = reactive<FormRules<RuleForm>>({
   url: [
-    { required: true, message: i18n.global.t('welcome.pleaseInput')+i18n.global.t('localDeploy.url'), trigger: ['change','blur'] },
-    { type: 'url', message: i18n.global.t('welcome.validUrl'), trigger: 'blur' },
+    {
+      required: true,
+      message:
+        i18n.global.t('welcome.pleaseInput') + i18n.global.t('localDeploy.url'),
+      trigger: ['change', 'blur'],
+    },
+    {
+      type: 'url',
+      message: i18n.global.t('welcome.validUrl'),
+      trigger: 'blur',
+    },
   ],
-  modelName: [{ required: true, message: i18n.global.t('welcome.pleaseInput')+i18n.global.t('localDeploy.modelName'), trigger: ['change','blur'] }],
-  apiKey: [{ required: true, message: i18n.global.t('welcome.pleaseInput')+i18n.global.t('localDeploy.apiKey'), trigger: ['change','blur'] }],
+  modelName: [
+    {
+      required: true,
+      message:
+        i18n.global.t('welcome.pleaseInput') +
+        i18n.global.t('localDeploy.modelName'),
+      trigger: ['change', 'blur'],
+    },
+  ],
+  apiKey: [
+    {
+      required: true,
+      message:
+        i18n.global.t('welcome.pleaseInput') +
+        i18n.global.t('localDeploy.apiKey'),
+      trigger: ['change', 'blur'],
+    },
+  ],
 });
-
 
 watch(
   [() => ruleForm, () => embeddingRuleForm],
@@ -154,19 +217,17 @@ const copyText = (ruleForm: RuleForm) => {
   embeddingRuleForm.apiKey = ruleForm.apiKey;
 };
 const validateForm = async () => {
-  const [ruleFormValid, ruleFormFields] = await new Promise<[boolean, any]>(
+  const [ruleFormValid] = await new Promise<[boolean, any]>((resolve) => {
+    ruleFormRef.value?.validate((valid, fields) => resolve([valid, fields]));
+  });
+
+  const [embeddingRuleFormValid] = await new Promise<[boolean, any]>(
     (resolve) => {
-      ruleFormRef.value?.validate((valid, fields) => resolve([valid, fields]));
+      embeddingRuleFormRef.value?.validate((valid, fields) =>
+        resolve([valid, fields]),
+      );
     },
   );
-
-  const [embeddingRuleFormValid, embeddingRuleFormFields] = await new Promise<
-    [boolean, any]
-  >((resolve) => {
-    embeddingRuleFormRef.value?.validate((valid, fields) =>
-      resolve([valid, fields]),
-    );
-  });
 
   if (!ruleFormValid || !embeddingRuleFormValid) {
     return false;
@@ -180,30 +241,59 @@ const handleConfirm = async () => {
   if (!isValid) {
     return;
   }
-  isTimeLine.value = true;
 
-  console.log('表单验证成功:', { ruleForm, embeddingRuleForm });
+  try {
+    // 切换到时间线视图
+    isTimeLine.value = true;
+
+    // 准备表单数据，格式与 DeploymentFormData 接口一致
+    const formData = {
+      ruleForm: {
+        url: ruleForm.url,
+        modelName: ruleForm.modelName,
+        apiKey: ruleForm.apiKey,
+      },
+      embeddingRuleForm: {
+        url: embeddingRuleForm.url,
+        modelName: embeddingRuleForm.modelName,
+        apiKey: embeddingRuleForm.apiKey,
+      },
+    };
+
+    console.log('开始部署，表单数据:', formData);
+
+    // 调用部署服务
+    if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+      await window.eulercopilotWelcome.deployment.startDeploymentFromForm(
+        formData,
+      );
+    } else {
+      console.error('部署服务不可用');
+    }
+  } catch (error) {
+    console.error('部署启动失败:', error);
+    // 可以在这里添加错误提示
+  }
 };
 const handleBack = () => {
-    if(isTimeLine.value){
-        isTimeLine.value = false;
-    }else{
-        props.back();
-    }
+  if (isTimeLine.value) {
+    isTimeLine.value = false;
+  } else {
+    props.back();
+  }
 };
-
 </script>
 
 <style lang="scss">
 /* 自定义el-tooltip的背景色为绿色 */
 .url-icon-tooltip.el-popper.is-light {
-  background-color: rgb(244,246,250) !important;
-  border-color: rgb(223,229,239) !important;
+  background-color: rgb(244, 246, 250) !important;
+  border-color: rgb(223, 229, 239) !important;
   box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%);
 }
 .url-icon-tooltip.el-popper.is-light .el-popper__arrow::before {
-  background-color: rgb(244,246,250) !important;
-  border-color: rgb(223,229,239) !important;
+  background-color: rgb(244, 246, 250) !important;
+  border-color: rgb(223, 229, 239) !important;
   border-left-color: transparent !important;
   border-top-color: transparent !important;
 }

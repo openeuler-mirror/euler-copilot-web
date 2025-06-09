@@ -92,10 +92,12 @@ export interface DesktopAppWelcomeAPI {
   // 部署服务
   deployment: {
     startDeploymentFromForm(formData: {
-      url: string;
-      modelName: string;
-      apiKey: string;
-      embeddingForm: {
+      ruleForm: {
+        url: string;
+        modelName: string;
+        apiKey: string;
+      };
+      embeddingRuleForm: {
         url: string;
         modelName: string;
         apiKey: string;

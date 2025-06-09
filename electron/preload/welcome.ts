@@ -17,10 +17,12 @@ const deploymentAPI = {
    * 从前端表单开始部署
    */
   startDeploymentFromForm: (formData: {
-    url: string;
-    modelName: string;
-    apiKey: string;
-    embeddingForm: {
+    ruleForm: {
+      url: string;
+      modelName: string;
+      apiKey: string;
+    };
+    embeddingRuleForm: {
       url: string;
       modelName: string;
       apiKey: string;
