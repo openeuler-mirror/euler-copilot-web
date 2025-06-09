@@ -43,6 +43,7 @@ openEuler 智能化解决方案 Web 前端
 # Electron 客户端
 Group:            Applications/Utilities
 Summary:          openEuler 智能化解决方案桌面客户端
+Requires:         which
 Requires:         at-spi2-core
 Requires:         gtk3
 Requires:         libXScrnSaver
