@@ -6,17 +6,17 @@
     <img class="close-btn" :src="closeIcon" alt="" @click="handleClose" />
     <div v-if="avtivePage === 'welcome'" class="welcome-page">
       <div class="welcome-title">
-        欢迎使用
+        {{ $t('welcome.welcomeText') }}
         <img :src="logoImage" alt="" />
       </div>
       <div class="welcome-detail-content">
         <div class="welcome-detail-content-item" :class = "isLinux?'':'item-disabled'" @click="handleLocalDeploy">
           <img :src="localDeployIcon" alt="" />
-          <span class="welcome-detail-content-item-text">后端本地部署</span>
+          <span class="welcome-detail-content-item-text">{{ $t('welcome.localDeploy') }}</span>
         </div>
         <div class="welcome-detail-content-item" @click="handleOnlineService">
           <img :src="onlineServiceIcon" alt="" />
-          <span class="welcome-detail-content-item-text">后端在线服务</span>
+          <span class="welcome-detail-content-item-text">{{ $t('welcome.onlineService') }}</span>
         </div>
       </div>
     </div>

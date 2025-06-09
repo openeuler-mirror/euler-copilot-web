@@ -2,10 +2,10 @@
   <div class="welcome-detail-title">
     <div @click="handleBack" class="back-btn">
       <img :src="leftArrowIcon" alt="" />
-      <span class="back-btn-text">返回</span>
+      <span class="back-btn-text">{{ $t('welcome.back') }}</span>
     </div>
     <span class="divider"></span>
-    <div class="welcome-detail-title-text">后端在线服务</div>
+    <div class="welcome-detail-title-text">{{ $t('welcome.localDeploy') }}</div>
   </div>
   <div v-if="!isTimeLine">
     <el-form
@@ -19,17 +19,17 @@
       style="max-width: 600px"
     >
       <div class="model-title">
-        大模型
+        {{ $t('localDeploy.model') }}
         <img :src="successIcon" alt="success" width="16" height="16" />
       </div>
-      <el-form-item label="URL" prop="url" label-position="left">
-        <el-input placeholder="请输入" v-model="ruleForm.url" />
+      <el-form-item :label="$t('localDeploy.url')" prop="url" label-position="left">
+        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="ruleForm.url" />
       </el-form-item>
-      <el-form-item label="模型名称" prop="modelName" label-position="left">
-        <el-input placeholder="请输入" v-model="ruleForm.modelName" />
+      <el-form-item :label="$t('localDeploy.modelName')" prop="modelName" label-position="left">
+        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="ruleForm.modelName" />
       </el-form-item>
-      <el-form-item label="API_Key" prop="apiKey" label-position="left">
-        <el-input placeholder="请输入" v-model="ruleForm.apiKey" />
+      <el-form-item :label="$t('localDeploy.apiKey')" prop="apiKey" label-position="left">
+        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="ruleForm.apiKey" />
       </el-form-item>
     </el-form>
     <el-form
@@ -42,14 +42,14 @@
       style="max-width: 600px"
     >
       <div class="model-title">
-        Embedding模型
+        {{ $t('localDeploy.embeddingModel') }}
         <img :src="successIcon" alt="success" width="16" height="16" />
       </div>
-      <el-form-item label="URL" prop="url" label-position="left">
+      <el-form-item :label="$t('localDeploy.url')" prop="url" label-position="left">
         <el-input placeholder="请输入" v-model="embeddingRuleForm.url">
           <template #suffix>
             <el-tooltip
-              content="复用大模型相同链接"
+              :content="$t('localDeploy.copyTip')"
               placement="top"
               effect="light"
               popper-class="url-icon-tooltip"
@@ -61,11 +61,11 @@
           </template>
         </el-input>
       </el-form-item>
-      <el-form-item label="模型名称" prop="modelName" label-position="left">
-        <el-input placeholder="请输入" v-model="embeddingRuleForm.modelName" />
+        <el-form-item :label="$t('localDeploy.modelName')" prop="modelName" label-position="left">
+          <el-input :placeholder="$t('welcome.pleaseInput')" v-model="embeddingRuleForm.modelName" />
       </el-form-item>
-      <el-form-item label="API_Key" prop="apiKey" label-position="left">
-        <el-input placeholder="请输入" v-model="embeddingRuleForm.apiKey" />
+      <el-form-item :label="$t('localDeploy.apiKey')" prop="apiKey" label-position="left">
+        <el-input :placeholder="$t('welcome.pleaseInput')" v-model="embeddingRuleForm.apiKey" />
       </el-form-item>
     </el-form>
     <div class="submit-btn">
@@ -74,7 +74,7 @@
         :disabled="isConfirmDisabled"
         @click="handleConfirm"
       >
-        确定
+        {{ $t('welcome.confirm') }}
       </el-button>
     </div>
   </div>
@@ -89,6 +89,8 @@ import copyIcon from './assets/svgs/copy_icon.svg';
 import successIcon from './assets/svgs/success.svg';
 import TimeLine from './timeLine.vue';
 import leftArrowIcon from './assets/svgs/left_arrow.svg';
+import i18n from './lang/index';
+
 const props = withDefaults(
   defineProps<{
     back: Function;
@@ -122,11 +124,11 @@ const isTimeLine = ref(false);
 
 const rules = reactive<FormRules<RuleForm>>({
   url: [
-    { required: true, message: '请输入URL', trigger: 'change' },
-    { type: 'url', message: '请输入有效的URL', trigger: 'blur' },
+    { required: true, message: i18n.global.t('welcome.pleaseInput')+i18n.global.t('localDeploy.url'), trigger: ['change','blur'] },
+    { type: 'url', message: i18n.global.t('welcome.validUrl'), trigger: 'blur' },
   ],
-  modelName: [{ required: true, message: '请输入模型名称', trigger: 'change' }],
-  apiKey: [{ required: true, message: '请输入API_Key', trigger: 'change' }],
+  modelName: [{ required: true, message: i18n.global.t('welcome.pleaseInput')+i18n.global.t('localDeploy.modelName'), trigger: ['change','blur'] }],
+  apiKey: [{ required: true, message: i18n.global.t('welcome.pleaseInput')+i18n.global.t('localDeploy.apiKey'), trigger: ['change','blur'] }],
 });
 
 
@@ -189,7 +191,6 @@ const handleBack = () => {
         props.back();
     }
 };
-
 
 </script>
 

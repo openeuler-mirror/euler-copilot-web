@@ -2,10 +2,10 @@
   <div class="welcome-detail-title">
     <div @click="handleBack" class="back-btn">
       <img :src="leftArrowIcon" alt="" />
-      <span class="back-btn-text">返回</span>
+      <span class="back-btn-text">{{ $t('welcome.back') }}</span>
     </div>
     <span class="divider"></span>
-    <div class="welcome-detail-title-text">后端在线服务</div>
+    <div class="welcome-detail-title-text">{{ $t('welcome.localDeploy') }}</div>
   </div>
   <el-form
     ref="ruleFormRef"
@@ -16,9 +16,9 @@
     class="online-ruleForm"
     style="max-width: 600px"
   >
-    <el-form-item label="后端服务链接" prop="url" label-position="left">
+    <el-form-item :label="$t('onlineService.serviceUrl')" prop="url" label-position="left">
       <el-input
-        placeholder="请输入"
+        :placeholder="$t('welcome.pleaseInput')"
         v-model="ruleForm.url"
         @change="handleUrlChange"
         @blur="handleUrlBlur"
@@ -27,7 +27,7 @@
   </el-form>
   <div class="submit-btn">
     <el-button type="primary" :disabled="isConfirmDisabled" @click="handleConfirm(ruleFormRef)">
-      确定
+      {{ $t('welcome.confirm') }}
     </el-button>
   </div>
 </template>
@@ -36,6 +36,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import leftArrowIcon from './assets/svgs/left_arrow.svg';
+import i18n from './lang/index';
 
 const props = withDefaults(
   defineProps<{
@@ -62,13 +63,13 @@ const checkUrlValid = (_rule, value, callback) => {
       callback();
     }
   }).catch((err) => {
-    callback('校验失败:',err);
+    callback(i18n.global.t('welcome.validationFailure'),err);
   });
 };
 const rules = reactive<FormRules<RuleForm>>({
   url: [
-    { required: true, message: '请输入后端服务链接', trigger: 'change' },
-    { type: 'url', message: '请输入有效的URL', trigger: ['blur'] },
+    { required: true, message:i18n.global.t('welcome.pleaseInput')+i18n.global.t('onlineService.serviceUrl') , trigger: ['change','blur'] },
+    { type: 'url', message: i18n.global.t('welcome.validUrl'), trigger: ['blur'] },
     { validator: checkUrlValid, trigger: ['blur'] },
   ],
 });

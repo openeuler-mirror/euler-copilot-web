@@ -1,0 +1,31 @@
+export default {
+  welcome: {
+    welcomeText: 'Welcome to use',
+    localDeploy: 'Back-end local deployment',
+    onlineService: 'Back-end online services',
+    back: 'Back',
+    confirm: 'Ok',
+    pleaseInput: 'Please Input',
+    validUrl: 'Please enter a valid URL',
+    validationFailure:'Validation failure',
+},
+  localDeploy: {
+    model: 'Large model',
+    embeddingModel: 'Embedding Model',
+    url: 'URL',
+    modelName: 'ModelName',
+    apiKey: 'API_Key',
+    copyTip: 'Reuse the same link for large models',
+    installation: 'Installation',
+    dataBase: 'Database services',
+    authHub: 'AuthHub services',
+    intelligence: 'Intelligence services',
+    serviceLaunch: 'Configuration File Initialization & Service Startup',
+    stopInstall: 'Stop installation',
+    complete: 'Complete',
+    retry: 'Retry',
+  },
+  onlineService: {
+    serviceUrl: 'Backend Service Links',
+  },
+};
