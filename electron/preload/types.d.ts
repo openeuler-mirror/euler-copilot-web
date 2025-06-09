@@ -89,6 +89,25 @@ export interface DesktopAppWelcomeAPI {
     cancel(): Promise<void>;
   };
 
+  // 部署服务
+  deployment: {
+    startDeploymentFromForm(formData: {
+      url: string;
+      modelName: string;
+      apiKey: string;
+      embeddingForm: {
+        url: string;
+        modelName: string;
+        apiKey: string;
+      };
+    }): Promise<void>;
+    stopDeployment(): Promise<void>;
+    getStatus(): Promise<any>;
+    onStatusChange(callback: (status: any) => void): void;
+    removeStatusListener(): void;
+    cleanup(): Promise<void>;
+  };
+
   // 系统信息
   system: {
     platform: string;

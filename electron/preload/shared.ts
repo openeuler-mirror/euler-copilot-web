@@ -20,7 +20,10 @@ import type { ServerValidationResult } from './types';
  * IPC 通道验证
  */
 export function validateIPC(channel: string): true | never {
-  if (!channel || !channel.startsWith('copilot:')) {
+  if (
+    !channel ||
+    (!channel.startsWith('copilot:') && !channel.startsWith('deployment:'))
+  ) {
     // 允许窗口状态变化事件通过验证
     if (
       channel === 'window-maximized-change' ||

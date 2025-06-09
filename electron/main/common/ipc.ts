@@ -11,8 +11,12 @@ import { ipcMain, BrowserWindow } from 'electron';
 import { toggleTheme, setSystemTheme } from './theme';
 import { getConfigManager, DesktopConfig } from './config';
 import { completeWelcomeFlow, showWelcomeWindow } from '../window/welcome';
+import { DeploymentIPCHandler } from '../deploy/main/DeploymentIPCHandler';
 import https from 'https';
 import http from 'http';
+
+// 全局部署服务IPC处理程序实例
+let deploymentIPCHandler: DeploymentIPCHandler | null = null;
 
 /**
  * 注册所有IPC监听器
@@ -22,6 +26,7 @@ export function registerIpcListeners(): void {
   registerWindowControlListeners();
   registerConfigListeners();
   registerWelcomeListeners();
+  registerDeploymentListeners();
 }
 
 /**
@@ -239,5 +244,34 @@ async function validateServerConnection(url: string): Promise<{
       isValid: false,
       error: error instanceof Error ? error.message : '无效的URL格式',
     };
+  }
+}
+
+/**
+ * 注册部署服务相关的IPC监听器
+ */
+function registerDeploymentListeners(): void {
+  // 初始化部署服务IPC处理程序
+  if (!deploymentIPCHandler) {
+    deploymentIPCHandler = new DeploymentIPCHandler();
+  }
+}
+
+/**
+ * 设置部署服务的主窗口引用
+ */
+export function setDeploymentMainWindow(window: BrowserWindow): void {
+  if (deploymentIPCHandler) {
+    deploymentIPCHandler.setMainWindow(window);
+  }
+}
+
+/**
+ * 清理部署服务IPC处理程序
+ */
+export function cleanupDeploymentHandlers(): void {
+  if (deploymentIPCHandler) {
+    deploymentIPCHandler.cleanup();
+    deploymentIPCHandler = null;
   }
 }
