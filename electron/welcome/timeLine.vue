@@ -169,6 +169,18 @@ const updateActivitiesStatus = (status: any) => {
       } else if (activityIndex === 3) {
         activity.type = 'running';
       }
+    } else if (currentStep === 'completed') {
+      // 全部完成
+      activities.value.forEach((act) => {
+        act.type = 'success';
+      });
+    } else if (currentStep === 'failed' || currentStep === 'stopped') {
+      // 失败或停止状态
+      activities.value.forEach((act) => {
+        if (act.type !== 'success') {
+          act.type = 'failed';
+        }
+      });
     }
   });
 };

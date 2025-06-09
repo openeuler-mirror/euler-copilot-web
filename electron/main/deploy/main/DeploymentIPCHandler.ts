@@ -34,8 +34,16 @@ export class DeploymentIPCHandler {
 
     // 设置状态变化回调
     this.localDeployHandler.setStatusCallback((status) => {
-      if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      // 验证状态对象是否有效
+      if (
+        status &&
+        typeof status === 'object' &&
+        this.mainWindow &&
+        !this.mainWindow.isDestroyed()
+      ) {
         this.mainWindow.webContents.send('deployment:statusChanged', status);
+      } else if (!status) {
+        console.warn('IPC Handler: 收到无效的状态更新:', status);
       }
     });
   }

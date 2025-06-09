@@ -61,7 +61,19 @@ export class DeploymentService {
    * 更新部署状态
    */
   private updateStatus(status: Partial<DeploymentStatus>) {
+    // 验证输入状态
+    if (!status || typeof status !== 'object') {
+      console.warn('DeploymentService: 尝试更新无效状态:', status);
+      return;
+    }
+
     this.currentStatus = { ...this.currentStatus, ...status };
+
+    // 确保 currentStep 总是存在
+    if (!this.currentStatus.currentStep) {
+      this.currentStatus.currentStep = 'unknown';
+    }
+
     if (this.statusCallback) {
       this.statusCallback(this.currentStatus);
     }
@@ -134,7 +146,7 @@ export class DeploymentService {
       status: 'preparing',
       message: '检查系统环境...',
       progress: 10,
-      currentStep: 'checking-environment',
+      currentStep: 'preparing-environment',
     });
 
     // 检查 root 权限（仅限 Linux）
@@ -148,7 +160,7 @@ export class DeploymentService {
     this.updateStatus({
       message: '环境检查通过',
       progress: 20,
-      currentStep: 'environment-checked',
+      currentStep: 'preparing-environment',
     });
   }
 
@@ -160,7 +172,7 @@ export class DeploymentService {
       status: 'cloning',
       message: '克隆部署仓库...',
       progress: 30,
-      currentStep: 'cloning-repository',
+      currentStep: 'preparing-environment',
     });
 
     // 确保部署目录的父目录存在
@@ -177,7 +189,7 @@ export class DeploymentService {
       this.updateStatus({
         message: '更新部署仓库完成',
         progress: 40,
-        currentStep: 'repository-updated',
+        currentStep: 'preparing-environment',
       });
     } else {
       // 不存在，克隆仓库
@@ -191,7 +203,7 @@ export class DeploymentService {
       this.updateStatus({
         message: '克隆部署仓库完成',
         progress: 40,
-        currentStep: 'repository-cloned',
+        currentStep: 'preparing-environment',
       });
     }
   }
@@ -204,7 +216,7 @@ export class DeploymentService {
       status: 'configuring',
       message: '配置部署参数...',
       progress: 50,
-      currentStep: 'configuring-values',
+      currentStep: 'preparing-environment',
     });
 
     const valuesPath = path.join(
@@ -216,7 +228,7 @@ export class DeploymentService {
     this.updateStatus({
       message: '配置部署参数完成',
       progress: 60,
-      currentStep: 'values-configured',
+      currentStep: 'preparing-environment',
     });
   }
 
@@ -252,7 +264,7 @@ export class DeploymentService {
     this.updateStatus({
       message: '工具安装完成',
       progress: 20,
-      currentStep: 'tools-installed',
+      currentStep: 'installing-tools',
     });
   }
 
@@ -345,7 +357,7 @@ export class DeploymentService {
       this.updateStatus({
         message: `${script.displayName} 安装完成`,
         progress: script.progressEnd,
-        currentStep: `${script.step}-completed`,
+        currentStep: script.step,
       });
     }
   }
