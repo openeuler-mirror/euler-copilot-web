@@ -89,6 +89,9 @@ app.on('activate', () => {
  */
 async function onReady() {
   try {
+    // 首先注册IPC监听器，确保欢迎窗口也能使用相关功能
+    registerIpcListeners();
+
     // 检查配置文件是否存在，如果不存在则显示欢迎界面
     const shouldShowWelcome = checkAndShowWelcomeIfNeeded();
 
@@ -161,9 +164,6 @@ export async function continueAppStartup() {
  * 启动应用
  */
 async function startup() {
-  // 注册IPC通信监听器
-  registerIpcListeners();
-
   // 创建系统托盘
   createTray();
 
