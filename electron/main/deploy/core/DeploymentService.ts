@@ -252,6 +252,7 @@ export class DeploymentService {
         step: 'install-databases',
         progressStart: 30,
         progressEnd: 50,
+        envVars: {},
       },
       {
         name: '7-install-authhub',
@@ -260,6 +261,11 @@ export class DeploymentService {
         step: 'install-authhub',
         progressStart: 50,
         progressEnd: 75,
+        envVars: {
+          // 通过环境变量或输入重定向避免交互
+          AUTHHUB_DOMAIN: 'authhub.eulercopilot.local',
+        },
+        useInputRedirection: true, // 标记需要输入重定向
       },
       {
         name: '8-install-EulerCopilot',
@@ -268,6 +274,14 @@ export class DeploymentService {
         step: 'install-intelligence',
         progressStart: 75,
         progressEnd: 95,
+        envVars: {
+          // install_eulercopilot.sh 已支持这些环境变量
+          EULERCOPILOT_DOMAIN: 'www.eulercopilot.local',
+          AUTHHUB_DOMAIN: 'authhub.eulercopilot.local',
+          // 设置非交互模式标志
+          CI: 'true',
+          DEBIAN_FRONTEND: 'noninteractive',
+        },
       },
     ];
 
@@ -288,10 +302,28 @@ export class DeploymentService {
         throw new Error(`脚本文件不存在: ${scriptPath}`);
       }
 
+      // 准备环境变量
+      const execEnv = {
+        ...process.env,
+        ...script.envVars,
+      };
+
+      // 构建执行命令
+      let command = `chmod +x "${scriptPath}" && `;
+
+      if (script.useInputRedirection) {
+        // 对于需要用户输入的脚本，使用输入重定向提供默认值
+        // 为 install_authhub.sh 提供默认域名输入
+        command += `echo "authhub.eulercopilot.local" | bash "${scriptPath}"`;
+      } else {
+        command += `bash "${scriptPath}"`;
+      }
+
       // 给脚本添加执行权限并执行
-      await execAsync(`chmod +x "${scriptPath}" && bash "${scriptPath}"`, {
+      await execAsync(command, {
         cwd: scriptsPath,
         timeout: 300000, // 5分钟超时
+        env: execEnv,
       });
 
       // 更新完成状态
