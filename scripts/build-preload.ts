@@ -55,6 +55,8 @@ function createRollupConfig(entry: PreloadEntry): RollupOptions {
       sourceMap: false,
       noEmitOnError: true,
       include: compilationInclude,
+      target: 'ES2022',
+      lib: ['ES2022', 'DOM'],
     }),
     alias({
       entries: {
