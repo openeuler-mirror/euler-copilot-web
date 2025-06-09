@@ -11,7 +11,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import { getCachePath } from '../../common/cache-conf';
 import type {
   DeploymentParams,
@@ -23,7 +22,35 @@ import {
 } from './EnvironmentChecker';
 import { ValuesYamlManager } from './ValuesYamlManager';
 
-const execAsync = promisify(exec);
+/**
+ * 支持中断的异步执行函数
+ */
+const execAsyncWithAbort = (
+  command: string,
+  options: any = {},
+  abortSignal?: AbortSignal,
+): Promise<{ stdout: string; stderr: string }> => {
+  return new Promise((resolve, reject) => {
+    const childProcess = exec(command, options, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve({
+          stdout: typeof stdout === 'string' ? stdout : stdout.toString(),
+          stderr: typeof stderr === 'string' ? stderr : stderr.toString(),
+        });
+      }
+    });
+
+    // 如果提供了中断信号，监听中断事件
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', () => {
+        childProcess.kill('SIGTERM');
+        reject(new Error('部署进程已被用户停止'));
+      });
+    }
+  });
+};
 
 /**
  * 部署服务核心类
@@ -40,6 +67,8 @@ export class DeploymentService {
     currentStep: 'idle',
   };
   private statusCallback?: (status: DeploymentStatus) => void;
+  private abortController?: AbortController;
+  private currentProcess?: any;
 
   constructor() {
     this.cachePath = getCachePath();
@@ -94,6 +123,9 @@ export class DeploymentService {
    */
   async startDeployment(params: DeploymentParams): Promise<void> {
     try {
+      // 创建新的 AbortController 用于控制部署流程
+      this.abortController = new AbortController();
+
       // 第一阶段：准备安装环境
       this.updateStatus({
         status: 'preparing',
@@ -128,12 +160,25 @@ export class DeploymentService {
         currentStep: 'completed',
       });
     } catch (error) {
-      this.updateStatus({
-        status: 'error',
-        message: `部署失败: ${error instanceof Error ? error.message : String(error)}`,
-        currentStep: 'failed',
-      });
-      throw error;
+      // 如果是因为手动停止导致的错误，使用停止状态
+      if (this.abortController?.signal.aborted) {
+        this.updateStatus({
+          status: 'idle',
+          message: '部署已停止',
+          currentStep: 'stopped',
+        });
+      } else {
+        this.updateStatus({
+          status: 'error',
+          message: `部署失败: ${error instanceof Error ? error.message : String(error)}`,
+          currentStep: 'failed',
+        });
+        throw error;
+      }
+    } finally {
+      // 清理资源
+      this.abortController = undefined;
+      this.currentProcess = undefined;
     }
   }
 
@@ -203,7 +248,11 @@ export class DeploymentService {
     const gitDir = path.join(this.deploymentPath, '.git');
     if (fs.existsSync(gitDir)) {
       // 已存在，执行 git pull 更新
-      await execAsync('git pull origin master', { cwd: this.deploymentPath });
+      await execAsyncWithAbort(
+        'git pull origin master',
+        { cwd: this.deploymentPath },
+        this.abortController?.signal,
+      );
       this.updateStatus({
         message: '更新部署仓库完成',
         currentStep: 'preparing-environment',
@@ -211,11 +260,12 @@ export class DeploymentService {
     } else {
       // 不存在，克隆仓库
       const repoUrl = 'https://gitee.com/openeuler/euler-copilot-framework.git';
-      await execAsync(
+      await execAsyncWithAbort(
         `git clone ${repoUrl} ${path.basename(this.deploymentPath)}`,
         {
           cwd: deploymentParentDir,
         },
+        this.abortController?.signal,
       );
       this.updateStatus({
         message: '克隆部署仓库完成',
@@ -277,10 +327,14 @@ export class DeploymentService {
       const command = this.buildRootCommand(toolsScriptPath);
 
       // 执行脚本
-      await execAsync(command, {
-        cwd: scriptsPath,
-        timeout: 300000, // 5分钟超时
-      });
+      await execAsyncWithAbort(
+        command,
+        {
+          cwd: scriptsPath,
+          timeout: 300000, // 5分钟超时
+        },
+        this.abortController?.signal,
+      );
     }
 
     this.updateStatus({
@@ -361,11 +415,15 @@ export class DeploymentService {
       );
 
       // 给脚本添加执行权限并执行
-      await execAsync(command, {
-        cwd: scriptsPath,
-        timeout: 300000, // 5分钟超时
-        env: execEnv,
-      });
+      await execAsyncWithAbort(
+        command,
+        {
+          cwd: scriptsPath,
+          timeout: 300000, // 5分钟超时
+          env: execEnv,
+        },
+        this.abortController?.signal,
+      );
 
       // 更新完成状态
       this.updateStatus({
@@ -386,7 +444,11 @@ export class DeploymentService {
 
     try {
       // 检查当前用户 ID，0 表示 root
-      const { stdout } = await execAsync('id -u');
+      const { stdout } = await execAsyncWithAbort(
+        'id -u',
+        {},
+        this.abortController?.signal,
+      );
       const uid = parseInt(stdout.trim(), 10);
 
       // 如果是 root 用户，直接通过
@@ -397,7 +459,11 @@ export class DeploymentService {
       // 如果不是 root 用户，检查是否有 sudo 权限
       try {
         // 检查用户是否在管理员组中（sudo、wheel、admin）
-        const { stdout: groupsOutput } = await execAsync('groups');
+        const { stdout: groupsOutput } = await execAsyncWithAbort(
+          'groups',
+          {},
+          this.abortController?.signal,
+        );
         const userGroups = groupsOutput.trim().split(/\s+/);
 
         // 检查常见的管理员组
@@ -414,7 +480,11 @@ export class DeploymentService {
 
         // 如果不在管理员组中，尝试检查是否有无密码 sudo 权限
         try {
-          await execAsync('sudo -n true', { timeout: 3000 });
+          await execAsyncWithAbort(
+            'sudo -n true',
+            { timeout: 3000 },
+            this.abortController?.signal,
+          );
           // 如果成功，说明用户有无密码 sudo 权限
           return;
         } catch {
@@ -505,11 +575,45 @@ export class DeploymentService {
    * 停止部署
    */
   async stopDeployment(): Promise<void> {
-    this.updateStatus({
-      status: 'idle',
-      message: '部署已停止',
-      currentStep: 'stopped',
-    });
+    try {
+      // 如果有正在进行的部署流程，中断它
+      if (this.abortController && !this.abortController.signal.aborted) {
+        console.log('正在停止部署流程...');
+
+        // 发送中断信号
+        this.abortController.abort();
+        console.log('已发送中断信号给所有正在运行的进程');
+
+        // 等待一小段时间确保进程能够响应中断信号
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log('等待进程响应中断信号完成');
+
+        console.log('部署流程已成功停止');
+      } else {
+        console.log('没有正在进行的部署流程，直接更新为停止状态');
+      }
+
+      // 统一更新为停止状态，不使用前端无法识别的 'stopping' 状态
+      this.updateStatus({
+        status: 'idle',
+        message: '部署已停止',
+        currentStep: 'stopped',
+      });
+    } catch (error) {
+      console.error('停止部署时出错:', error);
+
+      // 即使停止过程出错，也要更新状态
+      this.updateStatus({
+        status: 'idle',
+        message: '部署已停止',
+        currentStep: 'stopped',
+      });
+    } finally {
+      // 清理资源
+      console.log('清理部署相关资源');
+      this.abortController = undefined;
+      this.currentProcess = undefined;
+    }
   }
 
   /**

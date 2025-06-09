@@ -244,6 +244,15 @@ const handleStop = async () => {
     }
   } catch (error) {
     console.error('停止部署失败:', error);
+
+    // 即使停止失败，也要更新界面显示错误状态
+    const runningActivityIndex = activities.value.findIndex(
+      (activity) => activity.type === 'running',
+    );
+
+    if (runningActivityIndex !== -1) {
+      activities.value[runningActivityIndex].type = 'failed';
+    }
   }
 };
 
