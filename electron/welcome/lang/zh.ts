@@ -8,6 +8,7 @@ export default {
     pleaseInput: '请输入',
     validUrl: '请输入有效的 URL',
     validationFailure: '检验失败',
+    connectionFailed: '连接失败',
   },
   localDeploy: {
     model: '大模型',
@@ -24,6 +25,13 @@ export default {
     stopInstall: '停止安装',
     complete: '完成',
     retry: '重试',
+    validationFailed: '校验失败',
+    authError: '鉴权失败，请检查 API Key 是否正确',
+    functionCallNotSupported: '不支持 Function Call，请使用支持此功能的模型',
+    connectionError: '连接失败，请检查 URL 是否正确',
+    modelError: '模型验证失败',
+    llmValidationFailed: '大模型校验失败',
+    embeddingValidationFailed: 'Embedding 模型校验失败',
   },
   onlineService: {
     serviceUrl: '后端服务链接',

@@ -20,7 +20,28 @@
     >
       <div class="model-title">
         {{ $t('localDeploy.model') }}
-        <img :src="successIcon" alt="success" width="16" height="16" />
+        <img
+          v-if="llmValidationStatus === 'validating'"
+          :src="loadingIcon"
+          alt="validating"
+          width="16"
+          height="16"
+          class="loading-icon"
+        />
+        <img
+          v-else-if="llmValidationStatus === 'success'"
+          :src="successIcon"
+          alt="success"
+          width="16"
+          height="16"
+        />
+        <img
+          v-else-if="llmValidationStatus === 'error'"
+          :src="errorIcon"
+          alt="error"
+          width="16"
+          height="16"
+        />
       </div>
       <el-form-item
         :label="$t('localDeploy.url')"
@@ -64,7 +85,28 @@
     >
       <div class="model-title">
         {{ $t('localDeploy.embeddingModel') }}
-        <img :src="successIcon" alt="success" width="16" height="16" />
+        <img
+          v-if="embeddingValidationStatus === 'validating'"
+          :src="loadingIcon"
+          alt="validating"
+          width="16"
+          height="16"
+          class="loading-icon"
+        />
+        <img
+          v-else-if="embeddingValidationStatus === 'success'"
+          :src="successIcon"
+          alt="success"
+          width="16"
+          height="16"
+        />
+        <img
+          v-else-if="embeddingValidationStatus === 'error'"
+          :src="errorIcon"
+          alt="error"
+          width="16"
+          height="16"
+        />
       </div>
       <el-form-item
         :label="$t('localDeploy.url')"
@@ -127,8 +169,11 @@
 <script lang="ts" setup>
 import { reactive, ref, watch } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import copyIcon from './assets/svgs/copy_icon.svg';
 import successIcon from './assets/svgs/success.svg';
+import errorIcon from './assets/svgs/error.svg';
+import loadingIcon from './assets/svgs/upload-loading.svg';
 import TimeLine from './timeLine.vue';
 import leftArrowIcon from './assets/svgs/left_arrow.svg';
 import i18n from './lang/index';
@@ -163,6 +208,14 @@ const embeddingRuleFormRef = ref<FormInstance>();
 
 const isConfirmDisabled = ref(true);
 const isTimeLine = ref(false);
+
+// 模型验证状态
+const llmValidationStatus = ref<'none' | 'validating' | 'success' | 'error'>(
+  'none',
+);
+const embeddingValidationStatus = ref<
+  'none' | 'validating' | 'success' | 'error'
+>('none');
 
 const rules = reactive<FormRules<RuleForm>>({
   url: [
@@ -211,6 +264,10 @@ watch(
 
     // 如果两个表单都有效，则启用按钮
     isConfirmDisabled.value = !(isRuleFormValid && isEmbeddingRuleFormValid);
+
+    // 当表单数据变化时，重置验证状态
+    llmValidationStatus.value = 'none';
+    embeddingValidationStatus.value = 'none';
   },
   { immediate: true, deep: true }, // 立即执行一次初始检查
 );
@@ -219,7 +276,207 @@ const copyText = (ruleForm: RuleForm) => {
   embeddingRuleForm.url = ruleForm.url;
   embeddingRuleForm.apiKey = ruleForm.apiKey;
 };
+
+// OpenAI API 校验函数
+const validateOpenAIModel = async (
+  url: string,
+  apiKey: string,
+  modelName: string,
+  isLLM: boolean = true,
+) => {
+  try {
+    // 格式化 URL
+    const baseURL = url.replace(/\/+$/, '');
+
+    // 首先尝试检查模型列表（如果支持的话）
+    let modelExists = true; // 默认假设模型存在，除非确认不存在
+
+    try {
+      const apiURL = baseURL.includes('/v1')
+        ? `${baseURL}/models`
+        : `${baseURL}/v1/models`;
+
+      const modelsResponse = await fetch(apiURL, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (modelsResponse.ok) {
+        const modelsData = await modelsResponse.json();
+        const availableModels = modelsData.data || [];
+
+        // 如果成功获取到模型列表，则检查模型是否存在
+        modelExists = availableModels.some(
+          (model: any) => model.id === modelName,
+        );
+
+        if (!modelExists) {
+          throw new Error('model_not_found');
+        }
+      } else if (modelsResponse.status === 401) {
+        throw new Error('auth');
+      }
+      // 如果是其他错误（如404），可能是不支持models接口，继续后续验证
+    } catch (modelsError: any) {
+      // 如果是认证错误，直接抛出
+      if (modelsError.message === 'auth') {
+        throw modelsError;
+      }
+      if (modelsError.message === 'model_not_found') {
+        throw modelsError;
+      }
+      // 其他错误（如不支持models接口）则继续进行实际调用测试
+      console.warn(
+        'Models API not supported or failed, proceeding with direct testing',
+      );
+    }
+
+    if (isLLM) {
+      const chatURL = baseURL.includes('/v1')
+        ? `${baseURL}/chat/completions`
+        : `${baseURL}/v1/chat/completions`;
+
+      // 首先测试基本的聊天功能
+      const basicChatTest = {
+        model: modelName,
+        messages: [{ role: 'user', content: 'Hello' }],
+        max_tokens: 10,
+      };
+
+      const basicResponse = await fetch(chatURL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(basicChatTest),
+      });
+
+      if (!basicResponse.ok) {
+        if (basicResponse.status === 401) {
+          throw new Error('auth');
+        }
+        throw new Error('connection');
+      }
+
+      // 然后测试 function call 支持
+      const testFunctionCall = {
+        model: modelName,
+        messages: [{ role: 'user', content: 'Test function call support' }],
+        functions: [
+          {
+            name: 'test_function',
+            description: 'A test function',
+            parameters: {
+              type: 'object',
+              properties: {
+                test: { type: 'string', description: 'Test parameter' },
+              },
+              required: ['test'],
+            },
+          },
+        ],
+        max_tokens: 10,
+      };
+
+      const functionResponse = await fetch(chatURL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testFunctionCall),
+      });
+
+      if (!functionResponse.ok) {
+        if (functionResponse.status === 400) {
+          // 检查错误信息是否表明不支持 function call
+          const errorData = await functionResponse.json().catch(() => null);
+          if (
+            errorData?.error?.message?.toLowerCase().includes('function') ||
+            errorData?.error?.message?.toLowerCase().includes('tool')
+          ) {
+            throw new Error('function_call_not_supported');
+          }
+        }
+        throw new Error('function_call_test_failed');
+      }
+    } else {
+      // 对于 embedding 模型，测试 embeddings 接口
+      const embeddingURL = baseURL.includes('/v1')
+        ? `${baseURL}/embeddings`
+        : `${baseURL}/v1/embeddings`;
+
+      const embeddingTest = {
+        model: modelName,
+        input: 'Test embedding',
+      };
+
+      const embeddingResponse = await fetch(embeddingURL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(embeddingTest),
+      });
+
+      if (!embeddingResponse.ok) {
+        if (embeddingResponse.status === 401) {
+          throw new Error('auth');
+        }
+        throw new Error('connection');
+      }
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'unknown',
+      type: error.message,
+    };
+  }
+};
+
+// 显示错误消息
+const showValidationError = (modelType: string, errorType: string) => {
+  let message = '';
+  const modelLabel =
+    modelType === 'llm'
+      ? i18n.global.t('localDeploy.model')
+      : i18n.global.t('localDeploy.embeddingModel');
+  const modelName =
+    modelType === 'llm' ? ruleForm.modelName : embeddingRuleForm.modelName;
+
+  switch (errorType) {
+    case 'auth':
+      message = `${modelLabel}: ${i18n.global.t('localDeploy.authError')}`;
+      break;
+    case 'function_call_not_supported':
+      message = `${modelLabel}: ${i18n.global.t('localDeploy.functionCallNotSupported')}`;
+      break;
+    case 'connection':
+    case 'function_call_test_failed':
+      message = `${modelLabel}: ${i18n.global.t('localDeploy.connectionError')}`;
+      break;
+    case 'model_not_found':
+      message = `${modelLabel}: 模型 "${modelName}" 不存在`;
+      break;
+    default:
+      message = `${modelLabel}: ${i18n.global.t('localDeploy.modelError')}`;
+  }
+
+  ElMessageBox.alert(message, i18n.global.t('localDeploy.validationFailed'), {
+    confirmButtonText: i18n.global.t('welcome.confirm'),
+    type: 'error',
+  });
+};
 const validateForm = async () => {
+  // 首先进行基础表单校验
   const [ruleFormValid] = await new Promise<[boolean, any]>((resolve) => {
     ruleFormRef.value?.validate((valid, fields) => resolve([valid, fields]));
   });
@@ -235,7 +492,62 @@ const validateForm = async () => {
   if (!ruleFormValid || !embeddingRuleFormValid) {
     return false;
   }
-  return true;
+
+  // 重置验证状态
+  llmValidationStatus.value = 'validating';
+  embeddingValidationStatus.value = 'validating';
+
+  let validationSuccess = true;
+
+  try {
+    // 校验 LLM
+    const llmResult = await validateOpenAIModel(
+      ruleForm.url,
+      ruleForm.apiKey,
+      ruleForm.modelName,
+      true,
+    );
+
+    if (llmResult.success) {
+      llmValidationStatus.value = 'success';
+    } else {
+      llmValidationStatus.value = 'error';
+      showValidationError('llm', llmResult.type || 'unknown');
+      validationSuccess = false;
+    }
+
+    // 校验 Embedding 模型
+    const embeddingResult = await validateOpenAIModel(
+      embeddingRuleForm.url,
+      embeddingRuleForm.apiKey,
+      embeddingRuleForm.modelName,
+      false,
+    );
+
+    if (embeddingResult.success) {
+      embeddingValidationStatus.value = 'success';
+    } else {
+      embeddingValidationStatus.value = 'error';
+      showValidationError('embedding', embeddingResult.type || 'unknown');
+      validationSuccess = false;
+    }
+  } catch (error) {
+    console.error('Model validation error:', error);
+    llmValidationStatus.value = 'error';
+    embeddingValidationStatus.value = 'error';
+    validationSuccess = false;
+
+    ElMessageBox.alert(
+      i18n.global.t('localDeploy.modelError'),
+      i18n.global.t('localDeploy.validationFailed'),
+      {
+        confirmButtonText: i18n.global.t('welcome.confirm'),
+        type: 'error',
+      },
+    );
+  }
+
+  return validationSuccess;
 };
 
 const handleConfirm = async () => {
@@ -320,7 +632,20 @@ const handleBack = () => {
   .el-input__icon {
     cursor: pointer;
   }
+  .loading-icon {
+    animation: rotate 1s linear infinite;
+  }
 }
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .submit-btn {
   width: 100vw;
   display: flex;

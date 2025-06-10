@@ -5,7 +5,9 @@
       <span class="back-btn-text">{{ $t('welcome.back') }}</span>
     </div>
     <span class="divider"></span>
-    <div class="welcome-detail-title-text">{{ $t('welcome.localDeploy') }}</div>
+    <div class="welcome-detail-title-text">
+      {{ $t('welcome.onlineService') }}
+    </div>
   </div>
   <el-form
     ref="ruleFormRef"
@@ -43,6 +45,7 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import leftArrowIcon from './assets/svgs/left_arrow.svg';
 import i18n from './lang/index';
 
@@ -120,15 +123,61 @@ onMounted(() => {
 
 const handleConfirm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
-  await formEl.validate((valid, fields) => {
-    if (!valid) {
-      console.error('表单验证失败:', fields);
+
+  // 先进行表单验证
+  const isFormValid = await new Promise<boolean>((resolve) => {
+    formEl.validate((valid, fields) => {
+      if (!valid) {
+        console.error('表单验证失败:', fields);
+        resolve(false);
+        return;
+      }
+      resolve(true);
+    });
+  });
+
+  if (!isFormValid) return;
+
+  // 验证服务器连接
+  if (window.eulercopilotWelcome?.config) {
+    try {
+      const { isValid, error } =
+        await window.eulercopilotWelcome.config.validateServer(ruleForm.url);
+
+      if (!isValid) {
+        // 弹窗提醒用户连接失败
+        await ElMessageBox.alert(
+          error || i18n.global.t('welcome.validationFailure'),
+          i18n.global.t('welcome.connectionFailed'),
+          {
+            confirmButtonText: i18n.global.t('welcome.confirm'),
+            type: 'error',
+          },
+        );
+        return;
+      }
+
+      // 验证成功，设置代理 URL
+      await window.eulercopilotWelcome.config.setProxyUrl(ruleForm.url);
+    } catch (error) {
+      // 网络错误或其他异常
+      console.error('服务器验证失败:', error);
+      await ElMessageBox.alert(
+        i18n.global.t('welcome.validationFailure'),
+        i18n.global.t('welcome.connectionFailed'),
+        {
+          confirmButtonText: i18n.global.t('welcome.confirm'),
+          type: 'error',
+        },
+      );
       return;
     }
-    if (window.eulercopilotWelcome?.config) {
-      window.eulercopilotWelcome.config.setProxyUrl(ruleForm.url);
-    }
-  });
+  }
+
+  // 完成欢迎页面流程
+  if (window.eulercopilotWelcome?.welcome) {
+    await window.eulercopilotWelcome.welcome.complete();
+  }
 };
 
 const handleBack = () => {

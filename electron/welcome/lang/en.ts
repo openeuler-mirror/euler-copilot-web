@@ -8,6 +8,7 @@ export default {
     pleaseInput: 'Please Input',
     validUrl: 'Please enter a valid URL',
     validationFailure: 'Validation failure',
+    connectionFailed: 'Connection failed',
   },
   localDeploy: {
     model: 'Large model',
@@ -24,6 +25,14 @@ export default {
     stopInstall: 'Stop installation',
     complete: 'Complete',
     retry: 'Retry',
+    validationFailed: 'Validation Failed',
+    authError: 'Authentication failed, please check if the API Key is correct',
+    functionCallNotSupported:
+      'Function Call not supported, please use a model that supports this feature',
+    connectionError: 'Connection failed, please check if the URL is correct',
+    modelError: 'Model validation failed',
+    llmValidationFailed: 'LLM validation failed',
+    embeddingValidationFailed: 'Embedding model validation failed',
   },
   onlineService: {
     serviceUrl: 'Backend Service Links',
