@@ -1,0 +1,31 @@
+export default {
+  welcome: {
+    welcomeText: '欢迎使用',
+    localDeploy: '后端本地部署',
+    onlineService: '后端在线服务',
+    back: '返回',
+    confirm: '确定',
+    pleaseInput: '请输入',
+    validUrl: '请输入有效的URL',
+    validationFailure:'检验失败',
+},
+  localDeploy: {
+    model: '大模型',
+    embeddingModel: 'Embedding模型',
+    url: 'URL',
+    modelName: '模型名称',
+    apiKey: 'API_Key',
+    copyTip: '复用大模型相同链接',
+    installation: '安装中',
+    dataBase: '数据库服务',
+    authHub: 'AuthHub服务',
+    intelligence: 'Intelligence服务',
+    serviceLaunch: '配置文件初始化 & 服务启动',
+    stopInstall: '停止安装',
+    complete: '完成',
+    retry: '重试',
+  },
+  onlineService: {
+    serviceUrl: '后端服务链接',
+  },
+};

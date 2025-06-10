@@ -1,82 +1,133 @@
 <template>
-    <el-form ref="ruleFormRef" label-position="left" label-width="auto" :model="ruleForm" :rules="rules"
-        class="online-ruleForm" style="max-width: 600px">
-        <el-form-item label="后端服务链接" prop="url" label-position="left">
-            <el-input placeholder="请输入" v-model="ruleForm.url" @blur="checkUrlValid" />
-        </el-form-item>
-    </el-form>
-    <div class="submit-btn">
-        <el-button type="primary" @click="handleConfirm(ruleFormRef)">确定</el-button>
+  <div class="welcome-detail-title">
+    <div @click="handleBack" class="back-btn">
+      <img :src="leftArrowIcon" alt="" />
+      <span class="back-btn-text">{{ $t('welcome.back') }}</span>
     </div>
+    <span class="divider"></span>
+    <div class="welcome-detail-title-text">{{ $t('welcome.localDeploy') }}</div>
+  </div>
+  <el-form
+    ref="ruleFormRef"
+    label-position="left"
+    label-width="auto"
+    :model="ruleForm"
+    :rules="rules"
+    class="online-ruleForm"
+    style="max-width: 600px"
+  >
+    <el-form-item :label="$t('onlineService.serviceUrl')" prop="url" label-position="left">
+      <el-input
+        :placeholder="$t('welcome.pleaseInput')"
+        v-model="ruleForm.url"
+        @change="handleUrlChange"
+        @blur="handleUrlBlur"
+      />
+    </el-form-item>
+  </el-form>
+  <div class="submit-btn">
+    <el-button type="primary" :disabled="isConfirmDisabled" @click="handleConfirm(ruleFormRef)">
+      {{ $t('welcome.confirm') }}
+    </el-button>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import { reactive, ref, onMounted } from 'vue';
+import type { FormInstance, FormRules } from 'element-plus';
+import leftArrowIcon from './assets/svgs/left_arrow.svg';
+import i18n from './lang/index';
+
+const props = withDefaults(
+  defineProps<{
+    back: Function;
+  }>(),
+  {},
+);
 
 interface RuleForm {
-    url: string;
+  url: string;
 }
 
 const ruleForm = reactive<RuleForm>({
-    url: '',
-})
-const ruleFormRef = ref<FormInstance>()
+  url: '',
+});
+const ruleFormRef = ref<FormInstance>();
 
-const rules = reactive<FormRules<RuleForm>>({
-    url: [
-        { required: true, message: '请输入后端服务链接', trigger: 'blur' },
-        { type: 'url', message: '请输入有效的URL', trigger: ['blur', 'change'] },
-    ],
-})
-
-const urlStatus = ref<'idle' | 'checking' | 'valid' | 'invalid' | 'error'>('idle')
-
-const checkUrlValid = async () => {
-    if (!ruleForm.url) return;
-    urlStatus.value = 'checking'
-    try {
-        const response = await fetch(ruleForm.url, { method: 'HEAD', mode: 'cors' })
-        if (response.status === 404) {
-            urlStatus.value = 'invalid'
-            console.error('链接返回404，无法访问')
-        } else {
-            urlStatus.value = 'valid'
-            console.log('链接可访问')
-        }
-    } catch (e) {
-        urlStatus.value = 'error'
-        console.error('网络错误或CORS/CSP限制，无法访问链接')
+const checkUrlValid = (_rule, value, callback) => {
+  // 这里校验各个url链接
+  window.eulercopilotWelcome.config.validateServer(value).then(({isValid,error}) => {
+    if (!isValid) {
+      callback(error);
+    } else {
+      callback();
     }
-}
+  }).catch((err) => {
+    callback(i18n.global.t('welcome.validationFailure'),err);
+  });
+};
+const rules = reactive<FormRules<RuleForm>>({
+  url: [
+    { required: true, message:i18n.global.t('welcome.pleaseInput')+i18n.global.t('onlineService.serviceUrl') , trigger: ['change','blur'] },
+    { type: 'url', message: i18n.global.t('welcome.validUrl'), trigger: ['blur'] },
+    { validator: checkUrlValid, trigger: ['blur'] },
+  ],
+});
+
+const isConfirmDisabled = ref(true);
+
+const handleUrlChange = () => {
+  if (!ruleFormRef.value) return;
+  ruleFormRef.value.validate((valid) => {
+    isConfirmDisabled.value = !valid;
+  });
+};
+
+const handleUrlBlur = () => {
+  handleUrlChange();
+};
+
+onMounted(() => {
+  // 组件挂载后进行一次表单验证
+  if (ruleFormRef.value && ruleForm.url) {
+    handleUrlChange();
+  }
+});
 
 const handleConfirm = async (formEl: FormInstance | undefined) => {
-    if (!formEl) return;
-    await formEl.validate((valid, fields) => {
-        if (!valid) {
-            console.error('表单验证失败:', fields);
-            return;
-        }
-        console.log('表单验证成功:', ruleForm);
-    })
+  if (!formEl) return;
+  await formEl.validate((valid, fields) => {
+    if (!valid) {
+      console.error('表单验证失败:', fields);
+      return;
+    }
+    console.log('表单验证成功:', ruleForm);
+    window.eulercopilotWelcome.config.setProxyUrl(ruleForm.url);
+  });
+};
 
-    // 这里可以添加处理逻辑，比如保存链接或发送请求
-    console.log('后端服务链接:', ruleForm.url);
-    // 关闭当前页面或执行其他操作
-}
+const handleBack = () => {
+  props.back();
+};
 </script>
 <style lang="scss" scoped>
 .online-ruleForm {
-    margin: 0 48px 0 40px;
+  margin: 0 48px 0 40px;
 }
 .submit-btn {
-    width: 100vw;
-    display: flex;
-    justify-content: center;
-    position: absolute;
-    bottom: 24px;
-    button {
-        padding: 8px 25px;
-    }
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  bottom: 24px;
+  button {
+    padding: 8px 25px;
+  }
+}
+.el-form-item:not(.is-error) .el-input__wrapper {
+  background-color: transparent !important;
+}
+.el-form-item.is-error .el-input__wrapper {
+  background-color: rgb(247, 193, 193);
 }
 </style>
