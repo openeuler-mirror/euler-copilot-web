@@ -450,7 +450,14 @@ export class DeploymentService {
 
       try {
         // 构建需要权限的命令，使用已建立的sudo会话
-        const command = this.buildRootCommand(toolsScriptPath);
+        const command = this.buildRootCommand(
+          toolsScriptPath,
+          false,
+          undefined,
+          {
+            KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
+          },
+        );
 
         // 执行脚本
         await execAsyncWithAbort(
@@ -591,12 +598,13 @@ export class DeploymentService {
     const maxWaitTime = 60000; // 60秒
     const checkInterval = 5000; // 5秒检查一次
     const startTime = Date.now();
+    const sudoCommand = this.getSudoCommand();
 
     while (Date.now() - startTime < maxWaitTime) {
       try {
         // 检查k3s.yaml文件是否存在且可读
         const { stdout } = await execAsyncWithAbort(
-          'ls -la /etc/rancher/k3s/k3s.yaml',
+          `${sudoCommand}ls -la /etc/rancher/k3s/k3s.yaml`,
           {},
           this.abortController?.signal,
         );
@@ -624,9 +632,11 @@ export class DeploymentService {
     try {
       // 设置KUBECONFIG环境变量并测试连接
       const kubeconfigPath = '/etc/rancher/k3s/k3s.yaml';
+      const sudoCommand = this.getSudoCommand();
 
+      // 使用sudo权限执行kubectl命令，因为k3s.yaml文件只有root用户可以读取
       const { stdout } = await execAsyncWithAbort(
-        `KUBECONFIG=${kubeconfigPath} kubectl cluster-info`,
+        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl cluster-info'`,
         { timeout: 15000 },
         this.abortController?.signal,
       );
@@ -637,7 +647,7 @@ export class DeploymentService {
 
       // 验证节点状态
       const { stdout: nodeStatus } = await execAsyncWithAbort(
-        `KUBECONFIG=${kubeconfigPath} kubectl get nodes`,
+        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl get nodes'`,
         { timeout: 15000 },
         this.abortController?.signal,
       );
@@ -722,19 +732,25 @@ export class DeploymentService {
           }
         }
 
-        // 准备环境变量
-        const execEnv = {
+        // 准备环境变量，过滤掉 undefined 值
+        const baseEnv = {
           ...process.env,
           ...script.envVars,
           // 确保 KUBECONFIG 环境变量正确设置
           KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
         };
 
+        // 过滤掉 undefined 值，确保所有值都是字符串
+        const execEnv = Object.fromEntries(
+          Object.entries(baseEnv).filter(([, value]) => value !== undefined),
+        ) as Record<string, string>;
+
         // 构建需要权限的命令
         const command = this.buildRootCommand(
           scriptPath,
           script.useInputRedirection,
           script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
+          execEnv,
         );
 
         try {
@@ -744,7 +760,6 @@ export class DeploymentService {
             {
               cwd: scriptsPath,
               timeout: 600000, // 10分钟超时，某些服务安装可能需要较长时间
-              env: execEnv,
             },
             this.abortController?.signal,
           );
@@ -1025,6 +1040,7 @@ export class DeploymentService {
     scriptPath: string,
     useInputRedirection?: boolean,
     inputData?: string,
+    envVars?: Record<string, string>,
   ): string {
     // 获取sudo命令前缀
     const sudoCommand = this.getSudoCommand();
@@ -1034,11 +1050,20 @@ export class DeploymentService {
     // 给脚本添加执行权限
     command += `${sudoCommand}chmod +x "${scriptPath}"`;
 
+    // 构建环境变量字符串
+    let envString = '';
+    if (envVars && Object.keys(envVars).length > 0) {
+      const envPairs = Object.entries(envVars)
+        .map(([key, value]) => `${key}="${value}"`)
+        .join(' ');
+      envString = envPairs + ' ';
+    }
+
     // 执行脚本
     if (useInputRedirection && inputData) {
-      command += ` && ${sudoCommand}bash -c 'echo "${inputData}" | bash "${scriptPath}"'`;
+      command += ` && ${sudoCommand}bash -c '${envString}echo "${inputData}" | bash "${scriptPath}"'`;
     } else {
-      command += ` && ${sudoCommand}bash "${scriptPath}"`;
+      command += ` && ${sudoCommand}bash -c '${envString}bash "${scriptPath}"'`;
     }
 
     return command;
