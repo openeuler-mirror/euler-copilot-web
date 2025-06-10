@@ -23,9 +23,10 @@ onMounted(async () => {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
   const isElectron = window.navigator.userAgent.includes('Electron');
-  iframeTarget.value = isElectron
-    ? `${baseUrl}/witchaind`
-    : `${origin}/witchaind`;
+  iframeTarget.value = 'http://localhost:3002/witchaind/' 
+  // isElectron
+    // ? `${baseUrl}/witchaind`
+    // : `${origin}/witchaind`;
 });
 
 const changeLanguagefun = (lang: 'zh_cn' | 'en') => {

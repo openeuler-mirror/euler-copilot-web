@@ -8,7 +8,7 @@
         sandbox="allow-scripts allow-popups allow-same-origin allow-downloads"
         height="100%"
         width="100%"
-        :src="iframeTarget"
+        src="http://localhost:3002/witchaind/"
         @load="handleIframeLoad"
         @error="handleIframeError"
       ></iframe>
@@ -103,7 +103,8 @@ watch(
 
 // 添加错误处理
 onMounted(async () => {
-  iframeTarget.value = await getIframeTarget();
+  // iframeTarget.value = await getIframeTarget();
+  iframeTarget.value = 'http://localhost:3002/witchaind/';
   const iframe = iframeRef.value;
   if (iframe) {
     iframe.onerror = (error) => {

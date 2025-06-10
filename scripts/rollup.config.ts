@@ -14,7 +14,10 @@ export interface ConfigOptions {
   proc: 'main' | 'render' | 'preload';
 }
 
-const compilationInclude = ['electron/**/*.ts'];
+const compilationInclude = [
+  'electron/main/**/*.ts',
+  'electron/preload/**/*.ts',
+];
 
 export default function (opts: ConfigOptions) {
   const sourcemap = opts.proc === 'render';

@@ -49,7 +49,7 @@ export function createWelcomeWindow(): BrowserWindow {
   });
 
   // 加载欢迎界面的 HTML 文件
-  welcomeWindow.loadFile(path.join(__dirname, '../welcome/index.html'));
+  welcomeWindow.loadFile(path.join(__dirname, '../welcome/welcome.html'));
 
   // 开发模式下可以打开开发者工具
   if (process.env.NODE_ENV === 'development') {

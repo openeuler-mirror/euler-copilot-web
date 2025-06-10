@@ -188,7 +188,7 @@ onMounted(async () => {
 
   const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
   if (iframe) {
-    iframe.src = iframeTarget;
+    iframe.src = 'http://localhost:3002/witchaind/';
   }
 });
 
