@@ -16,7 +16,11 @@
     class="online-ruleForm"
     style="max-width: 600px"
   >
-    <el-form-item :label="$t('onlineService.serviceUrl')" prop="url" label-position="left">
+    <el-form-item
+      :label="$t('onlineService.serviceUrl')"
+      prop="url"
+      label-position="left"
+    >
       <el-input
         :placeholder="$t('welcome.pleaseInput')"
         v-model="ruleForm.url"
@@ -26,7 +30,11 @@
     </el-form-item>
   </el-form>
   <div class="submit-btn">
-    <el-button type="primary" :disabled="isConfirmDisabled" @click="handleConfirm(ruleFormRef)">
+    <el-button
+      type="primary"
+      :disabled="isConfirmDisabled"
+      @click="handleConfirm(ruleFormRef)"
+    >
       {{ $t('welcome.confirm') }}
     </el-button>
   </div>
@@ -40,7 +48,7 @@ import i18n from './lang/index';
 
 const props = withDefaults(
   defineProps<{
-    back: Function;
+    back: () => void;
   }>(),
   {},
 );
@@ -56,20 +64,36 @@ const ruleFormRef = ref<FormInstance>();
 
 const checkUrlValid = (_rule, value, callback) => {
   // 这里校验各个url链接
-  window.eulercopilotWelcome.config.validateServer(value).then(({isValid,error}) => {
-    if (!isValid) {
-      callback(error);
-    } else {
-      callback();
-    }
-  }).catch((err) => {
-    callback(i18n.global.t('welcome.validationFailure'),err);
-  });
+  if (window.eulercopilotWelcome?.config) {
+    window.eulercopilotWelcome.config
+      .validateServer(value)
+      .then(({ isValid, error }) => {
+        if (!isValid) {
+          callback(error);
+        } else {
+          callback();
+        }
+      })
+      .catch((err) => {
+        callback(i18n.global.t('welcome.validationFailure'), err);
+      });
+  }
 };
+
 const rules = reactive<FormRules<RuleForm>>({
   url: [
-    { required: true, message:i18n.global.t('welcome.pleaseInput')+i18n.global.t('onlineService.serviceUrl') , trigger: ['change','blur'] },
-    { type: 'url', message: i18n.global.t('welcome.validUrl'), trigger: ['blur'] },
+    {
+      required: true,
+      message:
+        i18n.global.t('welcome.pleaseInput') +
+        i18n.global.t('onlineService.serviceUrl'),
+      trigger: ['change', 'blur'],
+    },
+    {
+      type: 'url',
+      message: i18n.global.t('welcome.validUrl'),
+      trigger: ['blur'],
+    },
     { validator: checkUrlValid, trigger: ['blur'] },
   ],
 });
@@ -101,8 +125,12 @@ const handleConfirm = async (formEl: FormInstance | undefined) => {
       console.error('表单验证失败:', fields);
       return;
     }
-    console.log('表单验证成功:', ruleForm);
-    window.eulercopilotWelcome.config.setProxyUrl(ruleForm.url);
+    if (import.meta.env.DEV) {
+      console.log('表单验证成功:', ruleForm);
+    }
+    if (window.eulercopilotWelcome?.config) {
+      window.eulercopilotWelcome.config.setProxyUrl(ruleForm.url);
+    }
   });
 };
 

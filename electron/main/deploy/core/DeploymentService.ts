@@ -96,7 +96,9 @@ export class DeploymentService {
   private updateStatus(status: Partial<DeploymentStatus>) {
     // 验证输入状态
     if (!status || typeof status !== 'object') {
-      console.warn('DeploymentService: 尝试更新无效状态:', status);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('DeploymentService: 尝试更新无效状态:', status);
+      }
       return;
     }
 
@@ -107,8 +109,29 @@ export class DeploymentService {
       this.currentStatus.currentStep = 'unknown';
     }
 
+    // 调试信息：仅在开发环境下记录状态更新
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 DeploymentService: 状态更新', {
+        status: this.currentStatus.status,
+        currentStep: this.currentStatus.currentStep,
+        message: this.currentStatus.message,
+        hasCallback: !!this.statusCallback,
+      });
+    }
+
     if (this.statusCallback) {
-      this.statusCallback(this.currentStatus);
+      try {
+        this.statusCallback(this.currentStatus);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ DeploymentService: 状态回调已调用');
+        }
+      } catch (error) {
+        console.error('❌ DeploymentService: 状态回调执行失败:', error);
+      }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ DeploymentService: 没有设置状态回调函数');
+      }
     }
   }
 
@@ -693,7 +716,9 @@ export class DeploymentService {
           try {
             await this.refreshSudoSession();
           } catch (error) {
-            console.warn(`刷新sudo会话失败，继续执行: ${error}`);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`刷新sudo会话失败，继续执行: ${error}`);
+            }
           }
         }
 
@@ -948,7 +973,9 @@ export class DeploymentService {
       );
     } catch (error) {
       // 如果刷新失败，可能需要重新获取权限
-      console.warn('刷新sudo会话失败，可能需要重新输入密码:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('刷新sudo会话失败，可能需要重新输入密码:', error);
+      }
       this.sudoSessionActive = false;
     }
   }
@@ -1100,19 +1127,29 @@ export class DeploymentService {
     try {
       // 如果有正在进行的部署流程，中断它
       if (this.abortController && !this.abortController.signal.aborted) {
-        console.log('正在停止部署流程...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('正在停止部署流程...');
+        }
 
         // 发送中断信号
         this.abortController.abort();
-        console.log('已发送中断信号给所有正在运行的进程');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('已发送中断信号给所有正在运行的进程');
+        }
 
         // 等待一小段时间确保进程能够响应中断信号
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log('等待进程响应中断信号完成');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('等待进程响应中断信号完成');
+        }
 
-        console.log('部署流程已成功停止');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('部署流程已成功停止');
+        }
       } else {
-        console.log('没有正在进行的部署流程，直接更新为停止状态');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('没有正在进行的部署流程，直接更新为停止状态');
+        }
       }
 
       // 统一更新为停止状态，不使用前端无法识别的 'stopping' 状态
@@ -1132,7 +1169,9 @@ export class DeploymentService {
       });
     } finally {
       // 清理资源
-      console.log('清理部署相关资源');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('清理部署相关资源');
+      }
       this.abortController = undefined;
       this.currentProcess = undefined;
     }

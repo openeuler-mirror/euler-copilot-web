@@ -263,7 +263,9 @@ const handleConfirm = async () => {
       },
     };
 
-    console.log('开始部署，表单数据:', formData);
+    if (import.meta.env.DEV) {
+      console.log('开始部署，表单数据:', formData);
+    }
 
     // 调用部署服务
     if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {

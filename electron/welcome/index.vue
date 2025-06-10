@@ -16,11 +16,15 @@
           @click="handleLocalDeploy"
         >
           <img :src="localDeployIcon" alt="" />
-          <span class="welcome-detail-content-item-text">{{ $t('welcome.localDeploy') }}</span>
+          <span class="welcome-detail-content-item-text">
+            {{ $t('welcome.localDeploy') }}
+          </span>
         </div>
         <div class="welcome-detail-content-item" @click="handleOnlineService">
           <img :src="onlineServiceIcon" alt="" />
-          <span class="welcome-detail-content-item-text">{{ $t('welcome.onlineService') }}</span>
+          <span class="welcome-detail-content-item-text">
+            {{ $t('welcome.onlineService') }}
+          </span>
         </div>
       </div>
     </div>
@@ -60,23 +64,31 @@ const handleLocalDeploy = async () => {
   if (!isLinux.value) {
     return;
   }
-  console.log('选择本地部署');
+  if (import.meta.env.DEV) {
+    console.log('选择本地部署');
+  }
   avtivePage.value = 'localDeploy';
 };
 
 // 处理在线服务选择
 const handleOnlineService = async () => {
-  console.log('选择在线服务');
+  if (import.meta.env.DEV) {
+    console.log('选择在线服务');
+  }
   avtivePage.value = 'onlineService';
 };
 
 const handleBack = () => {
-  console.log('返回到欢迎页面');
+  if (import.meta.env.DEV) {
+    console.log('返回到欢迎页面');
+  }
   avtivePage.value = 'welcome';
 };
 
 const handleClose = async () => {
-  console.log('关闭欢迎页面');
+  if (import.meta.env.DEV) {
+    console.log('关闭欢迎页面');
+  }
   try {
     await window.eulercopilotWelcome?.welcome.cancel();
   } catch (error) {
@@ -85,7 +97,9 @@ const handleClose = async () => {
 };
 
 onMounted(() => {
-  console.log('欢迎页面已加载');
+  if (import.meta.env.DEV) {
+    console.log('欢迎页面已加载');
+  }
 });
 </script>
 

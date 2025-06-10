@@ -229,10 +229,27 @@ const updateActivitiesStatus = (status: any) => {
 
 // 状态监听器
 const onDeploymentStatusChange = (status: any) => {
+  // 调试信息：记录前端状态更新
+  if (import.meta.env.DEV) {
+    console.log('🔄 TimeLine: 收到状态更新', {
+      status: status?.status,
+      currentStep: status?.currentStep,
+      message: status?.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // 防止状态为 undefined 时的错误
   if (status) {
     deploymentStatus.value = status;
     updateActivitiesStatus(status);
+    if (import.meta.env.DEV) {
+      console.log('✅ TimeLine: 状态更新完成');
+    }
+  } else {
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ TimeLine: 收到无效状态:', status);
+    }
   }
 };
 
@@ -265,7 +282,9 @@ const handleRetry = async () => {
     });
 
     // 重新获取表单数据并重试（这里需要父组件传递表单数据）
-    console.log('重试部署...');
+    if (import.meta.env.DEV) {
+      console.log('重试部署...');
+    }
 
     // 可以通过 emit 事件让父组件重新提交表单
     // emit('retry');
@@ -277,29 +296,43 @@ const handleRetry = async () => {
 // 处理完成
 const handleFinish = () => {
   // 可以通过 emit 事件通知父组件完成
-  console.log('部署完成');
+  if (import.meta.env.DEV) {
+    console.log('部署完成');
+  }
   // emit('finish');
 };
 
 // 组件挂载时设置监听器
 onMounted(() => {
+  if (import.meta.env.DEV) {
+    console.log('🔄 TimeLine: 组件挂载，设置状态监听器');
+  }
+
   if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
     // 监听部署状态变化
     window.eulercopilotWelcome.deployment.onStatusChange(
       onDeploymentStatusChange,
     );
+    if (import.meta.env.DEV) {
+      console.log('✅ TimeLine: 状态监听器已设置');
+    }
 
     // 获取当前状态
     window.eulercopilotWelcome.deployment
       .getStatus()
       .then((status) => {
+        if (import.meta.env.DEV) {
+          console.log('🔄 TimeLine: 获取到初始状态:', status);
+        }
         if (status) {
           onDeploymentStatusChange(status);
         }
       })
       .catch((error) => {
-        console.error('获取部署状态失败:', error);
+        console.error('❌ TimeLine: 获取部署状态失败:', error);
       });
+  } else {
+    console.error('❌ TimeLine: 部署服务API不可用');
   }
 });
 
