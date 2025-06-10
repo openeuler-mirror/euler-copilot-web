@@ -69,6 +69,7 @@ export class DeploymentService {
   private statusCallback?: (status: DeploymentStatus) => void;
   private abortController?: AbortController;
   private sudoSessionActive: boolean = false;
+  private tempSudoScriptPath?: string;
 
   constructor() {
     this.cachePath = getCachePath();
@@ -215,6 +216,7 @@ export class DeploymentService {
       // 清理资源
       this.abortController = undefined;
       this.sudoSessionActive = false; // 重置sudo会话状态
+      this.cleanupTemporarySudoScript(); // 清理临时sudo脚本
     }
   }
 
@@ -871,8 +873,8 @@ export class DeploymentService {
         currentStep: 'preparing-environment',
       });
 
-      // 使用pkexec获取一次性权限，并创建一个长期有效的sudo会话
-      await this.establishPersistentSudoSession();
+      // 创建临时的sudo执行脚本
+      await this.createTemporarySudoScript();
 
       // 检查是否需要安装基础工具
       const missingTools = this.environmentCheckResult?.missingBasicTools || [];
@@ -894,7 +896,7 @@ export class DeploymentService {
       }
 
       if (commands.length > 0) {
-        // 使用已建立的sudo会话执行命令
+        // 使用临时sudo脚本执行命令
         const combinedCommand = commands.join(' && ');
         await this.executeSudoCommand(combinedCommand, 300000); // 5分钟超时
 
@@ -911,6 +913,9 @@ export class DeploymentService {
           currentStep: 'preparing-environment',
         });
       } else {
+        // 即使没有要执行的命令，也要验证sudo脚本是否正常工作
+        await this.executeSudoCommand('echo "权限验证成功"', 30000);
+
         this.updateStatus({
           message: '管理员权限获取成功',
           currentStep: 'preparing-environment',
@@ -951,9 +956,9 @@ export class DeploymentService {
   }
 
   /**
-   * 建立持久化的sudo会话，只需要输入一次密码
+   * 创建临时的sudo执行脚本，避免重复密码输入
    */
-  private async establishPersistentSudoSession(): Promise<void> {
+  private async createTemporarySudoScript(): Promise<void> {
     if (process.platform !== 'linux') {
       return;
     }
@@ -964,74 +969,57 @@ export class DeploymentService {
     }
 
     try {
-      // 首先检查用户是否有sudo权限，并获取密码
+      // 创建临时目录
+      const tempDir = path.join(this.cachePath, 'temp-sudo');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      // 创建临时sudo脚本路径
+      this.tempSudoScriptPath = path.join(tempDir, 'sudo-wrapper.sh');
+
+      // 创建一个简单的包装脚本，只是为了方便调用
+      const scriptContent = `#!/bin/bash
+# 临时sudo包装脚本，由openEuler Intelligence创建
+# 执行传入的命令
+exec "$@"
+`;
+
+      // 写入脚本文件
+      fs.writeFileSync(this.tempSudoScriptPath, scriptContent, { mode: 0o755 });
+
+      // 使用pkexec验证一次权限，确保用户可以正常输入密码
       const sudoCommand = this.getSudoCommand();
 
-      // 如果使用pkexec，获取一次权限验证后，创建一个sudo timestamp
       if (sudoCommand.includes('pkexec')) {
-        // 使用pkexec验证权限并创建sudo timestamp
+        // 测试pkexec是否工作正常，执行一个简单的命令
         await execAsyncWithAbort(
-          `${sudoCommand}bash -c 'sudo -v'`,
-          { timeout: 60000 },
+          `${sudoCommand}echo "权限验证成功"`,
+          { timeout: 60000 }, // 给用户充足时间输入密码
           this.abortController?.signal,
         );
       } else {
-        // 如果不使用pkexec，直接验证sudo
-        await execAsyncWithAbort(
-          'sudo -v',
-          { timeout: 60000 },
-          this.abortController?.signal,
-        );
+        throw new Error('当前系统不支持图形化权限验证工具');
       }
-
-      // 延长sudo timestamp，确保整个部署过程中sudo会话保持有效
-      // 使用后台进程定期刷新sudo timestamp
-      this.startSudoKeepAlive();
     } catch (error) {
+      // 清理可能创建的文件
+      if (this.tempSudoScriptPath && fs.existsSync(this.tempSudoScriptPath)) {
+        try {
+          fs.unlinkSync(this.tempSudoScriptPath);
+        } catch (cleanupError) {
+          // 忽略清理错误
+          console.warn('清理临时文件失败:', cleanupError);
+        }
+        this.tempSudoScriptPath = undefined;
+      }
       throw new Error(
-        `建立sudo会话失败: ${error instanceof Error ? error.message : String(error)}`,
+        `初始化权限验证失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * 启动sudo会话保活机制
-   */
-  private startSudoKeepAlive(): void {
-    if (process.platform !== 'linux') {
-      return;
-    }
-
-    // 每4分钟刷新一次sudo timestamp（sudo默认超时是5分钟）
-    const keepAliveInterval = setInterval(async () => {
-      try {
-        if (this.sudoSessionActive && !this.abortController?.signal.aborted) {
-          await execAsyncWithAbort(
-            'sudo -n true', // -n 参数表示非交互模式，如果需要密码会失败
-            { timeout: 5000 },
-            this.abortController?.signal,
-          );
-        } else {
-          // 如果会话不活跃或被中断，停止保活
-          clearInterval(keepAliveInterval);
-        }
-      } catch {
-        // sudo会话已过期或失败，停止保活
-        clearInterval(keepAliveInterval);
-        this.sudoSessionActive = false;
-      }
-    }, 240000); // 4分钟
-
-    // 确保在部署结束时清理interval
-    if (this.abortController) {
-      this.abortController.signal.addEventListener('abort', () => {
-        clearInterval(keepAliveInterval);
-      });
-    }
-  }
-
-  /**
-   * 使用已建立的sudo会话执行命令
+   * 使用pkexec执行命令，在同一个部署过程中尽量减少密码输入
    */
   private async executeSudoCommand(
     command: string,
@@ -1065,12 +1053,46 @@ export class DeploymentService {
       envString = envPairs + ' ';
     }
 
-    // 使用已建立的sudo会话执行命令
+    // 使用pkexec执行命令
+    // pkexec会缓存认证，在短时间内不会重复要求密码
+    const sudoCommand = this.getSudoCommand();
+    const fullCommand = `${sudoCommand}bash -c '${envString}${command}'`;
+
     return await execAsyncWithAbort(
-      `sudo bash -c '${envString}${command}'`,
+      fullCommand,
       { timeout },
       this.abortController?.signal,
     );
+  }
+
+  /**
+   * 清理临时sudo脚本
+   */
+  private cleanupTemporarySudoScript(): void {
+    if (this.tempSudoScriptPath && fs.existsSync(this.tempSudoScriptPath)) {
+      try {
+        // 删除临时脚本文件
+        fs.unlinkSync(this.tempSudoScriptPath);
+      } catch (error) {
+        // 如果无法删除，记录警告但不抛出错误
+        console.warn('清理临时sudo脚本时出错:', error);
+      }
+      this.tempSudoScriptPath = undefined;
+    }
+
+    // 清理临时目录（如果为空）
+    const tempDir = path.join(this.cachePath, 'temp-sudo');
+    if (fs.existsSync(tempDir)) {
+      try {
+        const files = fs.readdirSync(tempDir);
+        if (files.length === 0) {
+          fs.rmdirSync(tempDir);
+        }
+      } catch (error) {
+        // 忽略清理目录的错误
+        console.warn('清理临时目录时出错:', error);
+      }
+    }
   }
 
   /**
@@ -1273,6 +1295,7 @@ export class DeploymentService {
       }
       this.abortController = undefined;
       this.sudoSessionActive = false; // 重置sudo会话状态
+      this.cleanupTemporarySudoScript(); // 清理临时sudo脚本
     }
   }
 
@@ -1362,9 +1385,14 @@ export class DeploymentService {
    * 清理部署文件
    */
   async cleanup(): Promise<void> {
+    // 清理临时sudo脚本
+    this.cleanupTemporarySudoScript();
+
+    // 清理部署文件
     if (fs.existsSync(this.deploymentPath)) {
       fs.rmSync(this.deploymentPath, { recursive: true, force: true });
     }
+
     this.updateStatus({
       status: 'idle',
       message: '清理完成',
