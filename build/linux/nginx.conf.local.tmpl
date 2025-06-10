@@ -2,6 +2,9 @@ server {
     listen 8080 default_server;
     server_name _;
     charset utf-8;
+    
+    client_body_buffer_size 5120M;
+    client_max_body_size 5120M;
 
     add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options nosniff;
@@ -60,29 +63,40 @@ server {
         proxy_pass http://127.0.0.1:8002/api/;
     }
     
-    location ~ ^/witchaind(/?)(.*)$ {
+    location ~ ^/witchaind(.*)$ {
         # 提取路径后缀
         set $path_suffix $1;
         
-        # 转发请求到本地服务，保留路径结构
-        proxy_pass http://127.0.0.1:9888/witchaind$path_suffix;
+        # 转发请求到本地服务，保留路径结构和查询参数
+        proxy_pass http://127.0.0.1:9888/witchaind$path_suffix$is_args$args;
         
         # HTTP/1.1 支持
         proxy_http_version 1.1;
+        
+        # 确保传递Content-Type头部
+        proxy_set_header Content-Type $content_type;
+        
+        # 添加Content-Length头部，解决POST请求体丢失问题
+        proxy_set_header Content-Length $content_length;
         
         # 代理请求头设置
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
         
-        # 代理缓冲设置
-        proxy_buffering on;
-        proxy_buffer_size 4k;
-        proxy_buffers 8 32k;
-        proxy_busy_buffers_size 64k;
+        # 正确设置Upgrade和Connection头部
+        set $connection_upgrade $http_upgrade;
+        if ($http_upgrade) {
+            set $connection_upgrade "upgrade";
+        }
+        proxy_set_header Connection $connection_upgrade;
+        
+        # 增加请求体大小限制
+        client_max_body_size 20m;
+        
+        # 优化代理缓冲设置
+        proxy_buffering off;  # 对于POST请求可能更好
         
         # 请求和响应超时设置
         proxy_connect_timeout 60s;
@@ -96,9 +110,6 @@ server {
         
         # 处理 OPTIONS 请求
         if ($request_method = 'OPTIONS') {
-            add_header Access-Control-Allow-Origin *;
-            add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
-            add_header Access-Control-Allow-Headers 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
             add_header Access-Control-Max-Age 1728000;
             add_header Content-Type 'text/plain charset=UTF-8';
             add_header Content-Length 0;
@@ -106,7 +117,6 @@ server {
         }
     }
 
-    
     error_page 401 402 403 405 406 407 413 414 /error.html;
     error_page 404 /404.html;
     error_page 500 501 502 503 504 505 /error.html;
