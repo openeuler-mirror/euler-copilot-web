@@ -257,11 +257,7 @@
       // align-items: center;
       color: var(--o-text-color-primary);
       margin-left: 45px;
-      background-image: linear-gradient(
-        to right,
-        rgba(109, 117, 250, 0.2),
-        rgba(90, 179, 255, 0.2)
-      );
+      background-image: var(--o-content-bg);
       .messaege {
         top: 10px;
         margin-top: 24px;

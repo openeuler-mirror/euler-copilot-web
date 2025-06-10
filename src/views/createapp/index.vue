@@ -303,19 +303,4 @@ function onDebugSuccess(status: boolean) {
 </template>
 <style lang="scss">
 /* 滚动条轨道样式 */
-::-webkit-scrollbar-track {
-  background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
-  display: none;
-}
-
-::-webkit-scrollbar {
-  width: 4px !important;
-  height: 4px !important;
-}
-
-/* 滚动条的滑块 */
-::-webkit-scrollbar-thumb {
-  background-color: #c3cedf;
-  border-radius: 4px;
-}
 </style>

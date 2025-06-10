@@ -772,24 +772,6 @@ watch(
     flex-direction: column;
     position: relative;
     overflow: auto;
-    /* 滚动条轨道样式 */
-    ::-webkit-scrollbar-track {
-      background-color: transparent !important;
-    }
-
-    ::-webkit-scrollbar {
-      background-color: transparent !important;
-      left: 12px;
-      width: 3px;
-      height: 3px;
-    }
-
-    /* 滚动条的滑块 */
-    ::-webkit-scrollbar-thumb {
-      background-color: #d3dce9 !important;
-      border-radius: 3px;
-    }
-
     &-blogroll {
       display: block;
       padding-right: 24px;
@@ -820,12 +802,6 @@ watch(
           color: #7aa5ff;
         }
       }
-    }
-
-    /* 滚动条滑块hover样式 */
-    ::-webkit-scrollbar-thumb:hover {
-      background-color: #d3dce9 !important;
-      /* 鼠标悬停时的滚动条按钮颜色 */
     }
 
     &-tips {
