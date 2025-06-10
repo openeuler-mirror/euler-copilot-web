@@ -33,6 +33,7 @@ interface Window {
       onStatusChange(callback: (status: any) => void): void;
       removeStatusListener(): void;
       cleanup(): Promise<void>;
+      addHostsEntries(domains: string[]): Promise<void>;
     };
     system: {
       platform: string;

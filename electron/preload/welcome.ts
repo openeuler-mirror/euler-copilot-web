@@ -81,6 +81,13 @@ const deploymentAPI = {
   cleanup: (): Promise<void> => {
     return safeIPC.invoke('deployment:cleanup');
   },
+
+  /**
+   * 添加 hosts 条目
+   */
+  addHostsEntries: (domains: string[]): Promise<void> => {
+    return safeIPC.invoke('deployment:addHostsEntries', domains);
+  },
 };
 
 /**

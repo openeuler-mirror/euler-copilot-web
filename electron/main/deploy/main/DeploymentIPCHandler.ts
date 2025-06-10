@@ -122,6 +122,19 @@ export class DeploymentIPCHandler {
         throw error;
       }
     });
+
+    // 添加 hosts 条目
+    ipcMain.handle(
+      'deployment:addHostsEntries',
+      async (event, domains: string[]) => {
+        try {
+          await this.localDeployHandler.addHostsEntries(domains);
+        } catch (error) {
+          console.error('添加 hosts 条目失败:', error);
+          throw error;
+        }
+      },
+    );
   }
 
   /**
@@ -133,5 +146,6 @@ export class DeploymentIPCHandler {
     ipcMain.removeHandler('deployment:stop');
     ipcMain.removeHandler('deployment:getStatus');
     ipcMain.removeHandler('deployment:cleanup');
+    ipcMain.removeHandler('deployment:addHostsEntries');
   }
 }

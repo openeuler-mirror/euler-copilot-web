@@ -235,9 +235,38 @@ const handleRetry = async () => {
 };
 
 // 处理完成
-const handleFinish = () => {
-  // 可以通过 emit 事件通知父组件完成
-  // emit('finish');
+const handleFinish = async () => {
+  try {
+    // 1. 设置默认代理 URL
+    if (window.eulercopilotWelcome?.config) {
+      await window.eulercopilotWelcome.config.setProxyUrl(
+        'https://www.eulercopilot.local',
+      );
+    }
+
+    // 2. 将域名添加到 /etc/hosts
+    await addHostsEntries();
+
+    // 部署完成，可以通过 emit 事件通知父组件完成
+    // emit('finish');
+  } catch (error) {
+    console.error('完成部署后续配置失败:', error);
+    // 这里可以显示错误提示，但不阻止部署完成
+  }
+};
+
+// 添加 hosts 条目
+const addHostsEntries = async () => {
+  try {
+    if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+      await window.eulercopilotWelcome.deployment.addHostsEntries([
+        'www.eulercopilot.local',
+        'authhub.eulercopilot.local',
+      ]);
+    }
+  } catch (error) {
+    throw new Error(`添加 hosts 条目失败: ${error}`);
+  }
 };
 
 // 标记监听器是否已设置

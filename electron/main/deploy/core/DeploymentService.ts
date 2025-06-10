@@ -160,11 +160,11 @@ export class DeploymentService {
       // 1. 检查环境
       await this.checkEnvironment();
 
-      // 2. 在Linux系统上，一次性获取sudo权限并保持会话
-      await this.initializeSudoSession();
-
-      // 3. 克隆仓库
+      // 2. 克隆仓库
       await this.cloneRepository();
+
+      // 3. 在Linux系统上，一次性获取sudo权限并设置环境
+      await this.initializeSudoSession();
 
       // 4. 配置 values.yaml
       await this.configureValues(params);
@@ -249,36 +249,14 @@ export class DeploymentService {
         );
       }
 
-      // 安装缺失的基础工具
-      if (checkResult.needsBasicToolsInstall) {
-        try {
-          this.updateStatus({
-            message: '安装缺失的基础工具...',
-            currentStep: 'preparing-environment',
-          });
-
-          await this.environmentChecker.installBasicTools(
-            checkResult.missingBasicTools,
-          );
-
-          this.updateStatus({
-            message: '基础工具安装完成',
-            currentStep: 'preparing-environment',
-          });
-        } catch (error) {
-          throw new Error(
-            `基础工具安装失败: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
-      }
+      // 存储检查结果，用于后续决定是否需要执行 2-install-tools
+      // 基础工具的安装将在 initializeSudoSession 中处理
+      this.environmentCheckResult = checkResult;
 
       // 检查是否有严重错误
       if (!checkResult.success) {
         throw new Error(`环境检查未通过: ${checkResult.errors.join(', ')}`);
       }
-
-      // 存储检查结果，用于后续决定是否需要执行 2-install-tools
-      this.environmentCheckResult = checkResult;
 
       this.updateStatus({
         message: '环境检查通过',
@@ -887,7 +865,7 @@ export class DeploymentService {
   }
 
   /**
-   * 初始化sudo会话，一次性获取权限并保持会话
+   * 初始化sudo会话，一次性获取权限并安装缺失工具、设置脚本权限
    */
   private async initializeSudoSession(): Promise<void> {
     // 只在 Linux 系统上需要sudo会话
@@ -904,25 +882,67 @@ export class DeploymentService {
     try {
       this.updateStatus({
         status: 'preparing',
-        message: '获取管理员权限...',
+        message: '获取管理员权限并初始化环境...',
         currentStep: 'preparing-environment',
       });
 
-      // 使用pkexec或其他图形化sudo工具一次性获取权限
-      // 这里执行一个简单的sudo命令来激活会话
       const sudoCommand = this.getSudoCommand();
-      await execAsyncWithAbort(
-        `${sudoCommand}true`,
-        { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
-        this.abortController?.signal,
-      );
+
+      // 检查是否需要安装基础工具
+      const missingTools = this.environmentCheckResult?.missingBasicTools || [];
+
+      // 构建一次性执行的命令列表
+      const commands: string[] = [];
+
+      if (missingTools.length > 0) {
+        // 添加基础工具安装命令
+        commands.push(`dnf install -y ${missingTools.join(' ')}`);
+      }
+
+      // 添加脚本权限设置命令（如果部署目录存在）
+      const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
+      if (fs.existsSync(scriptsPath)) {
+        commands.push(
+          `find "${scriptsPath}" -name "*.sh" -type f -exec chmod +x {} +`,
+        );
+      }
+
+      if (commands.length > 0) {
+        // 一次性执行所有需要权限的命令
+        const combinedCommand = commands.join(' && ');
+        await execAsyncWithAbort(
+          `${sudoCommand}bash -c '${combinedCommand}'`,
+          { timeout: 300000 }, // 5分钟超时
+          this.abortController?.signal,
+        );
+
+        let message = '管理员权限获取成功';
+        if (missingTools.length > 0) {
+          message += `，已安装工具: ${missingTools.join(', ')}`;
+        }
+        if (fs.existsSync(scriptsPath)) {
+          message += '，脚本权限已设置';
+        }
+
+        this.updateStatus({
+          message,
+          currentStep: 'preparing-environment',
+        });
+      } else {
+        // 没有需要执行的命令，只获取权限验证
+        await execAsyncWithAbort(
+          `${sudoCommand}true`,
+          { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
+          this.abortController?.signal,
+        );
+
+        this.updateStatus({
+          message: '管理员权限获取成功',
+          currentStep: 'preparing-environment',
+        });
+      }
 
       this.sudoSessionActive = true;
-
-      this.updateStatus({
-        message: '管理员权限获取成功',
-        currentStep: 'preparing-environment',
-      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -1005,11 +1025,6 @@ export class DeploymentService {
     // 获取sudo命令前缀
     const sudoCommand = this.getSudoCommand();
 
-    let command = '';
-
-    // 给脚本添加执行权限
-    command += `${sudoCommand}chmod +x "${scriptPath}"`;
-
     // 构建环境变量字符串
     let envString = '';
     if (envVars && Object.keys(envVars).length > 0) {
@@ -1019,11 +1034,12 @@ export class DeploymentService {
       envString = envPairs + ' ';
     }
 
-    // 执行脚本
+    // 直接执行脚本，不需要 chmod（权限已在克隆仓库后设置）
+    let command = '';
     if (useInputRedirection && inputData) {
-      command += ` && ${sudoCommand}bash -c '${envString}echo "${inputData}" | bash "${scriptPath}"'`;
+      command = `${sudoCommand}bash -c '${envString}echo "${inputData}" | bash "${scriptPath}"'`;
     } else {
-      command += ` && ${sudoCommand}bash -c '${envString}bash "${scriptPath}"'`;
+      command = `${sudoCommand}bash -c '${envString}bash "${scriptPath}"'`;
     }
 
     return command;
@@ -1159,6 +1175,72 @@ export class DeploymentService {
       }
       this.abortController = undefined;
       this.currentProcess = undefined;
+    }
+  }
+
+  /**
+   * 添加 hosts 条目，将域名指向本地
+   */
+  async addHostsEntries(domains: string[]): Promise<void> {
+    try {
+      // 只在 Linux 和 macOS 系统上执行
+      if (process.platform !== 'linux' && process.platform !== 'darwin') {
+        throw new Error('当前系统不支持自动配置 hosts 文件');
+      }
+
+      const hostsPath = '/etc/hosts';
+
+      // 检查是否已经存在这些条目
+      let hostsContent = '';
+      try {
+        hostsContent = fs.readFileSync(hostsPath, 'utf8');
+      } catch (error) {
+        throw new Error(`无法读取 hosts 文件: ${error}`);
+      }
+
+      // 过滤出需要添加的域名（避免重复添加）
+      const domainsToAdd = domains.filter((domain) => {
+        return (
+          !hostsContent.includes(`127.0.0.1\t${domain}`) &&
+          !hostsContent.includes(`127.0.0.1 ${domain}`)
+        );
+      });
+
+      if (domainsToAdd.length === 0) {
+        // 所有域名都已存在，无需添加
+        return;
+      }
+
+      // 构建要添加的内容
+      const entriesToAdd = domainsToAdd
+        .map((domain) => `127.0.0.1\t${domain}`)
+        .join('\n');
+      const newContent =
+        hostsContent.trim() +
+        '\n\n# EulerCopilot Local Deployment\n' +
+        entriesToAdd +
+        '\n';
+
+      // 使用管理员权限写入 hosts 文件
+      const sudoCommand = this.getSudoCommand();
+
+      // 创建临时文件写入内容，然后移动到 hosts 文件位置
+      const tempFile = '/tmp/hosts_new';
+
+      // 写入新内容到临时文件，然后移动到 hosts 文件
+      const command = `${sudoCommand}bash -c 'echo "${newContent.replace(/'/g, "'\"'\"'")}" > ${tempFile} && mv ${tempFile} ${hostsPath}'`;
+
+      await execAsyncWithAbort(
+        command,
+        { timeout: 30000 },
+        undefined, // 这是部署完成后的操作，不需要 abortController
+      );
+
+      console.log(`已添加以下域名到 hosts 文件: ${domainsToAdd.join(', ')}`);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`配置 hosts 文件失败: ${errorMessage}`);
     }
   }
 
