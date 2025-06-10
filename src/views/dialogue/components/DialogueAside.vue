@@ -13,6 +13,7 @@ import {
 } from 'element-plus';
 import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
+import * as _ from 'lodash'
 import {
   useAccountStore,
   useHistorySessionStore,
@@ -256,13 +257,14 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-const handleNewChat = () => {
+const handleNewChat = _.debounce(() => {
   selectedAppId.value = '';
   user_selected_app.value = '';
   app.value.selectedAppId = '';
   app.value.appId = '';
   createNewSession();
-};
+},500, { leading: true, trailing: false })
+
 
 const selectApp = (id) => {
   if (selectedAppId.value === id) {
