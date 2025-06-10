@@ -551,7 +551,7 @@ $bus.on('getNodesStatue', (item: any) => {
 // 这里结束整个工作流对话
 $bus.on('debugChatEnd', () => {
   // 更新发布按钮状态
-  emits('updateFlowsDebug');
+  queryFlow('update');
   updateFlowsDebugStatus.value = true;
 });
 
