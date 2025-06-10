@@ -175,11 +175,18 @@ export class DeploymentService {
           currentStep: 'stopped',
         });
       } else {
-        this.updateStatus({
-          status: 'error',
-          message: `部署失败: ${error instanceof Error ? error.message : String(error)}`,
-          currentStep: 'failed',
-        });
+        // 如果错误还没有被处理（设置status为error），在这里处理
+        if (this.currentStatus.status !== 'error') {
+          const friendlyMessage = this.getUserFriendlyErrorMessage(
+            error,
+            '部署过程',
+          );
+          this.updateStatus({
+            status: 'error',
+            message: friendlyMessage,
+            currentStep: 'failed',
+          });
+        }
         throw error;
       }
     } finally {
@@ -194,91 +201,151 @@ export class DeploymentService {
    * 检查环境
    */
   private async checkEnvironment(): Promise<void> {
-    this.updateStatus({
-      status: 'preparing',
-      message: '检查系统环境...',
-      currentStep: 'preparing-environment',
-    });
-
-    // 检查 root 权限（仅限 Linux）
-    await this.checkRootPermission();
-
-    const checkResult = await this.environmentChecker.checkAll();
-
-    // 安装缺失的基础工具
-    if (checkResult.needsBasicToolsInstall) {
+    try {
       this.updateStatus({
-        message: '安装缺失的基础工具...',
+        status: 'preparing',
+        message: '检查系统环境...',
         currentStep: 'preparing-environment',
       });
 
-      await this.environmentChecker.installBasicTools(
-        checkResult.missingBasicTools,
-      );
+      // 检查 root 权限（仅限 Linux）
+      try {
+        await this.checkRootPermission();
+      } catch (error) {
+        throw new Error(
+          `权限检查失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      let checkResult;
+      try {
+        checkResult = await this.environmentChecker.checkAll();
+      } catch (error) {
+        throw new Error(
+          `系统环境检查失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      // 安装缺失的基础工具
+      if (checkResult.needsBasicToolsInstall) {
+        try {
+          this.updateStatus({
+            message: '安装缺失的基础工具...',
+            currentStep: 'preparing-environment',
+          });
+
+          await this.environmentChecker.installBasicTools(
+            checkResult.missingBasicTools,
+          );
+
+          this.updateStatus({
+            message: '基础工具安装完成',
+            currentStep: 'preparing-environment',
+          });
+        } catch (error) {
+          throw new Error(
+            `基础工具安装失败: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+
+      // 检查是否有严重错误
+      if (!checkResult.success) {
+        throw new Error(`环境检查未通过: ${checkResult.errors.join(', ')}`);
+      }
+
+      // 存储检查结果，用于后续决定是否需要执行 2-install-tools
+      this.environmentCheckResult = checkResult;
 
       this.updateStatus({
-        message: '基础工具安装完成',
+        message: '环境检查通过',
         currentStep: 'preparing-environment',
       });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.updateStatus({
+        status: 'error',
+        message: `环境检查阶段失败: ${errorMessage}`,
+        currentStep: 'preparing-environment',
+      });
+      throw error;
     }
-
-    // 检查是否有严重错误
-    if (!checkResult.success) {
-      throw new Error(`环境检查失败: ${checkResult.errors.join(', ')}`);
-    }
-
-    // 存储检查结果，用于后续决定是否需要执行 2-install-tools
-    this.environmentCheckResult = checkResult;
-
-    this.updateStatus({
-      message: '环境检查通过',
-      currentStep: 'preparing-environment',
-    });
   }
 
   /**
    * 克隆远程仓库
    */
   private async cloneRepository(): Promise<void> {
-    this.updateStatus({
-      status: 'cloning',
-      message: '克隆部署仓库...',
-      currentStep: 'preparing-environment',
-    });
-
-    // 确保部署目录的父目录存在
-    const deploymentParentDir = path.dirname(this.deploymentPath);
-    if (!fs.existsSync(deploymentParentDir)) {
-      fs.mkdirSync(deploymentParentDir, { recursive: true });
-    }
-
-    // 检查是否已经克隆过
-    const gitDir = path.join(this.deploymentPath, '.git');
-    if (fs.existsSync(gitDir)) {
-      // 已存在，执行 git pull 更新
-      await execAsyncWithAbort(
-        'git pull origin master',
-        { cwd: this.deploymentPath },
-        this.abortController?.signal,
-      );
+    try {
       this.updateStatus({
-        message: '更新部署仓库完成',
+        status: 'cloning',
+        message: '克隆部署仓库...',
         currentStep: 'preparing-environment',
       });
-    } else {
-      // 不存在，克隆仓库
-      const repoUrl = 'https://gitee.com/openeuler/euler-copilot-framework.git';
-      await execAsyncWithAbort(
-        `git clone ${repoUrl} ${path.basename(this.deploymentPath)}`,
-        {
-          cwd: deploymentParentDir,
-        },
-        this.abortController?.signal,
-      );
+
+      // 确保部署目录的父目录存在
+      const deploymentParentDir = path.dirname(this.deploymentPath);
+      try {
+        if (!fs.existsSync(deploymentParentDir)) {
+          fs.mkdirSync(deploymentParentDir, { recursive: true });
+        }
+      } catch (error) {
+        throw new Error(
+          `创建部署目录失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      // 检查是否已经克隆过
+      const gitDir = path.join(this.deploymentPath, '.git');
+      if (fs.existsSync(gitDir)) {
+        try {
+          // 已存在，执行 git pull 更新
+          await execAsyncWithAbort(
+            'git pull origin master',
+            { cwd: this.deploymentPath },
+            this.abortController?.signal,
+          );
+          this.updateStatus({
+            message: '更新部署仓库完成',
+            currentStep: 'preparing-environment',
+          });
+        } catch (error) {
+          throw new Error(
+            `更新仓库失败: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      } else {
+        try {
+          // 不存在，克隆仓库
+          const repoUrl =
+            'https://gitee.com/openeuler/euler-copilot-framework.git';
+          await execAsyncWithAbort(
+            `git clone ${repoUrl} ${path.basename(this.deploymentPath)}`,
+            {
+              cwd: deploymentParentDir,
+            },
+            this.abortController?.signal,
+          );
+          this.updateStatus({
+            message: '克隆部署仓库完成',
+            currentStep: 'preparing-environment',
+          });
+        } catch (error) {
+          throw new Error(
+            `克隆仓库失败: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.updateStatus({
-        message: '克隆部署仓库完成',
+        status: 'error',
+        message: `仓库操作阶段失败: ${errorMessage}`,
         currentStep: 'preparing-environment',
       });
+      throw error;
     }
   }
 
@@ -286,69 +353,115 @@ export class DeploymentService {
    * 配置 values.yaml 文件
    */
   private async configureValues(params: DeploymentParams): Promise<void> {
-    this.updateStatus({
-      status: 'configuring',
-      message: '配置部署参数...',
-      currentStep: 'preparing-environment',
-    });
+    try {
+      this.updateStatus({
+        status: 'configuring',
+        message: '配置部署参数...',
+        currentStep: 'preparing-environment',
+      });
 
-    const valuesPath = path.join(
-      this.deploymentPath,
-      'deploy/chart/euler_copilot/values.yaml',
-    );
-    await this.valuesYamlManager.updateModelsConfig(valuesPath, params);
+      const valuesPath = path.join(
+        this.deploymentPath,
+        'deploy/chart/euler_copilot/values.yaml',
+      );
 
-    this.updateStatus({
-      message: '配置部署参数完成',
-      currentStep: 'preparing-environment',
-    });
+      // 检查 values.yaml 文件是否存在
+      if (!fs.existsSync(valuesPath)) {
+        throw new Error(`配置文件不存在: ${valuesPath}`);
+      }
+
+      try {
+        await this.valuesYamlManager.updateModelsConfig(valuesPath, params);
+      } catch (error) {
+        throw new Error(
+          `更新配置文件失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      this.updateStatus({
+        message: '配置部署参数完成',
+        currentStep: 'preparing-environment',
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.updateStatus({
+        status: 'error',
+        message: `配置阶段失败: ${errorMessage}`,
+        currentStep: 'preparing-environment',
+      });
+      throw error;
+    }
   }
 
   /**
    * 安装工具（准备环境的一部分）
    */
   private async installTools(): Promise<void> {
-    // 检查是否需要安装 K8s 工具
-    if (!this.environmentCheckResult?.needsK8sToolsInstall) {
+    try {
+      // 检查是否需要安装 K8s 工具
+      if (!this.environmentCheckResult?.needsK8sToolsInstall) {
+        this.updateStatus({
+          message: 'K8s 工具已存在，跳过工具安装',
+          currentStep: 'preparing-environment',
+        });
+        return;
+      }
+
       this.updateStatus({
-        message: 'K8s 工具已存在，跳过工具安装',
+        status: 'preparing',
+        message: '安装 K8s 工具 (kubectl, helm, k3s)...',
         currentStep: 'preparing-environment',
       });
-      return;
-    }
 
-    this.updateStatus({
-      status: 'preparing',
-      message: '安装 K8s 工具 (kubectl, helm)...',
-      currentStep: 'preparing-environment',
-    });
-
-    const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
-    const toolsScriptPath = path.join(
-      scriptsPath,
-      '2-install-tools/install_tools.sh',
-    );
-
-    // 检查脚本文件是否存在
-    if (fs.existsSync(toolsScriptPath)) {
-      // 构建需要权限的命令，使用已建立的sudo会话
-      const command = this.buildRootCommand(toolsScriptPath);
-
-      // 执行脚本
-      await execAsyncWithAbort(
-        command,
-        {
-          cwd: scriptsPath,
-          timeout: 300000, // 5分钟超时
-        },
-        this.abortController?.signal,
+      const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
+      const toolsScriptPath = path.join(
+        scriptsPath,
+        '2-install-tools/install_tools.sh',
       );
-    }
 
-    this.updateStatus({
-      message: 'K8s 工具安装完成',
-      currentStep: 'preparing-environment',
-    });
+      // 检查脚本文件是否存在
+      if (!fs.existsSync(toolsScriptPath)) {
+        throw new Error(`工具安装脚本不存在: ${toolsScriptPath}`);
+      }
+
+      try {
+        // 构建需要权限的命令，使用已建立的sudo会话
+        const command = this.buildRootCommand(toolsScriptPath);
+
+        // 执行脚本
+        await execAsyncWithAbort(
+          command,
+          {
+            cwd: scriptsPath,
+            timeout: 600000, // 10分钟超时，k3s安装可能需要较长时间
+          },
+          this.abortController?.signal,
+        );
+      } catch (error) {
+        // 检查是否是超时错误
+        if (error instanceof Error && error.message.includes('timeout')) {
+          throw new Error('K8s 工具安装超时，可能网络较慢或下载失败');
+        }
+        throw new Error(
+          `K8s 工具安装执行失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      this.updateStatus({
+        message: 'K8s 工具安装完成',
+        currentStep: 'preparing-environment',
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.updateStatus({
+        status: 'error',
+        message: `工具安装阶段失败: ${errorMessage}`,
+        currentStep: 'preparing-environment',
+      });
+      throw error;
+    }
   }
 
   /**
@@ -360,30 +473,53 @@ export class DeploymentService {
       return;
     }
 
-    this.updateStatus({
-      status: 'preparing',
-      message: '验证 K8s 集群状态...',
-      currentStep: 'preparing-environment',
-    });
-
     try {
+      this.updateStatus({
+        status: 'preparing',
+        message: '验证 K8s 集群状态...',
+        currentStep: 'preparing-environment',
+      });
+
       // 1. 检查k3s服务状态
-      await this.checkK3sService();
+      try {
+        await this.checkK3sService();
+      } catch (error) {
+        throw new Error(
+          `k3s 服务检查失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
 
       // 2. 等待k3s服务完全启动
-      await this.waitForK3sReady();
+      try {
+        await this.waitForK3sReady();
+      } catch (error) {
+        throw new Error(
+          `k3s 服务启动验证失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
 
       // 3. 验证kubectl连接
-      await this.verifyKubectlConnection();
+      try {
+        await this.verifyKubectlConnection();
+      } catch (error) {
+        throw new Error(
+          `kubectl 连接验证失败: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
 
       this.updateStatus({
         message: 'K8s 集群验证通过',
         currentStep: 'preparing-environment',
       });
     } catch (error) {
-      throw new Error(
-        `K8s 集群验证失败: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.updateStatus({
+        status: 'error',
+        message: `K8s 集群验证阶段失败: ${errorMessage}`,
+        currentStep: 'preparing-environment',
+      });
+      throw error;
     }
   }
 
@@ -538,55 +674,103 @@ export class DeploymentService {
     for (let i = 0; i < scripts.length; i++) {
       const script = scripts[i];
 
-      this.updateStatus({
-        status: 'deploying',
-        message: `正在安装 ${script.displayName}...`,
-        currentStep: script.step,
-      });
+      try {
+        this.updateStatus({
+          status: 'deploying',
+          message: `正在安装 ${script.displayName}...`,
+          currentStep: script.step,
+        });
 
-      const scriptPath = path.join(scriptsPath, script.path);
+        const scriptPath = path.join(scriptsPath, script.path);
 
-      // 检查脚本文件是否存在
-      if (!fs.existsSync(scriptPath)) {
-        throw new Error(`脚本文件不存在: ${scriptPath}`);
+        // 检查脚本文件是否存在
+        if (!fs.existsSync(scriptPath)) {
+          throw new Error(`脚本文件不存在: ${scriptPath}`);
+        }
+
+        // 在执行脚本前刷新sudo会话（除第一个脚本外）
+        if (i > 0) {
+          try {
+            await this.refreshSudoSession();
+          } catch (error) {
+            console.warn(`刷新sudo会话失败，继续执行: ${error}`);
+          }
+        }
+
+        // 准备环境变量
+        const execEnv = {
+          ...process.env,
+          ...script.envVars,
+          // 确保 KUBECONFIG 环境变量正确设置
+          KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
+        };
+
+        // 构建需要权限的命令
+        const command = this.buildRootCommand(
+          scriptPath,
+          script.useInputRedirection,
+          script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
+        );
+
+        try {
+          // 给脚本添加执行权限并执行
+          await execAsyncWithAbort(
+            command,
+            {
+              cwd: scriptsPath,
+              timeout: 600000, // 10分钟超时，某些服务安装可能需要较长时间
+              env: execEnv,
+            },
+            this.abortController?.signal,
+          );
+        } catch (error) {
+          // 检查是否是超时错误
+          if (error instanceof Error && error.message.includes('timeout')) {
+            throw new Error(
+              `${script.displayName} 安装超时，可能网络较慢或下载失败`,
+            );
+          }
+          // 检查是否是权限错误
+          if (
+            error instanceof Error &&
+            (error.message.includes('permission denied') ||
+              error.message.includes('Access denied'))
+          ) {
+            throw new Error(
+              `${script.displayName} 安装权限不足，请确保有管理员权限`,
+            );
+          }
+          // 检查是否是网络错误
+          if (
+            error instanceof Error &&
+            (error.message.includes('network') ||
+              error.message.includes('connection') ||
+              error.message.includes('resolve'))
+          ) {
+            throw new Error(
+              `${script.displayName} 安装网络错误，请检查网络连接`,
+            );
+          }
+          throw new Error(
+            `${script.displayName} 安装失败: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+
+        // 更新完成状态
+        this.updateStatus({
+          message: `${script.displayName} 安装完成`,
+          currentStep: script.step,
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.updateStatus({
+          status: 'error',
+          message: `${script.displayName} 安装失败: ${errorMessage}`,
+          currentStep: script.step,
+        });
+        throw error;
       }
-
-      // 在执行脚本前刷新sudo会话（除第一个脚本外）
-      if (i > 0) {
-        await this.refreshSudoSession();
-      }
-
-      // 准备环境变量
-      const execEnv = {
-        ...process.env,
-        ...script.envVars,
-        // 确保 KUBECONFIG 环境变量正确设置
-        KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
-      };
-
-      // 构建需要权限的命令
-      const command = this.buildRootCommand(
-        scriptPath,
-        script.useInputRedirection,
-        script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
-      );
-
-      // 给脚本添加执行权限并执行
-      await execAsyncWithAbort(
-        command,
-        {
-          cwd: scriptsPath,
-          timeout: 300000, // 5分钟超时
-          env: execEnv,
-        },
-        this.abortController?.signal,
-      );
-
-      // 更新完成状态
-      this.updateStatus({
-        message: `${script.displayName} 安装完成`,
-        currentStep: script.step,
-      });
     }
   }
 
@@ -688,19 +872,19 @@ export class DeploymentService {
       return;
     }
 
-    this.updateStatus({
-      status: 'preparing',
-      message: '获取管理员权限...',
-      currentStep: 'preparing-environment',
-    });
-
     try {
+      this.updateStatus({
+        status: 'preparing',
+        message: '获取管理员权限...',
+        currentStep: 'preparing-environment',
+      });
+
       // 使用pkexec或其他图形化sudo工具一次性获取权限
       // 这里执行一个简单的sudo命令来激活会话
       const sudoCommand = this.getSudoCommand();
       await execAsyncWithAbort(
         `${sudoCommand}true`,
-        { timeout: 30000 }, // 30秒超时，给用户足够时间输入密码
+        { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
         this.abortController?.signal,
       );
 
@@ -711,9 +895,34 @@ export class DeploymentService {
         currentStep: 'preparing-environment',
       });
     } catch (error) {
-      throw new Error(
-        `获取管理员权限失败: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      // 检查是否是用户取消操作
+      if (
+        errorMessage.includes('cancelled') ||
+        errorMessage.includes('aborted')
+      ) {
+        throw new Error('用户取消了权限授权操作');
+      }
+
+      // 检查是否是权限被拒绝
+      if (
+        errorMessage.includes('authentication') ||
+        errorMessage.includes('permission')
+      ) {
+        throw new Error(
+          '管理员权限验证失败，请确保密码正确或用户具有管理员权限',
+        );
+      }
+
+      this.updateStatus({
+        status: 'error',
+        message: `权限获取阶段失败: ${errorMessage}`,
+        currentStep: 'preparing-environment',
+      });
+
+      throw new Error(`获取管理员权限失败: ${errorMessage}`);
     }
   }
 
@@ -806,6 +1015,82 @@ export class DeploymentService {
     }
 
     return command;
+  }
+
+  /**
+   * 获取用户友好的错误消息
+   */
+  private getUserFriendlyErrorMessage(error: unknown, context: string): string {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // 网络相关错误
+    if (
+      errorMessage.includes('network') ||
+      errorMessage.includes('connection') ||
+      errorMessage.includes('resolve') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes('ECONNREFUSED')
+    ) {
+      return `${context}：网络连接失败，请检查网络连接和防火墙设置`;
+    }
+
+    // 权限相关错误
+    if (
+      errorMessage.includes('permission') ||
+      errorMessage.includes('Access denied') ||
+      errorMessage.includes('authentication') ||
+      errorMessage.includes('EACCES')
+    ) {
+      return `${context}：权限不足，请确保具有管理员权限`;
+    }
+
+    // 文件不存在错误
+    if (
+      errorMessage.includes('ENOENT') ||
+      errorMessage.includes('No such file') ||
+      errorMessage.includes('not found')
+    ) {
+      return `${context}：所需文件或命令不存在，请检查安装是否完整`;
+    }
+
+    // 磁盘空间不足
+    if (
+      errorMessage.includes('ENOSPC') ||
+      errorMessage.includes('No space left')
+    ) {
+      return `${context}：磁盘空间不足，请清理磁盘空间后重试`;
+    }
+
+    // 用户取消操作
+    if (
+      errorMessage.includes('cancelled') ||
+      errorMessage.includes('aborted') ||
+      errorMessage.includes('用户停止')
+    ) {
+      return `${context}：操作被用户取消`;
+    }
+
+    // Kubernetes相关错误
+    if (
+      errorMessage.includes('kubectl') ||
+      errorMessage.includes('k3s') ||
+      errorMessage.includes('cluster') ||
+      errorMessage.includes('kubeconfig')
+    ) {
+      return `${context}：Kubernetes集群配置错误，请检查k3s服务状态`;
+    }
+
+    // 端口占用错误
+    if (
+      errorMessage.includes('port') &&
+      errorMessage.includes('already in use')
+    ) {
+      return `${context}：端口被占用，请检查相关服务是否已在运行`;
+    }
+
+    // 默认返回原始错误消息，但添加上下文
+    return `${context}：${errorMessage}`;
   }
 
   /**
