@@ -1199,11 +1199,14 @@ export class DeploymentService {
       }
 
       // 过滤出需要添加的域名（避免重复添加）
+      // 使用正则表达式检测域名是否已存在，处理多个空格/tab的情况
       const domainsToAdd = domains.filter((domain) => {
-        return (
-          !hostsContent.includes(`127.0.0.1\t${domain}`) &&
-          !hostsContent.includes(`127.0.0.1 ${domain}`)
+        // 匹配 127.0.0.1 + 一个或多个空白字符 + 域名 + 行尾或空白字符或注释
+        const domainRegex = new RegExp(
+          `^127\\.0\\.0\\.1\\s+${domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$|#)`,
+          'm',
         );
+        return !domainRegex.test(hostsContent);
       });
 
       if (domainsToAdd.length === 0) {
@@ -1211,15 +1214,29 @@ export class DeploymentService {
         return;
       }
 
+      // 检查是否已经存在 openEuler Intelligence 注释标签
+      const commentExists = hostsContent.includes(
+        '# openEuler Intelligence Local Deployment',
+      );
+
       // 构建要添加的内容
       const entriesToAdd = domainsToAdd
-        .map((domain) => `127.0.0.1\t${domain}`)
+        .map((domain) => `127.0.0.1 ${domain}`)
         .join('\n');
-      const newContent =
-        hostsContent.trim() +
-        '\n\n# EulerCopilot Local Deployment\n' +
-        entriesToAdd +
-        '\n';
+
+      let newContent: string;
+      if (commentExists) {
+        // 如果注释已存在，在注释后面插入新的域名条目
+        const commentRegex = /(# openEuler Intelligence Local Deployment\n)/;
+        newContent = hostsContent.replace(commentRegex, `$1${entriesToAdd}\n`);
+      } else {
+        // 如果注释不存在，添加完整的注释块和域名条目
+        newContent =
+          hostsContent.trim() +
+          '\n\n# openEuler Intelligence Local Deployment\n' +
+          entriesToAdd +
+          '\n';
+      }
 
       // 使用管理员权限写入 hosts 文件
       const sudoCommand = this.getSudoCommand();
