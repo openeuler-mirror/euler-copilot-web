@@ -14,7 +14,6 @@
   "private": true,
   "main": "./dist/main/index.js",
   "scripts": {
-    "postinstall": "patch-package",
     "dev": "vite",
     "dev:micro": "vite --mode micro",
     "build": "vite build",
@@ -179,7 +178,6 @@
     "mitt": "^3.0.1",
     "mockjs": "^1.1.0",
     "ora": "^5.4.1",
-    "patch-package": "^8.0.0",
     "prettier": "3.4.2",
     "rimraf": "^6.0.1",
     "rollup": "^4.40.0",
@@ -193,5 +191,6 @@
     "vite": "5.4.11",
     "vite-plugin-mock": "^3.0.2",
     "vite-plugin-qiankun": "1.0.15"
-  }
+  },
+  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
 }
