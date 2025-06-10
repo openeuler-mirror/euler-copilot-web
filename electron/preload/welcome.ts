@@ -12,6 +12,9 @@ import { contextBridge } from 'electron';
 import { sharedConfigAPI, systemAPI, utilsAPI, safeIPC } from './shared';
 
 // 导入部署服务API
+let statusChangeCallback: ((status: any) => void) | null = null;
+let isListenerSetup = false;
+
 const deploymentAPI = {
   /**
    * 从前端表单开始部署
@@ -49,18 +52,27 @@ const deploymentAPI = {
    * 监听部署状态变化
    */
   onStatusChange: (callback: (status: any) => void): void => {
-    console.log('🔧 Preload: 设置部署状态监听器');
-    safeIPC.on('deployment:statusChanged', (_event, status) => {
-      console.log('🔄 Preload: 收到部署状态更新:', status);
-      callback(status);
-    });
+    // 存储回调函数
+    statusChangeCallback = callback;
+
+    // 只设置一次 IPC 监听器
+    if (!isListenerSetup) {
+      isListenerSetup = true;
+      safeIPC.on('deployment:statusChanged', (status) => {
+        if (statusChangeCallback) {
+          statusChangeCallback(status);
+        }
+      });
+    }
   },
 
   /**
    * 移除状态变化监听器
    */
   removeStatusListener: (): void => {
+    statusChangeCallback = null;
     safeIPC.removeAllListeners('deployment:statusChanged');
+    isListenerSetup = false;
   },
 
   /**
@@ -147,5 +159,3 @@ if (process.contextIsolated) {
 } else {
   (window as any).eulercopilotWelcome = welcomeAPI;
 }
-
-console.log('Welcome preload script loaded');

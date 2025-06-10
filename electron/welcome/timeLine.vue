@@ -47,6 +47,7 @@
     </el-button>
   </div>
 </template>
+
 <script lang="ts" setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import successIcon from './assets/svgs/success.svg';
@@ -103,25 +104,11 @@ const updateActivitiesStatus = (status: any) => {
     return; // 如果状态无效，直接返回
   }
 
-  // 开发模式下输出详细的状态更新信息
-  if (import.meta.env.DEV) {
-    console.group('🔧 updateActivitiesStatus 调用');
-    console.log('状态详情:', {
-      状态: status.status,
-      当前步骤: status.currentStep,
-      消息: status.message,
-    });
-    console.groupEnd();
-  }
-
   // 安全地获取 currentStep，避免解构错误
   const currentStep = status.currentStep || '';
 
   if (status.status === 'error') {
     // 错误状态：所有未完成的步骤标记为失败
-    if (import.meta.env.DEV) {
-      console.log('🚨 处理错误状态：将所有未完成步骤标记为失败');
-    }
     activities.value.forEach((activity) => {
       if (activity.type !== 'success') {
         activity.type = 'failed';
@@ -132,9 +119,6 @@ const updateActivitiesStatus = (status: any) => {
 
   if (status.status === 'success') {
     // 成功状态：所有步骤标记为成功
-    if (import.meta.env.DEV) {
-      console.log('✅ 处理成功状态：将所有步骤标记为成功');
-    }
     activities.value.forEach((activity) => {
       activity.type = 'success';
     });
@@ -148,9 +132,6 @@ const updateActivitiesStatus = (status: any) => {
       currentStep === 'installing-tools'
     ) {
       // 准备环境阶段
-      if (import.meta.env.DEV) {
-        console.log('📋 处理准备环境阶段');
-      }
       if (activityIndex === 0) {
         activity.type = 'running';
       } else {
@@ -158,9 +139,6 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'environment-ready') {
       // 环境准备完成
-      if (import.meta.env.DEV) {
-        console.log('✅ 处理环境准备完成');
-      }
       if (activityIndex === 0) {
         activity.type = 'success';
       } else {
@@ -168,9 +146,6 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'install-databases') {
       // 数据库服务安装中
-      if (import.meta.env.DEV) {
-        console.log('🗄️ 处理数据库服务安装');
-      }
       if (activityIndex === 0) {
         activity.type = 'success';
       } else if (activityIndex === 1) {
@@ -180,9 +155,6 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'install-authhub') {
       // AuthHub 服务安装中
-      if (import.meta.env.DEV) {
-        console.log('🔐 处理 AuthHub 服务安装');
-      }
       if (activityIndex <= 1) {
         activity.type = 'success';
       } else if (activityIndex === 2) {
@@ -192,9 +164,6 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'install-intelligence') {
       // Intelligence 服务安装中
-      if (import.meta.env.DEV) {
-        console.log('🧠 处理 Intelligence 服务安装');
-      }
       if (activityIndex <= 2) {
         activity.type = 'success';
       } else if (activityIndex === 3) {
@@ -202,17 +171,11 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'completed') {
       // 全部完成
-      if (import.meta.env.DEV) {
-        console.log('🎉 处理全部完成状态');
-      }
       activities.value.forEach((act) => {
         act.type = 'success';
       });
     } else if (currentStep === 'failed' || currentStep === 'stopped') {
       // 失败或停止状态
-      if (import.meta.env.DEV) {
-        console.log('🛑 处理失败或停止状态');
-      }
       activities.value.forEach((act) => {
         if (act.type !== 'success') {
           act.type = 'failed';
@@ -220,36 +183,19 @@ const updateActivitiesStatus = (status: any) => {
       });
     } else {
       // 未知步骤
-      if (import.meta.env.DEV) {
-        console.warn(`❓ 未知的步骤: ${currentStep}`);
-      }
+      console.warn(`未知的部署步骤: ${currentStep}`);
     }
   });
 };
 
 // 状态监听器
 const onDeploymentStatusChange = (status: any) => {
-  // 调试信息：记录前端状态更新
-  if (import.meta.env.DEV) {
-    console.log('🔄 TimeLine: 收到状态更新', {
-      status: status?.status,
-      currentStep: status?.currentStep,
-      message: status?.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   // 防止状态为 undefined 时的错误
   if (status) {
     deploymentStatus.value = status;
     updateActivitiesStatus(status);
-    if (import.meta.env.DEV) {
-      console.log('✅ TimeLine: 状态更新完成');
-    }
   } else {
-    if (import.meta.env.DEV) {
-      console.warn('⚠️ TimeLine: 收到无效状态:', status);
-    }
+    console.warn('收到无效的部署状态:', status);
   }
 };
 
@@ -281,11 +227,6 @@ const handleRetry = async () => {
       activity.type = 'default';
     });
 
-    // 重新获取表单数据并重试（这里需要父组件传递表单数据）
-    if (import.meta.env.DEV) {
-      console.log('重试部署...');
-    }
-
     // 可以通过 emit 事件让父组件重新提交表单
     // emit('retry');
   } catch (error) {
@@ -296,24 +237,16 @@ const handleRetry = async () => {
 // 处理完成
 const handleFinish = () => {
   // 可以通过 emit 事件通知父组件完成
-  if (import.meta.env.DEV) {
-    console.log('部署完成');
-  }
   // emit('finish');
 };
 
-// 组件挂载时设置监听器
-onMounted(() => {
-  if (import.meta.env.DEV) {
-    console.log('🔄 TimeLine: 组件挂载，设置状态监听器');
-    console.log(
-      '🔍 TimeLine: window.eulercopilotWelcome:',
-      window.eulercopilotWelcome,
-    );
-    console.log(
-      '🔍 TimeLine: window.eulercopilotWelcome.deployment:',
-      window.eulercopilotWelcome?.deployment,
-    );
+// 标记监听器是否已设置
+let isListenerSet = false;
+
+// 独立的函数来设置部署监听器
+const setupDeploymentListener = () => {
+  if (isListenerSet) {
+    return;
   }
 
   if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
@@ -321,34 +254,36 @@ onMounted(() => {
     window.eulercopilotWelcome.deployment.onStatusChange(
       onDeploymentStatusChange,
     );
-    if (import.meta.env.DEV) {
-      console.log('✅ TimeLine: 状态监听器已设置');
-    }
+    isListenerSet = true;
 
     // 获取当前状态
     window.eulercopilotWelcome.deployment
       .getStatus()
       .then((status) => {
-        if (import.meta.env.DEV) {
-          console.log('🔄 TimeLine: 获取到初始状态:', status);
-        }
         if (status) {
           onDeploymentStatusChange(status);
         }
       })
       .catch((error) => {
-        console.error('❌ TimeLine: 获取部署状态失败:', error);
+        console.error('获取部署状态失败:', error);
       });
   } else {
-    console.error('❌ TimeLine: 部署服务API不可用');
-    console.error('❌ TimeLine: window对象调试信息:', {
-      hasEulercopilotWelcome: !!window.eulercopilotWelcome,
-      hasDeployment: !!(
-        window.eulercopilotWelcome && window.eulercopilotWelcome.deployment
-      ),
-      windowKeys: Object.keys(window).filter((key) => key.includes('euler')),
-    });
+    console.error('部署服务API不可用');
   }
+};
+
+// 组件挂载时设置监听器
+onMounted(() => {
+  // 立即尝试设置监听器
+  setupDeploymentListener();
+
+  // 多次重试确保监听器设置成功
+  const retryIntervals = [100, 300, 500];
+  retryIntervals.forEach((delay) => {
+    setTimeout(() => {
+      setupDeploymentListener();
+    }, delay);
+  });
 });
 
 // 组件卸载时清理监听器
