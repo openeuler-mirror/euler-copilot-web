@@ -721,17 +721,6 @@ export class DeploymentService {
           throw new Error(`脚本文件不存在: ${scriptPath}`);
         }
 
-        // 在执行脚本前刷新sudo会话（除第一个脚本外）
-        if (i > 0) {
-          try {
-            await this.refreshSudoSession();
-          } catch (error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.warn(`刷新sudo会话失败，继续执行: ${error}`);
-            }
-          }
-        }
-
         // 准备环境变量，过滤掉 undefined 值
         const baseEnv = {
           ...process.env,
@@ -963,35 +952,6 @@ export class DeploymentService {
       });
 
       throw new Error(`获取管理员权限失败: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * 刷新sudo会话时间戳，延长会话时间
-   */
-  private async refreshSudoSession(): Promise<void> {
-    if (process.platform !== 'linux' || !this.sudoSessionActive) {
-      return;
-    }
-
-    // 检查是否为root用户
-    if (process.getuid && process.getuid() === 0) {
-      return;
-    }
-
-    try {
-      // 使用 sudo -v 刷新时间戳，无需重新输入密码
-      await execAsyncWithAbort(
-        'sudo -v',
-        { timeout: 5000 },
-        this.abortController?.signal,
-      );
-    } catch (error) {
-      // 如果刷新失败，可能需要重新获取权限
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('刷新sudo会话失败，可能需要重新输入密码:', error);
-      }
-      this.sudoSessionActive = false;
     }
   }
 
