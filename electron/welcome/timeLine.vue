@@ -306,6 +306,14 @@ const handleFinish = () => {
 onMounted(() => {
   if (import.meta.env.DEV) {
     console.log('🔄 TimeLine: 组件挂载，设置状态监听器');
+    console.log(
+      '🔍 TimeLine: window.eulercopilotWelcome:',
+      window.eulercopilotWelcome,
+    );
+    console.log(
+      '🔍 TimeLine: window.eulercopilotWelcome.deployment:',
+      window.eulercopilotWelcome?.deployment,
+    );
   }
 
   if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
@@ -333,6 +341,13 @@ onMounted(() => {
       });
   } else {
     console.error('❌ TimeLine: 部署服务API不可用');
+    console.error('❌ TimeLine: window对象调试信息:', {
+      hasEulercopilotWelcome: !!window.eulercopilotWelcome,
+      hasDeployment: !!(
+        window.eulercopilotWelcome && window.eulercopilotWelcome.deployment
+      ),
+      windowKeys: Object.keys(window).filter((key) => key.includes('euler')),
+    });
   }
 });
 

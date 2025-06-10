@@ -49,7 +49,9 @@ const deploymentAPI = {
    * 监听部署状态变化
    */
   onStatusChange: (callback: (status: any) => void): void => {
+    console.log('🔧 Preload: 设置部署状态监听器');
     safeIPC.on('deployment:statusChanged', (_event, status) => {
+      console.log('🔄 Preload: 收到部署状态更新:', status);
       callback(status);
     });
   },
