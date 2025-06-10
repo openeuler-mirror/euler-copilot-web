@@ -10,7 +10,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { getCachePath } from '../../common/cache-conf';
 import type {
   DeploymentParams,
@@ -69,7 +69,7 @@ export class DeploymentService {
   private statusCallback?: (status: DeploymentStatus) => void;
   private abortController?: AbortController;
   private sudoSessionActive: boolean = false;
-  private tempSudoScriptPath?: string;
+  private sudoHelperProcess?: any;
 
   constructor() {
     this.cachePath = getCachePath();
@@ -216,7 +216,7 @@ export class DeploymentService {
       // 清理资源
       this.abortController = undefined;
       this.sudoSessionActive = false; // 重置sudo会话状态
-      this.cleanupTemporarySudoScript(); // 清理临时sudo脚本
+      this.cleanupSudoHelper(); // 清理sudo助手进程
     }
   }
 
@@ -873,8 +873,8 @@ export class DeploymentService {
         currentStep: 'preparing-environment',
       });
 
-      // 创建临时的sudo执行脚本
-      await this.createTemporarySudoScript();
+      // 启动sudo助手进程
+      await this.startSudoHelper();
 
       // 检查是否需要安装基础工具
       const missingTools = this.environmentCheckResult?.missingBasicTools || [];
@@ -896,7 +896,7 @@ export class DeploymentService {
       }
 
       if (commands.length > 0) {
-        // 使用临时sudo脚本执行命令
+        // 使用sudo助手执行命令
         const combinedCommand = commands.join(' && ');
         await this.executeSudoCommand(combinedCommand, 300000); // 5分钟超时
 
@@ -913,7 +913,7 @@ export class DeploymentService {
           currentStep: 'preparing-environment',
         });
       } else {
-        // 即使没有要执行的命令，也要验证sudo脚本是否正常工作
+        // 即使没有要执行的命令，也要验证sudo助手是否正常工作
         await this.executeSudoCommand('echo "权限验证成功"', 30000);
 
         this.updateStatus({
@@ -956,9 +956,9 @@ export class DeploymentService {
   }
 
   /**
-   * 创建临时的sudo执行脚本，避免重复密码输入
+   * 启动sudo助手进程，只需要一次密码输入
    */
-  private async createTemporarySudoScript(): Promise<void> {
+  private async startSudoHelper(): Promise<void> {
     if (process.platform !== 'linux') {
       return;
     }
@@ -975,51 +975,102 @@ export class DeploymentService {
         fs.mkdirSync(tempDir, { recursive: true });
       }
 
-      // 创建临时sudo脚本路径
-      this.tempSudoScriptPath = path.join(tempDir, 'sudo-wrapper.sh');
+      // 创建sudo助手脚本
+      const helperScriptPath = path.join(tempDir, 'sudo-helper.sh');
+      const helperScriptContent = `#!/bin/bash
+# Sudo助手脚本，保持长期运行的sudo会话
 
-      // 创建一个简单的包装脚本，只是为了方便调用
-      const scriptContent = `#!/bin/bash
-# 临时sudo包装脚本，由openEuler Intelligence创建
-# 执行传入的命令
-exec "$@"
+# 读取命令并执行
+while IFS= read -r command; do
+    if [ "$command" = "EXIT" ]; then
+        break
+    fi
+    # 使用eval执行命令，支持复杂的命令结构
+    eval "$command"
+    echo "COMMAND_DONE_$$"
+done
 `;
 
-      // 写入脚本文件
-      fs.writeFileSync(this.tempSudoScriptPath, scriptContent, { mode: 0o755 });
+      // 写入助手脚本
+      fs.writeFileSync(helperScriptPath, helperScriptContent, { mode: 0o755 });
 
-      // 使用pkexec验证一次权限，确保用户可以正常输入密码
+      // 使用pkexec启动助手进程，只需要输入一次密码
       const sudoCommand = this.getSudoCommand();
 
-      if (sudoCommand.includes('pkexec')) {
-        // 测试pkexec是否工作正常，执行一个简单的命令
-        await execAsyncWithAbort(
-          `${sudoCommand}echo "权限验证成功"`,
-          { timeout: 60000 }, // 给用户充足时间输入密码
-          this.abortController?.signal,
-        );
-      } else {
+      if (!sudoCommand.includes('pkexec')) {
         throw new Error('当前系统不支持图形化权限验证工具');
       }
-    } catch (error) {
-      // 清理可能创建的文件
-      if (this.tempSudoScriptPath && fs.existsSync(this.tempSudoScriptPath)) {
-        try {
-          fs.unlinkSync(this.tempSudoScriptPath);
-        } catch (cleanupError) {
-          // 忽略清理错误
-          console.warn('清理临时文件失败:', cleanupError);
-        }
-        this.tempSudoScriptPath = undefined;
+
+      // 启动长期运行的sudo助手进程
+      const command = `${sudoCommand}bash "${helperScriptPath}"`;
+
+      this.sudoHelperProcess = spawn('bash', ['-c', command], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+
+      // 等待进程启动并准备就绪
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('sudo助手进程启动超时'));
+        }, 60000); // 60秒超时，给用户充足时间输入密码
+
+        let isResolved = false;
+
+        this.sudoHelperProcess.stdout?.on('data', (data: Buffer) => {
+          const output = data.toString();
+          // 检查是否是我们的命令完成标记，如果是说明进程已经启动
+          if (output.includes('COMMAND_DONE_') && !isResolved) {
+            clearTimeout(timeout);
+            isResolved = true;
+            resolve(void 0);
+          }
+        });
+
+        this.sudoHelperProcess.on('error', (error: Error) => {
+          if (!isResolved) {
+            clearTimeout(timeout);
+            isResolved = true;
+            reject(error);
+          }
+        });
+
+        this.sudoHelperProcess.on('exit', (code: number) => {
+          if (!isResolved) {
+            clearTimeout(timeout);
+            isResolved = true;
+            reject(new Error(`sudo助手进程异常退出，代码: ${code}`));
+          }
+        });
+
+        // 发送一个测试命令来确认进程正常工作
+        this.sudoHelperProcess.stdin?.write('echo "Helper Ready"\n');
+      });
+
+      // 清理临时脚本文件
+      try {
+        fs.unlinkSync(helperScriptPath);
+      } catch {
+        // 忽略清理错误
       }
+    } catch (error) {
+      // 清理可能启动的进程
+      if (this.sudoHelperProcess) {
+        try {
+          this.sudoHelperProcess.kill();
+        } catch {
+          // 忽略清理错误
+        }
+        this.sudoHelperProcess = undefined;
+      }
+
       throw new Error(
-        `初始化权限验证失败: ${error instanceof Error ? error.message : String(error)}`,
+        `启动sudo助手进程失败: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * 使用pkexec执行命令，在同一个部署过程中尽量减少密码输入
+   * 使用sudo助手进程执行命令，无需重复密码输入
    */
   private async executeSudoCommand(
     command: string,
@@ -1044,53 +1095,144 @@ exec "$@"
       );
     }
 
-    // 构建环境变量字符串
-    let envString = '';
-    if (envVars && Object.keys(envVars).length > 0) {
-      const envPairs = Object.entries(envVars)
-        .map(([key, value]) => `${key}="${value}"`)
-        .join(' ');
-      envString = envPairs + ' ';
+    // 使用sudo助手进程执行命令
+    if (!this.sudoHelperProcess) {
+      throw new Error('sudo助手进程未启动，请先初始化sudo会话');
     }
 
-    // 使用pkexec执行命令
-    // pkexec会缓存认证，在短时间内不会重复要求密码
-    const sudoCommand = this.getSudoCommand();
-    const fullCommand = `${sudoCommand}bash -c '${envString}${command}'`;
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`命令执行超时: ${command}`));
+      }, timeout);
 
-    return await execAsyncWithAbort(
-      fullCommand,
-      { timeout },
-      this.abortController?.signal,
-    );
+      let stdout = '';
+      let stderr = '';
+      let isResolved = false;
+
+      const dataHandler = (data: Buffer) => {
+        const output = data.toString();
+        stdout += output;
+
+        // 检查命令是否完成
+        if (
+          output.includes(`COMMAND_DONE_${this.sudoHelperProcess?.pid}`) &&
+          !isResolved
+        ) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          // 移除完成标记
+          stdout = stdout.replace(
+            new RegExp(`COMMAND_DONE_${this.sudoHelperProcess?.pid}\\s*`, 'g'),
+            '',
+          );
+          resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
+        }
+      };
+
+      const errorHandler = (data: Buffer) => {
+        stderr += data.toString();
+      };
+
+      const processErrorHandler = (error: Error) => {
+        if (!isResolved) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          reject(error);
+        }
+      };
+
+      const processExitHandler = (code: number) => {
+        if (!isResolved) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          reject(new Error(`sudo助手进程异常退出，代码: ${code}`));
+        }
+      };
+
+      // 绑定事件监听器
+      this.sudoHelperProcess.stdout?.on('data', dataHandler);
+      this.sudoHelperProcess.stderr?.on('data', errorHandler);
+      this.sudoHelperProcess.on('error', processErrorHandler);
+      this.sudoHelperProcess.on('exit', processExitHandler);
+
+      // 构建环境变量字符串
+      let envString = '';
+      if (envVars && Object.keys(envVars).length > 0) {
+        const envPairs = Object.entries(envVars)
+          .map(([key, value]) => `export ${key}="${value}"`)
+          .join('; ');
+        envString = envPairs + '; ';
+      }
+
+      // 发送命令到助手进程
+      const fullCommand = `${envString}${command}`;
+      this.sudoHelperProcess.stdin?.write(`${fullCommand}\n`);
+
+      // 设置清理函数
+      const cleanup = () => {
+        this.sudoHelperProcess.stdout?.off('data', dataHandler);
+        this.sudoHelperProcess.stderr?.off('data', errorHandler);
+        this.sudoHelperProcess.off('error', processErrorHandler);
+        this.sudoHelperProcess.off('exit', processExitHandler);
+      };
+
+      // 确保在resolve或reject时清理事件监听器
+      const originalResolve = resolve;
+      const originalReject = reject;
+
+      resolve = (value: any) => {
+        cleanup();
+        originalResolve(value);
+      };
+
+      reject = (reason: any) => {
+        cleanup();
+        originalReject(reason);
+      };
+    });
   }
 
   /**
-   * 清理临时sudo脚本
+   * 清理sudo助手进程
    */
-  private cleanupTemporarySudoScript(): void {
-    if (this.tempSudoScriptPath && fs.existsSync(this.tempSudoScriptPath)) {
+  private cleanupSudoHelper(): void {
+    if (this.sudoHelperProcess) {
       try {
-        // 删除临时脚本文件
-        fs.unlinkSync(this.tempSudoScriptPath);
-      } catch (error) {
-        // 如果无法删除，记录警告但不抛出错误
-        console.warn('清理临时sudo脚本时出错:', error);
+        // 发送退出命令
+        this.sudoHelperProcess.stdin?.write('EXIT\n');
+
+        // 等待一小段时间让进程正常退出
+        setTimeout(() => {
+          if (this.sudoHelperProcess && !this.sudoHelperProcess.killed) {
+            this.sudoHelperProcess.kill('SIGTERM');
+          }
+        }, 1000);
+      } catch {
+        // 强制终止进程
+        try {
+          this.sudoHelperProcess.kill('SIGKILL');
+        } catch {
+          // 忽略强制终止的错误
+        }
       }
-      this.tempSudoScriptPath = undefined;
+      this.sudoHelperProcess = undefined;
     }
 
-    // 清理临时目录（如果为空）
+    // 清理临时目录
     const tempDir = path.join(this.cachePath, 'temp-sudo');
     if (fs.existsSync(tempDir)) {
       try {
         const files = fs.readdirSync(tempDir);
-        if (files.length === 0) {
-          fs.rmdirSync(tempDir);
-        }
-      } catch (error) {
-        // 忽略清理目录的错误
-        console.warn('清理临时目录时出错:', error);
+        files.forEach((file) => {
+          try {
+            fs.unlinkSync(path.join(tempDir, file));
+          } catch {
+            // 忽略文件删除错误
+          }
+        });
+        fs.rmdirSync(tempDir);
+      } catch {
+        // 忽略目录清理错误
       }
     }
   }
@@ -1295,7 +1437,7 @@ exec "$@"
       }
       this.abortController = undefined;
       this.sudoSessionActive = false; // 重置sudo会话状态
-      this.cleanupTemporarySudoScript(); // 清理临时sudo脚本
+      this.cleanupSudoHelper(); // 清理sudo助手进程
     }
   }
 
@@ -1385,8 +1527,8 @@ exec "$@"
    * 清理部署文件
    */
   async cleanup(): Promise<void> {
-    // 清理临时sudo脚本
-    this.cleanupTemporarySudoScript();
+    // 清理sudo助手进程
+    this.cleanupSudoHelper();
 
     // 清理部署文件
     if (fs.existsSync(this.deploymentPath)) {
