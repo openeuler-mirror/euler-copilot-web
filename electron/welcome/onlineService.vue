@@ -125,9 +125,6 @@ const handleConfirm = async (formEl: FormInstance | undefined) => {
       console.error('表单验证失败:', fields);
       return;
     }
-    if (import.meta.env.DEV) {
-      console.log('表单验证成功:', ruleForm);
-    }
     if (window.eulercopilotWelcome?.config) {
       window.eulercopilotWelcome.config.setProxyUrl(ruleForm.url);
     }

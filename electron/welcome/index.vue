@@ -40,7 +40,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, Ref } from 'vue';
+import { Ref } from 'vue';
 import 'element-plus/dist/index.css';
 import logoImage from './assets/images/logo-euler-copilot.png';
 import welcomeBgImage from './assets/images/welcome_bg.webp';
@@ -64,43 +64,25 @@ const handleLocalDeploy = async () => {
   if (!isLinux.value) {
     return;
   }
-  if (import.meta.env.DEV) {
-    console.log('选择本地部署');
-  }
   avtivePage.value = 'localDeploy';
 };
 
 // 处理在线服务选择
 const handleOnlineService = async () => {
-  if (import.meta.env.DEV) {
-    console.log('选择在线服务');
-  }
   avtivePage.value = 'onlineService';
 };
 
 const handleBack = () => {
-  if (import.meta.env.DEV) {
-    console.log('返回到欢迎页面');
-  }
   avtivePage.value = 'welcome';
 };
 
 const handleClose = async () => {
-  if (import.meta.env.DEV) {
-    console.log('关闭欢迎页面');
-  }
   try {
     await window.eulercopilotWelcome?.welcome.cancel();
   } catch (error) {
     console.error('完成欢迎流程失败:', error);
   }
 };
-
-onMounted(() => {
-  if (import.meta.env.DEV) {
-    console.log('欢迎页面已加载');
-  }
-});
 </script>
 
 <style lang="scss">

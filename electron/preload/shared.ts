@@ -48,9 +48,7 @@ export const safeIPC = {
 
   on: (channel: string, listener: (...args: any[]) => void): void => {
     validateIPC(channel);
-    console.log('🔧 SafeIPC: 设置事件监听器:', channel);
     ipcRenderer.on(channel, (event, ...args) => {
-      console.log('🔄 SafeIPC: 收到事件:', channel, args);
       listener(...args);
     });
   },
