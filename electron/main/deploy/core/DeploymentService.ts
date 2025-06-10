@@ -68,7 +68,6 @@ export class DeploymentService {
   };
   private statusCallback?: (status: DeploymentStatus) => void;
   private abortController?: AbortController;
-  private currentProcess?: any;
   private sudoSessionActive: boolean = false;
 
   constructor() {
@@ -215,7 +214,6 @@ export class DeploymentService {
     } finally {
       // 清理资源
       this.abortController = undefined;
-      this.currentProcess = undefined;
       this.sudoSessionActive = false; // 重置sudo会话状态
     }
   }
@@ -427,24 +425,20 @@ export class DeploymentService {
       }
 
       try {
-        // 构建需要权限的命令，使用已建立的sudo会话
-        const command = this.buildRootCommand(
-          toolsScriptPath,
-          false,
-          undefined,
-          {
-            KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
-          },
-        );
+        // 直接使用已建立的sudo会话执行脚本
+        const envVars = {
+          KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
+        };
+
+        // 构建环境变量字符串
+        const envString = Object.entries(envVars)
+          .map(([key, value]) => `${key}="${value}"`)
+          .join(' ');
 
         // 执行脚本
-        await execAsyncWithAbort(
-          command,
-          {
-            cwd: scriptsPath,
-            timeout: 600000, // 10分钟超时，k3s安装可能需要较长时间
-          },
-          this.abortController?.signal,
+        await this.executeSudoCommand(
+          `${envString} bash "${toolsScriptPath}"`,
+          600000, // 10分钟超时，k3s安装可能需要较长时间
         );
       } catch (error) {
         // 检查是否是超时错误
@@ -544,12 +538,7 @@ export class DeploymentService {
 
       if (stdout.trim() !== 'active') {
         // 尝试启动k3s服务
-        const sudoCommand = this.getSudoCommand();
-        await execAsyncWithAbort(
-          `${sudoCommand}systemctl start k3s`,
-          { timeout: 30000 },
-          this.abortController?.signal,
-        );
+        await this.executeSudoCommand('systemctl start k3s', 30000);
 
         // 再次检查状态
         const { stdout: newStatus } = await execAsyncWithAbort(
@@ -576,15 +565,13 @@ export class DeploymentService {
     const maxWaitTime = 60000; // 60秒
     const checkInterval = 5000; // 5秒检查一次
     const startTime = Date.now();
-    const sudoCommand = this.getSudoCommand();
 
     while (Date.now() - startTime < maxWaitTime) {
       try {
         // 检查k3s.yaml文件是否存在且可读
-        const { stdout } = await execAsyncWithAbort(
-          `${sudoCommand}ls -la /etc/rancher/k3s/k3s.yaml`,
-          {},
-          this.abortController?.signal,
+        const { stdout } = await this.executeSudoCommand(
+          'ls -la /etc/rancher/k3s/k3s.yaml',
+          10000,
         );
 
         if (stdout.includes('k3s.yaml')) {
@@ -610,13 +597,12 @@ export class DeploymentService {
     try {
       // 设置KUBECONFIG环境变量并测试连接
       const kubeconfigPath = '/etc/rancher/k3s/k3s.yaml';
-      const sudoCommand = this.getSudoCommand();
 
       // 使用sudo权限执行kubectl命令，因为k3s.yaml文件只有root用户可以读取
-      const { stdout } = await execAsyncWithAbort(
-        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl cluster-info'`,
-        { timeout: 15000 },
-        this.abortController?.signal,
+      const { stdout } = await this.executeSudoCommand(
+        `KUBECONFIG=${kubeconfigPath} kubectl cluster-info`,
+        15000,
+        { KUBECONFIG: kubeconfigPath },
       );
 
       if (!stdout.includes('is running at')) {
@@ -624,10 +610,10 @@ export class DeploymentService {
       }
 
       // 验证节点状态
-      const { stdout: nodeStatus } = await execAsyncWithAbort(
-        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl get nodes'`,
-        { timeout: 15000 },
-        this.abortController?.signal,
+      const { stdout: nodeStatus } = await this.executeSudoCommand(
+        `KUBECONFIG=${kubeconfigPath} kubectl get nodes`,
+        15000,
+        { KUBECONFIG: kubeconfigPath },
       );
 
       if (!nodeStatus.includes('Ready')) {
@@ -699,36 +685,35 @@ export class DeploymentService {
           throw new Error(`脚本文件不存在: ${scriptPath}`);
         }
 
-        // 准备环境变量，过滤掉 undefined 值
-        const baseEnv = {
-          ...process.env,
+        // 构建需要权限的命令
+        const envVars = {
           ...script.envVars,
           // 确保 KUBECONFIG 环境变量正确设置
           KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
         };
 
         // 过滤掉 undefined 值，确保所有值都是字符串
-        const execEnv = Object.fromEntries(
-          Object.entries(baseEnv).filter(([, value]) => value !== undefined),
+        const cleanEnvVars = Object.fromEntries(
+          Object.entries(envVars).filter(([, value]) => value !== undefined),
         ) as Record<string, string>;
 
-        // 构建需要权限的命令
-        const command = this.buildRootCommand(
-          scriptPath,
-          script.useInputRedirection,
-          script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
-          execEnv,
-        );
-
         try {
-          // 给脚本添加执行权限并执行
-          await execAsyncWithAbort(
+          // 使用已建立的sudo会话执行脚本，避免重复输入密码
+          let command = `bash "${scriptPath}"`;
+
+          if (
+            script.useInputRedirection &&
+            script.useInputRedirection === true
+          ) {
+            // 对于需要输入重定向的脚本，预设输入内容
+            const inputData = 'authhub.eulercopilot.local';
+            command = `echo "${inputData}" | ${command}`;
+          }
+
+          await this.executeSudoCommand(
             command,
-            {
-              cwd: scriptsPath,
-              timeout: 600000, // 10分钟超时，某些服务安装可能需要较长时间
-            },
-            this.abortController?.signal,
+            600000, // 10分钟超时，某些服务安装可能需要较长时间
+            cleanEnvVars,
           );
         } catch (error) {
           // 检查是否是超时错误
@@ -886,7 +871,8 @@ export class DeploymentService {
         currentStep: 'preparing-environment',
       });
 
-      const sudoCommand = this.getSudoCommand();
+      // 使用pkexec获取一次性权限，并创建一个长期有效的sudo会话
+      await this.establishPersistentSudoSession();
 
       // 检查是否需要安装基础工具
       const missingTools = this.environmentCheckResult?.missingBasicTools || [];
@@ -908,13 +894,9 @@ export class DeploymentService {
       }
 
       if (commands.length > 0) {
-        // 一次性执行所有需要权限的命令
+        // 使用已建立的sudo会话执行命令
         const combinedCommand = commands.join(' && ');
-        await execAsyncWithAbort(
-          `${sudoCommand}bash -c '${combinedCommand}'`,
-          { timeout: 300000 }, // 5分钟超时
-          this.abortController?.signal,
-        );
+        await this.executeSudoCommand(combinedCommand, 300000); // 5分钟超时
 
         let message = '管理员权限获取成功';
         if (missingTools.length > 0) {
@@ -929,13 +911,6 @@ export class DeploymentService {
           currentStep: 'preparing-environment',
         });
       } else {
-        // 没有需要执行的命令，只获取权限验证
-        await execAsyncWithAbort(
-          `${sudoCommand}true`,
-          { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
-          this.abortController?.signal,
-        );
-
         this.updateStatus({
           message: '管理员权限获取成功',
           currentStep: 'preparing-environment',
@@ -973,6 +948,129 @@ export class DeploymentService {
 
       throw new Error(`获取管理员权限失败: ${errorMessage}`);
     }
+  }
+
+  /**
+   * 建立持久化的sudo会话，只需要输入一次密码
+   */
+  private async establishPersistentSudoSession(): Promise<void> {
+    if (process.platform !== 'linux') {
+      return;
+    }
+
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return;
+    }
+
+    try {
+      // 首先检查用户是否有sudo权限，并获取密码
+      const sudoCommand = this.getSudoCommand();
+
+      // 如果使用pkexec，获取一次权限验证后，创建一个sudo timestamp
+      if (sudoCommand.includes('pkexec')) {
+        // 使用pkexec验证权限并创建sudo timestamp
+        await execAsyncWithAbort(
+          `${sudoCommand}bash -c 'sudo -v'`,
+          { timeout: 60000 },
+          this.abortController?.signal,
+        );
+      } else {
+        // 如果不使用pkexec，直接验证sudo
+        await execAsyncWithAbort(
+          'sudo -v',
+          { timeout: 60000 },
+          this.abortController?.signal,
+        );
+      }
+
+      // 延长sudo timestamp，确保整个部署过程中sudo会话保持有效
+      // 使用后台进程定期刷新sudo timestamp
+      this.startSudoKeepAlive();
+    } catch (error) {
+      throw new Error(
+        `建立sudo会话失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 启动sudo会话保活机制
+   */
+  private startSudoKeepAlive(): void {
+    if (process.platform !== 'linux') {
+      return;
+    }
+
+    // 每4分钟刷新一次sudo timestamp（sudo默认超时是5分钟）
+    const keepAliveInterval = setInterval(async () => {
+      try {
+        if (this.sudoSessionActive && !this.abortController?.signal.aborted) {
+          await execAsyncWithAbort(
+            'sudo -n true', // -n 参数表示非交互模式，如果需要密码会失败
+            { timeout: 5000 },
+            this.abortController?.signal,
+          );
+        } else {
+          // 如果会话不活跃或被中断，停止保活
+          clearInterval(keepAliveInterval);
+        }
+      } catch {
+        // sudo会话已过期或失败，停止保活
+        clearInterval(keepAliveInterval);
+        this.sudoSessionActive = false;
+      }
+    }, 240000); // 4分钟
+
+    // 确保在部署结束时清理interval
+    if (this.abortController) {
+      this.abortController.signal.addEventListener('abort', () => {
+        clearInterval(keepAliveInterval);
+      });
+    }
+  }
+
+  /**
+   * 使用已建立的sudo会话执行命令
+   */
+  private async executeSudoCommand(
+    command: string,
+    timeout: number = 60000,
+    envVars?: Record<string, string>,
+  ): Promise<{ stdout: string; stderr: string }> {
+    if (process.platform !== 'linux') {
+      // 非Linux系统直接执行
+      return await execAsyncWithAbort(
+        command,
+        { timeout, env: { ...process.env, ...envVars } },
+        this.abortController?.signal,
+      );
+    }
+
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return await execAsyncWithAbort(
+        command,
+        { timeout, env: { ...process.env, ...envVars } },
+        this.abortController?.signal,
+      );
+    }
+
+    // 构建环境变量字符串
+    let envString = '';
+    if (envVars && Object.keys(envVars).length > 0) {
+      const envPairs = Object.entries(envVars)
+        .map(([key, value]) => `${key}="${value}"`)
+        .join(' ');
+      envString = envPairs + ' ';
+    }
+
+    // 使用已建立的sudo会话执行命令
+    return await execAsyncWithAbort(
+      `sudo bash -c '${envString}${command}'`,
+      { timeout },
+      this.abortController?.signal,
+    );
   }
 
   /**
@@ -1174,7 +1272,7 @@ export class DeploymentService {
         console.log('清理部署相关资源');
       }
       this.abortController = undefined;
-      this.currentProcess = undefined;
+      this.sudoSessionActive = false; // 重置sudo会话状态
     }
   }
 
@@ -1239,8 +1337,6 @@ export class DeploymentService {
       }
 
       // 使用管理员权限写入 hosts 文件
-      const sudoCommand = this.getSudoCommand();
-
       // 创建临时文件写入内容，然后移动到 hosts 文件位置
       const tempFile = '/tmp/hosts_new';
 
@@ -1252,13 +1348,7 @@ export class DeploymentService {
       }
 
       // 移动临时文件到 hosts 文件位置
-      const command = `${sudoCommand}bash -c 'mv ${tempFile} ${hostsPath}'`;
-
-      await execAsyncWithAbort(
-        command,
-        { timeout: 30000 },
-        undefined, // 这是部署完成后的操作，不需要 abortController
-      );
+      await this.executeSudoCommand(`mv ${tempFile} ${hostsPath}`, 30000);
 
       console.log(`已添加以下域名到 hosts 文件: ${domainsToAdd.join(', ')}`);
     } catch (error) {
