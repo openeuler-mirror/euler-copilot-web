@@ -149,6 +149,9 @@ export class DeploymentService {
       // 5. 执行部署脚本中的工具安装部分（如果需要）
       await this.installTools();
 
+      // 6. 验证K8s集群状态
+      await this.verifyK8sCluster();
+
       // 更新准备环境完成状态
       this.updateStatus({
         message: '准备安装环境完成',
@@ -349,6 +352,148 @@ export class DeploymentService {
   }
 
   /**
+   * 验证K8s集群状态（确保k3s正常运行）
+   */
+  private async verifyK8sCluster(): Promise<void> {
+    // 只在 Linux 系统上需要验证k3s
+    if (process.platform !== 'linux') {
+      return;
+    }
+
+    this.updateStatus({
+      status: 'preparing',
+      message: '验证 K8s 集群状态...',
+      currentStep: 'preparing-environment',
+    });
+
+    try {
+      // 1. 检查k3s服务状态
+      await this.checkK3sService();
+
+      // 2. 等待k3s服务完全启动
+      await this.waitForK3sReady();
+
+      // 3. 验证kubectl连接
+      await this.verifyKubectlConnection();
+
+      this.updateStatus({
+        message: 'K8s 集群验证通过',
+        currentStep: 'preparing-environment',
+      });
+    } catch (error) {
+      throw new Error(
+        `K8s 集群验证失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 检查k3s服务状态
+   */
+  private async checkK3sService(): Promise<void> {
+    try {
+      const { stdout } = await execAsyncWithAbort(
+        'systemctl is-active k3s',
+        {},
+        this.abortController?.signal,
+      );
+
+      if (stdout.trim() !== 'active') {
+        // 尝试启动k3s服务
+        const sudoCommand = this.getSudoCommand();
+        await execAsyncWithAbort(
+          `${sudoCommand}systemctl start k3s`,
+          { timeout: 30000 },
+          this.abortController?.signal,
+        );
+
+        // 再次检查状态
+        const { stdout: newStatus } = await execAsyncWithAbort(
+          'systemctl is-active k3s',
+          {},
+          this.abortController?.signal,
+        );
+
+        if (newStatus.trim() !== 'active') {
+          throw new Error('k3s 服务启动失败');
+        }
+      }
+    } catch (error) {
+      throw new Error(
+        `k3s 服务检查失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 等待k3s服务完全启动（最多等待60秒）
+   */
+  private async waitForK3sReady(): Promise<void> {
+    const maxWaitTime = 60000; // 60秒
+    const checkInterval = 5000; // 5秒检查一次
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWaitTime) {
+      try {
+        // 检查k3s.yaml文件是否存在且可读
+        const { stdout } = await execAsyncWithAbort(
+          'ls -la /etc/rancher/k3s/k3s.yaml',
+          {},
+          this.abortController?.signal,
+        );
+
+        if (stdout.includes('k3s.yaml')) {
+          // 文件存在，等待几秒确保内容完整
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          return;
+        }
+      } catch {
+        // 文件还不存在，继续等待
+      }
+
+      // 等待一段时间后重试
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    }
+
+    throw new Error('k3s 配置文件生成超时，服务可能启动失败');
+  }
+
+  /**
+   * 验证kubectl连接
+   */
+  private async verifyKubectlConnection(): Promise<void> {
+    try {
+      // 设置KUBECONFIG环境变量并测试连接
+      const kubeconfigPath = '/etc/rancher/k3s/k3s.yaml';
+
+      const { stdout } = await execAsyncWithAbort(
+        `KUBECONFIG=${kubeconfigPath} kubectl cluster-info`,
+        { timeout: 15000 },
+        this.abortController?.signal,
+      );
+
+      if (!stdout.includes('is running at')) {
+        throw new Error('kubectl 无法连接到 k3s 集群');
+      }
+
+      // 验证节点状态
+      const { stdout: nodeStatus } = await execAsyncWithAbort(
+        `KUBECONFIG=${kubeconfigPath} kubectl get nodes`,
+        { timeout: 15000 },
+        this.abortController?.signal,
+      );
+
+      if (!nodeStatus.includes('Ready')) {
+        throw new Error('k3s 节点状态异常');
+      }
+    } catch (error) {
+      throw new Error(
+        `kubectl 连接验证失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
    * 执行部署脚本
    */
   private async executeDeploymentScripts(): Promise<void> {
@@ -415,6 +560,8 @@ export class DeploymentService {
       const execEnv = {
         ...process.env,
         ...script.envVars,
+        // 确保 KUBECONFIG 环境变量正确设置
+        KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
       };
 
       // 构建需要权限的命令

@@ -236,7 +236,7 @@ export class EnvironmentChecker {
     // 基础工具：通过 DNF 安装
     const basicTools = ['git', 'curl', 'docker'];
     // K8s 工具：通过 2-install-tools 脚本安装
-    const k8sTools = ['kubectl', 'helm'];
+    const k8sTools = ['kubectl', 'helm', 'k3s'];
 
     const missingBasicTools: string[] = [];
     const missingK8sTools: string[] = [];
