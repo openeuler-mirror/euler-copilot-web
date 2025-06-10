@@ -192,6 +192,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
+const { createNewSession } = useHistorySessionStore();
 const appType = ref('my');
 const appSearchValue = ref();
 const appList = ref<App[]>([]);
@@ -237,14 +238,15 @@ const handleCreateApp = async (appType: 'flow' | 'agent') => {
   }
 };
 
-const routerToDetail = (appItem) => {
+const routerToDetail = async(appItem) => {
   if (!appItem.published) {
     //未发布应用不允许跳转
     return;
   }
-  //获取appItem.id & appItem.name
-  router.push(`/?appId=${appItem.appId}&name=${appItem.name}`);
-  //保证跳转后一定是一条选中的新会话
+  await createNewSession().finally(() => {
+    //保证跳转后一定是一条选中的新会话
+    router.push(`/?appId=${appItem.appId}&name=${appItem.name}`);
+  })
   currentSelectedSession.value = '';
 };
 
