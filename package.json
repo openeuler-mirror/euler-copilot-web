@@ -31,7 +31,7 @@
     "build:preload": "node -r ts-node/register scripts/build-preload --env=production",
     "build:welcome": "node -r ts-node/register scripts/build-welcome --env=production",
     "build:main": "node -r ts-node/register scripts/build-main --env=production",
-    "build:desktop": "rimraf dist && pnpm run build:preload && pnpm run build:main && pnpm run build:welcome && pnpm run build:render",
+    "build:desktop": "rimraf dist && pnpm run build:render && pnpm run build:preload && pnpm run build:main && pnpm run build:welcome",
     "package:win64": "pnpm run build:desktop && electron-builder --win --x64",
     "package:mac": "pnpm run build:desktop && electron-builder --mac --universal",
     "package:linux": "pnpm run build:desktop && electron-builder --linux"
