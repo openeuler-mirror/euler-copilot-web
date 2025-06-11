@@ -594,19 +594,6 @@ const chatWithParams = async () => {
               src="@/assets/svgs/arror_right.svg"
             />
           </div>
-          <div
-            class="regenerate-button"
-            v-if="needRegernerate && isFinish && !flowdata"
-            @click="handlePauseAndReGenerate(Number(cid))"
-          >
-            <img
-              v-if="themeStore.theme === 'dark'"
-              src="@/assets/svgs/dark_regenerate.svg"
-              alt=""
-            />
-            <img v-else src="@/assets/svgs/light_regenerate.svg" alt="" />
-            <div>{{ $t('feedback.regenerate') }}</div>
-          </div>
 
           <div class="button-group" v-if="isFinish">
             <el-tooltip
