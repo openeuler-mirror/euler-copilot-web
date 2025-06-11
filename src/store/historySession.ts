@@ -156,7 +156,6 @@ export const useHistorySessionStore = defineStore(
         if (!currentSelectedSession.value) {
           currentSelectedSession.value =
             res.result.conversations[0]?.conversationId;
-          //-----
         }
         if (currentSelectedSession.value) {
           const { getConversation, isAnswerGenerating } = useSessionStore();

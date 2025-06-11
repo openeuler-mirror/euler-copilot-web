@@ -13,6 +13,7 @@ import {
 } from 'element-plus';
 import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
+import * as _ from 'lodash'
 import {
   useAccountStore,
   useHistorySessionStore,
@@ -256,13 +257,14 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-const handleNewChat = () => {
+const handleNewChat = _.debounce(() => {
   selectedAppId.value = '';
   user_selected_app.value = '';
   app.value.selectedAppId = '';
   app.value.appId = '';
   createNewSession();
-};
+},500, { leading: true, trailing: false })
+
 
 const selectApp = (id) => {
   if (selectedAppId.value === id) {
@@ -772,24 +774,6 @@ watch(
     flex-direction: column;
     position: relative;
     overflow: auto;
-    /* 滚动条轨道样式 */
-    ::-webkit-scrollbar-track {
-      background-color: transparent !important;
-    }
-
-    ::-webkit-scrollbar {
-      background-color: transparent !important;
-      left: 12px;
-      width: 3px;
-      height: 3px;
-    }
-
-    /* 滚动条的滑块 */
-    ::-webkit-scrollbar-thumb {
-      background-color: #d3dce9 !important;
-      border-radius: 3px;
-    }
-
     &-blogroll {
       display: block;
       padding-right: 24px;
@@ -820,12 +804,6 @@ watch(
           color: #7aa5ff;
         }
       }
-    }
-
-    /* 滚动条滑块hover样式 */
-    ::-webkit-scrollbar-thumb:hover {
-      background-color: #d3dce9 !important;
-      /* 鼠标悬停时的滚动条按钮颜色 */
     }
 
     &-tips {

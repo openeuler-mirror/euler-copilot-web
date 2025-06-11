@@ -1,0 +1,13 @@
+diff --git a/esm/vs/editor/contrib/clipboard/browser/clipboard.js b/esm/vs/editor/contrib/clipboard/browser/clipboard.js
+index a1deb14b9174989775f3bbe2c7d2370644633237..89691c6b59dc198891dd2afe88e9a156da41c99c 100644
+--- a/esm/vs/editor/contrib/clipboard/browser/clipboard.js
++++ b/esm/vs/editor/contrib/clipboard/browser/clipboard.js
+@@ -201,7 +201,7 @@ if (PasteAction) {
+             if (result) {
+                 return CopyPasteController.get(focusedEditor)?.finishedPaste() ?? Promise.resolve();
+             }
+-            else if (platform.isWeb) {
++            else {
+                 // Use the clipboard service if document.execCommand('paste') was not successful
+                 return (async () => {
+                     const clipboardText = await clipboardService.readText();
