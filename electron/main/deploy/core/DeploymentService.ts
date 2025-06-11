@@ -71,6 +71,8 @@ export class DeploymentService {
   private sudoSessionActive: boolean = false;
   private sudoHelperProcess?: any;
   private sudoHelperMonitorInterval?: NodeJS.Timeout;
+  private activeCommandStartTime?: number; // 记录当前活跃命令的开始时间
+  private isCommandExecuting: boolean = false; // 标记是否有命令正在执行
 
   constructor() {
     this.cachePath = getCachePath();
@@ -1002,11 +1004,45 @@ trap 'echo "HELPER_SIGNAL_RECEIVED_$$" >&2; exit 0' SIGTERM SIGINT
 # 输出调试信息
 echo "HELPER_STARTED_$$" >&2
 
+# 设置读取超时和错误处理
+export TIMEOUT=3
+
+# 全局变量来跟踪当前是否有长时间运行的命令
+RUNNING_COMMAND_PID=""
+
+# 创建命名管道用于健康检查通信
+HEALTH_PIPE="/tmp/health_check_$$"
+mkfifo "$HEALTH_PIPE" 2>/dev/null || true
+
+# 后台健康检查处理函数
+health_check_handler() {
+    while true; do
+        if [ -p "$HEALTH_PIPE" ]; then
+            if read -t 1 health_cmd < "$HEALTH_PIPE" 2>/dev/null; then
+                if [[ "$health_cmd" == echo*HEALTH_CHECK* ]]; then
+                    eval "$health_cmd" 2>/dev/null || true
+                    echo "COMMAND_DONE_$$"
+                    exec 1>&1 2>&2
+                fi
+            fi
+        fi
+        sleep 0.1
+    done
+}
+
+# 启动后台健康检查处理器
+health_check_handler &
+HEALTH_HANDLER_PID=$!
+
 # 主循环：读取命令并执行
 while true; do
-    # 检查是否有输入可读，避免阻塞
-    if ! IFS= read -r -t 1 command 2>/dev/null; then
-        # 读取超时，继续循环（保持进程活跃）
+    # 检查是否有输入可读，使用更短的超时避免阻塞
+    if ! IFS= read -r -t 2 command 2>/dev/null; then
+        # 读取超时，检查进程是否还应该继续运行
+        # 发送一个心跳信号表明进程仍然活跃（降低频率）
+        if [ $((RANDOM % 60)) -eq 0 ]; then
+            echo "HELPER_HEARTBEAT_$$" >&2 2>/dev/null || true
+        fi
         continue
     fi
     
@@ -1016,6 +1052,9 @@ while true; do
     # 检查退出命令
     if [ "$command" = "EXIT" ]; then
         echo "HELPER_EXITING_$$" >&2
+        # 清理后台健康检查进程
+        kill $HEALTH_HANDLER_PID 2>/dev/null || true
+        rm -f "$HEALTH_PIPE" 2>/dev/null || true
         break
     fi
     
@@ -1028,21 +1067,36 @@ while true; do
     
     # 检查健康检查命令
     if [[ "$command" == echo*HEALTH_CHECK* ]]; then
-        # 健康检查命令，直接执行
-        eval "$command" 2>/dev/null || true
-        echo "COMMAND_DONE_$$"
+        # 将健康检查命令发送到后台处理器
+        if [ -p "$HEALTH_PIPE" ]; then
+            echo "$command" > "$HEALTH_PIPE" &
+        else
+            # 如果管道不可用，直接处理
+            eval "$command" 2>/dev/null || true
+            echo "COMMAND_DONE_$$"
+            exec 1>&1 2>&2
+        fi
         continue
     fi
     
     # 执行命令并捕获退出码，使用子shell避免影响主进程
+    # 添加超时保护，避免长时间运行的命令阻塞助手进程
     (
-        # 在子shell中执行命令
-        eval "$command"
-    )
-    cmd_exit_code=$?
+        # 在子shell中执行命令，设置超时保护（30分钟）
+        timeout 1800 bash -c "$command" 2>&1 || exit $?
+    ) &
+    RUNNING_COMMAND_PID=$!
     
-    # 根据退出码输出相应信息
-    if [ $cmd_exit_code -eq 0 ]; then
+    # 等待命令完成
+    wait $RUNNING_COMMAND_PID
+    cmd_exit_code=$?
+    RUNNING_COMMAND_PID=""
+    
+    # 处理timeout命令的特殊退出码
+    if [ $cmd_exit_code -eq 124 ]; then
+        echo "COMMAND_ERROR_TIMEOUT_$$" >&2
+        echo "COMMAND_ERROR_124_$$"
+    elif [ $cmd_exit_code -eq 0 ]; then
         echo "COMMAND_SUCCESS_$$"
     else
         echo "COMMAND_ERROR_\${cmd_exit_code}_$$"
@@ -1054,6 +1108,10 @@ while true; do
     exec 1>&1
     exec 2>&2
 done
+
+# 清理
+kill $HEALTH_HANDLER_PID 2>/dev/null || true
+rm -f "$HEALTH_PIPE" 2>/dev/null || true
 
 echo "HELPER_TERMINATED_$$" >&2
 exit 0
@@ -1204,16 +1262,50 @@ exit 0
     // 清理现有进程
     this.cleanupSudoHelper();
 
+    // 等待一小段时间确保清理完成
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // 重置状态
     this.sudoSessionActive = false;
 
-    // 重新启动助手进程
-    await this.startSudoHelper();
+    try {
+      // 重新启动助手进程，增加重试机制
+      let attempts = 0;
+      const maxAttempts = 3;
 
-    this.sudoSessionActive = true;
+      while (attempts < maxAttempts) {
+        try {
+          await this.startSudoHelper();
+          this.sudoSessionActive = true;
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('sudo助手进程重新启动成功');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('sudo助手进程重新启动成功');
+          }
+          return;
+        } catch (error) {
+          attempts++;
+          if (process.env.NODE_ENV === 'development') {
+            console.log(
+              `sudo助手进程启动尝试 ${attempts}/${maxAttempts} 失败:`,
+              error,
+            );
+          }
+
+          if (attempts < maxAttempts) {
+            // 等待一段时间后重试
+            await new Promise((resolve) =>
+              setTimeout(resolve, 2000 * attempts),
+            );
+          } else {
+            throw error;
+          }
+        }
+      }
+    } catch (error) {
+      this.sudoSessionActive = false;
+      throw new Error(
+        `重启sudo助手进程失败（尝试了${3}次）: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -1225,7 +1317,7 @@ exit 0
       return;
     }
 
-    // 每30秒检查一次sudo助手进程状态
+    // 每60秒检查一次sudo助手进程状态（降低检查频率减少系统压力）
     this.sudoHelperMonitorInterval = setInterval(async () => {
       if (this.sudoSessionActive && this.sudoHelperProcess) {
         try {
@@ -1248,31 +1340,77 @@ exit 0
               if (process.env.NODE_ENV === 'development') {
                 console.error('sudo助手进程重启失败:', error);
               }
-              // 重启失败，停止监控
+              // 重启失败，停止监控并标记会话为非活跃状态
               this.stopSudoHelperMonitor();
               this.sudoSessionActive = false;
+
+              // 可以考虑发送错误状态通知给UI
+              this.updateStatus({
+                status: 'error',
+                message: 'sudo助手进程重启失败，部署可能中断',
+                currentStep: 'error',
+              });
             }
           } else {
-            // 进程仍在运行，进行健康检查
-            try {
-              await this.checkSudoHelperHealth();
-            } catch (error) {
-              if (process.env.NODE_ENV === 'development') {
-                console.log('sudo助手进程健康检查失败，准备重启:', error);
-              }
+            // 进程仍在运行，检查是否有命令正在执行
+            if (this.isCommandExecuting) {
+              // 有命令正在执行，检查是否超过了合理的执行时间（20分钟）
+              const now = Date.now();
+              const executionTime = this.activeCommandStartTime
+                ? now - this.activeCommandStartTime
+                : 0;
+              const maxExecutionTime = 20 * 60 * 1000; // 20分钟
 
+              if (executionTime > maxExecutionTime) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(
+                    `检测到命令执行时间过长（${Math.round(executionTime / 1000)}秒），可能存在问题`,
+                  );
+                }
+                // 命令执行时间过长，可能出现问题，但不立即重启，只记录警告
+                // 让命令继续执行，但下次检查时如果还是这样就考虑重启
+              } else {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(
+                    `跳过健康检查，有命令正在执行（执行时间: ${Math.round(executionTime / 1000)}秒）`,
+                  );
+                }
+                // 跳过健康检查，命令正在正常执行
+                return;
+              }
+            } else {
+              // 没有命令正在执行，进行健康检查
               try {
-                await this.restartSudoHelper();
+                await this.checkSudoHelperHealth();
+                // 健康检查通过，重置错误计数
                 if (process.env.NODE_ENV === 'development') {
-                  console.log('sudo助手进程重启成功');
+                  console.log('sudo助手进程健康检查通过');
                 }
-              } catch (restartError) {
+              } catch (error) {
                 if (process.env.NODE_ENV === 'development') {
-                  console.error('sudo助手进程重启失败:', restartError);
+                  console.log('sudo助手进程健康检查失败，准备重启:', error);
                 }
-                // 重启失败，停止监控
-                this.stopSudoHelperMonitor();
-                this.sudoSessionActive = false;
+
+                try {
+                  await this.restartSudoHelper();
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('sudo助手进程重启成功');
+                  }
+                } catch (restartError) {
+                  if (process.env.NODE_ENV === 'development') {
+                    console.error('sudo助手进程重启失败:', restartError);
+                  }
+                  // 重启失败，停止监控
+                  this.stopSudoHelperMonitor();
+                  this.sudoSessionActive = false;
+
+                  // 发送错误状态通知
+                  this.updateStatus({
+                    status: 'error',
+                    message: 'sudo助手进程无法恢复，部署中断',
+                    currentStep: 'error',
+                  });
+                }
               }
             }
           }
@@ -1280,9 +1418,16 @@ exit 0
           if (process.env.NODE_ENV === 'development') {
             console.error('sudo助手进程监控出错:', error);
           }
+          // 发生意外错误，也应该尝试恢复
+          try {
+            await this.restartSudoHelper();
+          } catch (restartError) {
+            this.stopSudoHelperMonitor();
+            this.sudoSessionActive = false;
+          }
         }
       }
-    }, 30000); // 30秒检查一次
+    }, 60000); // 改为60秒检查一次
   }
 
   /**
@@ -1302,25 +1447,56 @@ exit 0
     // 停止进程监控
     this.stopSudoHelperMonitor();
 
+    // 重置命令执行状态
+    this.isCommandExecuting = false;
+    this.activeCommandStartTime = undefined;
+
     if (this.sudoHelperProcess) {
       try {
         // 发送退出命令
-        this.sudoHelperProcess.stdin?.write('EXIT\n');
+        if (!this.sudoHelperProcess.killed && this.sudoHelperProcess.stdin) {
+          this.sudoHelperProcess.stdin.write('EXIT\n');
+        }
 
         // 等待一小段时间让进程正常退出
         setTimeout(() => {
           if (this.sudoHelperProcess && !this.sudoHelperProcess.killed) {
-            this.sudoHelperProcess.kill('SIGTERM');
+            try {
+              this.sudoHelperProcess.kill('SIGTERM');
+
+              // 如果SIGTERM不起作用，几秒后使用SIGKILL
+              setTimeout(() => {
+                if (this.sudoHelperProcess && !this.sudoHelperProcess.killed) {
+                  try {
+                    this.sudoHelperProcess.kill('SIGKILL');
+                  } catch {
+                    // 忽略SIGKILL错误
+                  }
+                }
+              }, 3000);
+            } catch {
+              // 忽略SIGTERM错误
+            }
           }
         }, 1000);
       } catch {
-        // 强制终止进程
+        // 如果正常退出失败，强制终止进程
         try {
-          this.sudoHelperProcess.kill('SIGKILL');
+          if (this.sudoHelperProcess && !this.sudoHelperProcess.killed) {
+            this.sudoHelperProcess.kill('SIGKILL');
+          }
         } catch {
           // 忽略强制终止的错误
         }
       }
+
+      // 移除所有事件监听器
+      try {
+        this.sudoHelperProcess.removeAllListeners();
+      } catch {
+        // 忽略移除监听器的错误
+      }
+
       this.sudoHelperProcess = undefined;
     }
 
@@ -1656,10 +1832,18 @@ exit 0
       throw new Error('sudo助手进程未运行');
     }
 
+    // 首先检查进程基本状态
+    if (this.sudoHelperProcess.exitCode !== null) {
+      throw new Error(
+        `sudo助手进程已退出，退出码: ${this.sudoHelperProcess.exitCode}`,
+      );
+    }
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        cleanup();
         reject(new Error('sudo助手进程健康检查超时'));
-      }, 5000); // 5秒超时
+      }, 10000); // 增加到10秒超时，给系统更多时间响应
 
       let isResolved = false;
       const healthCheckId = Date.now();
@@ -1672,7 +1856,7 @@ exit 0
         ) {
           clearTimeout(timeout);
           isResolved = true;
-          this.sudoHelperProcess.stdout?.off('data', dataHandler);
+          cleanup();
           resolve();
         }
       };
@@ -1681,18 +1865,43 @@ exit 0
         if (!isResolved) {
           clearTimeout(timeout);
           isResolved = true;
-          this.sudoHelperProcess.stdout?.off('data', dataHandler);
+          cleanup();
           reject(error);
         }
       };
 
+      const exitHandler = (code: number | null) => {
+        if (!isResolved) {
+          clearTimeout(timeout);
+          isResolved = true;
+          cleanup();
+          reject(new Error(`sudo助手进程在健康检查期间退出，代码: ${code}`));
+        }
+      };
+
+      const cleanup = () => {
+        this.sudoHelperProcess?.stdout?.off('data', dataHandler);
+        this.sudoHelperProcess?.off('error', errorHandler);
+        this.sudoHelperProcess?.off('exit', exitHandler);
+      };
+
       this.sudoHelperProcess.stdout?.on('data', dataHandler);
       this.sudoHelperProcess.on('error', errorHandler);
+      this.sudoHelperProcess.on('exit', exitHandler);
 
-      // 发送健康检查命令
-      this.sudoHelperProcess.stdin?.write(
-        `echo "HEALTH_CHECK_${healthCheckId}_DONE"\n`,
-      );
+      try {
+        // 发送健康检查命令
+        this.sudoHelperProcess.stdin?.write(
+          `echo "HEALTH_CHECK_${healthCheckId}_DONE"\n`,
+        );
+      } catch (writeError) {
+        cleanup();
+        reject(
+          new Error(
+            `健康检查命令发送失败: ${writeError instanceof Error ? writeError.message : String(writeError)}`,
+          ),
+        );
+      }
     });
   }
 
@@ -1738,14 +1947,42 @@ exit 0
       try {
         await this.restartSudoHelper();
       } catch (restartError) {
-        throw new Error(
-          `sudo助手进程重启失败: ${restartError instanceof Error ? restartError.message : String(restartError)}`,
-        );
+        // 重启失败，在 Linux 系统上使用后备方案
+        if (process.env.NODE_ENV === 'development') {
+          console.log('sudo助手进程重启失败，尝试使用后备方案:', restartError);
+        }
+
+        // 只在 Linux 系统上尝试后备方案
+        if (process.platform === 'linux') {
+          try {
+            return await this.executeSudoCommandFallback(
+              command,
+              timeout,
+              envVars,
+            );
+          } catch (fallbackError) {
+            throw new Error(
+              `sudo助手进程重启失败且后备方案也失败: ${restartError instanceof Error ? restartError.message : String(restartError)}. 后备方案错误: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`,
+            );
+          }
+        } else {
+          // 非 Linux 系统直接抛出重启错误
+          throw new Error(
+            `sudo助手进程重启失败: ${restartError instanceof Error ? restartError.message : String(restartError)}`,
+          );
+        }
       }
     }
 
     return new Promise((resolve, reject) => {
+      // 标记命令开始执行
+      this.isCommandExecuting = true;
+      this.activeCommandStartTime = Date.now();
+
       const timeoutId = setTimeout(() => {
+        // 命令执行完成，清除状态
+        this.isCommandExecuting = false;
+        this.activeCommandStartTime = undefined;
         reject(new Error(`命令执行超时: ${command}`));
       }, timeout);
 
@@ -1887,13 +2124,18 @@ exit 0
 
       // 设置清理函数
       const cleanup = () => {
+        // 清除命令执行状态
+        this.isCommandExecuting = false;
+        this.activeCommandStartTime = undefined;
+
+        // 清理事件监听器
         this.sudoHelperProcess.stdout?.off('data', dataHandler);
         this.sudoHelperProcess.stderr?.off('data', errorHandler);
         this.sudoHelperProcess.off('error', processErrorHandler);
         this.sudoHelperProcess.off('exit', processExitHandler);
       };
 
-      // 确保在resolve或reject时清理事件监听器
+      // 确保在resolve或reject时清理事件监听器和执行状态
       const originalResolve = resolve;
       const originalReject = reject;
 
@@ -1907,5 +2149,53 @@ exit 0
         originalReject(reason);
       };
     });
+  }
+
+  /**
+   * 后备方案：当sudo助手进程不可用时，使用传统的sudo方式执行命令
+   * 只适用于 Linux 系统
+   */
+  private async executeSudoCommandFallback(
+    command: string,
+    timeout: number = 60000,
+    envVars?: Record<string, string>,
+  ): Promise<{ stdout: string; stderr: string }> {
+    // 此方法只应在 Linux 系统上调用
+    if (process.platform !== 'linux') {
+      throw new Error('executeSudoCommandFallback 只能在 Linux 系统上使用');
+    }
+
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return await execAsyncWithAbort(
+        command,
+        { timeout, env: { ...process.env, ...envVars } },
+        this.abortController?.signal,
+      );
+    }
+
+    // 使用传统的sudo方式
+    const sudoCommand = this.getSudoCommand();
+
+    // 构建环境变量字符串
+    let envString = '';
+    if (envVars && Object.keys(envVars).length > 0) {
+      const envPairs = Object.entries(envVars)
+        .map(([key, value]) => `${key}="${value}"`)
+        .join(' ');
+      envString = envPairs + ' ';
+    }
+
+    const fullCommand = `${sudoCommand}bash -c '${envString}${command}'`;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('使用后备方案执行sudo命令:', fullCommand);
+    }
+
+    return await execAsyncWithAbort(
+      fullCommand,
+      { timeout },
+      this.abortController?.signal,
+    );
   }
 }
