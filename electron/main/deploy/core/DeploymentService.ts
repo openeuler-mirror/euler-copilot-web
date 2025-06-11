@@ -10,7 +10,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { getCachePath } from '../../common/cache-conf';
 import type {
   DeploymentParams,
@@ -68,8 +68,9 @@ export class DeploymentService {
   };
   private statusCallback?: (status: DeploymentStatus) => void;
   private abortController?: AbortController;
-  private currentProcess?: any;
   private sudoSessionActive: boolean = false;
+  private sudoHelperProcess?: any;
+  private sudoHelperMonitorInterval?: NodeJS.Timeout;
 
   constructor() {
     this.cachePath = getCachePath();
@@ -215,8 +216,8 @@ export class DeploymentService {
     } finally {
       // 清理资源
       this.abortController = undefined;
-      this.currentProcess = undefined;
       this.sudoSessionActive = false; // 重置sudo会话状态
+      this.cleanupSudoHelper(); // 清理sudo助手进程
     }
   }
 
@@ -297,7 +298,7 @@ export class DeploymentService {
         );
       }
 
-      // 检查是否已经克隆过
+      // 检查是否已经克 clone 过
       const gitDir = path.join(this.deploymentPath, '.git');
       if (fs.existsSync(gitDir)) {
         try {
@@ -427,24 +428,20 @@ export class DeploymentService {
       }
 
       try {
-        // 构建需要权限的命令，使用已建立的sudo会话
-        const command = this.buildRootCommand(
-          toolsScriptPath,
-          false,
-          undefined,
-          {
-            KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
-          },
-        );
+        // 直接使用已建立的sudo会话执行脚本
+        const envVars = {
+          KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
+        };
+
+        // 构建环境变量字符串
+        const envString = Object.entries(envVars)
+          .map(([key, value]) => `${key}="${value}"`)
+          .join(' ');
 
         // 执行脚本
-        await execAsyncWithAbort(
-          command,
-          {
-            cwd: scriptsPath,
-            timeout: 600000, // 10分钟超时，k3s安装可能需要较长时间
-          },
-          this.abortController?.signal,
+        await this.executeSudoCommand(
+          `${envString} bash "${toolsScriptPath}"`,
+          600000, // 10分钟超时，k3s安装可能需要较长时间
         );
       } catch (error) {
         // 检查是否是超时错误
@@ -544,12 +541,7 @@ export class DeploymentService {
 
       if (stdout.trim() !== 'active') {
         // 尝试启动k3s服务
-        const sudoCommand = this.getSudoCommand();
-        await execAsyncWithAbort(
-          `${sudoCommand}systemctl start k3s`,
-          { timeout: 30000 },
-          this.abortController?.signal,
-        );
+        await this.executeSudoCommand('systemctl start k3s', 30000);
 
         // 再次检查状态
         const { stdout: newStatus } = await execAsyncWithAbort(
@@ -576,15 +568,13 @@ export class DeploymentService {
     const maxWaitTime = 60000; // 60秒
     const checkInterval = 5000; // 5秒检查一次
     const startTime = Date.now();
-    const sudoCommand = this.getSudoCommand();
 
     while (Date.now() - startTime < maxWaitTime) {
       try {
         // 检查k3s.yaml文件是否存在且可读
-        const { stdout } = await execAsyncWithAbort(
-          `${sudoCommand}ls -la /etc/rancher/k3s/k3s.yaml`,
-          {},
-          this.abortController?.signal,
+        const { stdout } = await this.executeSudoCommand(
+          'ls -la /etc/rancher/k3s/k3s.yaml',
+          10000,
         );
 
         if (stdout.includes('k3s.yaml')) {
@@ -610,13 +600,12 @@ export class DeploymentService {
     try {
       // 设置KUBECONFIG环境变量并测试连接
       const kubeconfigPath = '/etc/rancher/k3s/k3s.yaml';
-      const sudoCommand = this.getSudoCommand();
 
       // 使用sudo权限执行kubectl命令，因为k3s.yaml文件只有root用户可以读取
-      const { stdout } = await execAsyncWithAbort(
-        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl cluster-info'`,
-        { timeout: 15000 },
-        this.abortController?.signal,
+      const { stdout } = await this.executeSudoCommand(
+        `KUBECONFIG=${kubeconfigPath} kubectl cluster-info`,
+        15000,
+        { KUBECONFIG: kubeconfigPath },
       );
 
       if (!stdout.includes('is running at')) {
@@ -624,10 +613,10 @@ export class DeploymentService {
       }
 
       // 验证节点状态
-      const { stdout: nodeStatus } = await execAsyncWithAbort(
-        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl get nodes'`,
-        { timeout: 15000 },
-        this.abortController?.signal,
+      const { stdout: nodeStatus } = await this.executeSudoCommand(
+        `KUBECONFIG=${kubeconfigPath} kubectl get nodes`,
+        15000,
+        { KUBECONFIG: kubeconfigPath },
       );
 
       if (!nodeStatus.includes('Ready')) {
@@ -699,36 +688,44 @@ export class DeploymentService {
           throw new Error(`脚本文件不存在: ${scriptPath}`);
         }
 
-        // 准备环境变量，过滤掉 undefined 值
-        const baseEnv = {
-          ...process.env,
+        // 构建需要权限的命令
+        const envVars = {
           ...script.envVars,
           // 确保 KUBECONFIG 环境变量正确设置
           KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
         };
 
         // 过滤掉 undefined 值，确保所有值都是字符串
-        const execEnv = Object.fromEntries(
-          Object.entries(baseEnv).filter(([, value]) => value !== undefined),
+        const cleanEnvVars = Object.fromEntries(
+          Object.entries(envVars).filter(([, value]) => value !== undefined),
         ) as Record<string, string>;
 
-        // 构建需要权限的命令
-        const command = this.buildRootCommand(
-          scriptPath,
-          script.useInputRedirection,
-          script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
-          execEnv,
-        );
-
         try {
-          // 给脚本添加执行权限并执行
-          await execAsyncWithAbort(
+          // 使用已建立的sudo会话执行脚本，避免重复输入密码
+          let command = `bash "${scriptPath}"`;
+
+          if (
+            script.useInputRedirection &&
+            script.useInputRedirection === true
+          ) {
+            // 对于需要输入重定向的脚本，预设输入内容
+            const inputData = 'authhub.eulercopilot.local';
+            command = `echo "${inputData}" | ${command}`;
+          }
+
+          // 增加详细日志
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`执行脚本: ${script.displayName}`);
+            console.log(`脚本路径: ${scriptPath}`);
+            console.log(`执行命令: ${command}`);
+            console.log(`环境变量:`, cleanEnvVars);
+            console.log(`超时时间: ${600000}ms (10分钟)`);
+          }
+
+          await this.executeSudoCommand(
             command,
-            {
-              cwd: scriptsPath,
-              timeout: 600000, // 10分钟超时，某些服务安装可能需要较长时间
-            },
-            this.abortController?.signal,
+            600000, // 10分钟超时，某些服务安装可能需要较长时间
+            cleanEnvVars,
           );
         } catch (error) {
           // 检查是否是超时错误
@@ -886,7 +883,8 @@ export class DeploymentService {
         currentStep: 'preparing-environment',
       });
 
-      const sudoCommand = this.getSudoCommand();
+      // 启动sudo助手进程
+      await this.startSudoHelper();
 
       // 检查是否需要安装基础工具
       const missingTools = this.environmentCheckResult?.missingBasicTools || [];
@@ -908,13 +906,9 @@ export class DeploymentService {
       }
 
       if (commands.length > 0) {
-        // 一次性执行所有需要权限的命令
+        // 使用sudo助手执行命令
         const combinedCommand = commands.join(' && ');
-        await execAsyncWithAbort(
-          `${sudoCommand}bash -c '${combinedCommand}'`,
-          { timeout: 300000 }, // 5分钟超时
-          this.abortController?.signal,
-        );
+        await this.executeSudoCommand(combinedCommand, 300000); // 5分钟超时
 
         let message = '管理员权限获取成功';
         if (missingTools.length > 0) {
@@ -929,12 +923,8 @@ export class DeploymentService {
           currentStep: 'preparing-environment',
         });
       } else {
-        // 没有需要执行的命令，只获取权限验证
-        await execAsyncWithAbort(
-          `${sudoCommand}true`,
-          { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
-          this.abortController?.signal,
-        );
+        // 即使没有要执行的命令，也要验证sudo助手是否正常工作
+        await this.executeSudoCommand('echo "权限验证成功"', 30000);
 
         this.updateStatus({
           message: '管理员权限获取成功',
@@ -943,6 +933,9 @@ export class DeploymentService {
       }
 
       this.sudoSessionActive = true;
+
+      // 启动进程监控
+      this.startSudoHelperMonitor();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -972,6 +965,381 @@ export class DeploymentService {
       });
 
       throw new Error(`获取管理员权限失败: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * 启动sudo助手进程，只需要一次密码输入
+   */
+  private async startSudoHelper(): Promise<void> {
+    if (process.platform !== 'linux') {
+      return;
+    }
+
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return;
+    }
+
+    try {
+      // 创建临时目录
+      const tempDir = path.join(this.cachePath, 'temp-sudo');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      // 创建sudo助手脚本
+      const helperScriptPath = path.join(tempDir, 'sudo-helper.sh');
+      const helperScriptContent = `#!/bin/bash
+# Sudo助手脚本，保持长期运行的sudo会话
+
+# 不使用 set -e，因为我们需要手动处理错误以保持进程运行
+# set -o pipefail 也可能导致意外退出，所以也不使用
+
+# 设置信号处理，确保优雅退出
+trap 'echo "HELPER_SIGNAL_RECEIVED_$$" >&2; exit 0' SIGTERM SIGINT
+
+# 输出调试信息
+echo "HELPER_STARTED_$$" >&2
+
+# 主循环：读取命令并执行
+while true; do
+    # 检查是否有输入可读，避免阻塞
+    if ! IFS= read -r -t 1 command 2>/dev/null; then
+        # 读取超时，继续循环（保持进程活跃）
+        continue
+    fi
+    
+    # 输出调试信息
+    echo "RECEIVED_COMMAND: $command" >&2
+    
+    # 检查退出命令
+    if [ "$command" = "EXIT" ]; then
+        echo "HELPER_EXITING_$$" >&2
+        break
+    fi
+    
+    # 检查命令是否为空
+    if [ -z "$command" ]; then
+        echo "EMPTY_COMMAND_$$" >&2
+        echo "COMMAND_DONE_$$"
+        continue
+    fi
+    
+    # 检查健康检查命令
+    if [[ "$command" == echo*HEALTH_CHECK* ]]; then
+        # 健康检查命令，直接执行
+        eval "$command" 2>/dev/null || true
+        echo "COMMAND_DONE_$$"
+        continue
+    fi
+    
+    # 执行命令并捕获退出码，使用子shell避免影响主进程
+    (
+        # 在子shell中执行命令
+        eval "$command"
+    )
+    cmd_exit_code=$?
+    
+    # 根据退出码输出相应信息
+    if [ $cmd_exit_code -eq 0 ]; then
+        echo "COMMAND_SUCCESS_$$"
+    else
+        echo "COMMAND_ERROR_\${cmd_exit_code}_$$"
+    fi
+    
+    echo "COMMAND_DONE_$$"
+    
+    # 强制刷新输出缓冲区
+    exec 1>&1
+    exec 2>&2
+done
+
+echo "HELPER_TERMINATED_$$" >&2
+exit 0
+`;
+
+      // 写入助手脚本
+      fs.writeFileSync(helperScriptPath, helperScriptContent, { mode: 0o755 });
+
+      // 使用pkexec启动助手进程，只需要输入一次密码
+      const sudoCommand = this.getSudoCommand();
+
+      if (!sudoCommand.includes('pkexec')) {
+        throw new Error('当前系统不支持图形化权限验证工具');
+      }
+
+      // 启动长期运行的sudo助手进程
+      const command = `${sudoCommand}bash "${helperScriptPath}"`;
+
+      this.sudoHelperProcess = spawn('bash', ['-c', command], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        // 设置进程选项以提高稳定性
+        env: {
+          ...process.env,
+          PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+        },
+      });
+
+      // 等待进程启动并准备就绪
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('sudo助手进程启动超时，请检查权限验证是否完成'));
+        }, 120000); // 增加到120秒超时，给用户更充足时间输入密码
+
+        let isResolved = false;
+        let helperStarted = false;
+
+        this.sudoHelperProcess.stdout?.on('data', (data: Buffer) => {
+          const output = data.toString();
+
+          // 检查助手是否已启动
+          if (output.includes('HELPER_STARTED_') && !helperStarted) {
+            helperStarted = true;
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Sudo助手进程已启动');
+            }
+          }
+
+          // 检查是否是我们的命令完成标记，如果是说明进程已经启动并可以接收命令
+          if (
+            (output.includes('COMMAND_DONE_') ||
+              output.includes('COMMAND_SUCCESS_')) &&
+            !isResolved
+          ) {
+            clearTimeout(timeout);
+            isResolved = true;
+            resolve(void 0);
+          }
+        });
+
+        this.sudoHelperProcess.stderr?.on('data', (data: Buffer) => {
+          const errorOutput = data.toString();
+
+          // 检查助手启动信息
+          if (errorOutput.includes('HELPER_STARTED_') && !helperStarted) {
+            helperStarted = true;
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Sudo助手进程已启动 (从stderr)');
+            }
+          }
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Sudo Helper Stderr:', errorOutput.trim());
+          }
+        });
+
+        this.sudoHelperProcess.on('error', (error: Error) => {
+          if (!isResolved) {
+            clearTimeout(timeout);
+            isResolved = true;
+            reject(new Error(`sudo助手进程启动失败: ${error.message}`));
+          }
+        });
+
+        this.sudoHelperProcess.on('exit', (code: number) => {
+          if (!isResolved) {
+            clearTimeout(timeout);
+            isResolved = true;
+
+            if (code === 126) {
+              reject(
+                new Error(
+                  'sudo助手进程启动失败: 权限被拒绝，请确保用户具有管理员权限',
+                ),
+              );
+            } else if (code === 127) {
+              reject(
+                new Error('sudo助手进程启动失败: 找不到命令，请检查系统配置'),
+              );
+            } else {
+              reject(new Error(`sudo助手进程启动时退出，代码: ${code}`));
+            }
+          }
+        });
+
+        // 等待一小段时间确保进程完全启动，然后发送测试命令
+        setTimeout(() => {
+          if (this.sudoHelperProcess && !this.sudoHelperProcess.killed) {
+            this.sudoHelperProcess.stdin?.write('echo "Helper Ready"\n');
+          }
+        }, 2000);
+      });
+
+      // 清理临时脚本文件
+      try {
+        fs.unlinkSync(helperScriptPath);
+      } catch {
+        // 忽略清理错误
+      }
+    } catch (error) {
+      // 清理可能启动的进程
+      if (this.sudoHelperProcess) {
+        try {
+          this.sudoHelperProcess.kill();
+        } catch {
+          // 忽略清理错误
+        }
+        this.sudoHelperProcess = undefined;
+      }
+
+      throw new Error(
+        `启动sudo助手进程失败: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * 尝试重新启动sudo助手进程
+   */
+  private async restartSudoHelper(): Promise<void> {
+    if (process.platform !== 'linux') {
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('尝试重新启动sudo助手进程...');
+    }
+
+    // 清理现有进程
+    this.cleanupSudoHelper();
+
+    // 重置状态
+    this.sudoSessionActive = false;
+
+    // 重新启动助手进程
+    await this.startSudoHelper();
+
+    this.sudoSessionActive = true;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('sudo助手进程重新启动成功');
+    }
+  }
+
+  /**
+   * 启动sudo助手进程监控
+   */
+  private startSudoHelperMonitor(): void {
+    if (process.platform !== 'linux' || this.sudoHelperMonitorInterval) {
+      return;
+    }
+
+    // 每30秒检查一次sudo助手进程状态
+    this.sudoHelperMonitorInterval = setInterval(async () => {
+      if (this.sudoSessionActive && this.sudoHelperProcess) {
+        try {
+          // 检查进程是否仍然活跃
+          if (
+            this.sudoHelperProcess.killed ||
+            this.sudoHelperProcess.exitCode !== null
+          ) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('检测到sudo助手进程已退出，准备重启...');
+            }
+
+            // 尝试重启进程
+            try {
+              await this.restartSudoHelper();
+              if (process.env.NODE_ENV === 'development') {
+                console.log('sudo助手进程重启成功');
+              }
+            } catch (error) {
+              if (process.env.NODE_ENV === 'development') {
+                console.error('sudo助手进程重启失败:', error);
+              }
+              // 重启失败，停止监控
+              this.stopSudoHelperMonitor();
+              this.sudoSessionActive = false;
+            }
+          } else {
+            // 进程仍在运行，进行健康检查
+            try {
+              await this.checkSudoHelperHealth();
+            } catch (error) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('sudo助手进程健康检查失败，准备重启:', error);
+              }
+
+              try {
+                await this.restartSudoHelper();
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('sudo助手进程重启成功');
+                }
+              } catch (restartError) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.error('sudo助手进程重启失败:', restartError);
+                }
+                // 重启失败，停止监控
+                this.stopSudoHelperMonitor();
+                this.sudoSessionActive = false;
+              }
+            }
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('sudo助手进程监控出错:', error);
+          }
+        }
+      }
+    }, 30000); // 30秒检查一次
+  }
+
+  /**
+   * 停止sudo助手进程监控
+   */
+  private stopSudoHelperMonitor(): void {
+    if (this.sudoHelperMonitorInterval) {
+      clearInterval(this.sudoHelperMonitorInterval);
+      this.sudoHelperMonitorInterval = undefined;
+    }
+  }
+
+  /**
+   * 清理sudo助手进程
+   */
+  private cleanupSudoHelper(): void {
+    // 停止进程监控
+    this.stopSudoHelperMonitor();
+
+    if (this.sudoHelperProcess) {
+      try {
+        // 发送退出命令
+        this.sudoHelperProcess.stdin?.write('EXIT\n');
+
+        // 等待一小段时间让进程正常退出
+        setTimeout(() => {
+          if (this.sudoHelperProcess && !this.sudoHelperProcess.killed) {
+            this.sudoHelperProcess.kill('SIGTERM');
+          }
+        }, 1000);
+      } catch {
+        // 强制终止进程
+        try {
+          this.sudoHelperProcess.kill('SIGKILL');
+        } catch {
+          // 忽略强制终止的错误
+        }
+      }
+      this.sudoHelperProcess = undefined;
+    }
+
+    // 清理临时目录
+    const tempDir = path.join(this.cachePath, 'temp-sudo');
+    if (fs.existsSync(tempDir)) {
+      try {
+        const files = fs.readdirSync(tempDir);
+        files.forEach((file) => {
+          try {
+            fs.unlinkSync(path.join(tempDir, file));
+          } catch {
+            // 忽略文件删除错误
+          }
+        });
+        fs.rmdirSync(tempDir);
+      } catch {
+        // 忽略目录清理错误
+      }
     }
   }
 
@@ -1174,7 +1542,8 @@ export class DeploymentService {
         console.log('清理部署相关资源');
       }
       this.abortController = undefined;
-      this.currentProcess = undefined;
+      this.sudoSessionActive = false; // 重置sudo会话状态
+      this.cleanupSudoHelper(); // 清理sudo助手进程
     }
   }
 
@@ -1199,11 +1568,14 @@ export class DeploymentService {
       }
 
       // 过滤出需要添加的域名（避免重复添加）
+      // 使用正则表达式检测域名是否已存在，处理多个空格/tab的情况
       const domainsToAdd = domains.filter((domain) => {
-        return (
-          !hostsContent.includes(`127.0.0.1\t${domain}`) &&
-          !hostsContent.includes(`127.0.0.1 ${domain}`)
+        // 匹配 127.0.0.1 + 一个或多个空白字符 + 域名 + 行尾或空白字符或注释
+        const domainRegex = new RegExp(
+          `^127\\.0\\.0\\.1\\s+${domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$|#)`,
+          'm',
         );
+        return !domainRegex.test(hostsContent);
       });
 
       if (domainsToAdd.length === 0) {
@@ -1211,30 +1583,43 @@ export class DeploymentService {
         return;
       }
 
+      // 检查是否已经存在 openEuler Intelligence 注释标签
+      const commentExists = hostsContent.includes(
+        '# openEuler Intelligence Local Deployment',
+      );
+
       // 构建要添加的内容
       const entriesToAdd = domainsToAdd
-        .map((domain) => `127.0.0.1\t${domain}`)
+        .map((domain) => `127.0.0.1 ${domain}`)
         .join('\n');
-      const newContent =
-        hostsContent.trim() +
-        '\n\n# EulerCopilot Local Deployment\n' +
-        entriesToAdd +
-        '\n';
+
+      let newContent: string;
+      if (commentExists) {
+        // 如果注释已存在，在注释后面插入新的域名条目
+        const commentRegex = /(# openEuler Intelligence Local Deployment\n)/;
+        newContent = hostsContent.replace(commentRegex, `$1${entriesToAdd}\n`);
+      } else {
+        // 如果注释不存在，添加完整的注释块和域名条目
+        newContent =
+          hostsContent.trim() +
+          '\n\n# openEuler Intelligence Local Deployment\n' +
+          entriesToAdd +
+          '\n';
+      }
 
       // 使用管理员权限写入 hosts 文件
-      const sudoCommand = this.getSudoCommand();
-
       // 创建临时文件写入内容，然后移动到 hosts 文件位置
       const tempFile = '/tmp/hosts_new';
 
-      // 写入新内容到临时文件，然后移动到 hosts 文件
-      const command = `${sudoCommand}bash -c 'echo "${newContent.replace(/'/g, "'\"'\"'")}" > ${tempFile} && mv ${tempFile} ${hostsPath}'`;
+      // 先将内容写入临时文件，避免直接在命令行中处理复杂的字符串转义
+      try {
+        fs.writeFileSync(tempFile, newContent);
+      } catch (error) {
+        throw new Error(`无法创建临时文件: ${error}`);
+      }
 
-      await execAsyncWithAbort(
-        command,
-        { timeout: 30000 },
-        undefined, // 这是部署完成后的操作，不需要 abortController
-      );
+      // 移动临时文件到 hosts 文件位置
+      await this.executeSudoCommand(`mv ${tempFile} ${hostsPath}`, 30000);
 
       console.log(`已添加以下域名到 hosts 文件: ${domainsToAdd.join(', ')}`);
     } catch (error) {
@@ -1248,13 +1633,279 @@ export class DeploymentService {
    * 清理部署文件
    */
   async cleanup(): Promise<void> {
+    // 清理sudo助手进程
+    this.cleanupSudoHelper();
+
+    // 清理部署文件
     if (fs.existsSync(this.deploymentPath)) {
       fs.rmSync(this.deploymentPath, { recursive: true, force: true });
     }
+
     this.updateStatus({
       status: 'idle',
       message: '清理完成',
       currentStep: 'idle',
+    });
+  }
+
+  /**
+   * 检查sudo助手进程健康状态
+   */
+  private async checkSudoHelperHealth(): Promise<void> {
+    if (!this.sudoHelperProcess || this.sudoHelperProcess.killed) {
+      throw new Error('sudo助手进程未运行');
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('sudo助手进程健康检查超时'));
+      }, 5000); // 5秒超时
+
+      let isResolved = false;
+      const healthCheckId = Date.now();
+
+      const dataHandler = (data: Buffer) => {
+        const output = data.toString();
+        if (
+          output.includes(`HEALTH_CHECK_${healthCheckId}_DONE`) &&
+          !isResolved
+        ) {
+          clearTimeout(timeout);
+          isResolved = true;
+          this.sudoHelperProcess.stdout?.off('data', dataHandler);
+          resolve();
+        }
+      };
+
+      const errorHandler = (error: Error) => {
+        if (!isResolved) {
+          clearTimeout(timeout);
+          isResolved = true;
+          this.sudoHelperProcess.stdout?.off('data', dataHandler);
+          reject(error);
+        }
+      };
+
+      this.sudoHelperProcess.stdout?.on('data', dataHandler);
+      this.sudoHelperProcess.on('error', errorHandler);
+
+      // 发送健康检查命令
+      this.sudoHelperProcess.stdin?.write(
+        `echo "HEALTH_CHECK_${healthCheckId}_DONE"\n`,
+      );
+    });
+  }
+
+  /**
+   * 使用sudo助手进程执行命令，无需重复密码输入
+   */
+  private async executeSudoCommand(
+    command: string,
+    timeout: number = 60000,
+    envVars?: Record<string, string>,
+  ): Promise<{ stdout: string; stderr: string }> {
+    if (process.platform !== 'linux') {
+      // 非Linux系统直接执行
+      return await execAsyncWithAbort(
+        command,
+        { timeout, env: { ...process.env, ...envVars } },
+        this.abortController?.signal,
+      );
+    }
+
+    // 检查是否为root用户
+    if (process.getuid && process.getuid() === 0) {
+      return await execAsyncWithAbort(
+        command,
+        { timeout, env: { ...process.env, ...envVars } },
+        this.abortController?.signal,
+      );
+    }
+
+    // 检查sudo助手进程是否仍然活跃
+    if (!this.sudoHelperProcess || this.sudoHelperProcess.killed) {
+      throw new Error('sudo助手进程未启动或已终止，请重新初始化sudo会话');
+    }
+
+    // 检查sudo助手进程健康状态，如果不健康则尝试重启
+    try {
+      await this.checkSudoHelperHealth();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('sudo助手进程健康检查失败，尝试重启:', error);
+      }
+
+      try {
+        await this.restartSudoHelper();
+      } catch (restartError) {
+        throw new Error(
+          `sudo助手进程重启失败: ${restartError instanceof Error ? restartError.message : String(restartError)}`,
+        );
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`命令执行超时: ${command}`));
+      }, timeout);
+
+      let stdout = '';
+      let stderr = '';
+      let isResolved = false;
+
+      const dataHandler = (data: Buffer) => {
+        const output = data.toString();
+        stdout += output;
+
+        // 检查命令是否成功完成
+        if (
+          output.includes(`COMMAND_SUCCESS_${this.sudoHelperProcess?.pid}`) &&
+          !isResolved
+        ) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          // 移除状态标记
+          stdout = stdout.replace(
+            new RegExp(
+              `COMMAND_(SUCCESS|DONE)_${this.sudoHelperProcess?.pid}\\s*`,
+              'g',
+            ),
+            '',
+          );
+          resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
+        }
+        // 检查命令是否失败
+        else if (
+          output.includes(`COMMAND_ERROR_`) &&
+          output.includes(`_${this.sudoHelperProcess?.pid}`) &&
+          !isResolved
+        ) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          // 提取错误码
+          const errorMatch = output.match(
+            new RegExp(`COMMAND_ERROR_(\\d+)_${this.sudoHelperProcess?.pid}`),
+          );
+          const errorCode = errorMatch ? errorMatch[1] : 'unknown';
+
+          // 移除状态标记
+          stdout = stdout.replace(
+            new RegExp(
+              `COMMAND_(ERROR_\\d+|DONE)_${this.sudoHelperProcess?.pid}\\s*`,
+              'g',
+            ),
+            '',
+          );
+
+          reject(
+            new Error(
+              `命令执行失败 (退出码: ${errorCode}): ${stderr.trim() || stdout.trim()}`,
+            ),
+          );
+        }
+        // 向后兼容：检查旧的完成标记
+        else if (
+          output.includes(`COMMAND_DONE_${this.sudoHelperProcess?.pid}`) &&
+          !isResolved
+        ) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          // 移除完成标记
+          stdout = stdout.replace(
+            new RegExp(`COMMAND_DONE_${this.sudoHelperProcess?.pid}\\s*`, 'g'),
+            '',
+          );
+          resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
+        }
+      };
+
+      const errorHandler = (data: Buffer) => {
+        const errorOutput = data.toString();
+        stderr += errorOutput;
+
+        // 检查是否有调试信息
+        if (process.env.NODE_ENV === 'development') {
+          if (
+            errorOutput.includes('HELPER_STARTED_') ||
+            errorOutput.includes('RECEIVED_COMMAND:') ||
+            errorOutput.includes('HELPER_EXITING_') ||
+            errorOutput.includes('HELPER_TERMINATED_')
+          ) {
+            console.log('Sudo Helper Debug:', errorOutput.trim());
+          }
+        }
+      };
+
+      const processErrorHandler = (error: Error) => {
+        if (!isResolved) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+          reject(new Error(`sudo助手进程错误: ${error.message}`));
+        }
+      };
+
+      const processExitHandler = (code: number) => {
+        if (!isResolved) {
+          clearTimeout(timeoutId);
+          isResolved = true;
+
+          // 提供更详细的退出信息
+          const stderrInfo = stderr.trim() ? `\nStderr: ${stderr.trim()}` : '';
+          const stdoutInfo = stdout.trim() ? `\nStdout: ${stdout.trim()}` : '';
+
+          reject(
+            new Error(
+              `sudo助手进程异常退出，代码: ${code}${stderrInfo}${stdoutInfo}\n` +
+                `这可能是由于:\n` +
+                `1. 脚本执行时间过长导致进程超时\n` +
+                `2. 系统资源不足\n` +
+                `3. 权限问题或认证超时\n` +
+                `4. 脚本内部错误导致bash退出`,
+            ),
+          );
+        }
+      };
+
+      // 绑定事件监听器
+      this.sudoHelperProcess.stdout?.on('data', dataHandler);
+      this.sudoHelperProcess.stderr?.on('data', errorHandler);
+      this.sudoHelperProcess.on('error', processErrorHandler);
+      this.sudoHelperProcess.on('exit', processExitHandler);
+
+      // 构建环境变量字符串
+      let envString = '';
+      if (envVars && Object.keys(envVars).length > 0) {
+        const envPairs = Object.entries(envVars)
+          .map(([key, value]) => `export ${key}="${value}"`)
+          .join('; ');
+        envString = envPairs + '; ';
+      }
+
+      // 发送命令到助手进程
+      const fullCommand = `${envString}${command}`;
+      this.sudoHelperProcess.stdin?.write(`${fullCommand}\n`);
+
+      // 设置清理函数
+      const cleanup = () => {
+        this.sudoHelperProcess.stdout?.off('data', dataHandler);
+        this.sudoHelperProcess.stderr?.off('data', errorHandler);
+        this.sudoHelperProcess.off('error', processErrorHandler);
+        this.sudoHelperProcess.off('exit', processExitHandler);
+      };
+
+      // 确保在resolve或reject时清理事件监听器
+      const originalResolve = resolve;
+      const originalReject = reject;
+
+      resolve = (value: any) => {
+        cleanup();
+        originalResolve(value);
+      };
+
+      reject = (reason: any) => {
+        cleanup();
+        originalReject(reason);
+      };
     });
   }
 }

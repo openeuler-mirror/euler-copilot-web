@@ -239,33 +239,91 @@ const handleFinish = async () => {
   try {
     // 1. 设置默认代理 URL
     if (window.eulercopilotWelcome?.config) {
-      await window.eulercopilotWelcome.config.setProxyUrl(
-        'https://www.eulercopilot.local',
-      );
+      try {
+        await window.eulercopilotWelcome.config.setProxyUrl(
+          'https://www.eulercopilot.local',
+        );
+      } catch (configError) {
+        console.error('❌ 设置代理 URL 失败:', configError);
+      }
+    } else {
+      console.warn('❌ 未找到 config API');
     }
 
     // 2. 将域名添加到 /etc/hosts
-    await addHostsEntries();
+    try {
+      await addHostsEntries();
+    } catch (hostsError) {
+      console.error('❌ 添加 hosts 条目失败:', hostsError);
+    }
 
-    // 部署完成，可以通过 emit 事件通知父组件完成
-    // emit('finish');
+    // 3. 完成欢迎流程，关闭欢迎窗口并打开主窗口
+    try {
+      if (window.eulercopilotWelcome?.welcome) {
+        await window.eulercopilotWelcome.welcome.complete();
+      } else {
+        console.warn('❌ 未找到 welcome API');
+      }
+    } catch (welcomeError) {
+      console.error('❌ 完成欢迎流程失败:', welcomeError);
+    }
   } catch (error) {
-    console.error('完成部署后续配置失败:', error);
-    // 这里可以显示错误提示，但不阻止部署完成
+    console.error('❌ 完成部署后续配置失败:', error);
+  } finally {
+    console.log('🏁 handleFinish 执行完成');
   }
 };
 
 // 添加 hosts 条目
 const addHostsEntries = async () => {
   try {
+    console.log('📝 检查 deployment API');
+    console.log('window.eulercopilotWelcome:', window.eulercopilotWelcome);
+
     if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
-      await window.eulercopilotWelcome.deployment.addHostsEntries([
-        'www.eulercopilot.local',
-        'authhub.eulercopilot.local',
-      ]);
+      console.log('✅ 找到 deployment API');
+      console.log('deployment 对象:', window.eulercopilotWelcome.deployment);
+      console.log(
+        'addHostsEntries 方法:',
+        window.eulercopilotWelcome.deployment.addHostsEntries,
+      );
+
+      if (
+        typeof window.eulercopilotWelcome.deployment.addHostsEntries ===
+        'function'
+      ) {
+        console.log('✅ addHostsEntries 方法存在，开始调用');
+
+        const domains = [
+          'www.eulercopilot.local',
+          'authhub.eulercopilot.local',
+        ];
+        console.log('📝 要添加的域名:', domains);
+
+        await window.eulercopilotWelcome.deployment.addHostsEntries(domains);
+        console.log('✅ addHostsEntries 调用成功');
+      } else {
+        console.error('❌ addHostsEntries 方法不存在');
+        throw new Error('addHostsEntries 方法不可用');
+      }
+    } else {
+      console.warn('❌ 未找到 deployment API');
+      console.log(
+        'window.eulercopilotWelcome 的完整内容:',
+        JSON.stringify(window.eulercopilotWelcome, null, 2),
+      );
+      throw new Error('部署服务 API 不可用');
     }
   } catch (error) {
-    throw new Error(`添加 hosts 条目失败: ${error}`);
+    console.error('❌ addHostsEntries 失败:', error);
+    console.error('错误详情:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw new Error(
+      `添加 hosts 条目失败: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 };
 
