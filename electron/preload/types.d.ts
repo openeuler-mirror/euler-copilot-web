@@ -115,6 +115,7 @@ export interface DesktopAppWelcomeAPI {
     onStatusChange(callback: (status: any) => void): void;
     removeStatusListener(): void;
     cleanup(): Promise<void>;
+    addHostsEntries(domains: string[]): Promise<void>;
   };
 
   // 系统信息

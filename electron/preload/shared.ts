@@ -48,7 +48,9 @@ export const safeIPC = {
 
   on: (channel: string, listener: (...args: any[]) => void): void => {
     validateIPC(channel);
-    ipcRenderer.on(channel, (event, ...args) => listener(...args));
+    ipcRenderer.on(channel, (event, ...args) => {
+      listener(...args);
+    });
   },
 
   once: (channel: string, listener: (...args: any[]) => void): void => {

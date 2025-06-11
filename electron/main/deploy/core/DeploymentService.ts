@@ -96,7 +96,9 @@ export class DeploymentService {
   private updateStatus(status: Partial<DeploymentStatus>) {
     // 验证输入状态
     if (!status || typeof status !== 'object') {
-      console.warn('DeploymentService: 尝试更新无效状态:', status);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('DeploymentService: 尝试更新无效状态:', status);
+      }
       return;
     }
 
@@ -107,8 +109,29 @@ export class DeploymentService {
       this.currentStatus.currentStep = 'unknown';
     }
 
+    // 调试信息：仅在开发环境下记录状态更新
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 DeploymentService: 状态更新', {
+        status: this.currentStatus.status,
+        currentStep: this.currentStatus.currentStep,
+        message: this.currentStatus.message,
+        hasCallback: !!this.statusCallback,
+      });
+    }
+
     if (this.statusCallback) {
-      this.statusCallback(this.currentStatus);
+      try {
+        this.statusCallback(this.currentStatus);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ DeploymentService: 状态回调已调用');
+        }
+      } catch (error) {
+        console.error('❌ DeploymentService: 状态回调执行失败:', error);
+      }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ DeploymentService: 没有设置状态回调函数');
+      }
     }
   }
 
@@ -137,11 +160,11 @@ export class DeploymentService {
       // 1. 检查环境
       await this.checkEnvironment();
 
-      // 2. 在Linux系统上，一次性获取sudo权限并保持会话
-      await this.initializeSudoSession();
-
-      // 3. 克隆仓库
+      // 2. 克隆仓库
       await this.cloneRepository();
+
+      // 3. 在Linux系统上，一次性获取sudo权限并设置环境
+      await this.initializeSudoSession();
 
       // 4. 配置 values.yaml
       await this.configureValues(params);
@@ -226,36 +249,14 @@ export class DeploymentService {
         );
       }
 
-      // 安装缺失的基础工具
-      if (checkResult.needsBasicToolsInstall) {
-        try {
-          this.updateStatus({
-            message: '安装缺失的基础工具...',
-            currentStep: 'preparing-environment',
-          });
-
-          await this.environmentChecker.installBasicTools(
-            checkResult.missingBasicTools,
-          );
-
-          this.updateStatus({
-            message: '基础工具安装完成',
-            currentStep: 'preparing-environment',
-          });
-        } catch (error) {
-          throw new Error(
-            `基础工具安装失败: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
-      }
+      // 存储检查结果，用于后续决定是否需要执行 2-install-tools
+      // 基础工具的安装将在 initializeSudoSession 中处理
+      this.environmentCheckResult = checkResult;
 
       // 检查是否有严重错误
       if (!checkResult.success) {
         throw new Error(`环境检查未通过: ${checkResult.errors.join(', ')}`);
       }
-
-      // 存储检查结果，用于后续决定是否需要执行 2-install-tools
-      this.environmentCheckResult = checkResult;
 
       this.updateStatus({
         message: '环境检查通过',
@@ -427,7 +428,14 @@ export class DeploymentService {
 
       try {
         // 构建需要权限的命令，使用已建立的sudo会话
-        const command = this.buildRootCommand(toolsScriptPath);
+        const command = this.buildRootCommand(
+          toolsScriptPath,
+          false,
+          undefined,
+          {
+            KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
+          },
+        );
 
         // 执行脚本
         await execAsyncWithAbort(
@@ -568,12 +576,13 @@ export class DeploymentService {
     const maxWaitTime = 60000; // 60秒
     const checkInterval = 5000; // 5秒检查一次
     const startTime = Date.now();
+    const sudoCommand = this.getSudoCommand();
 
     while (Date.now() - startTime < maxWaitTime) {
       try {
         // 检查k3s.yaml文件是否存在且可读
         const { stdout } = await execAsyncWithAbort(
-          'ls -la /etc/rancher/k3s/k3s.yaml',
+          `${sudoCommand}ls -la /etc/rancher/k3s/k3s.yaml`,
           {},
           this.abortController?.signal,
         );
@@ -601,9 +610,11 @@ export class DeploymentService {
     try {
       // 设置KUBECONFIG环境变量并测试连接
       const kubeconfigPath = '/etc/rancher/k3s/k3s.yaml';
+      const sudoCommand = this.getSudoCommand();
 
+      // 使用sudo权限执行kubectl命令，因为k3s.yaml文件只有root用户可以读取
       const { stdout } = await execAsyncWithAbort(
-        `KUBECONFIG=${kubeconfigPath} kubectl cluster-info`,
+        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl cluster-info'`,
         { timeout: 15000 },
         this.abortController?.signal,
       );
@@ -614,7 +625,7 @@ export class DeploymentService {
 
       // 验证节点状态
       const { stdout: nodeStatus } = await execAsyncWithAbort(
-        `KUBECONFIG=${kubeconfigPath} kubectl get nodes`,
+        `${sudoCommand}bash -c 'KUBECONFIG=${kubeconfigPath} kubectl get nodes'`,
         { timeout: 15000 },
         this.abortController?.signal,
       );
@@ -688,28 +699,25 @@ export class DeploymentService {
           throw new Error(`脚本文件不存在: ${scriptPath}`);
         }
 
-        // 在执行脚本前刷新sudo会话（除第一个脚本外）
-        if (i > 0) {
-          try {
-            await this.refreshSudoSession();
-          } catch (error) {
-            console.warn(`刷新sudo会话失败，继续执行: ${error}`);
-          }
-        }
-
-        // 准备环境变量
-        const execEnv = {
+        // 准备环境变量，过滤掉 undefined 值
+        const baseEnv = {
           ...process.env,
           ...script.envVars,
           // 确保 KUBECONFIG 环境变量正确设置
           KUBECONFIG: '/etc/rancher/k3s/k3s.yaml',
         };
 
+        // 过滤掉 undefined 值，确保所有值都是字符串
+        const execEnv = Object.fromEntries(
+          Object.entries(baseEnv).filter(([, value]) => value !== undefined),
+        ) as Record<string, string>;
+
         // 构建需要权限的命令
         const command = this.buildRootCommand(
           scriptPath,
           script.useInputRedirection,
           script.useInputRedirection ? 'authhub.eulercopilot.local' : undefined,
+          execEnv,
         );
 
         try {
@@ -719,7 +727,6 @@ export class DeploymentService {
             {
               cwd: scriptsPath,
               timeout: 600000, // 10分钟超时，某些服务安装可能需要较长时间
-              env: execEnv,
             },
             this.abortController?.signal,
           );
@@ -858,7 +865,7 @@ export class DeploymentService {
   }
 
   /**
-   * 初始化sudo会话，一次性获取权限并保持会话
+   * 初始化sudo会话，一次性获取权限并安装缺失工具、设置脚本权限
    */
   private async initializeSudoSession(): Promise<void> {
     // 只在 Linux 系统上需要sudo会话
@@ -875,25 +882,67 @@ export class DeploymentService {
     try {
       this.updateStatus({
         status: 'preparing',
-        message: '获取管理员权限...',
+        message: '获取管理员权限并初始化环境...',
         currentStep: 'preparing-environment',
       });
 
-      // 使用pkexec或其他图形化sudo工具一次性获取权限
-      // 这里执行一个简单的sudo命令来激活会话
       const sudoCommand = this.getSudoCommand();
-      await execAsyncWithAbort(
-        `${sudoCommand}true`,
-        { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
-        this.abortController?.signal,
-      );
+
+      // 检查是否需要安装基础工具
+      const missingTools = this.environmentCheckResult?.missingBasicTools || [];
+
+      // 构建一次性执行的命令列表
+      const commands: string[] = [];
+
+      if (missingTools.length > 0) {
+        // 添加基础工具安装命令
+        commands.push(`dnf install -y ${missingTools.join(' ')}`);
+      }
+
+      // 添加脚本权限设置命令（如果部署目录存在）
+      const scriptsPath = path.join(this.deploymentPath, 'deploy/scripts');
+      if (fs.existsSync(scriptsPath)) {
+        commands.push(
+          `find "${scriptsPath}" -name "*.sh" -type f -exec chmod +x {} +`,
+        );
+      }
+
+      if (commands.length > 0) {
+        // 一次性执行所有需要权限的命令
+        const combinedCommand = commands.join(' && ');
+        await execAsyncWithAbort(
+          `${sudoCommand}bash -c '${combinedCommand}'`,
+          { timeout: 300000 }, // 5分钟超时
+          this.abortController?.signal,
+        );
+
+        let message = '管理员权限获取成功';
+        if (missingTools.length > 0) {
+          message += `，已安装工具: ${missingTools.join(', ')}`;
+        }
+        if (fs.existsSync(scriptsPath)) {
+          message += '，脚本权限已设置';
+        }
+
+        this.updateStatus({
+          message,
+          currentStep: 'preparing-environment',
+        });
+      } else {
+        // 没有需要执行的命令，只获取权限验证
+        await execAsyncWithAbort(
+          `${sudoCommand}true`,
+          { timeout: 60000 }, // 60秒超时，给用户足够时间输入密码
+          this.abortController?.signal,
+        );
+
+        this.updateStatus({
+          message: '管理员权限获取成功',
+          currentStep: 'preparing-environment',
+        });
+      }
 
       this.sudoSessionActive = true;
-
-      this.updateStatus({
-        message: '管理员权限获取成功',
-        currentStep: 'preparing-environment',
-      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -923,33 +972,6 @@ export class DeploymentService {
       });
 
       throw new Error(`获取管理员权限失败: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * 刷新sudo会话时间戳，延长会话时间
-   */
-  private async refreshSudoSession(): Promise<void> {
-    if (process.platform !== 'linux' || !this.sudoSessionActive) {
-      return;
-    }
-
-    // 检查是否为root用户
-    if (process.getuid && process.getuid() === 0) {
-      return;
-    }
-
-    try {
-      // 使用 sudo -v 刷新时间戳，无需重新输入密码
-      await execAsyncWithAbort(
-        'sudo -v',
-        { timeout: 5000 },
-        this.abortController?.signal,
-      );
-    } catch (error) {
-      // 如果刷新失败，可能需要重新获取权限
-      console.warn('刷新sudo会话失败，可能需要重新输入密码:', error);
-      this.sudoSessionActive = false;
     }
   }
 
@@ -998,20 +1020,26 @@ export class DeploymentService {
     scriptPath: string,
     useInputRedirection?: boolean,
     inputData?: string,
+    envVars?: Record<string, string>,
   ): string {
     // 获取sudo命令前缀
     const sudoCommand = this.getSudoCommand();
 
+    // 构建环境变量字符串
+    let envString = '';
+    if (envVars && Object.keys(envVars).length > 0) {
+      const envPairs = Object.entries(envVars)
+        .map(([key, value]) => `${key}="${value}"`)
+        .join(' ');
+      envString = envPairs + ' ';
+    }
+
+    // 直接执行脚本，不需要 chmod（权限已在克隆仓库后设置）
     let command = '';
-
-    // 给脚本添加执行权限
-    command += `${sudoCommand}chmod +x "${scriptPath}"`;
-
-    // 执行脚本
     if (useInputRedirection && inputData) {
-      command += ` && ${sudoCommand}bash -c 'echo "${inputData}" | bash "${scriptPath}"'`;
+      command = `${sudoCommand}bash -c '${envString}echo "${inputData}" | bash "${scriptPath}"'`;
     } else {
-      command += ` && ${sudoCommand}bash "${scriptPath}"`;
+      command = `${sudoCommand}bash -c '${envString}bash "${scriptPath}"'`;
     }
 
     return command;
@@ -1100,19 +1128,29 @@ export class DeploymentService {
     try {
       // 如果有正在进行的部署流程，中断它
       if (this.abortController && !this.abortController.signal.aborted) {
-        console.log('正在停止部署流程...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('正在停止部署流程...');
+        }
 
         // 发送中断信号
         this.abortController.abort();
-        console.log('已发送中断信号给所有正在运行的进程');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('已发送中断信号给所有正在运行的进程');
+        }
 
         // 等待一小段时间确保进程能够响应中断信号
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log('等待进程响应中断信号完成');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('等待进程响应中断信号完成');
+        }
 
-        console.log('部署流程已成功停止');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('部署流程已成功停止');
+        }
       } else {
-        console.log('没有正在进行的部署流程，直接更新为停止状态');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('没有正在进行的部署流程，直接更新为停止状态');
+        }
       }
 
       // 统一更新为停止状态，不使用前端无法识别的 'stopping' 状态
@@ -1132,9 +1170,77 @@ export class DeploymentService {
       });
     } finally {
       // 清理资源
-      console.log('清理部署相关资源');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('清理部署相关资源');
+      }
       this.abortController = undefined;
       this.currentProcess = undefined;
+    }
+  }
+
+  /**
+   * 添加 hosts 条目，将域名指向本地
+   */
+  async addHostsEntries(domains: string[]): Promise<void> {
+    try {
+      // 只在 Linux 和 macOS 系统上执行
+      if (process.platform !== 'linux' && process.platform !== 'darwin') {
+        throw new Error('当前系统不支持自动配置 hosts 文件');
+      }
+
+      const hostsPath = '/etc/hosts';
+
+      // 检查是否已经存在这些条目
+      let hostsContent = '';
+      try {
+        hostsContent = fs.readFileSync(hostsPath, 'utf8');
+      } catch (error) {
+        throw new Error(`无法读取 hosts 文件: ${error}`);
+      }
+
+      // 过滤出需要添加的域名（避免重复添加）
+      const domainsToAdd = domains.filter((domain) => {
+        return (
+          !hostsContent.includes(`127.0.0.1\t${domain}`) &&
+          !hostsContent.includes(`127.0.0.1 ${domain}`)
+        );
+      });
+
+      if (domainsToAdd.length === 0) {
+        // 所有域名都已存在，无需添加
+        return;
+      }
+
+      // 构建要添加的内容
+      const entriesToAdd = domainsToAdd
+        .map((domain) => `127.0.0.1\t${domain}`)
+        .join('\n');
+      const newContent =
+        hostsContent.trim() +
+        '\n\n# EulerCopilot Local Deployment\n' +
+        entriesToAdd +
+        '\n';
+
+      // 使用管理员权限写入 hosts 文件
+      const sudoCommand = this.getSudoCommand();
+
+      // 创建临时文件写入内容，然后移动到 hosts 文件位置
+      const tempFile = '/tmp/hosts_new';
+
+      // 写入新内容到临时文件，然后移动到 hosts 文件
+      const command = `${sudoCommand}bash -c 'echo "${newContent.replace(/'/g, "'\"'\"'")}" > ${tempFile} && mv ${tempFile} ${hostsPath}'`;
+
+      await execAsyncWithAbort(
+        command,
+        { timeout: 30000 },
+        undefined, // 这是部署完成后的操作，不需要 abortController
+      );
+
+      console.log(`已添加以下域名到 hosts 文件: ${domainsToAdd.join(', ')}`);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`配置 hosts 文件失败: ${errorMessage}`);
     }
   }
 

@@ -139,4 +139,11 @@ export class LocalDeployHandler {
   async cleanup(): Promise<void> {
     await this.deploymentService.cleanup();
   }
+
+  /**
+   * 添加 hosts 条目
+   */
+  async addHostsEntries(domains: string[]): Promise<void> {
+    await this.deploymentService.addHostsEntries(domains);
+  }
 }

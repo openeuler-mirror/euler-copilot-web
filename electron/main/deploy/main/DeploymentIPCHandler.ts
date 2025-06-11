@@ -34,6 +34,16 @@ export class DeploymentIPCHandler {
 
     // 设置状态变化回调
     this.localDeployHandler.setStatusCallback((status) => {
+      // 调试信息：仅在开发环境下记录IPC层状态更新
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 IPC Handler: 收到状态更新', {
+          status: status?.status,
+          currentStep: status?.currentStep,
+          hasMainWindow: !!this.mainWindow,
+          isDestroyed: this.mainWindow?.isDestroyed(),
+        });
+      }
+
       // 验证状态对象是否有效
       if (
         status &&
@@ -41,9 +51,22 @@ export class DeploymentIPCHandler {
         this.mainWindow &&
         !this.mainWindow.isDestroyed()
       ) {
-        this.mainWindow.webContents.send('deployment:statusChanged', status);
+        try {
+          this.mainWindow.webContents.send('deployment:statusChanged', status);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ IPC Handler: 状态已发送到渲染进程');
+          }
+        } catch (error) {
+          console.error('❌ IPC Handler: 发送状态到渲染进程失败:', error);
+        }
       } else if (!status) {
-        console.warn('IPC Handler: 收到无效的状态更新:', status);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ IPC Handler: 收到无效的状态更新:', status);
+        }
+      } else if (!this.mainWindow || this.mainWindow.isDestroyed()) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ IPC Handler: 主窗口不可用，无法发送状态更新');
+        }
       }
     });
   }
@@ -99,6 +122,19 @@ export class DeploymentIPCHandler {
         throw error;
       }
     });
+
+    // 添加 hosts 条目
+    ipcMain.handle(
+      'deployment:addHostsEntries',
+      async (event, domains: string[]) => {
+        try {
+          await this.localDeployHandler.addHostsEntries(domains);
+        } catch (error) {
+          console.error('添加 hosts 条目失败:', error);
+          throw error;
+        }
+      },
+    );
   }
 
   /**
@@ -110,5 +146,6 @@ export class DeploymentIPCHandler {
     ipcMain.removeHandler('deployment:stop');
     ipcMain.removeHandler('deployment:getStatus');
     ipcMain.removeHandler('deployment:cleanup');
+    ipcMain.removeHandler('deployment:addHostsEntries');
   }
 }

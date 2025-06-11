@@ -16,24 +16,18 @@
 
 // 等待 DOM 加载完成
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('部署服务连接器已加载（兼容性版本）');
-
   // 检查是否在 Electron 环境中
   if (
     typeof window.eulercopilotWelcome === 'undefined' ||
     typeof window.eulercopilotWelcome.deployment === 'undefined'
   ) {
-    console.warn('部署服务不可用，请在 Electron 环境中运行');
     return;
   }
-
-  console.log('部署服务 API 可用');
 });
 
 // 保留一些实用函数用于调试
 window.deploymentUtils = {
   getFormData: function () {
-    console.log('获取表单数据的实用函数（调试用）');
     return null;
   },
 

@@ -263,7 +263,13 @@ const handleConfirm = async () => {
       },
     };
 
-    console.log('开始部署，表单数据:', formData);
+    // 等待 TimeLine 组件挂载并设置好监听器
+    // 使用 nextTick 确保 DOM 更新完成，再给一点额外时间让监听器设置完成
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 800); // 给 TimeLine 组件足够时间挂载和设置监听器
+    });
 
     // 调用部署服务
     if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
