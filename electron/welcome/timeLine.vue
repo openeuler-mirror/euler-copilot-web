@@ -29,18 +29,18 @@
         }"
       >
         {{ activity.content }}
-        <span v-if="activity.type === 'running'">{{$t('localDeploy.installation')}}</span>
+        <span v-if="activity.type === 'running'">安装中</span>
       </el-card>
     </el-timeline-item>
   </el-timeline>
   <div class="submit-btn">
     <el-button v-if="allSuccess" type="primary" @click="handleFinish">
-      {{ $t('localDeploy.complete') }}
+      完成
     </el-button>
     <el-button v-else-if="hasFailed" type="primary" @click="handleRetry">
-      {{ $t('localDeploy.retry') }}
+      重试
     </el-button>
-    <el-button v-else type="primary" @click="handleStop">{{ $t('localDeploy.stopInstall') }}</el-button>
+    <el-button v-else type="primary" @click="handleStop">停止安装</el-button>
   </div>
 </template>
 <script lang="ts" setup>
@@ -48,23 +48,22 @@ import { computed } from 'vue';
 import successIcon from './assets/svgs/success.svg';
 import failedIcon from './assets/svgs/error.svg';
 import loadingIcon from './assets/svgs/upload-loading.svg';
-import i18n from './lang/index';
 
 const activities: any[] = [
   {
-    content: i18n.global.t('localDeploy.dataBase') ,
+    content: '数据库服务',
     type: 'running',
   },
   {
-    content: i18n.global.t('localDeploy.authHub'),
+    content: 'AuthHub 服务',
     // type: 'success',
   },
   {
-    content: i18n.global.t('localDeploy.intelligence'),
+    content: 'Intelligence 服务',
     // type: 'failed',
   },
   {
-    content: i18n.global.t('localDeploy.serviceLaunch'),
+    content: '配置文件初始化 & 服务启动',
     // type: 'success',
   },
 ];
