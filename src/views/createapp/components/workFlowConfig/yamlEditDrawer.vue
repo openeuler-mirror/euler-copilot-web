@@ -218,74 +218,74 @@ const updateNodeYaml = () => {
 :deep(.el-collapse-item__arrow .is-active) {
   top: 0px !important;
 }
-:deep(.el-collapse-item){
+:deep(.el-collapse-item) {
   margin-top: 0px;
 }
-:deep(.el-drawer__header){
-  padding:24px 24px 16px !important;
+:deep(.el-drawer__header) {
+  padding: 24px 24px 16px !important;
   margin-bottom: 0px;
 }
 .yamlMonacoEditor {
   height: 400px;
 }
-  :deep(.el-drawer__body) {
-    padding: 0px 24px 16px !important;
-    .drawerBody {
-      height: 100%;
-      .yamlContent {
-        .el-collapse-item__header {
-          padding: 0;
-          height: 22px;
-          line-height: 22px;
-          margin-bottom: 8px;
-          font-size: 14px;
-          display: flex;
-          gap: 4px;
-          span {
-            color: var(--o-text-color-primary);
-          }
-        }
-        .el-collapse-item__content {
-          margin-left: 20px;
-          .cm-editor {
-            .cm-lineNumbers {
-              .cm-gutterElement {
-                min-width: 31px;
-                padding-left: 0 0 0 9px;
-                text-align: center;
-              }
-            }
-            .cm-foldGutter {
-              padding-left: 0;
-            }
-          }
-          .baseInfo {
-            .el-form{
-              margin-top:0px
-            }
-            .el-form-item {
-              display: flex;
-              gap: 24px;
-              .el-form-item__label {
-                margin-left: -8px;
-                padding-right: 0px;
-              }
-              .el-form-item__content {
-                flex: 1;
-                .el-textarea__inner {
-                  height: 56px;
-                }
-              }
-            }
-          }
+:deep(.el-drawer__body) {
+  padding: 0px 24px 16px !important;
+  .drawerBody {
+    height: 100%;
+    .yamlContent {
+      .el-collapse-item__header {
+        padding: 0;
+        height: 22px;
+        line-height: 22px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        display: flex;
+        gap: 4px;
+        span {
+          color: var(--o-text-color-primary);
         }
       }
-      textarea {
-        width: 100%;
-        height: 100%;
+      .el-collapse-item__content {
+        margin-left: 20px;
+        .cm-editor {
+          .cm-lineNumbers {
+            .cm-gutterElement {
+              min-width: 31px;
+              padding-left: 0 0 0 9px;
+              text-align: center;
+            }
+          }
+          .cm-foldGutter {
+            padding-left: 0;
+          }
+        }
+        .baseInfo {
+          .el-form {
+            margin-top: 0px;
+          }
+          .el-form-item {
+            display: flex;
+            gap: 24px;
+            .el-form-item__label {
+              margin-left: -8px;
+              padding-right: 0px;
+            }
+            .el-form-item__content {
+              flex: 1;
+              .el-textarea__inner {
+                height: 56px;
+              }
+            }
+          }
+        }
       }
     }
+    textarea {
+      width: 100%;
+      height: 100%;
+    }
   }
+}
 .monacoEditorMask {
   .view-lines {
     position: relative;

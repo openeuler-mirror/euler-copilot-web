@@ -926,7 +926,6 @@ button[disabled]:hover {
   justify-content: space-between;
   min-width: 500px;
 
-
   &::before {
     content: '';
     width: 100%;
