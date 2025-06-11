@@ -40,6 +40,8 @@ export default function (opts: ConfigOptions) {
         sourceMap: sourcemap,
         noEmitOnError: true,
         include: compilationInclude,
+        target: 'ES2022', // 支持私有字段语法
+        lib: ['ES2022', 'DOM'], // 总是包含 DOM 库，因为 preload 文件需要访问 window
       }),
       alias({
         entries: {

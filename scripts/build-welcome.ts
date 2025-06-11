@@ -4,7 +4,13 @@ import vue from '@vitejs/plugin-vue';
 import chalk from 'chalk';
 import ora from 'ora';
 import minimist from 'minimist';
-import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import {
+  mkdirSync,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  copyFileSync,
+} from 'fs';
 
 const argv = minimist(process.argv.slice(2));
 const TAG = '[build-welcome.ts]';
@@ -40,10 +46,16 @@ const buildWelcome = async (watch = false) => {
       resolve: {
         alias: {
           '@': resolve(__dirname, '../src'),
+          // 添加别名让 deploy 能被正确解析
+          '@deploy': resolve(__dirname, '../electron/main/deploy'),
         },
       },
       define: {
         'process.env.NODE_ENV': watch ? '"development"' : '"production"',
+      },
+      // 确保 TypeScript 文件被正确处理
+      esbuild: {
+        target: 'es2020',
       },
     });
 
@@ -51,6 +63,20 @@ const buildWelcome = async (watch = false) => {
     const distDir = resolve(__dirname, '../dist/welcome');
     if (!existsSync(distDir)) {
       mkdirSync(distDir, { recursive: true });
+    }
+
+    // 复制 deployServiceConnector.js 文件
+    const connectorSrc = resolve(
+      __dirname,
+      '../electron/welcome/deployServiceConnector.js',
+    );
+    const connectorDest = resolve(distDir, 'deployServiceConnector.js');
+    if (existsSync(connectorSrc)) {
+      copyFileSync(connectorSrc, connectorDest);
+    } else {
+      console.warn(
+        `Warning: deployServiceConnector.js not found at ${connectorSrc}`,
+      );
     }
 
     // 读取原始 HTML 文件

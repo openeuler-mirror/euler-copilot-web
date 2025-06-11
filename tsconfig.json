@@ -29,7 +29,9 @@
     "paths": {
       "src*": ["src/*"],
       "@/*": ["src/*"],
-      "src/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "@deploy": ["electron/main/deploy"],
+      "@deploy/*": ["electron/main/deploy/*"]
     },
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
   },

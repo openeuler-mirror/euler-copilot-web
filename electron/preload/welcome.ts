@@ -11,6 +11,64 @@
 import { contextBridge } from 'electron';
 import { sharedConfigAPI, systemAPI, utilsAPI, safeIPC } from './shared';
 
+// 导入部署服务API
+const deploymentAPI = {
+  /**
+   * 从前端表单开始部署
+   */
+  startDeploymentFromForm: (formData: {
+    ruleForm: {
+      url: string;
+      modelName: string;
+      apiKey: string;
+    };
+    embeddingRuleForm: {
+      url: string;
+      modelName: string;
+      apiKey: string;
+    };
+  }): Promise<void> => {
+    return safeIPC.invoke('deployment:startFromForm', formData);
+  },
+
+  /**
+   * 停止部署
+   */
+  stopDeployment: (): Promise<void> => {
+    return safeIPC.invoke('deployment:stop');
+  },
+
+  /**
+   * 获取部署状态
+   */
+  getStatus: (): Promise<any> => {
+    return safeIPC.invoke('deployment:getStatus');
+  },
+
+  /**
+   * 监听部署状态变化
+   */
+  onStatusChange: (callback: (status: any) => void): void => {
+    safeIPC.on('deployment:statusChanged', (_event, status) => {
+      callback(status);
+    });
+  },
+
+  /**
+   * 移除状态变化监听器
+   */
+  removeStatusListener: (): void => {
+    safeIPC.removeAllListeners('deployment:statusChanged');
+  },
+
+  /**
+   * 清理部署文件
+   */
+  cleanup: (): Promise<void> => {
+    return safeIPC.invoke('deployment:cleanup');
+  },
+};
+
 /**
  * 欢迎界面专用的 preload 脚本
  * 提供配置管理和欢迎流程相关的 API，使用统一的后端验证接口
@@ -66,6 +124,9 @@ const welcomeAPI = {
 
   // 欢迎流程管理（专用实现）
   welcome: welcomeFlowAPI,
+
+  // 部署服务（新增）
+  deployment: deploymentAPI,
 
   // 系统信息（使用共享模块）
   system: systemAPI,

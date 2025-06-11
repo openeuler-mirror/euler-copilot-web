@@ -29,58 +29,214 @@
         }"
       >
         {{ activity.content }}
-        <span v-if="activity.type === 'running'">安装中</span>
+        <span v-if="activity.type === 'running'">
+          {{ $t('localDeploy.installation') }}
+        </span>
       </el-card>
     </el-timeline-item>
   </el-timeline>
   <div class="submit-btn">
     <el-button v-if="allSuccess" type="primary" @click="handleFinish">
-      完成
+      {{ $t('localDeploy.complete') }}
     </el-button>
     <el-button v-else-if="hasFailed" type="primary" @click="handleRetry">
-      重试
+      {{ $t('localDeploy.retry') }}
     </el-button>
-    <el-button v-else type="primary" @click="handleStop">停止安装</el-button>
+    <el-button v-else type="primary" @click="handleStop">
+      {{ $t('localDeploy.stopInstall') }}
+    </el-button>
   </div>
 </template>
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import successIcon from './assets/svgs/success.svg';
 import failedIcon from './assets/svgs/error.svg';
 import loadingIcon from './assets/svgs/upload-loading.svg';
+import i18n from './lang/index';
 
-const activities: any[] = [
+// 活动列表（与部署服务的步骤对应）
+const activities = ref([
   {
-    content: '数据库服务',
-    type: 'running',
+    content: '准备安装环境',
+    type: 'default', // default, running, success, failed
+    step: 'preparing-environment',
   },
   {
-    content: 'AuthHub 服务',
-    // type: 'success',
+    content: i18n.global.t('localDeploy.dataBase'),
+    type: 'default',
+    step: 'install-databases',
   },
   {
-    content: 'Intelligence 服务',
-    // type: 'failed',
+    content: i18n.global.t('localDeploy.authHub'),
+    type: 'default',
+    step: 'install-authhub',
   },
   {
-    content: '配置文件初始化 & 服务启动',
-    // type: 'success',
+    content: i18n.global.t('localDeploy.intelligence'),
+    type: 'default',
+    step: 'install-intelligence',
   },
-];
+]);
+
+// 部署状态
+const deploymentStatus = ref<any>({
+  status: 'idle',
+  message: '',
+  progress: 0,
+  currentStep: '',
+});
 
 // 计算属性：检查是否所有活动都成功
 const allSuccess = computed(() => {
-  return activities.every((activity) => activity.status === 'success');
+  return activities.value.every((activity) => activity.type === 'success');
 });
 
 // 计算属性：检查是否存在失败的活动
 const hasFailed = computed(() => {
-  return activities.some((activity) => activity.status === 'failed');
+  return activities.value.some((activity) => activity.type === 'failed');
 });
 
-const handleStop = () => {};
-const handleRetry = () => {};
-const handleFinish = () => {};
+// 更新活动状态
+const updateActivitiesStatus = (status: any) => {
+  const { currentStep } = status;
+
+  if (status.status === 'error') {
+    // 错误状态：所有未完成的步骤标记为失败
+    activities.value.forEach((activity) => {
+      if (activity.type !== 'success') {
+        activity.type = 'failed';
+      }
+    });
+    return;
+  }
+
+  if (status.status === 'success') {
+    // 成功状态：所有步骤标记为成功
+    activities.value.forEach((activity) => {
+      activity.type = 'success';
+    });
+    return;
+  }
+
+  // 根据当前步骤更新状态
+  activities.value.forEach((activity, activityIndex) => {
+    if (
+      currentStep === 'preparing-environment' ||
+      currentStep === 'installing-tools'
+    ) {
+      // 准备环境阶段
+      if (activityIndex === 0) {
+        activity.type = 'running';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'environment-ready') {
+      // 环境准备完成
+      if (activityIndex === 0) {
+        activity.type = 'success';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'install-databases') {
+      // 数据库服务安装中
+      if (activityIndex === 0) {
+        activity.type = 'success';
+      } else if (activityIndex === 1) {
+        activity.type = 'running';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'install-authhub') {
+      // AuthHub 服务安装中
+      if (activityIndex <= 1) {
+        activity.type = 'success';
+      } else if (activityIndex === 2) {
+        activity.type = 'running';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'install-intelligence') {
+      // Intelligence 服务安装中
+      if (activityIndex <= 2) {
+        activity.type = 'success';
+      } else if (activityIndex === 3) {
+        activity.type = 'running';
+      }
+    }
+  });
+};
+
+// 状态监听器
+const onDeploymentStatusChange = (status: any) => {
+  console.log('部署状态更新:', status);
+  deploymentStatus.value = status;
+  updateActivitiesStatus(status);
+};
+
+// 处理停止安装
+const handleStop = async () => {
+  try {
+    if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+      await window.eulercopilotWelcome.deployment.stopDeployment();
+    }
+  } catch (error) {
+    console.error('停止部署失败:', error);
+  }
+};
+
+// 处理重试
+const handleRetry = async () => {
+  try {
+    // 重置活动状态
+    activities.value.forEach((activity) => {
+      activity.type = 'default';
+    });
+
+    // 重新获取表单数据并重试（这里需要父组件传递表单数据）
+    console.log('重试部署...');
+
+    // 可以通过 emit 事件让父组件重新提交表单
+    // emit('retry');
+  } catch (error) {
+    console.error('重试部署失败:', error);
+  }
+};
+
+// 处理完成
+const handleFinish = () => {
+  // 可以通过 emit 事件通知父组件完成
+  console.log('部署完成');
+  // emit('finish');
+};
+
+// 组件挂载时设置监听器
+onMounted(() => {
+  if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+    // 监听部署状态变化
+    window.eulercopilotWelcome.deployment.onStatusChange(
+      onDeploymentStatusChange,
+    );
+
+    // 获取当前状态
+    window.eulercopilotWelcome.deployment
+      .getStatus()
+      .then((status) => {
+        if (status) {
+          onDeploymentStatusChange(status);
+        }
+      })
+      .catch((error) => {
+        console.error('获取部署状态失败:', error);
+      });
+  }
+});
+
+// 组件卸载时清理监听器
+onUnmounted(() => {
+  if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+    window.eulercopilotWelcome.deployment.removeStatusListener();
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -167,11 +323,6 @@ const handleFinish = () => {};
   /* 成功状态 - 绿色连接线 */
   :deep(.timeline-status-success .el-timeline-item__tail) {
     border-left-color: #67c23a !important;
-  }
-
-  /* 危险状态 - 红色连接线 */
-  :deep(.timeline-status-failed .el-timeline-item__tail) {
-    border-left-color: #f56c6c !important;
   }
 
   /* 主要状态 - 蓝色连接线 */

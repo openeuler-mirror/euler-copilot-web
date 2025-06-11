@@ -11,6 +11,7 @@
 import { BrowserWindow } from 'electron';
 import * as path from 'node:path';
 import { getConfigManager } from '../common/config';
+import { setDeploymentMainWindow } from '../common/ipc';
 
 /**
  * 欢迎窗口引用
@@ -60,6 +61,8 @@ export function createWelcomeWindow(): BrowserWindow {
   welcomeWindow.once('ready-to-show', () => {
     if (welcomeWindow && !welcomeWindow.isDestroyed()) {
       welcomeWindow.show();
+      // 设置部署服务的主窗口引用
+      setDeploymentMainWindow(welcomeWindow);
     }
   });
 

@@ -117,6 +117,7 @@
     "@dagrejs/dagre": "1.1.2",
     "@element-plus/icons-vue": "^2.3.1",
     "@microsoft/fetch-event-source": "^2.0.1",
+    "@types/js-yaml": "^4.0.9",
     "axios": "1.7.9",
     "codemirror": "^6.0.1",
     "dayjs": "1.11.9",

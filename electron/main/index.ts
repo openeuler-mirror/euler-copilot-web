@@ -25,7 +25,7 @@ import {
   unregisterAllShortcuts,
 } from './common/shortcuts';
 import { buildAppMenu } from './common/menu';
-import { registerIpcListeners } from './common/ipc';
+import { registerIpcListeners, cleanupDeploymentHandlers } from './common/ipc';
 
 // 允许本地部署时使用无效证书，仅在 Electron 主进程下生效
 if (process.versions.electron) {
@@ -73,6 +73,7 @@ app.on('will-quit', () => {
 
 app.on('window-all-closed', () => {
   ipcMain.removeAllListeners();
+  cleanupDeploymentHandlers();
   if (process.platform !== 'darwin') {
     app.quit();
   }
