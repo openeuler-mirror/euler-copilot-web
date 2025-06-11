@@ -98,10 +98,30 @@ const hasFailed = computed(() => {
 
 // 更新活动状态
 const updateActivitiesStatus = (status: any) => {
-  const { currentStep } = status;
+  // 防止 status 为 undefined 或 null
+  if (!status) {
+    return; // 如果状态无效，直接返回
+  }
+
+  // 开发模式下输出详细的状态更新信息
+  if (import.meta.env.DEV) {
+    console.group('🔧 updateActivitiesStatus 调用');
+    console.log('状态详情:', {
+      状态: status.status,
+      当前步骤: status.currentStep,
+      消息: status.message,
+    });
+    console.groupEnd();
+  }
+
+  // 安全地获取 currentStep，避免解构错误
+  const currentStep = status.currentStep || '';
 
   if (status.status === 'error') {
     // 错误状态：所有未完成的步骤标记为失败
+    if (import.meta.env.DEV) {
+      console.log('🚨 处理错误状态：将所有未完成步骤标记为失败');
+    }
     activities.value.forEach((activity) => {
       if (activity.type !== 'success') {
         activity.type = 'failed';
@@ -112,6 +132,9 @@ const updateActivitiesStatus = (status: any) => {
 
   if (status.status === 'success') {
     // 成功状态：所有步骤标记为成功
+    if (import.meta.env.DEV) {
+      console.log('✅ 处理成功状态：将所有步骤标记为成功');
+    }
     activities.value.forEach((activity) => {
       activity.type = 'success';
     });
@@ -125,6 +148,9 @@ const updateActivitiesStatus = (status: any) => {
       currentStep === 'installing-tools'
     ) {
       // 准备环境阶段
+      if (import.meta.env.DEV) {
+        console.log('📋 处理准备环境阶段');
+      }
       if (activityIndex === 0) {
         activity.type = 'running';
       } else {
@@ -132,6 +158,9 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'environment-ready') {
       // 环境准备完成
+      if (import.meta.env.DEV) {
+        console.log('✅ 处理环境准备完成');
+      }
       if (activityIndex === 0) {
         activity.type = 'success';
       } else {
@@ -139,6 +168,9 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'install-databases') {
       // 数据库服务安装中
+      if (import.meta.env.DEV) {
+        console.log('🗄️ 处理数据库服务安装');
+      }
       if (activityIndex === 0) {
         activity.type = 'success';
       } else if (activityIndex === 1) {
@@ -148,6 +180,9 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'install-authhub') {
       // AuthHub 服务安装中
+      if (import.meta.env.DEV) {
+        console.log('🔐 处理 AuthHub 服务安装');
+      }
       if (activityIndex <= 1) {
         activity.type = 'success';
       } else if (activityIndex === 2) {
@@ -157,10 +192,36 @@ const updateActivitiesStatus = (status: any) => {
       }
     } else if (currentStep === 'install-intelligence') {
       // Intelligence 服务安装中
+      if (import.meta.env.DEV) {
+        console.log('🧠 处理 Intelligence 服务安装');
+      }
       if (activityIndex <= 2) {
         activity.type = 'success';
       } else if (activityIndex === 3) {
         activity.type = 'running';
+      }
+    } else if (currentStep === 'completed') {
+      // 全部完成
+      if (import.meta.env.DEV) {
+        console.log('🎉 处理全部完成状态');
+      }
+      activities.value.forEach((act) => {
+        act.type = 'success';
+      });
+    } else if (currentStep === 'failed' || currentStep === 'stopped') {
+      // 失败或停止状态
+      if (import.meta.env.DEV) {
+        console.log('🛑 处理失败或停止状态');
+      }
+      activities.value.forEach((act) => {
+        if (act.type !== 'success') {
+          act.type = 'failed';
+        }
+      });
+    } else {
+      // 未知步骤
+      if (import.meta.env.DEV) {
+        console.warn(`❓ 未知的步骤: ${currentStep}`);
       }
     }
   });
@@ -168,9 +229,11 @@ const updateActivitiesStatus = (status: any) => {
 
 // 状态监听器
 const onDeploymentStatusChange = (status: any) => {
-  console.log('部署状态更新:', status);
-  deploymentStatus.value = status;
-  updateActivitiesStatus(status);
+  // 防止状态为 undefined 时的错误
+  if (status) {
+    deploymentStatus.value = status;
+    updateActivitiesStatus(status);
+  }
 };
 
 // 处理停止安装

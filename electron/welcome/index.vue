@@ -10,7 +10,11 @@
         <img :src="logoImage" alt="" />
       </div>
       <div class="welcome-detail-content">
-        <div class="welcome-detail-content-item" :class = "isLinux?'':'item-disabled'" @click="handleLocalDeploy">
+        <div
+          class="welcome-detail-content-item"
+          :class="isLinux ? '' : 'item-disabled'"
+          @click="handleLocalDeploy"
+        >
           <img :src="localDeployIcon" alt="" />
           <span class="welcome-detail-content-item-text">{{ $t('welcome.localDeploy') }}</span>
         </div>
@@ -32,36 +36,28 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, Ref } from 'vue';
+import { onMounted, Ref } from 'vue';
 import 'element-plus/dist/index.css';
 import logoImage from './assets/images/logo-euler-copilot.png';
 import welcomeBgImage from './assets/images/welcome_bg.webp';
 import localDeployIcon from './assets/svgs/local_deploy.svg';
 import onlineServiceIcon from './assets/svgs/online_service.svg';
 import closeIcon from './assets/svgs/close.svg';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import OnlineService from './onlineService.vue';
 import localDeploy from './localDeploy.vue';
 
 type activePageType = 'localDeploy' | 'onlineService' | 'welcome';
 const avtivePage: Ref<activePageType> = ref('welcome');
-  const platform = ref<'linux' | 'darwin' | 'windows' | 'unknown'>('unknown');
 
-onMounted(() => {
-  if (window.eulercopilotWelcome && window.eulercopilotWelcome.system) {
-    platform.value = window.eulercopilotWelcome.system.platform as 'linux' | 'darwin'| 'unknown';
-  } else {
-    const userAgent = navigator.userAgent;
-    if (userAgent.includes('Linux')) platform.value = 'linux';
-    else if (userAgent.includes('Mac')) platform.value = 'darwin';
-  }
-  console.log('系统平台:', platform.value);
+// 通过预加载脚本获取平台信息
+const isLinux = computed(() => {
+  return window.eulercopilotWelcome?.system?.platform === 'linux';
 });
 
-const isLinux = computed(() => ['linux', 'darwin'].includes(platform.value));
 // 处理本地部署选择
 const handleLocalDeploy = async () => {
-  if(!isLinux.value){
+  if (!isLinux.value) {
     return;
   }
   console.log('选择本地部署');
@@ -165,10 +161,9 @@ onMounted(() => {
         }
       }
 
-      .item-disabled{
+      .item-disabled {
         background-color: rgba(212, 212, 212, 0.7);
         cursor: not-allowed !important;
-        
       }
     }
   }

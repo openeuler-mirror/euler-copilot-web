@@ -52,6 +52,11 @@ const buildWelcome = async (watch = false) => {
       },
       define: {
         'process.env.NODE_ENV': watch ? '"development"' : '"production"',
+        // 为欢迎页面定义 process 对象，避免在渲染进程中访问 Node.js process
+        'process.platform': JSON.stringify(process.platform),
+        'process.arch': JSON.stringify(process.arch),
+        'process.versions': JSON.stringify(process.versions),
+        global: 'globalThis',
       },
       // 确保 TypeScript 文件被正确处理
       esbuild: {
