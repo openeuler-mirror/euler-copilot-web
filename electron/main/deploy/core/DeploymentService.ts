@@ -1227,8 +1227,15 @@ export class DeploymentService {
       // 创建临时文件写入内容，然后移动到 hosts 文件位置
       const tempFile = '/tmp/hosts_new';
 
-      // 写入新内容到临时文件，然后移动到 hosts 文件
-      const command = `${sudoCommand}bash -c 'echo "${newContent.replace(/'/g, "'\"'\"'")}" > ${tempFile} && mv ${tempFile} ${hostsPath}'`;
+      // 先将内容写入临时文件，避免直接在命令行中处理复杂的字符串转义
+      try {
+        fs.writeFileSync(tempFile, newContent);
+      } catch (error) {
+        throw new Error(`无法创建临时文件: ${error}`);
+      }
+
+      // 移动临时文件到 hosts 文件位置
+      const command = `${sudoCommand}bash -c 'mv ${tempFile} ${hostsPath}'`;
 
       await execAsyncWithAbort(
         command,
