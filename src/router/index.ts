@@ -46,7 +46,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
       {
         path: '/witchainD',
         name: 'witchainD',
-        children:[],  // 这里不要添加component内容，否则会导致iframe重复渲染
+        children: [], // 这里不要添加component内容，否则会导致iframe重复渲染
       },
       {
         path: '/settings',

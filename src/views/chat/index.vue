@@ -207,7 +207,11 @@ async function onSend(q: string) {
   if (!conversationId) {
     await api.createSession(p).then((res) => {
       localStorage.setItem('conversationId', res[1].result.conversationId);
-      queryStream(q, res[1].result.conversationId, language.value as 'zh' | 'en');
+      queryStream(
+        q,
+        res[1].result.conversationId,
+        language.value as 'zh' | 'en',
+      );
     });
   } else {
     queryStream(q, conversationId, language.value as 'zh' | 'en');
@@ -325,7 +329,12 @@ onBeforeUnmount(() => {
         </div>
         <Welcome class="welcome" v-else />
 
-        <Sender :is-streaming="isStreaming" @newChat="newChat" @send="onSend" class="sender" />
+        <Sender
+          :is-streaming="isStreaming"
+          @newChat="newChat"
+          @send="onSend"
+          class="sender"
+        />
       </div>
 
       <CommonFooter />

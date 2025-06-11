@@ -135,7 +135,7 @@ onMounted(() => {
 watch(
   () => currentSelectedSession.value,
   () => {
-    if(currentSelectedSession.value) {
+    if (currentSelectedSession.value) {
       currentLLM();
     }
   },
@@ -262,7 +262,7 @@ const handleNewChat = () => {
   app.value.selectedAppId = '';
   app.value.appId = '';
   createNewSession();
-}
+};
 
 const selectApp = (id) => {
   if (selectedAppId.value === id) {

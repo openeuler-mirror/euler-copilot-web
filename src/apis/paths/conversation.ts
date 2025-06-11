@@ -58,7 +58,7 @@ export const createSession = ({
     ),
   ]
 > => {
-  return post(BASE_URL,{appId,debug},{llm_id,kb_ids});
+  return post(BASE_URL, { appId, debug }, { llm_id, kb_ids });
 };
 
 /**

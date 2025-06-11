@@ -24,11 +24,11 @@ export interface HistorySessionItem {
   appId: string;
   debug: boolean;
   kbList: string[];
-  llm:{
+  llm: {
     icon: string;
     modelName: string;
     llmId: string;
-  }
+  };
 }
 
 export const useHistorySessionStore = defineStore(
@@ -96,7 +96,7 @@ export const useHistorySessionStore = defineStore(
       historySession.value.forEach((item) => {
         if (item.conversationId === currentSelectedSession.value) {
           selectLLM.value = item.llm;
-          if(item.appId){
+          if (item.appId) {
             app.value.appId = item.appId;
           }
         }
@@ -135,7 +135,7 @@ export const useHistorySessionStore = defineStore(
      * @returns
      */
     const getHistorySession = async (): Promise<void> => {
-      const conversationId = localStorage.getItem("conversationId");
+      const conversationId = localStorage.getItem('conversationId');
       const [err, res] = await api.getSessionRecord();
       const { conversationList } = storeToRefs(useSessionStore());
       if (!err && res) {
@@ -147,7 +147,8 @@ export const useHistorySessionStore = defineStore(
             title: item.title,
             docCount: item.docCount || 0,
             llm: item.llm || {},
-          })).filter((item) => item.conversationId !== conversationId);
+          }))
+          .filter((item) => item.conversationId !== conversationId);
         if (res.result.conversations.length === 0) {
           await generateSession();
           return;

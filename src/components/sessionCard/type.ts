@@ -19,14 +19,14 @@ export interface SessionItem {
   appId?: string;
   debug?: boolean;
   model?: AddedModalList;
-  llm?:{
+  llm?: {
     icon: string;
     modelName: string;
-  }
+  };
   kbList?: teamKnowledgeList[];
 }
 // 新增接口
-export interface modelItem  {
+export interface modelItem {
   icon: string;
   modelName: string;
 }

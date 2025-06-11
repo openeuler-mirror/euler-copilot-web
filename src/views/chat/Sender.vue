@@ -32,7 +32,7 @@ function onSendClick() {
 <template>
   <div class="sender">
     <div class="create-button" @click="emits('newChat')">
-      <img :src=CopilotIconSelected alt="" />
+      <img :src="CopilotIconSelected" alt="" />
     </div>
     <div class="chat-sender">
       <textarea

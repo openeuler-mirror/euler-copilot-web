@@ -11,17 +11,15 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
-import {
-  useHistorySessionStore,
-  useLangStore,
-} from 'src/store';
+import { useHistorySessionStore, useLangStore } from 'src/store';
 import {
   AppShowType,
   FlowDataType,
   MessageArray,
   type ConversationItem,
   type RobotConversationItem,
-  type UserConversationItem, FlowType,
+  type UserConversationItem,
+  FlowType,
 } from 'src/views/dialogue/types';
 import { api } from 'src/apis';
 import { successMsg } from 'src/components/Message';
@@ -30,7 +28,7 @@ import { Application } from 'src/apis/paths/type';
 import { handleAuthorize } from 'src/apis/tools';
 import $bus from 'src/bus/index';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
-import { getCookie } from "@/apis/tools";
+import { getCookie } from '@/apis/tools';
 import { getBaseProxyUrl } from 'src/utils/tools';
 
 export const echartsObj = ref({});
@@ -72,7 +70,7 @@ export const useSessionStore = defineStore('conversation', () => {
   const dataTransfers = {
     textAdd: (
       conversationItem: RobotConversationItem,
-      message: Record<string, unknown>
+      message: Record<string, unknown>,
     ) => {
       scrollToBottom();
       const content = (message.content || {}) as Record<string, string>;
@@ -85,31 +83,24 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     documentAdd: (
       conversationItem: RobotConversationItem,
-      message: Record<string, unknown>
+      message: Record<string, unknown>,
     ) => {
       conversationItem.message[conversationItem.currentInd] += message.content;
-      conversationItem.files = [
-        ...conversationItem.files,
-        message.content
-      ];
+      conversationItem.files = [...conversationItem.files, message.content];
     },
     suggestionFunc: (
       conversationItem: RobotConversationItem,
-      message: Record<string, unknown>
+      message: Record<string, unknown>,
     ) => {
       if (conversationItem.search_suggestions) {
-        conversationItem.search_suggestions.push(
-          Object(message.content),
-        );
+        conversationItem.search_suggestions.push(Object(message.content));
       } else {
-        conversationItem.search_suggestions = [
-          Object(message.content),
-        ];
+        conversationItem.search_suggestions = [Object(message.content)];
       }
     },
     flowStart: (
       conversationItem: RobotConversationItem,
-      message: Record<string, unknown>
+      message: Record<string, unknown>,
     ) => {
       const flow = (message.flow || {}) as Record<string, string>;
       conversationItem.flowdata = {
@@ -125,7 +116,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     stepInput: (
       conversationItem: RobotConversationItem,
-      message: Record<string, unknown>
+      message: Record<string, unknown>,
     ) => {
       const flow = (message.flow || {}) as Record<string, string>;
       conversationItem.flowdata?.data[0].push({
@@ -143,7 +134,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     stepOutput: (
       conversationItem: RobotConversationItem,
-      message: Record<string, unknown>
+      message: Record<string, unknown>,
     ) => {
       const flow = (message.flow || {}) as Record<string, string>;
       const metadata = (message.metadata || {}) as Record<string, unknown>;
@@ -155,10 +146,7 @@ export const useSessionStore = defineStore('conversation', () => {
         target.status = flow.stepStatus;
         // 工作流添加每阶段的时间耗时
         target['costTime'] = metadata.timeCost;
-        if (
-          flow.step_status === 'error' &&
-          conversationItem.flowdata
-        ) {
+        if (flow.step_status === 'error' && conversationItem.flowdata) {
           conversationItem.flowdata.status = flow.stepStatus;
         }
       }
@@ -166,7 +154,7 @@ export const useSessionStore = defineStore('conversation', () => {
     flowStop: (
       conversationItem: RobotConversationItem,
       message: Record<string, unknown>,
-      isFlowDebug: boolean
+      isFlowDebug: boolean,
     ) => {
       const content = (message.content || {}) as Record<string, unknown>;
       const contentFlow = (content.flow || {}) as Record<string, string>;
@@ -204,7 +192,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     dataDone: (
       conversationItem: RobotConversationItem,
-      isFlowDebug: boolean
+      isFlowDebug: boolean,
     ) => {
       if (excelPath.value.length > 0) {
         conversationItem.message[conversationItem.currentInd] +=
@@ -216,14 +204,14 @@ export const useSessionStore = defineStore('conversation', () => {
       if (isFlowDebug) {
         $bus.emit('debugChatEnd');
       }
-    }
-  }
+    },
+  };
 
   // chat message回调
   const handleMsgDataShow = (
     params: Record<string, unknown>,
     msgData: Record<string, unknown>,
-    conversationItem: RobotConversationItem
+    conversationItem: RobotConversationItem,
   ) => {
     if (isPaused.value) {
       // 手动暂停输出
@@ -296,108 +284,96 @@ export const useSessionStore = defineStore('conversation', () => {
       url: string,
       params: Record<string, unknown>,
       innerParams: Record<string, unknown>,
-      fetchParams: Record<string, unknown>
+      fetchParams: Record<string, unknown>,
     ) => {
       if (!params.type) {
-        await fetchEventSource(
-          url,
-          {
-            ...fetchParams,
-            body: JSON.stringify({
-              app: {
-                appId: params.user_selected_app,
-                auth: {},
-                flowId: params.user_selected_flow,
-                params: innerParams || {},
-              },
-              conversationId: params.conversationId,
-              features: features,
-              groupId: params.groupId,
-              language,
-              question: params.question,
-              // record_id: params.qaRecordId,
-            }),
-            openWhenHidden: true,
-          },
-        );
-        return;
-      }
-      // 新的工作流调试记录
-      await fetchEventSource(
-        url,
-        {
+        await fetchEventSource(url, {
           ...fetchParams,
           body: JSON.stringify({
             app: {
               appId: params.user_selected_app,
+              auth: {},
               flowId: params.user_selected_flow,
-              params: {},
+              params: innerParams || {},
             },
             conversationId: params.conversationId,
-            debug: true,
+            features: features,
+            groupId: params.groupId,
+            language,
             question: params.question,
+            // record_id: params.qaRecordId,
           }),
           openWhenHidden: true,
-        }
-      );
+        });
+        return;
+      }
+      // 新的工作流调试记录
+      await fetchEventSource(url, {
+        ...fetchParams,
+        body: JSON.stringify({
+          app: {
+            appId: params.user_selected_app,
+            flowId: params.user_selected_flow,
+            params: {},
+          },
+          conversationId: params.conversationId,
+          debug: true,
+          question: params.question,
+        }),
+        openWhenHidden: true,
+      });
     },
     fetchAppNew: async (
       url: string,
       params: Record<string, unknown>,
       innerParams: Record<string, unknown>,
-      fetchParams: Record<string, unknown>
+      fetchParams: Record<string, unknown>,
     ) => {
-      await fetchEventSource(
-        url,
-        {
-          ...fetchParams,
-          body: JSON.stringify({
-            app: {
-              appId: params.user_selected_app,
-              auth: {},
-              flowId: '',
-              params: innerParams || {},
-            },
-            conversationId: params.conversationId,
-            features: features,
-            language,
-            groupId: params.groupId,
-            question: params.question,
-            record_id: params.qaRecordId,
-          }),
-          openWhenHidden: true,
-        }
-      );
+      await fetchEventSource(url, {
+        ...fetchParams,
+        body: JSON.stringify({
+          app: {
+            appId: params.user_selected_app,
+            auth: {},
+            flowId: '',
+            params: innerParams || {},
+          },
+          conversationId: params.conversationId,
+          features: features,
+          language,
+          groupId: params.groupId,
+          question: params.question,
+          record_id: params.qaRecordId,
+        }),
+        openWhenHidden: true,
+      });
     },
     fetchDefault: async (
       url: string,
       params: Record<string, unknown>,
       innerParams: Record<string, unknown>,
-      fetchParams: Record<string, unknown>
+      fetchParams: Record<string, unknown>,
     ) => {
-      await fetchEventSource(
-        url,
-        {
-          ...fetchParams,
-          body: JSON.stringify({
-            app: {
-              appId: '',
-              flowId: '',
-              params: {},
-              auth: {},
-            },
-            conversationId: params.conversationId,
-            features: features,
-            groupId: params.groupId,
-            language,
-            question: params.question,
-            record_id: params.qaRecordId,
-          }),
-          openWhenHidden: true,
-        }
-      );
-    }
-  }
+      await fetchEventSource(url, {
+        ...fetchParams,
+        body: JSON.stringify({
+          app: {
+            appId: '',
+            flowId: '',
+            params: {},
+            auth: {},
+          },
+          conversationId: params.conversationId,
+          features: features,
+          groupId: params.groupId,
+          language,
+          question: params.question,
+          record_id: params.qaRecordId,
+        }),
+        openWhenHidden: true,
+      });
+    },
+  };
 
   const judgeResp = async (resp) => {
     const isServiceOk = await handleServiceStatus(resp.status);
@@ -411,7 +387,7 @@ export const useSessionStore = defineStore('conversation', () => {
       throw new Error(`HTTP error, body not exits`);
     }
     return true;
-  }
+  };
 
   /**
    * 请求流式数据
@@ -429,13 +405,13 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number,
   ): Promise<void> => {
-
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
     // 当前问答在整个问答记录中的索引 openEuler有什么ai特性
     const answerIndex = ind ?? conversationList.value.length - 1;
-    const conversationItem =
-      conversationList.value[answerIndex] as RobotConversationItem;
+    const conversationItem = conversationList.value[
+      answerIndex
+    ] as RobotConversationItem;
     controller = new AbortController();
 
     try {
@@ -463,7 +439,7 @@ export const useSessionStore = defineStore('conversation', () => {
           'Content-Type': 'application/json; charset=UTF-8',
           'X-CSRF-Token': getCookie('_csrf_tk') || '',
           // 从 localStorage 获取 ECSESSION 并设置 Authorization
-          ...(localEc ? {'Authorization': `Bearer ${localEc}`} : {})
+          ...(localEc ? { Authorization: `Bearer ${localEc}` } : {}),
         },
         body: {},
         onopen: async (response) => {
@@ -471,8 +447,8 @@ export const useSessionStore = defineStore('conversation', () => {
         },
         onmessage: async (ev) => {
           handleMsgDataShow(params, ev, conversationItem);
-        }
-      }
+        },
+      };
 
       if (params.user_selected_flow) {
         // 之前的对话历史记录
@@ -490,13 +466,17 @@ export const useSessionStore = defineStore('conversation', () => {
     } catch (err: any) {
       isPaused.value = true;
       isAnswerGenerating.value = false;
-      const targetItem = conversationList.value[answerIndex] as RobotConversationItem;
+      const targetItem = conversationList.value[
+        answerIndex
+      ] as RobotConversationItem;
       targetItem.isFinish = true;
       if (err.name === 'AbortError') {
         successMsg(i18n.global.t('feedback.stopSuccessful'));
         // targetItem.isFinish = true;
       } else {
-        targetItem.message[targetItem.currentInd] += i18n.global.t('feedback.systemBusy');
+        targetItem.message[targetItem.currentInd] += i18n.global.t(
+          'feedback.systemBusy',
+        );
       }
     }
   };
@@ -548,7 +528,9 @@ export const useSessionStore = defineStore('conversation', () => {
       });
     }
     if (regenerateInd) {
-      const targetItem = conversationList.value[regenerateInd] as RobotConversationItem;
+      const targetItem = conversationList.value[
+        regenerateInd
+      ] as RobotConversationItem;
       // 重新生成，指定某个回答，修改默认索引
       targetItem.message.push(''); //123
       // 重新生成，指定某个回答，修改默认索引
@@ -590,7 +572,7 @@ export const useSessionStore = defineStore('conversation', () => {
     let getStreamParams: Parameters<typeof getStream>[0] = {
       question,
       qaRecordId,
-      groupId
+      groupId,
     };
     if (user_selected_flow && user_selected_app) {
       getStreamParams = {
@@ -598,19 +580,16 @@ export const useSessionStore = defineStore('conversation', () => {
         user_selected_app: user_selected_app,
         user_selected_flow,
         params: params || undefined,
-        type: type
-      }
+        type: type,
+      };
     } else if (user_selected_app?.length) {
       getStreamParams = {
         ...getStreamParams,
         user_selected_app: user_selected_app,
         params: params || undefined,
-      }
+      };
     }
-    await getStream(
-      getStreamParams,
-      regenerateInd ?? undefined,
-    );
+    await getStream(getStreamParams, regenerateInd ?? undefined);
   };
 
   /**
@@ -623,7 +602,9 @@ export const useSessionStore = defineStore('conversation', () => {
     }
 
     isPaused.value = true;
-    const targetItem = conversationList.value[answerIdx] as RobotConversationItem;
+    const targetItem = conversationList.value[
+      answerIdx
+    ] as RobotConversationItem;
     targetItem.message[0] += '暂停生成';
     targetItem.isFinish = true;
     cancel();
@@ -644,7 +625,9 @@ export const useSessionStore = defineStore('conversation', () => {
     const answerInd = conversationList.value.findIndex(
       (val) => val.cid === cid,
     );
-    const answerItem = conversationList.value[answerInd] as RobotConversationItem;
+    const answerItem = conversationList.value[
+      answerInd
+    ] as RobotConversationItem;
     const question = (
       conversationList.value[answerInd - 1] as UserConversationItem
     ).message;
@@ -705,7 +688,7 @@ export const useSessionStore = defineStore('conversation', () => {
       conversationList.value = [];
       const cList = conversationList.value as RobotConversationItem[];
       res.result.records.forEach((record) => {
-        const targetRecord = cList.find(i => i.groupId === record.groupId);
+        const targetRecord = cList.find((i) => i.groupId === record.groupId);
         if (targetRecord) {
           // 这里用groupId找到的targetRecord中的message必为array（为string的情况不存在groupId）
           targetRecord.message.push(record.content.answer);
@@ -716,7 +699,7 @@ export const useSessionStore = defineStore('conversation', () => {
             record.comment,
           );
           if (targetRecord.currentInd !== undefined) {
-            targetRecord.currentInd ++;
+            targetRecord.currentInd++;
           }
           return;
         }
@@ -747,7 +730,9 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
-            flowdata: record?.flow ? (generateFlowData(record.flow) as FlowType) : undefined,
+            flowdata: record?.flow
+              ? (generateFlowData(record.flow) as FlowType)
+              : undefined,
           },
         );
         scrollToBottom();
@@ -786,8 +771,8 @@ export const useSessionStore = defineStore('conversation', () => {
     isPaused.value = true;
     (
       conversationList.value[
-      conversationList.value.length - 1
-        ] as RobotConversationItem
+        conversationList.value.length - 1
+      ] as RobotConversationItem
     ).isFinish = true;
     cancel();
     const resp = await api.stopGeneration();
@@ -814,6 +799,6 @@ export const useSessionStore = defineStore('conversation', () => {
     nextPage,
     reGenerateAnswer,
     getConversation,
-    cancel
+    cancel,
   };
 });

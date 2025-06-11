@@ -184,7 +184,11 @@ onMounted(() => {
   li {
     margin-bottom: 16px;
     .blue {
-      background: linear-gradient(to bottom, rgb(109, 117, 250), rgb(90, 179, 255));
+      background: linear-gradient(
+        to bottom,
+        rgb(109, 117, 250),
+        rgb(90, 179, 255)
+      );
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;

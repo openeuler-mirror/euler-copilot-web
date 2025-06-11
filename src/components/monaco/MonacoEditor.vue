@@ -63,7 +63,7 @@ onMounted(() => {
       enableSchemaRequest: true,
       isKubernetes: true,
     });
-     
+
     editor.value = monaco.editor.create(editorContainer.value, {
       value: props.yamlContent || '',
       language: 'yaml',

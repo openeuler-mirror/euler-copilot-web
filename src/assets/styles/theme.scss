@@ -2,8 +2,8 @@ body[theme='dark'] {
   --o-main-bg-color: #131415;
   --o-bg-image: url('../../assets/svgs/dark_background.svg');
   --no-work-flow: url('../../assets/images/dark_no_flow.png');
-  --o-question-color:#d3dce9;
-  --o-text-color-record-number:rgb(211, 220, 233);
+  --o-question-color: #d3dce9;
+  --o-text-color-record-number: rgb(211, 220, 233);
   --o-button-color: #576372;
   --o-button-border-color: #576372;
   --o-button-disable-color: #626d7c;
@@ -21,21 +21,31 @@ body[theme='dark'] {
   --flow-bg-color: #343a43;
   --o-bash-box-shadow: 0 4px 16px 0 rgba(255, 255, 255, 0.1);
   // 工作流开始节点结束背景渐变色
-  --flow-startEnd-bg: linear-gradient(rgba(132, 149, 253, 0.3),
-      rgba(104, 113, 129, 0.15),
-      rgba(52, 58, 67, 0));
-  --flow-system-bg: linear-gradient(rgba(113, 225, 229, 0.3),
-      rgba(97, 119, 121, 0.15),
-      rgba(52, 58, 67, 0));
-  --flow-apos-apollo-bg: linear-gradient(rgba(137, 212, 255, 0.3),
-      rgba(103, 111, 130, 0.15),
-      rgba(52, 58, 67, 0));
-  --flow-euler-copilot-tune-bg: linear-gradient(rgba(156, 237, 203, 0.3),
-      rgba(101, 125, 110, 0.15),
-      rgba(52, 58, 67, 0));
-  --flow-other-node-bg: linear-gradient(rgba(252, 154, 186, 0.3),
-      rgba(117, 99, 110, 0.15),
-      rgba(52, 58, 67, 0));
+  --flow-startEnd-bg: linear-gradient(
+    rgba(132, 149, 253, 0.3),
+    rgba(104, 113, 129, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-system-bg: linear-gradient(
+    rgba(113, 225, 229, 0.3),
+    rgba(97, 119, 121, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-apos-apollo-bg: linear-gradient(
+    rgba(137, 212, 255, 0.3),
+    rgba(103, 111, 130, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-euler-copilot-tune-bg: linear-gradient(
+    rgba(156, 237, 203, 0.3),
+    rgba(101, 125, 110, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-other-node-bg: linear-gradient(
+    rgba(252, 154, 186, 0.3),
+    rgba(117, 99, 110, 0.15),
+    rgba(52, 58, 67, 0)
+  );
   --flow-node-default-over-color: #25303e;
   --flow-node-boder-default-over: #314265;
   --flow-node-success-over-color: #1f312a;
@@ -47,10 +57,12 @@ body[theme='dark'] {
   --o-think-header-text: #e4e8ee;
   --el-drawer-bg-color: #000000;
   --el-bg-color: #1f2329;
-  --question-bg: linear-gradient(0deg,
-      rgb(47, 57, 66),
-      rgb(32, 35, 37) 33.232%,
-      rgb(41, 43, 55) 85.699%);
+  --question-bg: linear-gradient(
+    0deg,
+    rgb(47, 57, 66),
+    rgb(32, 35, 37) 33.232%,
+    rgb(41, 43, 55) 85.699%
+  );
   --el-collapse-header-bg: rgb(42, 47, 55);
   --el-collapse-border: rgb(62, 69, 81, 0.5);
   --el-collapse-content-bg: rgb(42, 47, 55, 0.5);
@@ -79,8 +91,8 @@ body[theme='light'] {
   --o-main-bg-color: #f1f8ff;
   --o-bg-image: url('../../assets/svgs/light_background.webp');
   --no-work-flow: url('../../assets/images/light_no_flow.png');
-  --o-question-color:#4e5865;
-  --o-text-color-record-number:rgb(78, 88, 101);
+  --o-question-color: #4e5865;
+  --o-text-color-record-number: rgb(78, 88, 101);
   --o-button-color: #c3cedf;
   --o-button-border-color: #d3dce9;
   --o-button-disable-color: #bfc7d7;
@@ -98,21 +110,31 @@ body[theme='light'] {
   --flow-bg-color: #fdfeff;
   --o-bash-box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
   // 工作流开始节点结束背景渐变色
-  --flow-startEnd-bg: linear-gradient(rgba(133, 148, 253, 0.3),
-      rgba(210, 231, 252, 0.15),
-      rgba(255, 255, 255, 0));
-  --flow-system-bg: linear-gradient(rgba(156, 237, 203, 0.3),
-      rgba(240, 253, 244, 0.15),
-      rgba(255, 255, 255, 0));
-  --flow-apos-apollo-bg: linear-gradient(rgba(137, 212, 255, 0.3),
-      rgba(230, 237, 255, 0.15),
-      rgba(255, 255, 255, 0));
-  --flow-euler-copilot-tune-bg: linear-gradient(rgba(156, 237, 203, 0.3),
-      rgba(240, 253, 248, 0.15),
-      rgba(255, 255, 255, 0));
-  --flow-other-node-bg: linear-gradient(rgba(252, 154, 186, 0.3),
-      rgba(253, 240, 248, 0.15),
-      rgba(255, 255, 255, 0));
+  --flow-startEnd-bg: linear-gradient(
+    rgba(133, 148, 253, 0.3),
+    rgba(210, 231, 252, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-system-bg: linear-gradient(
+    rgba(156, 237, 203, 0.3),
+    rgba(240, 253, 244, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-apos-apollo-bg: linear-gradient(
+    rgba(137, 212, 255, 0.3),
+    rgba(230, 237, 255, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-euler-copilot-tune-bg: linear-gradient(
+    rgba(156, 237, 203, 0.3),
+    rgba(240, 253, 248, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-other-node-bg: linear-gradient(
+    rgba(252, 154, 186, 0.3),
+    rgba(253, 240, 248, 0.15),
+    rgba(255, 255, 255, 0)
+  );
   --flow-node-boder-default-over: #c7d6f5;
   --flow-node-success-over-color: #e6f6e9;
   --flow-node-error-over-color: #f8e7e7;
@@ -124,7 +146,18 @@ body[theme='light'] {
   --el-collapse-header-bg: rgb(244, 246, 250);
   --el-collapse-border: rgb(223, 229, 239);
   --el-collapse-content-bg: rgb(244, 246, 250, 0.5);
-  --question-bg: linear-gradient(177.93deg, rgba(255, 255, 255, 0) -40.031%, rgba(255, 255, 255, 0.35) 1.263%, rgba(255, 255, 255)36.178%), linear-gradient(270deg, rgb(227, 242, 255, 0.5), rgb(195, 227, 255, 0.5) 33.232%, rgb(197, 203, 249, 0.5) 85.699%);
+  --question-bg: linear-gradient(
+      177.93deg,
+      rgba(255, 255, 255, 0) -40.031%,
+      rgba(255, 255, 255, 0.35) 1.263%,
+      rgba(255, 255, 255) 36.178%
+    ),
+    linear-gradient(
+      270deg,
+      rgb(227, 242, 255, 0.5),
+      rgb(195, 227, 255, 0.5) 33.232%,
+      rgb(197, 203, 249, 0.5) 85.699%
+    );
   --question-shadow: rgba(221, 225, 240, 0.5);
   --applist-hover: #f3f4f6;
   --flow-running-bg: linear-gradient(
@@ -148,7 +181,6 @@ body[theme='light'] {
 }
 
 body {
-
   // 这里替换下拉框的选中颜色，无论亮暗都是一致
   .el-select-dropdown__item.is-selected {
     background-color: #6395fd !important;
@@ -162,5 +194,5 @@ body {
     border-top: none !important;
     cursor: pointer;
   }
-  --o-border-radius-small: 4px
+  --o-border-radius-small: 4px;
 }

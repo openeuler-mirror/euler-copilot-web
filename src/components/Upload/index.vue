@@ -371,7 +371,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.el-collapse-item__title{
+.el-collapse-item__title {
   display: block;
   position: relative;
   left: 4px;
@@ -526,7 +526,7 @@ onMounted(() => {
     border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
   }
-  :deep(.el-collapse-item__wrap){
+  :deep(.el-collapse-item__wrap) {
     border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
   }

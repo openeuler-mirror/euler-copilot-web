@@ -16,7 +16,7 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-import questions from 'src/views/dialogue/constants'
+import questions from 'src/views/dialogue/constants';
 const { appList } = storeToRefs(useSessionStore());
 const { user_selected_app, selectLLM } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
@@ -225,8 +225,8 @@ watch(currentSelectedSession, async (newVal) => {
       .forEach((item) => {
         existUploadList.push(item);
         if (item.status !== UploadStatus.USED) {
-          if(isNewSession){
-            uploadFilesView.value.push(item as any)
+          if (isNewSession) {
+            uploadFilesView.value.push(item as any);
           }
         }
       });
@@ -373,7 +373,7 @@ const getPollingProcess = (sessionId) => {
           isStopPolling = false;
         }
       });
-      if(isStopPolling) {
+      if (isStopPolling) {
         stopPolling();
       }
     } else {
@@ -628,14 +628,20 @@ watch(
         ref="dialogueRef"
         v-if="!isCreateApp"
       >
-      <div v-if="user_selected_app?.length && conversationList.length !== 0" class="preTop">
-      <div class="preTopContent">
-        <img src="@/assets/svgs/myApp.svg" class="preTitleIcon" />
-        <div class="preMainAppName">
-          {{ appList?.filter((item) => item.appId === user_selected_app)[0]?.name }}
+        <div
+          v-if="user_selected_app?.length && conversationList.length !== 0"
+          class="preTop"
+        >
+          <div class="preTopContent">
+            <img src="@/assets/svgs/myApp.svg" class="preTitleIcon" />
+            <div class="preMainAppName">
+              {{
+                appList?.filter((item) => item.appId === user_selected_app)[0]
+                  ?.name
+              }}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
@@ -1243,101 +1249,101 @@ button[disabled]:hover {
   width: 100%;
 }
 .preTop {
-    width: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  // padding-left: calc(50% - 0px);
+  align-items: center;
+  position: relative;
+
+  .mcp-list {
+    position: absolute;
+    right: 103px;
+    font-size: 12px;
     display: flex;
-    justify-content: center;
-    // padding-left: calc(50% - 0px);
     align-items: center;
-    position: relative;
+    color: var(--o-text-color-tertiary);
 
-    .mcp-list {
-      position: absolute;
-      right: 103px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      color: var(--o-text-color-tertiary);
-
-      .mcp-item {
-        width: 24px;
-        height: 24px;
-        margin-left: 8px;
-        border-radius: 50%;
-      }
-    }
-
-    .preTopContent {
-      display: flex;
-      align-items: center;
-      height: 40px;
-      padding: 8px;
-      border-radius: 20px;
-      gap: 8px;
-      background: linear-gradient(
-        122.39deg,
-        rgba(109, 117, 250, 0.2) -20.158%,
-        rgba(90, 179, 255, 0.2) 112.459%
-      );
-      .preTitleIcon {
-        width: 32px;
-        height: 32px;
-      }
-      .preMainAppName {
-        font-size: 16px;
-        margin-right: 8px;
-        line-height: 24px;
-        color: var(--o-text-color-primary);
-        font-weight: 700;
-      }
+    .mcp-item {
+      width: 24px;
+      height: 24px;
+      margin-left: 8px;
+      border-radius: 50%;
     }
   }
+
+  .preTopContent {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 8px;
+    border-radius: 20px;
+    gap: 8px;
+    background: linear-gradient(
+      122.39deg,
+      rgba(109, 117, 250, 0.2) -20.158%,
+      rgba(90, 179, 255, 0.2) 112.459%
+    );
+    .preTitleIcon {
+      width: 32px;
+      height: 32px;
+    }
+    .preMainAppName {
+      font-size: 16px;
+      margin-right: 8px;
+      line-height: 24px;
+      color: var(--o-text-color-primary);
+      font-weight: 700;
+    }
+  }
+}
 .preTop {
-    width: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  // padding-left: calc(50% - 0px);
+  align-items: center;
+  position: relative;
+
+  .mcp-list {
+    position: absolute;
+    right: 103px;
+    font-size: 12px;
     display: flex;
-    justify-content: center;
-    // padding-left: calc(50% - 0px);
     align-items: center;
-    position: relative;
+    color: var(--o-text-color-tertiary);
 
-    .mcp-list {
-      position: absolute;
-      right: 103px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      color: var(--o-text-color-tertiary);
-
-      .mcp-item {
-        width: 24px;
-        height: 24px;
-        margin-left: 8px;
-        border-radius: 50%;
-      }
-    }
-
-    .preTopContent {
-      display: flex;
-      align-items: center;
-      height: 40px;
-      padding: 8px;
-      border-radius: 20px;
-      gap: 8px;
-      background: linear-gradient(
-        122.39deg,
-        rgba(109, 117, 250, 0.2) -20.158%,
-        rgba(90, 179, 255, 0.2) 112.459%
-      );
-      .preTitleIcon {
-        width: 32px;
-        height: 32px;
-      }
-      .preMainAppName {
-        font-size: 16px;
-        margin-right: 8px;
-        line-height: 24px;
-        color: var(--o-text-color-primary);
-        font-weight: 700;
-      }
+    .mcp-item {
+      width: 24px;
+      height: 24px;
+      margin-left: 8px;
+      border-radius: 50%;
     }
   }
+
+  .preTopContent {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 8px;
+    border-radius: 20px;
+    gap: 8px;
+    background: linear-gradient(
+      122.39deg,
+      rgba(109, 117, 250, 0.2) -20.158%,
+      rgba(90, 179, 255, 0.2) 112.459%
+    );
+    .preTitleIcon {
+      width: 32px;
+      height: 32px;
+    }
+    .preMainAppName {
+      font-size: 16px;
+      margin-right: 8px;
+      line-height: 24px;
+      color: var(--o-text-color-primary);
+      font-weight: 700;
+    }
+  }
+}
 </style>
