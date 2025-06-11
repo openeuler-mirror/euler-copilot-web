@@ -57,7 +57,7 @@ import i18n from './lang/index';
 // 活动列表（与部署服务的步骤对应）
 const activities = ref([
   {
-    content: '准备安装环境',
+    content: i18n.global.t('localDeploy.prepareEnv'),
     type: 'default', // default, running, success, failed
     step: 'preparing-environment',
   },
@@ -244,6 +244,15 @@ const handleStop = async () => {
     }
   } catch (error) {
     console.error('停止部署失败:', error);
+
+    // 即使停止失败，也要更新界面显示错误状态
+    const runningActivityIndex = activities.value.findIndex(
+      (activity) => activity.type === 'running',
+    );
+
+    if (runningActivityIndex !== -1) {
+      activities.value[runningActivityIndex].type = 'failed';
+    }
   }
 };
 
