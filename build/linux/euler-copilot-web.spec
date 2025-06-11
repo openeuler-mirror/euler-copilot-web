@@ -18,7 +18,7 @@ AutoReq: no
 BuildArch:        aarch64 x86_64
 Name:             euler-copilot-web
 Version:          0.9.6
-Release:          4%{?dist}
+Release:          5%{?dist}
 License:          MulanPSL-2.0
 Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
@@ -310,6 +310,9 @@ fi
 
 
 %changelog
+* Wed Jun 11 2025 openEuler <contact@openeuler.org> - 0.9.6-5
+- 修复桌面端 YAML 编辑器无法粘贴文本的问题
+
 * Wed Jun 11 2025 openEuler <contact@openeuler.org> - 0.9.6-4
 - 本地部署 & MCP 支持
 
