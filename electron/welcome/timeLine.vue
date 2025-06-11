@@ -177,8 +177,15 @@ const updateActivitiesStatus = (status: any) => {
     } else if (currentStep === 'failed' || currentStep === 'stopped') {
       // 失败或停止状态
       activities.value.forEach((act) => {
-        if (act.type !== 'success') {
+        if (act.type === 'running') {
           act.type = 'failed';
+        }
+      });
+    } else if (currentStep === 'idle') {
+      // 空闲状态
+      activities.value.forEach((act) => {
+        if (act.type !== 'success') {
+          act.type = 'default';
         }
       });
     } else {
