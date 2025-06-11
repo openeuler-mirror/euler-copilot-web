@@ -238,7 +238,7 @@ const handleCreateApp = async (appType: 'flow' | 'agent') => {
   }
 };
 
-const routerToDetail = async(appItem) => {
+const routerToDetail = async (appItem) => {
   if (!appItem.published) {
     //未发布应用不允许跳转
     return;
@@ -246,7 +246,7 @@ const routerToDetail = async(appItem) => {
   await createNewSession().finally(() => {
     //保证跳转后一定是一条选中的新会话
     router.push(`/?appId=${appItem.appId}&name=${appItem.name}`);
-  })
+  });
   currentSelectedSession.value = '';
 };
 

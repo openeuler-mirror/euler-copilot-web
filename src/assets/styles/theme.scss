@@ -1,9 +1,9 @@
 body[theme='dark'] {
-  --o-content-bg:linear-gradient(
-        to right,
-        rgba(109, 117, 250, 0.5),
-        rgba(90, 179, 255, 0.5)
-      );
+  --o-content-bg: linear-gradient(
+    to right,
+    rgba(109, 117, 250, 0.5),
+    rgba(90, 179, 255, 0.5)
+  );
   --o-main-bg-color: #131415;
   --o-bg-image: url('../../assets/svgs/dark_background.svg');
   --no-work-flow: url('../../assets/images/dark_no_flow.png');
@@ -93,11 +93,11 @@ body[theme='dark'] {
 }
 
 body[theme='light'] {
-  --o-content-bg:linear-gradient(
-        to right,
-        rgba(109, 117, 250, 0.2),
-        rgba(90, 179, 255, 0.2)
-      );
+  --o-content-bg: linear-gradient(
+    to right,
+    rgba(109, 117, 250, 0.2),
+    rgba(90, 179, 255, 0.2)
+  );
   --o-main-bg-color: #f1f8ff;
   --o-bg-image: url('../../assets/svgs/light_background.webp');
   --no-work-flow: url('../../assets/images/light_no_flow.png');
