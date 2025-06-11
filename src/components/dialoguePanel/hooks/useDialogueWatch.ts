@@ -14,20 +14,20 @@ export function useIslikeList(isLikeList: Ref<string[] | string | undefined>) {
       isSupport.value = false;
       isAgainst.value = true;
     }
-  };  
+  };
   /**
- * 反对
- * @param reason
- * @param reasionLink
- * @param reasonDescription
- */
-    watch(
-        () => isLikeList,
-        (val, oldVal) => {
-            handleIsLike();
-        },
-      );
-    return {
-        isLike,
-    }
+   * 反对
+   * @param reason
+   * @param reasionLink
+   * @param reasonDescription
+   */
+  watch(
+    () => isLikeList,
+    (val, oldVal) => {
+      handleIsLike();
+    },
+  );
+  return {
+    isLike,
+  };
 }

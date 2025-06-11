@@ -71,7 +71,10 @@ watch(
         :connectable-end="true"
       ></Handle>
       <div class="nodeSaEBorderBox">
-        <div v-if="props.data.name === '开始' || props.data.name === 'start'" class="saEIcon startIcon"></div>
+        <div
+          v-if="props.data.name === '开始' || props.data.name === 'start'"
+          class="saEIcon startIcon"
+        ></div>
         <div
           v-else-if="props.data.name === '结束' || props.data.name === 'end'"
           class="saEIcon endIcon"

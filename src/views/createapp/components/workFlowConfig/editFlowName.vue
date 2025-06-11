@@ -53,7 +53,7 @@
   </el-dialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch} from 'vue';
+import { ref, watch } from 'vue';
 import { api } from 'src/apis';
 import { ElMessage, FormInstance } from 'element-plus';
 import i18n from 'src/i18n';
@@ -71,7 +71,7 @@ const props = defineProps({
   },
   appId: {
     type: String,
-  }
+  },
 });
 const emits = defineEmits<{
   (e: 'handleClose', flowId?: string): void;
@@ -93,14 +93,15 @@ const onCancel = () => {
   workFlowData.value = {
     name: '',
     description: '',
-  }
-  emits('handleClose',flow.value.flowId);
+  };
+  emits('handleClose', flow.value.flowId);
 };
-watch(() => props.flowObj,
+watch(
+  () => props.flowObj,
   (val) => {
     flow.value = props.flowObj;
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 );
 const handleSubmit = (formEl: FormInstance | undefined) => {
   // 校验必填项是否填写
@@ -121,17 +122,22 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
       }
       flow.value.name = workFlowData.value.name;
       flow.value.description = workFlowData.value.description;
-      api.createOrUpdateFlowTopology({
-        appId : props.appId,
-        flowId: flow.value.flowId,
-      },{
-        flow: flow.value
-      }).then((res) => {
-        if (res[1].code === 200) {
-          emits('handleClose',flow.value.flowId);
-          isDisabled.value = false;
-        }
-      })
+      api
+        .createOrUpdateFlowTopology(
+          {
+            appId: props.appId,
+            flowId: flow.value.flowId,
+          },
+          {
+            flow: flow.value,
+          },
+        )
+        .then((res) => {
+          if (res[1].code === 200) {
+            emits('handleClose', flow.value.flowId);
+            isDisabled.value = false;
+          }
+        });
     }
   });
 };

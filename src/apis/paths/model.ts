@@ -55,7 +55,6 @@ const getModelProviderList = () => {
   >('/api/llm/provider');
 };
 
-
 const getAllModels = (searchKey: string) => {
   return get<{
     models: { modelId: string; modelName: string }[];

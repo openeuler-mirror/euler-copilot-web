@@ -144,16 +144,15 @@ export class MessageArray {
   }
 
   getCommentList(): string[] {
-    return this.items.map((item) => item.comment ? item.comment : 'none');
+    return this.items.map((item) => (item.comment ? item.comment : 'none'));
   }
 
   getCommentbyIndex(index: number): string {
-    return this.items.map((item) => item.comment ? item.comment : 'none')[index];
+    return this.items.map((item) => (item.comment ? item.comment : 'none'))[
+      index
+    ];
   }
-  changeCommentByIndex(
-    index: number,
-    comment: string,
-  ): void {
+  changeCommentByIndex(index: number, comment: string): void {
     this.items[index].comment = comment;
   }
 }

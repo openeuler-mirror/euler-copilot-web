@@ -145,14 +145,11 @@ watch(
                       class="loading-icon"
                     />
                     <span class="title">{{ secItem.title }}</span>
-                    <div v-if="secItem.costTime"
-                      class="time"
-                      >
-                    <span :class="`${secItem.status}Bg`"
-                    >
-                      {{ secItem.costTime.toFixed(3) }}s
-                    </span>
-                  </div>
+                    <div v-if="secItem.costTime" class="time">
+                      <span :class="`${secItem.status}Bg`">
+                        {{ secItem.costTime.toFixed(3) }}s
+                      </span>
+                    </div>
                   </div>
                 </template>
                 <template #icon="{ isActive }">
@@ -185,13 +182,12 @@ watch(
   </div>
 </template>
 <style lang="scss" scoped>
-:deep(.el-collapse-item__content){
+:deep(.el-collapse-item__content) {
   margin: 0px 16px 0px 0px !important;
 }
 </style>
 
 <style lang="scss" scope>
-
 .el-collapse-item:last-child {
   margin-bottom: 0px;
 }
@@ -233,7 +229,7 @@ watch(
 }
 .o-nest-collapse {
   .el-collapse-item:last-child {
-    border-bottom: none!important;
+    border-bottom: none !important;
   }
 }
 .title {
@@ -291,9 +287,8 @@ watch(
     margin-bottom: 2px !important;
   }
   :deep(.el-collapse-item__content) {
-  margin: 0px 16px 16px 0px !important;
-
-}
+    margin: 0px 16px 16px 0px !important;
+  }
 }
 .loading {
   display: flex;
@@ -347,26 +342,26 @@ watch(
   .time {
     padding: 0px 12px;
     margin-left: auto;
-    span{
-    padding: 0px 4px;
-    border-radius: 4px;
-    min-width: 44px;
-    width: fit-content;
-    border-radius: 4px;
-    font-size: 12px;
+    span {
+      padding: 0px 4px;
+      border-radius: 4px;
+      min-width: 44px;
+      width: fit-content;
+      border-radius: 4px;
+      font-size: 12px;
     }
   }
 }
-            .totalTime {
-              min-width: 54px;
-              width: fit-content;
-              padding: 0px 8px;
-              height: 16px;
-              line-height: 16px;
-              font-size: 12px;
-              border-radius: 4px;
-            }
-            .totalTime.errorBg {
-              background-color: rgba(227, 32, 32, 0.2);
-            }
+.totalTime {
+  min-width: 54px;
+  width: fit-content;
+  padding: 0px 8px;
+  height: 16px;
+  line-height: 16px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.totalTime.errorBg {
+  background-color: rgba(227, 32, 32, 0.2);
+}
 </style>

@@ -2,7 +2,6 @@
 @import './message.scss';
 @import './theme.scss';
 
-
 // Linux平台窗口圆角和阴影样式
 html.platform-linux {
   width: 100vw;
@@ -24,7 +23,7 @@ html.platform-linux {
       border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   #app {
     border-radius: 12px;
     overflow: hidden;
@@ -39,13 +38,14 @@ html.platform-linux {
     left: 16px !important;
     border-radius: 12px;
   }
-  
+
   // 窗口最大化状态下取消圆角和阴影
   &.window-maximized {
     padding: 0 !important;
     // 保持过渡动画一致性
     transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    body, #app {
+    body,
+    #app {
       width: 100vw !important;
       height: 100vh !important;
       border-radius: 0 !important;

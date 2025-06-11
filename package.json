@@ -20,7 +20,7 @@
     "build:micro": "vite build --mode micro",
     "preview": "vite preview",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/",
+    "format": "prettier --write src/ electron/ scripts/",
     "type-check": "tsc --noEmit",
     "dev:render": "vite",
     "dev:preload": "node -r ts-node/register scripts/build-preload --env=development --watch",

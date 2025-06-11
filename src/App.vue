@@ -13,7 +13,6 @@ onMounted(() => {
   if (window.electronProcess?.platform === 'linux') {
     isLinuxPlatform.value = true;
   }
-  
 });
 </script>
 
@@ -26,7 +25,7 @@ onMounted(() => {
     <LinuxTitleBar v-if="isLinuxPlatform" />
 
     <router-view />
-    </div>
+  </div>
 </template>
 
 <style lang="scss" scoped>

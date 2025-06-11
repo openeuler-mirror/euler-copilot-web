@@ -22,14 +22,14 @@ export const updateKnowledgeList = ({
   conversationId: string;
 }): Promise<[any, FcResponse<{}> | undefined]> => {
   let kbIds = kb_ids;
-  return put('/api/knowledge', { kbIds } , { conversationId });
+  return put('/api/knowledge', { kbIds }, { conversationId });
 };
 
-export const getConvKnowledgeList = (params:{
+export const getConvKnowledgeList = (params: {
   conversationId: string;
   kbName?: string;
 }): Promise<[any, FcResponse<{}> | undefined]> => {
-  return get('/api/knowledge',params);
+  return get('/api/knowledge', params);
 };
 
 export const knowledgeApi = {

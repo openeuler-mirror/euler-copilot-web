@@ -69,17 +69,17 @@ const handleKnowledgeList = async () => {
   });
   if (!_ && res && res.code === 200) {
     availableitems.value = res.result.teamKbList;
-      availableitems.value.forEach((item) => {
-        item.kb_list.forEach((kb) => {
-          if (kb.isUsed === true) {
-            selectedTags.value.push(kb);
-          }
-        });
+    availableitems.value.forEach((item) => {
+      item.kb_list.forEach((kb) => {
+        if (kb.isUsed === true) {
+          selectedTags.value.push(kb);
+        }
       });
-      emit(
-    'updateValue',
-    selectedTags.value.map((item) => item.kbId),
-  );
+    });
+    emit(
+      'updateValue',
+      selectedTags.value.map((item) => item.kbId),
+    );
     activeNames.value = res.result.teamKbList.map((item) => item.teamName);
   }
 };
@@ -149,8 +149,13 @@ const checkTagsOverflow = () => {
     <div class="multi-select-box">
       <div class="select-content">
         <div class="label-text" @click="toggleModal">
-          <img class="label-img" style="width: 16px" src="@/assets/svgs/dark_knowledge.svg" alt="" />
-          <span>{{ $t('witChainD.knowledge')}}</span>
+          <img
+            class="label-img"
+            style="width: 16px"
+            src="@/assets/svgs/dark_knowledge.svg"
+            alt=""
+          />
+          <span>{{ $t('witChainD.knowledge') }}</span>
         </div>
         <div v-if="selectedTags.length" class="tags-container">
           <div v-for="(tag, index) in selectedTags" :key="index" class="tag">
@@ -170,7 +175,7 @@ const checkTagsOverflow = () => {
     <transition name="slide">
       <div v-if="isModalOpen" class="global-tag-modal">
         <div class="modal-header">
-          <h3>{{ $t('witChainD.knowledge')}}</h3>
+          <h3>{{ $t('witChainD.knowledge') }}</h3>
           <button class="close-button" @click="toggleModal">×</button>
         </div>
         <div class="multi-select-list">
