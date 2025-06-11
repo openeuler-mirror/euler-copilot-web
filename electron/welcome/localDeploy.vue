@@ -51,6 +51,11 @@
         <el-input
           :placeholder="$t('welcome.pleaseInput')"
           v-model="ruleForm.url"
+          @focus="inputFocusStates.llmUrl = true"
+          @blur="
+            inputFocusStates.llmUrl = false;
+            autoValidateModels();
+          "
         />
       </el-form-item>
       <el-form-item
@@ -61,6 +66,11 @@
         <el-input
           :placeholder="$t('welcome.pleaseInput')"
           v-model="ruleForm.modelName"
+          @focus="inputFocusStates.llmModelName = true"
+          @blur="
+            inputFocusStates.llmModelName = false;
+            autoValidateModels();
+          "
         />
       </el-form-item>
       <el-form-item
@@ -71,6 +81,11 @@
         <el-input
           :placeholder="$t('welcome.pleaseInput')"
           v-model="ruleForm.apiKey"
+          @focus="inputFocusStates.llmApiKey = true"
+          @blur="
+            inputFocusStates.llmApiKey = false;
+            autoValidateModels();
+          "
         />
       </el-form-item>
     </el-form>
@@ -116,6 +131,11 @@
         <el-input
           :placeholder="$t('welcome.pleaseInput')"
           v-model="embeddingRuleForm.url"
+          @focus="inputFocusStates.embeddingUrl = true"
+          @blur="
+            inputFocusStates.embeddingUrl = false;
+            autoValidateModels();
+          "
         >
           <template #suffix>
             <el-tooltip
@@ -139,6 +159,11 @@
         <el-input
           :placeholder="$t('welcome.pleaseInput')"
           v-model="embeddingRuleForm.modelName"
+          @focus="inputFocusStates.embeddingModelName = true"
+          @blur="
+            inputFocusStates.embeddingModelName = false;
+            autoValidateModels();
+          "
         />
       </el-form-item>
       <el-form-item
@@ -149,6 +174,11 @@
         <el-input
           :placeholder="$t('welcome.pleaseInput')"
           v-model="embeddingRuleForm.apiKey"
+          @focus="inputFocusStates.embeddingApiKey = true"
+          @blur="
+            inputFocusStates.embeddingApiKey = false;
+            autoValidateModels();
+          "
         />
       </el-form-item>
     </el-form>
@@ -209,6 +239,16 @@ const embeddingRuleFormRef = ref<FormInstance>();
 const isConfirmDisabled = ref(true);
 const isTimeLine = ref(false);
 
+// 输入框焦点状态跟踪
+const inputFocusStates = ref({
+  llmUrl: false,
+  llmModelName: false,
+  llmApiKey: false,
+  embeddingUrl: false,
+  embeddingModelName: false,
+  embeddingApiKey: false,
+});
+
 // 模型验证状态
 const llmValidationStatus = ref<'none' | 'validating' | 'success' | 'error'>(
   'none',
@@ -251,25 +291,95 @@ const rules = reactive<FormRules<RuleForm>>({
   ],
 });
 
+// 检查是否所有字段都填写完整
+const isAllFieldsFilled = () => {
+  return (
+    ruleForm.url &&
+    ruleForm.modelName &&
+    ruleForm.apiKey &&
+    embeddingRuleForm.url &&
+    embeddingRuleForm.modelName &&
+    embeddingRuleForm.apiKey
+  );
+};
+
+// 检查是否有输入框处于焦点状态
+const hasInputFocus = () => {
+  return Object.values(inputFocusStates.value).some((state) => state);
+};
+
+// 自动验证模型
+const autoValidateModels = async () => {
+  if (!isAllFieldsFilled() || hasInputFocus()) {
+    return;
+  }
+
+  // 重置验证状态
+  llmValidationStatus.value = 'validating';
+  embeddingValidationStatus.value = 'validating';
+
+  try {
+    // 校验 LLM
+    const llmResult = await validateOpenAIModel(
+      ruleForm.url,
+      ruleForm.apiKey,
+      ruleForm.modelName,
+      true,
+    );
+
+    if (llmResult.success) {
+      llmValidationStatus.value = 'success';
+    } else {
+      llmValidationStatus.value = 'error';
+      showValidationError('llm', llmResult.type || 'unknown');
+    }
+
+    // 校验 Embedding 模型
+    const embeddingResult = await validateOpenAIModel(
+      embeddingRuleForm.url,
+      embeddingRuleForm.apiKey,
+      embeddingRuleForm.modelName,
+      false,
+    );
+
+    if (embeddingResult.success) {
+      embeddingValidationStatus.value = 'success';
+    } else {
+      embeddingValidationStatus.value = 'error';
+      showValidationError('embedding', embeddingResult.type || 'unknown');
+    }
+  } catch (error) {
+    console.error('Model validation error:', error);
+    llmValidationStatus.value = 'error';
+    embeddingValidationStatus.value = 'error';
+  }
+};
+
 watch(
   [() => ruleForm, () => embeddingRuleForm],
-  ([newRuleForm, newEmbeddingRuleForm]) => {
-    // 检查所有必填字段是否都有值
-    const isRuleFormValid =
-      newRuleForm.url && newRuleForm.modelName && newRuleForm.apiKey;
-    const isEmbeddingRuleFormValid =
-      newEmbeddingRuleForm.url &&
-      newEmbeddingRuleForm.modelName &&
-      newEmbeddingRuleForm.apiKey;
-
-    // 如果两个表单都有效，则启用按钮
-    isConfirmDisabled.value = !(isRuleFormValid && isEmbeddingRuleFormValid);
-
+  () => {
     // 当表单数据变化时，重置验证状态
     llmValidationStatus.value = 'none';
     embeddingValidationStatus.value = 'none';
+
+    // 延迟执行验证，避免在用户还在输入时触发
+    setTimeout(() => {
+      autoValidateModels();
+    }, 500);
   },
-  { immediate: true, deep: true }, // 立即执行一次初始检查
+  { immediate: true, deep: true },
+);
+
+// 监听验证状态变化，更新提交按钮状态
+watch(
+  [llmValidationStatus, embeddingValidationStatus],
+  ([llmStatus, embeddingStatus]) => {
+    // 只有当两个模型都验证成功时才启用提交按钮
+    isConfirmDisabled.value = !(
+      llmStatus === 'success' && embeddingStatus === 'success'
+    );
+  },
+  { immediate: true },
 );
 
 const copyText = (ruleForm: RuleForm) => {
@@ -475,85 +585,16 @@ const showValidationError = (modelType: string, errorType: string) => {
     type: 'error',
   });
 };
-const validateForm = async () => {
-  // 首先进行基础表单校验
-  const [ruleFormValid] = await new Promise<[boolean, any]>((resolve) => {
-    ruleFormRef.value?.validate((valid, fields) => resolve([valid, fields]));
-  });
-
-  const [embeddingRuleFormValid] = await new Promise<[boolean, any]>(
-    (resolve) => {
-      embeddingRuleFormRef.value?.validate((valid, fields) =>
-        resolve([valid, fields]),
-      );
-    },
-  );
-
-  if (!ruleFormValid || !embeddingRuleFormValid) {
-    return false;
-  }
-
-  // 重置验证状态
-  llmValidationStatus.value = 'validating';
-  embeddingValidationStatus.value = 'validating';
-
-  let validationSuccess = true;
-
-  try {
-    // 校验 LLM
-    const llmResult = await validateOpenAIModel(
-      ruleForm.url,
-      ruleForm.apiKey,
-      ruleForm.modelName,
-      true,
-    );
-
-    if (llmResult.success) {
-      llmValidationStatus.value = 'success';
-    } else {
-      llmValidationStatus.value = 'error';
-      showValidationError('llm', llmResult.type || 'unknown');
-      validationSuccess = false;
-    }
-
-    // 校验 Embedding 模型
-    const embeddingResult = await validateOpenAIModel(
-      embeddingRuleForm.url,
-      embeddingRuleForm.apiKey,
-      embeddingRuleForm.modelName,
-      false,
-    );
-
-    if (embeddingResult.success) {
-      embeddingValidationStatus.value = 'success';
-    } else {
-      embeddingValidationStatus.value = 'error';
-      showValidationError('embedding', embeddingResult.type || 'unknown');
-      validationSuccess = false;
-    }
-  } catch (error) {
-    console.error('Model validation error:', error);
-    llmValidationStatus.value = 'error';
-    embeddingValidationStatus.value = 'error';
-    validationSuccess = false;
-
-    ElMessageBox.alert(
-      i18n.global.t('localDeploy.modelError'),
-      i18n.global.t('localDeploy.validationFailed'),
-      {
-        confirmButtonText: i18n.global.t('welcome.confirm'),
-        type: 'error',
-      },
-    );
-  }
-
-  return validationSuccess;
-};
 
 const handleConfirm = async () => {
   if (!ruleFormRef.value || !embeddingRuleFormRef.value) return;
-  const isValid = await validateForm();
-  if (!isValid) {
+
+  // 由于按钮只有在验证成功时才会启用，所以这里不需要再次验证
+  // 但为了安全起见，还是检查一下验证状态
+  if (
+    llmValidationStatus.value !== 'success' ||
+    embeddingValidationStatus.value !== 'success'
+  ) {
     return;
   }
 
