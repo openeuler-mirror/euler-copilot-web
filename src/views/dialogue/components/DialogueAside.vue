@@ -540,7 +540,6 @@ watch(
 }
 :deep(.el-collapse-item__arrow.is-active) {
   transform: rotate(90deg);
-  padding-left: 3px;
 }
 :deep(.el-collapse-item__content) {
   border-bottom: none;
