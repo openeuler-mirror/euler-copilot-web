@@ -22,7 +22,7 @@
   </teleport>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits, watch } from 'vue';
+import { ref, watch } from 'vue';
 import UploadCard from 'src/components/uploadFile/UploadCard.vue';
 
 export type DropPostion = {
@@ -116,26 +116,6 @@ const handleLeave = () => {
       margin-bottom: 0;
     }
   }
-}
-
-/* 滚动条轨道样式 */
-::-webkit-scrollbar-track {
-  background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
-  display: none;
-}
-
-::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
-}
-
-/* 滚动条的滑块 */
-::-webkit-scrollbar-thumb {
-  background-color: #c3cedf;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-corner {
-  background: transparent;
 }
 
 /* transition 动画 */

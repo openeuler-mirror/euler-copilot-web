@@ -1,7 +1,6 @@
 .createAppContainer {
-  width: 100%;
   color: var(--o-text-color-secondary);
-  padding: 16px 24px 24px;
+  padding: 18px 24px 24px;
   display: flex;
   height: 100%;
   flex-direction: column;
@@ -86,6 +85,7 @@
     flex: 1;
     max-height: calc(100% - 112px);
     background-color: var(--o-bg-color-base);
+    border-radius: 8px;
   }
 
   .createWorkFlowContainerMain {
@@ -140,7 +140,7 @@
     .activeCollapse.baseInfoTitle {
       color: var(--o-text-color-primary);
     }
-      
+
     .el-collapse-item__arrow {
       color: #8d98aa;
       margin-left: 8px;
@@ -285,7 +285,6 @@
           width: 420px;
           height: 252px;
           padding: 8px 0px 0px;
-          margin-top: 4px;
           display: flex;
           gap: 4px;
           .permissionChoice {

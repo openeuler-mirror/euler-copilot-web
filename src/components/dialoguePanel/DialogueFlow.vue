@@ -58,19 +58,19 @@ watch(
                 v-if="props.flowdata.status === 'running'"
                 src="@/assets/images/loading.png"
                 alt=""
-                class="loading-icon"
+                class="loading-animeIcon"
               />
               <img
                 v-if="props.flowdata.status === 'success'"
                 src="@/assets/images/flow_success.png"
                 alt=""
-                class="o-collapse-icon"
+                class="loading-icon"
               />
               <img
                 v-if="props.flowdata.status === 'error'"
                 src="@/assets/images/flow_fail.png"
                 alt=""
-                class="o-collapse-icon"
+                class="loading-icon"
               />
               <div v-if="!props.isWorkFlowDebug" class="loading-text">
                 {{ props.flowdata.title }}
@@ -90,13 +90,14 @@ watch(
                   {{ totalTime?.toFixed(3) }}s
                 </div>
               </div>
+              <div class="loading-progress">{{ props.flowdata.progress }}</div>
             </div>
-            <div class="loading-progress">{{ props.flowdata.progress }}</div>
+          </template>
+          <template #icon="{ isActive }">
             <el-icon
               class="el-collapse-item__arrow"
               :class="{ 'is-active': activeNames.includes(item.id) }"
             >
-              <!-- <i class="el-icon-edit"></i> -->
               <img
                 src="@/assets/images/flow_arrow.png"
                 alt=""
@@ -124,47 +125,44 @@ watch(
                 :name="secItem.id"
               >
                 <template #title>
-                  <img
-                    v-if="secItem.status === 'running'"
-                    src="@/assets/images/loading.png"
-                    alt=""
-                    class="loading-icon"
-                  />
-                  <img
-                    v-if="secItem.status === 'success'"
-                    src="@/assets/images/flow_success.png"
-                    alt=""
-                    class="o-collapse-icon"
-                  />
-                  <img
-                    v-if="secItem.status === 'error'"
-                    src="@/assets/images/flow_fail.png"
-                    alt=""
-                    class="o-collapse-icon"
-                  />
+                  <div class="loading">
+                    <img
+                      v-if="secItem.status === 'running'"
+                      src="@/assets/images/loading.png"
+                      alt=""
+                      class="loading-animeIcon"
+                    />
+                    <img
+                      v-if="secItem.status === 'success'"
+                      src="@/assets/images/flow_success.png"
+                      alt=""
+                      class="loading-icon"
+                    />
+                    <img
+                      v-if="secItem.status === 'error'"
+                      src="@/assets/images/flow_fail.png"
+                      alt=""
+                      class="loading-icon"
+                    />
+                    <span class="title">{{ secItem.title }}</span>
+                    <div v-if="secItem.costTime" class="time">
+                      <span :class="`${secItem.status}Bg`">
+                        {{ secItem.costTime.toFixed(3) }}s
+                      </span>
+                    </div>
+                  </div>
+                </template>
+                <template #icon="{ isActive }">
                   <el-icon
                     class="el-collapse-item__arrow"
-                    :class="{
-                      'is-active': secondCollapseActiveName.includes(
-                        secItem.id,
-                      ),
-                    }"
+                    :class="{ 'is-active': activeNames.includes(item.id) }"
                   >
-                    <!-- <i class="el-icon-edit"></i> -->
                     <img
                       src="@/assets/images/flow_arrow.png"
                       alt=""
                       class="o-collapse-icon"
                     />
                   </el-icon>
-                  <span class="title">{{ secItem.title }}</span>
-                  <span
-                    v-if="secItem.costTime"
-                    class="time"
-                    :class="`${secItem.status}Bg`"
-                  >
-                    {{ secItem.costTime.toFixed(3) }}s
-                  </span>
                 </template>
                 <div
                   v-for="(desc, index) in secItem.data"
@@ -183,12 +181,13 @@ watch(
     </section>
   </div>
 </template>
-
-<style lang="scss">
-.el-collapse-item__content {
-  margin: 0px 16px 16px 16px;
+<style lang="scss" scoped>
+:deep(.el-collapse-item__content) {
+  margin: 0px 16px 0px 0px !important;
 }
+</style>
 
+<style lang="scss" scope>
 .el-collapse-item:last-child {
   margin-bottom: 0px;
 }
@@ -205,6 +204,7 @@ watch(
   border-radius: 0px !important;
 }
 .o-collapse-icon {
+  align-self: center;
   padding: 0px;
   margin-left: 0px;
   margin-right: 8px;
@@ -227,6 +227,11 @@ watch(
     background-color: var(--o-bg-color-light2) !important;
   }
 }
+.o-nest-collapse {
+  .el-collapse-item:last-child {
+    border-bottom: none !important;
+  }
+}
 .title {
   .el-collapse-item__wrap {
     background-color: var(--o-bg-color-light2);
@@ -245,15 +250,19 @@ watch(
   }
   .el-collapse-item__arrow.is-active {
     transform: rotate(90deg);
-    top: 3px;
     padding-left: 3px;
   }
+}
+.el-collapse-item__arrow.is-active {
+  transform: rotate(90deg);
+  padding-left: 3px;
 }
 .el-collapse-item__arrow {
   margin: 0px;
 }
 .loading-progress {
   margin-right: 8px;
+  padding-right: 8px;
 }
 
 .border-red {
@@ -268,25 +277,23 @@ watch(
   border: 1px solid rgba(109, 117, 250, 0.2);
 }
 .demo-collapse {
-  /* position: absolute; */
   margin-bottom: 24px;
-  // border-bottom: px;
   width: 100%;
   height: auto;
   border-radius: 0px 0px 4px 4px;
   border: 1px solid var(--o-border-color-base);
-
   :deep(.el-collapse-item__wragop) {
-    // border-bottom: 5px;
     margin-top: 12px !important;
     margin-bottom: 2px !important;
+  }
+  :deep(.el-collapse-item__content) {
+    margin: 0px 16px 16px 0px !important;
   }
 }
 .loading {
   display: flex;
   height: auto;
   width: 100%;
-  // padding: 12px;
   background-color: linear-gradient(
     127.95deg,
     rgba(109, 227, 250, 0.2) -1.967%,
@@ -295,6 +302,7 @@ watch(
   border-radius: 8px;
   border-top-left-radius: 0px;
   margin-left: 8px;
+  flex-wrap: nowrap; /* 水平排列 */
   @keyframes rotate-img {
     from {
       transform: rotate(0);
@@ -305,28 +313,55 @@ watch(
     }
   }
 
-  &-icon {
+  &-animeIcon {
+    margin-right: 8px;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    align-self: center;
     animation: rotate-img 1s infinite linear;
+  }
+
+  &-icon {
+    align-items: center;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
   }
 
   &-text {
     font-size: 16px;
-    line-height: 24px;
-    // padding-left: 12px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    justify-content: space-between;
     color: var(--o-text-color-primary);
   }
-  &-progress {
-    // right: 8px;
+  .time {
+    padding: 0px 12px;
+    margin-left: auto;
+    span {
+      padding: 0px 4px;
+      border-radius: 4px;
+      min-width: 44px;
+      width: fit-content;
+      border-radius: 4px;
+      font-size: 12px;
+    }
   }
 }
-
-.demo-collapse .el-collapse-item__header {
-  // background-color: greenyellow ;
-  // background: linear-gradient(127.95deg, rgba(109, 227, 250, 0.2) -1.967%, rgba(90, 179, 255, 0.2) 98.202%);
+.totalTime {
+  min-width: 54px;
+  width: fit-content;
+  padding: 0px 8px;
+  height: 16px;
+  line-height: 16px;
+  font-size: 12px;
+  border-radius: 4px;
 }
-.o-collapse-item {
-  // background-color: aliceblue !important;
-  // background-color: pink !important;
+.totalTime.errorBg {
+  background-color: rgba(227, 32, 32, 0.2);
 }
 </style>

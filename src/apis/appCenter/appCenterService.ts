@@ -1,7 +1,12 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 import { post, get, del, put } from 'src/apis/server';
 import type { FcResponse } from 'src/apis/server';
-import { QueryAppListParamsType, CreateOrUpdateAppParamsType } from './type';
+import {
+  QueryAppListParamsType,
+  CreateOrUpdateAppParamsType,
+  AppDetail,
+} from './type';
+
 /**
  * 获取应用列表
  * @param params
@@ -9,7 +14,28 @@ import { QueryAppListParamsType, CreateOrUpdateAppParamsType } from './type';
  */
 export const queryAppList = (
   params: QueryAppListParamsType,
-): Promise<[any, FcResponse<unknown> | undefined]> => {
+): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          applications: {
+            appId: string;
+            author: string;
+            description: string;
+            favorited: boolean;
+            appType: 'flow' | 'agent';
+            icon: string;
+            name: string;
+            published: boolean;
+          }[];
+          currentPage: number;
+          totalApps: number;
+        }>
+      | undefined
+    ),
+  ]
+> => {
   return get('/api/app', params);
 };
 
@@ -18,10 +44,8 @@ export const queryAppList = (
  * @param params
  * @returns
  */
-export const createOrUpdateApp = (
-  params: CreateOrUpdateAppParamsType,
-): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return post('/api/app', params);
+export const createOrUpdateApp = (params: CreateOrUpdateAppParamsType) => {
+  return post<{ appId: string }>('/api/app', params);
 };
 
 /**
@@ -29,10 +53,8 @@ export const createOrUpdateApp = (
  * @param params
  * @returns
  */
-export const querySingleAppData = (params: {
-  id: string;
-}): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get(`/api/app/${params.id}`);
+export const querySingleAppData = (params: { id: string }) => {
+  return get<AppDetail>(`/api/app/${params.id}`);
 };
 
 /**
@@ -52,9 +74,9 @@ export const deleteSingleAppData = (params: {
  * @returns
  */
 export const releaseSingleAppData = (params: {
-  id: string;
+  appId: string;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return post(`/api/app/${params.id}`, params);
+  return post(`/api/app/${params.appId}`);
 };
 
 /**
@@ -75,7 +97,13 @@ export const changeSingleAppCollect = (params: {
  * @returns
  */
 export const getPartAppConfgUser = (): Promise<
-  [any, FcResponse<unknown> | undefined]
+  [
+    any,
+    (
+      | FcResponse<{ userInfoList: { userName: string; userSub: string }[] }>
+      | undefined
+    ),
+  ]
 > => {
   return get('/api/user');
 };

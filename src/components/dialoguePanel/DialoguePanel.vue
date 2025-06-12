@@ -1,13 +1,9 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, ref, withDefaults } from 'vue';
+import { computed, ref } from 'vue';
 import { writeText } from 'src/utils';
-import {
-  useSessionStore,
-  useChangeThemeStore,
-  echartsObj,
-} from 'src/store/conversation';
+import { useSessionStore, useChangeThemeStore, echartsObj } from '@/store';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
@@ -99,7 +95,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
 const messageArray = ref<MessageArray>(props.messageArray);
 const thoughtContent = ref('');
 const index = ref(0);
-const isComment = ref("none");
+const isComment = ref('none');
 const emits = defineEmits<{
   (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
@@ -126,7 +122,7 @@ const handlePauseAndReGenerate = (cid?: number) => {
     thoughtContent.value = '';
     reGenerateAnswer(cid, user_selected_app.value);
     index.value = messageArray.value.getAllItems().length - 1;
-    isComment.value = "none";
+    isComment.value = 'none';
   } else {
     // 停止生成
     pausedStream(cid);
@@ -153,33 +149,38 @@ const handleLike = async (
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
   if (type === 'liked') {
-    await api.commentConversation({
-      type: !isSupport.value ? 'liked' : 'none',
-      qaRecordId: qaRecordId,
-      comment: !isSupport.value ? 'liked' : 'none',
-      groupId: props.groupId,
-    }).then((res) => {
-      if(res[1].code === 200){
-        isSupport.value = isSupport.value ? false : true;
-        isAgainst.value = false;
-        messageArray.value.getAllItems()[index.value].comment = isSupport.value ? 'liked' : 'none';
-      }
-    })
+    await api
+      .commentConversation({
+        type: !isSupport.value ? 'liked' : 'none',
+        qaRecordId: qaRecordId,
+        comment: !isSupport.value ? 'liked' : 'none',
+        groupId: props.groupId,
+      })
+      .then((res) => {
+        if (res[1].code === 200) {
+          isSupport.value = isSupport.value ? false : true;
+          isAgainst.value = false;
+          messageArray.value.getAllItems()[index.value].comment =
+            isSupport.value ? 'liked' : 'none';
+        }
+      });
   } else if (type === 'disliked') {
-    if(isAgainst.value){
-      await api.commentConversation({
-      type: 'none',
-      qaRecordId: qaRecordId,
-      comment: 'none',
-      groupId: props.groupId,
-    }).then((res) => {
-      if(res[1].code === 200){
-        isAgainst.value = false;
-        isSupport.value = false;
-        messageArray.value.getAllItems()[index.value].comment = 'none';
-      }
-    })
-    }else{
+    if (isAgainst.value) {
+      await api
+        .commentConversation({
+          type: 'none',
+          qaRecordId: qaRecordId,
+          comment: 'none',
+          groupId: props.groupId,
+        })
+        .then((res) => {
+          if (res[1].code === 200) {
+            isAgainst.value = false;
+            isSupport.value = false;
+            messageArray.value.getAllItems()[index.value].comment = 'none';
+          }
+        });
+    } else {
       isAgainstVisible.value = true;
     }
   } else {
@@ -199,8 +200,8 @@ const handleDislike = async (
   reasonDescription?: string,
 ): Promise<void> => {
   const qaRecordId = props.recordList[index.value];
-  await api.commentConversation(
-    {
+  await api
+    .commentConversation({
       type: !isAgainst.value ? 'disliked' : 'none',
       qaRecordId: qaRecordId,
       comment: !isAgainst.value ? 'disliked' : 'none',
@@ -208,15 +209,17 @@ const handleDislike = async (
       groupId: props.groupId,
       reasonLink: reasionLink,
       reasonDescription: reasonDescription,
-    }
-  ).then((res) => {
-    if(res[1].code === 200){
-      isAgainstVisible.value = false;
-      isAgainst.value = isAgainst.value ? false : true;
-      isSupport.value = false;
-      messageArray.value.getAllItems()[index.value].comment = isAgainst.value ? 'disliked' : 'none';
-    };
-  });
+    })
+    .then((res) => {
+      if (res[1].code === 200) {
+        isAgainstVisible.value = false;
+        isAgainst.value = isAgainst.value ? false : true;
+        isSupport.value = false;
+        messageArray.value.getAllItems()[index.value].comment = isAgainst.value
+          ? 'disliked'
+          : 'none';
+      }
+    });
 };
 
 const handleOutsideClick = () => {
@@ -267,9 +270,7 @@ const contentAfterMark = computed(() => {
   }
   //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
   let str = marked.parse(
-    xss(props.content[index.value])
-      .replace(/&gt;/g, '>')
-      .replace(/&lt;/g, '<'),
+    xss(props.content[index.value]).replace(/&gt;/g, '>').replace(/&lt;/g, '<'),
   );
   //将table提取出来中加一个<div>父节点控制溢出
   let tableStart = str.indexOf('<table>');
@@ -328,18 +329,18 @@ const handleIsLike = () => {
     isSupport.value = false;
     isAgainst.value = false;
   } else {
-      if (isComment.value !== 'none') {
-        isSupport.value = isComment.value === 'liked';
-        isAgainst.value = !isSupport.value;
-      } else {
-        isSupport.value = false;
-        isAgainst.value = false;
-      }
+    if (isComment.value !== 'none') {
+      isSupport.value = isComment.value === 'liked';
+      isAgainst.value = !isSupport.value;
+    } else {
+      isSupport.value = false;
+      isAgainst.value = false;
+    }
   }
 };
 
 onMounted(() => {
-  if(props.messageArray?.value){
+  if (props.messageArray?.value) {
     isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
   }
   setTimeout(() => {
@@ -350,18 +351,19 @@ onMounted(() => {
 watch(
   () => props.messageArray,
   () => {
-      index.value = 0;
-      if(props.messageArray){
-        index.value = props.messageArray?.getAllItems().length - 1;
-      }
-      messageArray.value = props.messageArray;
-      if(props.messageArray){
-        isComment.value = props.messageArray.getAllItems()[index.value].comment;
-      }
-      handleIsLike();
-  },{
+    index.value = 0;
+    if (props.messageArray) {
+      index.value = props.messageArray?.getAllItems().length - 1;
+    }
+    messageArray.value = props.messageArray;
+    if (props.messageArray) {
+      isComment.value = props.messageArray.getAllItems()[index.value].comment;
+    }
+    handleIsLike();
+  },
+  {
     immediate: true,
-  }
+  },
 );
 
 watch(
@@ -410,11 +412,11 @@ watch(
 );
 
 watch(
-  () => index.value, 
+  () => index.value,
   () => {
     handleIsLike();
-  }
-)
+  },
+);
 
 onBeforeUnmount(() => {
   isComment.value = undefined;
@@ -456,7 +458,7 @@ const { sendQuestion } = useSessionStore();
 
 const chatWithParams = async () => {
   visible.value = false;
-  const question = conversationList.value[props.cid - 1].message;
+  const question = conversationList.value[props.cid - 1].message as string;
   const flowId = conversationList.value[props.cid].flowdata.flowId;
   await sendQuestion(
     undefined,
@@ -468,7 +470,6 @@ const chatWithParams = async () => {
     params.value,
   );
 };
-
 </script>
 <template>
   <div
@@ -592,19 +593,6 @@ const chatWithParams = async () => {
               @click="nextPageHandle(Number(cid))"
               src="@/assets/svgs/arror_right.svg"
             />
-          </div>
-          <div
-            class="regenerate-button"
-            v-if="needRegernerate && isFinish && !flowdata"
-            @click="handlePauseAndReGenerate(Number(cid))"
-          >
-            <img
-              v-if="themeStore.theme === 'dark'"
-              src="@/assets/svgs/dark_regenerate.svg"
-              alt=""
-            />
-            <img v-else src="@/assets/svgs/light_regenerate.svg" alt="" />
-            <div>{{ $t('feedback.regenerate') }}</div>
           </div>
 
           <div class="button-group" v-if="isFinish">
@@ -736,9 +724,7 @@ const chatWithParams = async () => {
         <ul class="search-suggestions_value">
           <li class="value" v-for="(item, index) in props.search_suggestions">
             <div @click="selectQuestion(item)">
-              <p class="test" v-if="item.flowName">
-                #{{item.flowName }}
-              </p>
+              <p class="test" v-if="item.flowName">#{{ item.flowName }}</p>
               {{ item.question }}
             </div>
           </li>
@@ -751,638 +737,6 @@ const chatWithParams = async () => {
     <img :src="txt2imgPathZoom" />
   </div>
 </template>
-
-<style lang="scss">
-.button-group {
-  text-align: center;
-  .confirm-button {
-    margin-top: 32px;
-    width: 64px;
-    height: 24px;
-    border-radius: 1;
-    font-size: 12px;
-  }
-}
-.overflowTable {
-  overflow-x: scroll;
-}
-
-.test {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 14px;
-  background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-  background-clip: text;
-  color: transparent;
-  line-height: 32px;
-}
-.answer_img_mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-
-  img {
-    max-width: 100%;
-    max-height: 100%;
-  }
-
-  span {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
-  }
-}
-
-.el-popper[role='tooltip'] {
-  max-width: 500px;
-}
-
-.el-popper {
-  border: none;
-
-  .disliked-popover-title {
-    color: var(--o-text-color-primary);
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-  }
-
-  .disliked-item .el-checkbox .el-checkbox__label {
-    font-size: 12px;
-    color: var(--o-text-color-secondary);
-    line-height: 16px;
-  }
-
-  .disliked-button button:first-child {
-    border: 1px solid var(--o-border-color-lighter);
-    width: 64px;
-    height: 24px;
-    color: var(--o-text-color-secondary);
-    font-size: 12px;
-    line-height: 16px;
-
-    &:hover {
-      color: #7aa5ff;
-      background-color: transparent;
-      border: 1px solid #7aa5ff;
-    }
-  }
-
-  .disliked-popover .disliked-button button:first-child:hover {
-    background-color: transparent;
-  }
-
-  .disliked-button button:last-child {
-    background-color: var(--o-color-primary);
-    border: none;
-    color: var(--o-color-white);
-
-    &:hover {
-      background-color: #7aa5ff;
-      color: #fff;
-    }
-  }
-
-  .is-disabled,
-  .is-disabled:hover {
-    background-color: #b3cbff !important;
-    color: #e1eaff;
-  }
-
-  .disliked-popover .error-input__link,
-  .disliked-popover .error-input__desc {
-    background-color: var(--o-bg-color-light);
-  }
-}
-
-.disliked-popover {
-  .radio {
-    width: 88px;
-    margin-bottom: 4px;
-  }
-
-  .radio_item,
-  .el-radio-button__inner {
-    min-width: 88px;
-    width: 100%;
-    height: 100%;
-    border: none;
-    background-color: var(--o-bg-color-light);
-    color: var(--o-text-color-primary);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    word-break: auto-phrase;
-  }
-
-  .el-radio-button__original-radio:checked + .el-radio-button__inner {
-    border: none;
-    background-color: transparent;
-    color: #6395fd;
-    background-image: linear-gradient(
-      to right,
-      rgba(109, 117, 250, 0.2),
-      rgba(90, 179, 255, 0.2)
-    );
-  }
-}
-
-.svg:hover {
-  filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
-    brightness(100%) contrast(103%);
-}
-
-.disliked-button {
-  height: 16px;
-  width: auto;
-  margin-left: 12px;
-  color: var(--o-text-color-secondary);
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.el-tooltip {
-  float: left; //解决整体右浮动.提示语位置偏差
-}
-
-::deep .el-popper .el-popper.is-customized {
-  float: right; //解决整体右浮动.提示语位置偏差
-  background-color: pink;
-}
-
-.el-popper.is-customized {
-  padding: 6px 12px;
-  background: #f4f6fa;
-  box-shadow: 0 4px 8px 0 rgba($color: #000000, $alpha: 0.2);
-}
-
-.el-popper.is-customized .el-popper__arrow::before {
-  background: #f4f6fa;
-  right: 0;
-}
-</style>
-<style lang="scss" scoped>
-.search-suggestions {
-  display: flex;
-  line-height: 24px;
-  margin-top: 16px;
-
-  &_value {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  .tip {
-    color: var(--o-text-color-secondary);
-    font-size: 12px;
-    height: 32px;
-    line-height: 32px;
-    align-self: center;
-    font-weight: 100;
-    flex-shrink: 0;
-  }
-  .value {
-    display: flex;
-    color: var(--o-text-color-secondary);
-    background-color: var(--o-bg-color-base);
-    border-radius: 8px;
-    padding: 8px 16px;
-    margin: 0 0 8px 8px;
-    font-size: 12px;
-    &:hover {
-      background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
-      color: var(--o-text-color-fourth);
-    }
-    p {
-      align-content: center;
-      align-items: center;
-      line-height: 16px;
-    }
-  }
-}
-.dialogue-panel {
-  // padding-right: 25px;
-  // padding: 0px 15%;
-  width: 1000px;
-  &__user {
-    position: relative;
-    margin-bottom: 24px;
-
-    &-time {
-      display: flex;
-      padding-left: calc(50% - 37px);
-      color: #8d98aa;
-      font-size: 12px;
-      margin-top: 16px;
-    }
-
-    p {
-      padding: 12px 16px;
-      font-size: 16px;
-      line-height: 24px;
-    }
-  }
-
-  &__content {
-    display: flex;
-    align-items: flex-start;
-    margin-top: 10px;
-    overflow-wrap: break-word;
-    word-break: break-all;
-
-    img {
-      width: 48px;
-      height: 48px;
-      position: absolute;
-      left: -10px;
-    }
-
-    .content {
-      //min-height: 48px;
-      border-radius: 8px;
-      border-top-left-radius: 0px;
-      padding: 12px;
-      // display: flex;
-      // align-items: center;
-      color: var(--o-text-color-primary);
-      margin-left: 45px;
-      background-image: linear-gradient(
-        to right,
-        rgba(109, 117, 250, 0.2),
-        rgba(90, 179, 255, 0.2)
-      );
-      .messaege {
-        top: 10px;
-        margin-top: 24px;
-        display: block;
-        width: 100%;
-      }
-    }
-  }
-
-  &__robot {
-    position: relative;
-    padding-left: 45px;
-    border-radius: 8px;
-
-    .loading {
-      display: flex;
-      // min-height: 72px;
-      // padding: 24px;
-      background-color: var(--o-bg-color-base);
-      border-radius: 8px;
-      border-top-left-radius: 0px;
-
-      @keyframes rotate-img {
-        from {
-          transform: rotate(0);
-        }
-
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0px;
-        width: 48px;
-        height: 48px;
-        left: -10px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
-
-      &-icon {
-        animation: rotate-img 1s infinite linear;
-      }
-
-      &-text {
-        font-size: 16px;
-        line-height: 24px;
-        padding-left: 12px;
-        color: var(--o-text-color-primary);
-      }
-    }
-
-    &-slot {
-      .dialog-panel__robot-time {
-        display: flex;
-        justify-content: center;
-        color: #8d98aa;
-        font-size: 12px;
-        margin-bottom: 10px;
-        margin-top: 16px;
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        left: -10px;
-        top: 30px;
-        width: 48px;
-        height: 48px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
-    }
-
-    &-content {
-      background-color: var(--o-bg-color-base);
-      padding: 24px 24px 16px 24px;
-      border-top-right-radius: 8px;
-      overflow-wrap: break-word;
-      text-align: justify;
-      line-height: 24px;
-      color: var(--o-text-color-primary);
-
-      &::before {
-        content: '';
-        position: absolute;
-        left: -10px;
-        top: 0px;
-        width: 48px;
-        height: 48px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
-    }
-
-    &-bottom {
-      background-color: var(--o-bg-color-base);
-      padding: 0px 24px;
-      border-radius: 0 0 8px 8px;
-
-      .action-buttons {
-        border-top: 1px dashed var(--o-border-color-light);
-        padding: 16px 0 20px 0px;
-        display: flex;
-        align-items: center;
-
-        .pagenation {
-          display: flex;
-
-          &-item {
-            margin-right: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            line-height: 16px;
-            color: var(--o-text-color-tertiary) !important;
-            letter-spacing: 0px;
-          }
-
-          img {
-            width: 16px;
-            height: 16px;
-          }
-
-          &-arror {
-            margin: 0;
-            cursor: pointer;
-          }
-          .ml-8 {
-            margin-left: 8px;
-          }
-          .mr-8 {
-            margin-right: 8px;
-          }
-
-          .pagenation-cur {
-            font-size: 12px;
-            line-height: 18px;
-            color: var(--o-text-color-tertiary) !important;
-          }
-
-          .pagenation-total {
-            font-size: 12px;
-            line-height: 18px;
-            color: var(--o-text-color-primary) !important;
-          }
-
-          letter-spacing: 2px;
-        }
-
-        .regenerate-button {
-          display: flex;
-          align-items: center;
-          margin-left: 8px;
-          color: var(--o-text-color-secondary);
-          font-size: 12px;
-          line-height: 16px;
-          cursor: pointer;
-          user-select: none;
-
-          img {
-            margin-right: 8px;
-          }
-
-          .paused-answer {
-            color: #c4c2c2;
-            cursor: text;
-          }
-        }
-
-        .button-group {
-          margin-left: auto;
-          display: flex;
-          align-items: center;
-          font-size: 12px;
-
-          .button-icon {
-            width: 24px;
-            height: 24px;
-            margin-left: 4px;
-          }
-
-          .copy {
-            width: 24px;
-            height: 24px;
-          }
-
-          .copy:hover {
-            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
-              brightness(100%) contrast(103%) contrast(99%);
-          }
-
-          .button-icon:hover {
-            filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
-              brightness(100%) contrast(103%) contrast(99%);
-          }
-
-          img {
-            vertical-align: bottom;
-            cursor: pointer;
-            user-select: none;
-            width: 16px;
-            height: 16px;
-          }
-        }
-      }
-    }
-  }
-
-  &__stop {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 128px;
-    height: 40px;
-    border-radius: 8px;
-    border: 1px solid var(--o-border-color-extralight);
-    margin-top: 38px;
-    margin-left: auto;
-    margin-right: auto;
-    cursor: pointer;
-
-    img {
-      width: 16px;
-      height: 16px;
-      margin-right: 8px;
-    }
-
-    &-answer {
-      font-size: 16px;
-      color: var(--o-text-color-primary);
-      line-height: 24px;
-    }
-  }
-
-  :deep(.el-loading-spinner .circular) {
-    width: 20px;
-    height: 20px;
-  }
-}
-// 工作流调试抽屉样式
-.workFlowDebugStyle {
-  width: auto;
-  padding-right: 24px;
-  .loading {
-    display: none;
-  }
-  .dialogue-panel__content {
-    gap: 16px;
-    .userArea {
-      min-width: 48px;
-      height: 48px;
-      img {
-        left: 0px;
-      }
-    }
-    .content {
-      margin-left: 0px;
-      min-height: 48px;
-      .message {
-        white-space: pre-line;
-      }
-    }
-  }
-  .dialogue-panel__user-time {
-    height: 20px;
-    line-height: 20px;
-    .centerTimeStyle {
-      width: 136px;
-      padding: 0 8px;
-      background-color: var(--o-time-text);
-      border-radius: 12px;
-    }
-  }
-  .dialogue-panel__robot {
-    gap: 16px;
-    padding-left: 64px;
-    .dialogue-panel__robot-content {
-      border-radius: 8px;
-      // 工作流调试时控制显示
-      .dialogue-thought {
-        // ai思考无需显示
-        display: none;
-      }
-      ::v-deep(.demo-collapse) {
-        border-radius: 4px;
-        .title.el-collapse-item {
-          .loading-text {
-            display: flex;
-            text-align: left;
-            align-items: center;
-            .textTitle {
-              flex: 1;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-            .totalTime {
-              min-width: 54px;
-              width: fit-content;
-              padding: 0px 8px;
-              height: 16px;
-              line-height: 16px;
-              font-size: 12px;
-              border-radius: 4px;
-            }
-            .totalTime.errorBg {
-              background-color: rgba(227, 32, 32, 0.2);
-            }
-          }
-        }
-        .normal.el-collapse-item {
-          border-bottom: 1px dashed #dfe5ef;
-          .el-collapse-item__header {
-            background-color: var(--o-bg-color-base) !important;
-            color: var(--o-text-color-primary);
-            padding-right: 0px;
-            .o-collapse-icon {
-              width: 16px;
-              height: 16px;
-            }
-            .title {
-              flex: 1;
-              text-align: left;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-            .time {
-              min-width: 54px;
-              width: fit-content;
-              padding: 0px 8px;
-              height: 16px;
-              line-height: 16px;
-              border-radius: 4px;
-              font-size: 12px;
-            }
-            &::after {
-              background-color: transparent;
-            }
-          }
-          &:last-child {
-            border-bottom: 1px solid transparent !important;
-          }
-        }
-        .el-collapse-item__content {
-          margin: 0px 16px;
-        }
-      }
-      // 调试抽屉中echarts无需显示
-      .answer_img {
-        display: none;
-      }
-      .loading-echarts {
-        display: none;
-      }
-      &::before {
-        left: 0;
-      }
-    }
-  }
-  // 调试抽屉中不需要显示底部反对等功能图标
-  .dialogue-panel__robot-bottom {
-    display: none;
-  }
-}
+<style lang="sass" scoped>
+@import './DialoguePanel.scss'
 </style>

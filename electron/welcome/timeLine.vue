@@ -1,0 +1,500 @@
+<template>
+  <el-timeline style="max-width: 600px; max-height: 500px">
+    <el-timeline-item
+      v-for="(activity, index) in activities"
+      :key="index"
+      center
+      :class="`timeline-status-${activity.type}`"
+    >
+      <template #dot>
+        <img
+          v-if="activity.type === 'running'"
+          :src="loadingIcon"
+          alt=""
+          class="running-img"
+        />
+        <img
+          v-else-if="activity.type === 'success'"
+          :src="successIcon"
+          alt=""
+        />
+        <img v-else-if="activity.type === 'failed'" :src="failedIcon" alt="" />
+        <div v-else class="dot"></div>
+      </template>
+      <el-card
+        :class="{
+          'running-card': activity.type === 'running',
+          'success-card': activity.type === 'success',
+          'failed-card': activity.type === 'failed',
+        }"
+      >
+        {{ activity.content }}
+        <span v-if="activity.type === 'running'">
+          {{ $t('localDeploy.installation') }}
+        </span>
+      </el-card>
+    </el-timeline-item>
+  </el-timeline>
+  <div class="submit-btn">
+    <el-button v-if="allSuccess" type="primary" @click="handleFinish">
+      {{ $t('localDeploy.complete') }}
+    </el-button>
+    <el-button v-else-if="hasFailed" type="primary" @click="handleRetry">
+      {{ $t('localDeploy.retry') }}
+    </el-button>
+    <el-button v-else type="primary" @click="handleStop">
+      {{ $t('localDeploy.stopInstall') }}
+    </el-button>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import successIcon from './assets/svgs/success.svg';
+import failedIcon from './assets/svgs/error.svg';
+import loadingIcon from './assets/svgs/upload-loading.svg';
+import i18n from './lang/index';
+
+// 活动列表（与部署服务的步骤对应）
+const activities = ref([
+  {
+    content: i18n.global.t('localDeploy.prepareEnv'),
+    type: 'default', // default, running, success, failed
+    step: 'preparing-environment',
+  },
+  {
+    content: i18n.global.t('localDeploy.dataBase'),
+    type: 'default',
+    step: 'install-databases',
+  },
+  {
+    content: i18n.global.t('localDeploy.authHub'),
+    type: 'default',
+    step: 'install-authhub',
+  },
+  {
+    content: i18n.global.t('localDeploy.intelligence'),
+    type: 'default',
+    step: 'install-intelligence',
+  },
+]);
+
+// 部署状态
+const deploymentStatus = ref<any>({
+  status: 'idle',
+  message: '',
+  progress: 0,
+  currentStep: '',
+});
+
+// 计算属性：检查是否所有活动都成功
+const allSuccess = computed(() => {
+  return activities.value.every((activity) => activity.type === 'success');
+});
+
+// 计算属性：检查是否存在失败的活动
+const hasFailed = computed(() => {
+  return activities.value.some((activity) => activity.type === 'failed');
+});
+
+// 更新活动状态
+const updateActivitiesStatus = (status: any) => {
+  // 防止 status 为 undefined 或 null
+  if (!status) {
+    return; // 如果状态无效，直接返回
+  }
+
+  // 安全地获取 currentStep，避免解构错误
+  const currentStep = status.currentStep || '';
+
+  if (status.status === 'error') {
+    // 错误状态：所有未完成的步骤标记为失败
+    activities.value.forEach((activity) => {
+      if (activity.type !== 'success') {
+        activity.type = 'failed';
+      }
+    });
+    return;
+  }
+
+  if (status.status === 'success') {
+    // 成功状态：所有步骤标记为成功
+    activities.value.forEach((activity) => {
+      activity.type = 'success';
+    });
+    return;
+  }
+
+  // 根据当前步骤更新状态
+  activities.value.forEach((activity, activityIndex) => {
+    if (
+      currentStep === 'preparing-environment' ||
+      currentStep === 'installing-tools'
+    ) {
+      // 准备环境阶段
+      if (activityIndex === 0) {
+        activity.type = 'running';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'environment-ready') {
+      // 环境准备完成
+      if (activityIndex === 0) {
+        activity.type = 'success';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'install-databases') {
+      // 数据库服务安装中
+      if (activityIndex === 0) {
+        activity.type = 'success';
+      } else if (activityIndex === 1) {
+        activity.type = 'running';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'install-authhub') {
+      // AuthHub 服务安装中
+      if (activityIndex <= 1) {
+        activity.type = 'success';
+      } else if (activityIndex === 2) {
+        activity.type = 'running';
+      } else {
+        activity.type = 'default';
+      }
+    } else if (currentStep === 'install-intelligence') {
+      // Intelligence 服务安装中
+      if (activityIndex <= 2) {
+        activity.type = 'success';
+      } else if (activityIndex === 3) {
+        activity.type = 'running';
+      }
+    } else if (currentStep === 'completed') {
+      // 全部完成
+      activities.value.forEach((act) => {
+        act.type = 'success';
+      });
+    } else if (currentStep === 'failed' || currentStep === 'stopped') {
+      // 失败或停止状态
+      activities.value.forEach((act) => {
+        if (act.type === 'running') {
+          act.type = 'failed';
+        }
+      });
+    } else if (currentStep === 'idle') {
+      // 空闲状态
+      activities.value.forEach((act) => {
+        if (act.type !== 'success') {
+          act.type = 'default';
+        }
+      });
+    } else {
+      // 未知步骤
+      console.warn(`未知的部署步骤: ${currentStep}`);
+    }
+  });
+};
+
+// 状态监听器
+const onDeploymentStatusChange = (status: any) => {
+  // 防止状态为 undefined 时的错误
+  if (status) {
+    deploymentStatus.value = status;
+    updateActivitiesStatus(status);
+  } else {
+    console.warn('收到无效的部署状态:', status);
+  }
+};
+
+// 处理停止安装
+const handleStop = async () => {
+  try {
+    if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+      await window.eulercopilotWelcome.deployment.stopDeployment();
+    }
+  } catch (error) {
+    console.error('停止部署失败:', error);
+
+    // 即使停止失败，也要更新界面显示错误状态
+    const runningActivityIndex = activities.value.findIndex(
+      (activity) => activity.type === 'running',
+    );
+
+    if (runningActivityIndex !== -1) {
+      activities.value[runningActivityIndex].type = 'failed';
+    }
+  }
+};
+
+// 处理重试
+const handleRetry = async () => {
+  try {
+    // 重置活动状态
+    activities.value.forEach((activity) => {
+      activity.type = 'default';
+    });
+
+    // 可以通过 emit 事件让父组件重新提交表单
+    // emit('retry');
+  } catch (error) {
+    console.error('重试部署失败:', error);
+  }
+};
+
+// 处理完成
+const handleFinish = async () => {
+  try {
+    // 1. 设置默认代理 URL
+    if (window.eulercopilotWelcome?.config) {
+      try {
+        await window.eulercopilotWelcome.config.setProxyUrl(
+          'https://www.eulercopilot.local',
+        );
+      } catch (configError) {
+        console.error('❌ 设置代理 URL 失败:', configError);
+      }
+    } else {
+      console.warn('❌ 未找到 config API');
+    }
+
+    // 2. 将域名添加到 /etc/hosts
+    try {
+      await addHostsEntries();
+    } catch (hostsError) {
+      console.error('❌ 添加 hosts 条目失败:', hostsError);
+    }
+
+    // 3. 完成欢迎流程，关闭欢迎窗口并打开主窗口
+    try {
+      if (window.eulercopilotWelcome?.welcome) {
+        await window.eulercopilotWelcome.welcome.complete();
+      } else {
+        console.warn('❌ 未找到 welcome API');
+      }
+    } catch (welcomeError) {
+      console.error('❌ 完成欢迎流程失败:', welcomeError);
+    }
+  } catch (error) {
+    console.error('❌ 完成部署后续配置失败:', error);
+  } finally {
+    console.log('🏁 handleFinish 执行完成');
+  }
+};
+
+// 添加 hosts 条目
+const addHostsEntries = async () => {
+  try {
+    console.log('📝 检查 deployment API');
+    console.log('window.eulercopilotWelcome:', window.eulercopilotWelcome);
+
+    if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+      console.log('✅ 找到 deployment API');
+      console.log('deployment 对象:', window.eulercopilotWelcome.deployment);
+      console.log(
+        'addHostsEntries 方法:',
+        window.eulercopilotWelcome.deployment.addHostsEntries,
+      );
+
+      if (
+        typeof window.eulercopilotWelcome.deployment.addHostsEntries ===
+        'function'
+      ) {
+        console.log('✅ addHostsEntries 方法存在，开始调用');
+
+        const domains = [
+          'www.eulercopilot.local',
+          'authhub.eulercopilot.local',
+        ];
+        console.log('📝 要添加的域名:', domains);
+
+        await window.eulercopilotWelcome.deployment.addHostsEntries(domains);
+        console.log('✅ addHostsEntries 调用成功');
+      } else {
+        console.error('❌ addHostsEntries 方法不存在');
+        throw new Error('addHostsEntries 方法不可用');
+      }
+    } else {
+      console.warn('❌ 未找到 deployment API');
+      console.log(
+        'window.eulercopilotWelcome 的完整内容:',
+        JSON.stringify(window.eulercopilotWelcome, null, 2),
+      );
+      throw new Error('部署服务 API 不可用');
+    }
+  } catch (error) {
+    console.error('❌ addHostsEntries 失败:', error);
+    console.error('错误详情:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw new Error(
+      `添加 hosts 条目失败: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+};
+
+// 标记监听器是否已设置
+let isListenerSet = false;
+
+// 独立的函数来设置部署监听器
+const setupDeploymentListener = () => {
+  if (isListenerSet) {
+    return;
+  }
+
+  if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+    // 监听部署状态变化
+    window.eulercopilotWelcome.deployment.onStatusChange(
+      onDeploymentStatusChange,
+    );
+    isListenerSet = true;
+
+    // 获取当前状态
+    window.eulercopilotWelcome.deployment
+      .getStatus()
+      .then((status) => {
+        if (status) {
+          onDeploymentStatusChange(status);
+        }
+      })
+      .catch((error) => {
+        console.error('获取部署状态失败:', error);
+      });
+  } else {
+    console.error('部署服务API不可用');
+  }
+};
+
+// 组件挂载时设置监听器
+onMounted(() => {
+  // 立即尝试设置监听器
+  setupDeploymentListener();
+
+  // 多次重试确保监听器设置成功
+  const retryIntervals = [100, 300, 500];
+  retryIntervals.forEach((delay) => {
+    setTimeout(() => {
+      setupDeploymentListener();
+    }, delay);
+  });
+});
+
+// 组件卸载时清理监听器
+onUnmounted(() => {
+  if (window.eulercopilotWelcome && window.eulercopilotWelcome.deployment) {
+    window.eulercopilotWelcome.deployment.removeStatusListener();
+  }
+});
+</script>
+
+<style lang="scss" scoped>
+.submit-btn {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  bottom: 24px;
+  button {
+    padding: 8px 25px;
+  }
+}
+.el-timeline {
+  position: relative;
+  top: 44px;
+  left: 20px;
+
+  .el-timeline-item {
+    .el-timeline-item__node {
+      z-index: 10;
+    }
+    .el-timeline-item__node,
+    .el-timeline-item__node--normal {
+      height: 24px !important;
+      width: 24px !important;
+      left: -7px !important;
+      background-color: rgb(235, 239, 246);
+    }
+    .el-timeline-item__dot {
+      z-index: 10;
+      left: -6px;
+      img {
+        border-radius: 50%;
+        width: 21px;
+        height: 21px;
+      }
+      .running-img {
+        width: 16px;
+        height: 16px;
+        padding: 2px;
+        border-radius: 50%;
+        background-color: rgb(99, 149, 253);
+        animation: rotate 1s linear infinite;
+      }
+      .dot {
+        width: 21px;
+        height: 21px;
+        border-radius: 50%;
+        background-color: rgb(235, 239, 246);
+      }
+    }
+    .el-timeline-item__wrapper {
+      padding-left: 10px;
+      .el-card {
+        border: none;
+        background-color: rgb(244, 246, 250);
+        color: rgb(78, 88, 101);
+        font-weight: 500;
+        font-family: 'HarmonyOS Sans SC';
+        font-size: 16px;
+      }
+      .running-card {
+        background-color: rgba(99, 149, 253, 0.1);
+        color: rgb(99, 149, 253);
+      }
+      .success-card {
+        background-color: rgba(42, 169, 86, 0.1);
+        color: rgb(36, 171, 54);
+      }
+      .failed-card {
+        background-color: rgba(277, 32, 32, 0.1);
+        color: rgb(277, 32, 32);
+      }
+      .el-card.is-always-shadow {
+        box-shadow: none;
+      }
+      .el-timeline-item__timestamp.is-bottom {
+        margin-top: 0;
+      }
+    }
+  }
+
+  /* 成功状态 - 绿色连接线 */
+  :deep(.timeline-status-success .el-timeline-item__tail) {
+    border-left-color: #67c23a !important;
+  }
+
+  /* 主要状态 - 蓝色连接线 */
+  :deep(.timeline-status-running .el-timeline-item__tail) {
+    border-left-color: #409eff !important;
+  }
+
+  /* 默认状态 - 灰色连接线 */
+  :deep(.timeline-status-default .el-timeline-item__tail) {
+    border-left-color: #e4e7ed !important;
+  }
+
+  /* 最后一个节点不需要连接线 */
+  :deep(.el-timeline-item:last-child .el-timeline-item__tail) {
+    display: none !important;
+  }
+  :deep(.el-timeline-item__tail) {
+    left: 9px;
+    transform: translateY(35px);
+  }
+  :deep(.el-timeline-item__center:first-child .el-timeline-item__tail) {
+    height: 100% !important;
+    top: 0 !important;
+  }
+}
+</style>

@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor';
 import { onMounted, ref, toRaw, watch } from 'vue';
 import { configureMonacoYaml } from 'monaco-yaml';
 import YamlWorker from './yaml.worker.js?worker';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore } from '@/store/';
 const editorContainer = ref();
 const editor = ref();
 const themeStore = useChangeThemeStore();
@@ -63,7 +63,7 @@ onMounted(() => {
       enableSchemaRequest: true,
       isKubernetes: true,
     });
-     
+
     editor.value = monaco.editor.create(editorContainer.value, {
       value: props.yamlContent || '',
       language: 'yaml',

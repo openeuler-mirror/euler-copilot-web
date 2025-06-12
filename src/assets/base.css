@@ -33,8 +33,8 @@ html {
 }
 
 body {
-  min-width: 1366px;
-  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
   transition:
     color 0.5s,
     background-color 0.5s;
@@ -54,4 +54,16 @@ body {
   font-size: 15px;
   text-rendering: optimizeLegibility;
   background-color: #f5f5f6;
+}
+.successBg {
+  background-color: rgba(36, 171, 54, 0.2);
+  color: #24ab36;
+}
+.errorBg {
+  background-color: #fbdede;
+  color: #e32020;
+}
+.debugSuccess {
+  background-color: var(--o-color-success) !important;
+  color: var(--o-bg-color-base) !important;
 }

@@ -86,6 +86,10 @@ export interface ConversationListItem {
   createdTime: string;
   docCount: number;
   title: string;
+  llm: {
+    icon: string;
+    modelName: string;
+  };
 }
 
 /*
@@ -202,4 +206,32 @@ export interface serviceApiData {
    * 对话轮次（1～10）
    */
   [property: string]: any;
+}
+/**
+ * addedModalList, 获取可选modal列表
+ */
+export interface AddedModalList {
+  llmId: string;
+  icon?: string;
+  openaiBaseUrl?: string;
+  openaiApiKey: string;
+  modelName: string;
+  maxTokens: string;
+}
+/**
+ * teamKnowledgeList, 获取teamKnowledgeList列表
+ */
+export interface teamKnowledgeList {
+  teamId: string;
+  teamName: string;
+  knowledgeList: KnowledgeList[];
+}
+/**
+ * KnowledgeList, 获取knowledgeList列表
+ */
+export interface KnowledgeList {
+  kbId: string;
+  kbName: string;
+  description: string;
+  isUsed: boolean;
 }

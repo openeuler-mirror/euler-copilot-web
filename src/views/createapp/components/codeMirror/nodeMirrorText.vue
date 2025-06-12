@@ -55,7 +55,7 @@
 import { ref, watch } from 'vue';
 import { IconChevronDown } from '@computing/opendesign-icons';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore } from '@/store';
 import yaml from 'js-yaml';
 import { writeText } from 'src/utils';
 import { errorMsg, successMsg } from 'src/components/Message';

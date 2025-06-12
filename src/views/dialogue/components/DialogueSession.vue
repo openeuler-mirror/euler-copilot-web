@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
 import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
+import MultiSelectTags from 'src/views/dialogue/components/MultiSelectTags.vue';
 import { storeToRefs } from 'pinia';
+import { IconCaretRight } from '@computing/opendesign-icons';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
@@ -14,138 +16,29 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-const { user_selected_app, selectMode } = storeToRefs(useHistorySessionStore());
+import questions from 'src/views/dialogue/constants';
+const { appList } = storeToRefs(useSessionStore());
+const { user_selected_app, selectLLM } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
 
 export interface DialogueSession {
-  isCreateApp: any;
+  isCreateApp?: any;
   createAppForm: any;
 }
 
 const props = withDefaults(defineProps<DialogueSession>(), {});
-
 const Form = ref(props.createAppForm);
 const AppForm = ref(props.createAppForm);
+const knowledgeList = ref();
 const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
-// const isCreateApp = ref(true);
+const selectedLLM = ref({});
+const handleChangeMode = (val: string) => {
+  selectedLLM.value = val;
+};
+const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
-const questions = [
-  {
-    groupId: 0,
-    id: 1,
-    question: 'open_euler_community_edition_categories',
-  },
-  {
-    groupId: 0,
-    id: 2,
-    question: 'lts_release_cycle_and_support',
-  },
-  {
-    groupId: 0,
-    id: 3,
-    question: 'innovation_release_cycle_and_support',
-  },
-  {
-    groupId: 0,
-    id: 4,
-    question: 'container_cloud_platform_solution',
-  },
-  {
-    groupId: 1,
-    id: 5,
-    question: 'sec_gear_main_functions',
-  },
-  {
-    groupId: 1,
-    id: 6,
-    question: 'dde_description',
-  },
-  {
-    groupId: 1,
-    id: 7,
-    question: 'lustre_description',
-  },
-  {
-    groupId: 2,
-    id: 8,
-    question: 'open_euler_testing_management_platform',
-  },
-  {
-    groupId: 2,
-    id: 9,
-    question: 'open_euler_pkgship',
-  },
-  {
-    groupId: 2,
-    id: 10,
-    question: 'open_euler_software_package_introduction_principles',
-  },
-  {
-    groupId: 2,
-    id: 11,
-    question: 'download_rpm_without_installing',
-  },
-  {
-    groupId: 3,
-    id: 12,
-    question: 'count_the_occurrences_of_the_hello',
-  },
-  {
-    groupId: 3,
-    id: 13,
-    question: 'convert_uppercase_to_lowercase',
-  },
-  {
-    groupId: 3,
-    id: 14,
-    question: 'list_files_with_specific_permissions',
-  },
-  {
-    groupId: 3,
-    id: 15,
-    question: 'search_error_keyword_with_context',
-  },
-  {
-    groupId: 4,
-    id: 16,
-    question: 'clear_dependencies_for_software_package',
-  },
-  {
-    groupId: 4,
-    id: 17,
-    question: 'gpgcheck_purpose_in_dnf',
-  },
-  {
-    groupId: 4,
-    id: 18,
-    question: 'installonly_limit_function_in_dnf',
-  },
-  {
-    groupId: 4,
-    id: 19,
-    question: 'clean_requirement_on_remove_function_in_dnf',
-  },
-  {
-    groupId: 5,
-    id: 20,
-    question: 'hunan_tobacco_monopoly_applications_on_openeuler',
-  },
-  {
-    groupId: 5,
-    id: 21,
-    question: 'xsky_applications_on_openeuler',
-  },
-];
-
-let groupid = ref(0);
-
-const tagNum = ref(3);
-
-let filterQuestions = computed(() =>
-  questions.filter((item) => item.groupId === groupid.value % 6),
-);
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -162,10 +55,9 @@ const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const handleSendMessage = async (
   groupId: string | undefined,
   question: string,
-  user_selected_flow?: string[],
+  user_selected_flow?: string,
 ) => {
   if (isAnswerGenerating.value || !isAllowToSend.value) return;
-  const language = localStorage.getItem('localeLang') === 'CN' ? 'zh' : 'en';
   const len = conversationList.value.length;
   if (
     len > 0 &&
@@ -182,6 +74,17 @@ const handleSendMessage = async (
   if (!currentSelectedSession.value) {
     await generateSession();
   }
+  // 更新当前的会话模型和知识库列表
+  await Promise.all([
+    await api.updateKnowledgeList({
+      kb_ids: knowledgeList.value,
+      conversationId: currentSelectedSession.value,
+    }),
+    await api.updateLLMList({
+      conversationId: currentSelectedSession.value,
+      llmId: selectedLLM.value,
+    }),
+  ]);
   if (user_selected_flow) {
     await sendQuestion(
       groupId,
@@ -237,10 +140,14 @@ const inputRef = ref<HTMLTextAreaElement | null>(null);
  * @param type
  * @param cid
  */
-const handleReport = async (qaRecordId: string,reason_type:string,reason: string) => {
+const handleReport = async (
+  qaRecordId: string,
+  reason_type: string,
+  reason: string,
+) => {
   const params: {
-    qaRecordId: string;
-    reason_type:string;
+    record_id: string;
+    reason_type: string;
     reason: string;
   } = {
     reason_type: reason_type,
@@ -318,7 +225,9 @@ watch(currentSelectedSession, async (newVal) => {
       .forEach((item) => {
         existUploadList.push(item);
         if (item.status !== UploadStatus.USED) {
-          isNewSession ? uploadFilesView.value.push(item as any) : null;
+          if (isNewSession) {
+            uploadFilesView.value.push(item as any);
+          }
         }
       });
     // isNewSession ? curPolling.startPolling() : null;
@@ -464,7 +373,9 @@ const getPollingProcess = (sessionId) => {
           isStopPolling = false;
         }
       });
-      isStopPolling && stopPolling();
+      if (isStopPolling) {
+        stopPolling();
+      }
     } else {
       // 错误次数大于最大值 停止轮询
       currentCount++;
@@ -485,12 +396,16 @@ const getPollingProcess = (sessionId) => {
     clearInterval(timer);
     timer = null;
   };
-
   return { startPolling, stopPolling };
 };
 
 const isSameSession = (sessionId, curSessionId): boolean => {
   return sessionId === curSessionId;
+};
+
+const handleUpdate = (kbList: any[]): void => {
+  // 获取 knowledgeList 列表
+  knowledgeList.value = kbList;
 };
 
 // 上传文件(用户操作可能分批次)
@@ -590,84 +505,40 @@ const clearSuggestion = (index: number): void => {
   }
 };
 
+const getProviderLLM = async () => {
+  const [_, res] = await api.getLLMList();
+  if (!_ && res && res.code === 200) {
+    llmOptions.value = res.result;
+  }
+};
+
 onMounted(() => {
   // 数据初始化
   AppForm.value = props.createAppForm;
   if (!inputRef.value) return;
   inputRef.value.focus();
+  getProviderLLM();
 });
 
-watch(selectMode, (newValue, oldValue) => {
-  user_selected_app.value = [];
-  let first = true;
-  if (selectMode.value.length !== 0) {
-    if (selectMode.value[0] === 'auto') {
-      user_selected_app.value.push('auto');
-    } else {
-      selectMode.value.forEach((item) => {
-        const plugin = {
-          plugin_name: item,
-        };
-        user_selected_app.value.push(plugin.plugin_name);
-      });
-    }
+watch(selectLLM, (newValue) => {
+  if (newValue) {
+    selectedLLM.value.modalName = newValue.modelName;
+    selectedLLM.value.icon = newValue.icon;
+    selectedLLM.value = { ...selectLLM.value };
   }
-  nextTick(() => {
-    const totalW = (document.querySelector('.recognitionMode') as HTMLElement)
-      .offsetWidth;
-    const selectPreW = (document.querySelector('.el-select') as HTMLElement)
-      .offsetWidth;
-    const allTags = document.querySelectorAll(
-      '.recognitionMode .el-select-tags-wrapper .el-tag--info',
-    );
-    document.querySelector('.recognitionMode .el-select-tags-wrapper')
-      ? ((
-          document.querySelector(
-            '.recognitionMode .el-select-tags-wrapper',
-          ) as HTMLElement
-        ).style.display = 'flex')
-      : '';
-    const allTagsWidth = document.querySelector(
-      '.recognitionMode .el-select-tags-wrapper',
-    )
-      ? (
-          document.querySelector(
-            '.recognitionMode .el-select-tags-wrapper',
-          ) as HTMLElement
-        ).offsetWidth
-      : '';
-    const nTag = allTags[allTags.length - 1] as HTMLElement;
-    const isNExist = true;
-    if (selectPreW >= totalW && newValue.length > oldValue.length && isNExist) {
-      return;
-    }
-    if (totalW > allTagsWidth + 100) {
-      (
-        document.querySelector('.recognitionMode .el-select') as HTMLElement
-      ).style.width = `${allTagsWidth + 70}px`;
-    } else {
-      (
-        document.querySelector('.recognitionMode .el-select') as HTMLElement
-      ).style.width = `${totalW}px`;
-    }
-    if (allTags.length > 3) {
-      const lastTag = allTags[allTags.length - 3] as HTMLElement;
-      const selectDomW = (document.querySelector('.el-select') as HTMLElement)
-        .offsetWidth;
-      let show_w = 0;
-      if (selectDomW >= totalW) {
-        show_w = selectDomW - lastTag.offsetWidth + 200;
-        if (show_w >= totalW) {
-          tagNum.value = Math.min(tagNum.value, selectMode.value.length - 2);
-        } else {
-          tagNum.value = Math.min(tagNum.value, selectMode.value.length - 1);
-        }
-      } else {
-        tagNum.value = allTags.length;
-      }
-    }
-  });
 });
+
+watch(
+  currentSelectedSession,
+  (newValue, oldValue) => {
+    // 更新选择 mode
+    selectedLLM.value = [];
+  },
+  {
+    immediate: true,
+  },
+);
+
 const selectQuestion = (val: any) => {
   dialogueInput.value = val;
 };
@@ -706,8 +577,11 @@ const getappMode = (appId: string) => {
 watch(
   () => user_selected_app,
   (val) => {
-    if (user_selected_app.value[0] && !isCreateApp.value) {
-      getappMode(user_selected_app.value[0]);
+    if (app.value) {
+      user_selected_app.value = app.value.appId;
+    }
+    if (user_selected_app.value && !isCreateApp.value) {
+      getappMode(user_selected_app.value);
     }
     if (!isCreateApp.value) {
       Form.value = props.createAppForm;
@@ -715,6 +589,18 @@ watch(
   },
   {
     immediate: true,
+    deep: true,
+  },
+);
+
+watch(
+  () => app,
+  (val) => {
+    if (app.value) {
+      user_selected_app.value = app.value.appId;
+    }
+  },
+  {
     deep: true,
   },
 );
@@ -742,6 +628,20 @@ watch(
         ref="dialogueRef"
         v-if="!isCreateApp"
       >
+        <div
+          v-if="user_selected_app?.length && conversationList.length !== 0"
+          class="preTop"
+        >
+          <div class="preTopContent">
+            <img src="@/assets/svgs/myApp.svg" class="preTitleIcon" />
+            <div class="preMainAppName">
+              {{
+                appList?.filter((item) => item.appId === user_selected_app)[0]
+                  ?.name
+              }}
+            </div>
+          </div>
+        </div>
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
@@ -757,9 +657,7 @@ watch(
           :isCommentList="
             item.belong === 'robot' ? item.messageList.getCommentList() : ''
           "
-          :messageArray="
-            item.belong === 'robot' ? item.messageList : ''
-          "
+          :messageArray="item.belong === 'robot' ? item.messageList : ''"
           :is-finish="getItem(item, 'isFinish')"
           :test="getItem(item, 'test')"
           :metadata="getItem(item, 'metadata')"
@@ -770,7 +668,6 @@ watch(
           :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
-          :modeOptions="modeOptions"
           @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
@@ -810,6 +707,51 @@ watch(
           <div class="dialogue-panel__stop-answer">
             {{ $t('feedback.stop') }}
           </div>
+        </div>
+        <div class="dialogue-conversation-bottom-selectGroup">
+          <div class="modalSelectGroup">
+            <el-dropdown trigger="click">
+              <div class="el-dropdown-link" v-if="selectedLLM.modelName">
+                <img style="width: 16px" :src="selectedLLM.icon" alt="" />
+                <span
+                  style="
+                    width: 100px;
+                    overflow: hidden;
+                    line-height: 32px;
+                    padding-left: 8px;
+                  "
+                >
+                  {{ selectedLLM.modelName }}
+                </span>
+                <el-icon style="margin-left: auto">
+                  <IconCaretRight />
+                </el-icon>
+              </div>
+              <div class="el-dropdown-link" v-else>
+                <span>请选择模型</span>
+                <el-icon>
+                  <IconCaretRight />
+                </el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    v-for="(item, index) in llmOptions"
+                    :key="index"
+                    @click="handleChangeMode(item)"
+                  >
+                    <img
+                      :src="item.icon"
+                      alt=""
+                      style="width: 20px; height: 20px; margin-right: 8px"
+                    />
+                    {{ item.modelName }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+          <MultiSelectTags @updateValue="handleUpdate" />
         </div>
         <div class="sendbox-wrapper">
           <!-- 输入框 -->
@@ -855,7 +797,6 @@ watch(
             </div>
             <!-- 发送问题 -->
             <div class="dialogue-conversation-bottom-sendbox__icon">
-              <!-- <div class="word-limit"><span :class="[dialogueInput.length>=2000 ? 'red-word' : '']">{{dialogueInput.length}}</span>/2000</div> -->
               <img
                 v-if="
                   !isAllowToSend ||
@@ -874,7 +815,6 @@ watch(
               </div>
             </div>
           </div>
-          <!-- 上传问价列表 -->
           <transition name="fade">
             <div
               class="dialogue-conversation-bottom__upload-list"
@@ -896,6 +836,35 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+.dialogue-conversation-bottom-selectGroup {
+  display: flex;
+}
+.modalSelectGroup {
+  width: 140px;
+  margin-right: 8px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  height: 32px;
+  background-color: var(--o-bg-color-base);
+  border-radius: 8px;
+  display: inline-block;
+  span {
+    height: 32px;
+  }
+  .el-dropdown {
+    width: 100%;
+    display: block;
+    span {
+      line-height: 32px;
+    }
+  }
+  .el-dropdown-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+}
 .dialogue-rightContainer {
   height: 100%;
   width: 100%;
@@ -929,7 +898,8 @@ watch(
     line-height: 24px;
   }
 }
-::v-deep .el-input__inner {
+
+:deep(.el-input__inner) {
   border: none;
   box-shadow: none;
 }
@@ -956,29 +926,6 @@ button[disabled]:hover {
   justify-content: space-between;
   min-width: 500px;
 
-  /* 滚动条轨道样式 */
-  ::-webkit-scrollbar-track {
-    background-image: linear-gradient(
-      180deg,
-      #e7f0fd 1%,
-      #daeafc 40%
-    ) !important;
-    display: none;
-  }
-
-  ::-webkit-scrollbar {
-    width: 3px;
-    height: 3px;
-    // display: none;
-  }
-
-  /* 滚动条的滑块 */
-  ::-webkit-scrollbar-thumb {
-    background-color: #c3cedf;
-    border-radius: 3px;
-    // display: none;
-  }
-
   &::before {
     content: '';
     width: 100%;
@@ -987,7 +934,7 @@ button[disabled]:hover {
     top: 0;
     left: 0;
     opacity: 0.4;
-    background-image: linear-gradient(180deg, #e7f0fd 1%, #accbee 100%);
+    // background-image: linear-gradient(180deg, #e7f0fd 1%, #accbee 100%);
     z-index: -1;
   }
 
@@ -1218,7 +1165,6 @@ button[disabled]:hover {
 
 .recognitionMode {
   width: calc(100% - 48px);
-  // min-width: 154px;
   margin-bottom: 8px;
   margin-top: 16px;
   border-radius: 8px;
@@ -1248,14 +1194,14 @@ button[disabled]:hover {
   height: 0;
 }
 
-::v-deep .el-input__wrapper {
+:deep(.el-input__wrapper) {
   border: none;
   box-shadow: none;
   height: 40px;
   width: 175px;
 }
 
-::v-deep .el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light {
+:deep(.el-tag .is-closable .el-tag--info .el-tag--default .el-tag--light) {
   border-radius: 4px;
 }
 
@@ -1278,5 +1224,103 @@ button[disabled]:hover {
 
 .dialogue-interPreview-main {
   width: 100%;
+}
+.preTop {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  // padding-left: calc(50% - 0px);
+  align-items: center;
+  position: relative;
+
+  .mcp-list {
+    position: absolute;
+    right: 103px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    color: var(--o-text-color-tertiary);
+
+    .mcp-item {
+      width: 24px;
+      height: 24px;
+      margin-left: 8px;
+      border-radius: 50%;
+    }
+  }
+
+  .preTopContent {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 8px;
+    border-radius: 20px;
+    gap: 8px;
+    background: linear-gradient(
+      122.39deg,
+      rgba(109, 117, 250, 0.2) -20.158%,
+      rgba(90, 179, 255, 0.2) 112.459%
+    );
+    .preTitleIcon {
+      width: 32px;
+      height: 32px;
+    }
+    .preMainAppName {
+      font-size: 16px;
+      margin-right: 8px;
+      line-height: 24px;
+      color: var(--o-text-color-primary);
+      font-weight: 700;
+    }
+  }
+}
+.preTop {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  // padding-left: calc(50% - 0px);
+  align-items: center;
+  position: relative;
+
+  .mcp-list {
+    position: absolute;
+    right: 103px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    color: var(--o-text-color-tertiary);
+
+    .mcp-item {
+      width: 24px;
+      height: 24px;
+      margin-left: 8px;
+      border-radius: 50%;
+    }
+  }
+
+  .preTopContent {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 8px;
+    border-radius: 20px;
+    gap: 8px;
+    background: linear-gradient(
+      122.39deg,
+      rgba(109, 117, 250, 0.2) -20.158%,
+      rgba(90, 179, 255, 0.2) 112.459%
+    );
+    .preTitleIcon {
+      width: 32px;
+      height: 32px;
+    }
+    .preMainAppName {
+      font-size: 16px;
+      margin-right: 8px;
+      line-height: 24px;
+      color: var(--o-text-color-primary);
+      font-weight: 700;
+    }
+  }
 }
 </style>

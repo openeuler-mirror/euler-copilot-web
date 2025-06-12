@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -37,7 +37,17 @@ export const getSessionRecord = (): Promise<
  * 创建一个会话
  * @returns
  */
-export const createSession = (): Promise<
+export const createSession = ({
+  appId,
+  debug = false,
+  llm_id = '',
+  kb_ids = [],
+}: {
+  appId: string;
+  debug?: boolean;
+  llm_id?: string;
+  kb_ids?: string[];
+}): Promise<
   [
     any,
     (
@@ -48,7 +58,7 @@ export const createSession = (): Promise<
     ),
   ]
 > => {
-  return post(BASE_URL);
+  return post(BASE_URL, { appId, debug }, { llm_id, kb_ids });
 };
 
 /**
@@ -70,7 +80,9 @@ export const createSessionDebug = (params: any): Promise<[any, any]> => {
  */
 export const updateSession = (params: {
   conversationId: string;
-  title: string;
+  modelId?: string;
+  kbIds?: string[];
+  title?: string;
 }): Promise<
   [
     any,
@@ -88,6 +100,8 @@ export const updateSession = (params: {
     BASE_URL,
     {
       title: params.title,
+      modelId: params.modelId,
+      kbIds: params.kbIds,
     },
     {
       conversationId: params.conversationId,

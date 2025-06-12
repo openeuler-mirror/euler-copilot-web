@@ -24,7 +24,7 @@
 <script setup>
 import { IconCaretDown } from '@computing/opendesign-icons';
 import { ref, computed } from 'vue';
-import marked from 'src/utils/marked.js';
+import marked from 'src/utils/marked';
 import xss from 'xss';
 const props = defineProps({
   content: {
@@ -93,7 +93,6 @@ const contentAfterMark = computed(() => {
 
   .thought-content {
     padding: 1rem;
-    // background-color: #fff;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
   }

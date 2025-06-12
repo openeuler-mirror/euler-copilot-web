@@ -1,7 +1,8 @@
-FROM node:18.20.6-alpine
+FROM node:22.14.0-alpine
 WORKDIR /opt/eulerCopilot-web
 
 COPY . .
+ENV ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
 RUN npm install pnpm -g --registry=https://registry.npmmirror.com && \
     pnpm install --registry=https://registry.npmmirror.com && \
     pnpm run build
