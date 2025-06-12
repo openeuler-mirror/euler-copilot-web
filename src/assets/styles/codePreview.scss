@@ -1,8 +1,66 @@
 #markdown-preview {
+  line-height: 24px;
   .hljs {
     color: var(--o-text-color-secondary);
+    font-size: 14px;
+    font-family: SFMono-Regular, monospace, 'Courier New', Courier, Consolas,
+      'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'DejaVu Sans Mono',
+      'Bitstream Vera Sans Mono', 'Liberation Mono', Monaco, 'Source Code Pro',
+      'Fira Mono', 'IBM Plex Mono';
   }
-  //markdown text size
+
+  /* 为highlight.js所有语法元素添加等宽字体 */
+  .hljs-keyword,
+  .hljs-selector-tag,
+  .hljs-title,
+  .hljs-section,
+  .hljs-doctag,
+  .hljs-name,
+  .hljs-strong,
+  .hljs-comment,
+  .hljs-string,
+  .hljs-built_in,
+  .hljs-literal,
+  .hljs-type,
+  .hljs-addition,
+  .hljs-tag,
+  .hljs-quote,
+  .hljs-selector-id,
+  .hljs-selector-class,
+  .hljs-meta,
+  .hljs-subst,
+  .hljs-symbol,
+  .hljs-variable,
+  .hljs-template-variable,
+  .hljs-link,
+  .hljs-deletion,
+  .hljs-bullet,
+  .hljs-regexp,
+  .hljs-number,
+  .hljs-emphasis,
+  .hljs-attr,
+  .hljs-attribute,
+  .hljs-function {
+    font-size: 14px;
+    font-family: SFMono-Regular, monospace, 'Courier New', Courier, Consolas,
+      'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'DejaVu Sans Mono',
+      'Bitstream Vera Sans Mono', 'Liberation Mono', Monaco, 'Source Code Pro',
+      'Fira Mono', 'IBM Plex Mono';
+  }
+
+  /* 支持行内代码渲染 */
+  .inline-code {
+    background-color: var(--o-bash-bg);
+    color: var(--o-text-color-secondary);
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-family: SFMono-Regular, monospace, 'Courier New', Courier, Consolas,
+      'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'DejaVu Sans Mono',
+      'Bitstream Vera Sans Mono', 'Liberation Mono', Monaco, 'Source Code Pro',
+      'Fira Mono', 'IBM Plex Mono';
+    font-size: 0.9em;
+  }
+
   p {
     font-size: 16px;
     font-weight: 400;
@@ -80,6 +138,7 @@
     white-space: pre-wrap; /* 保持缩进同时允许换行 */
     margin: 8px 0px;
     .code-toolbar {
+      user-select: none;
       background-color: var(--o-bash-bg);
       color: var(--o-text-color-primarys);
       display: flex;

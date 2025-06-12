@@ -35,7 +35,7 @@
       }
 
       .createApp {
-        margin-left: 16px;
+        margin-left: 8px;
         border-radius: 4px;
       }
     }
@@ -62,18 +62,18 @@
       }
     }
     .appCenterCardContainer {
-      margin-top: 12px;
       padding-top: 4px;
       width: 1340px;
-      max-height: calc(100vh - 370px);
-      min-height: calc(100vh - 370px);
-      overflow-y: auto;
       .appCenterCardBox {
+        padding-top: 16px;
         width: fit-content;
         display: flex;
         flex-wrap: wrap;
+        align-content: flex-start;
         box-sizing: border-box;
         gap: 16px;
+        height: calc(100vh - 370px);
+        overflow-y: auto;
         .appCenterCardSingle {
           box-sizing: border-box;
           border: 1px solid transparent;
@@ -83,20 +83,20 @@
           justify-content: space-between;
           border-radius: 8px;
           width: 320px;
-          height: 136px;
+          height: 160px;
           padding: 16px;
           background-color: var(--o-bg-color-base);
           .appCenterCardTop {
             cursor: pointer;
             display: flex;
+            gap: 16px;
             max-height: 66px;
             .appCenterCardIcon {
-              width: 80px;
-              height: 50px;
               display: flex;
-              align-items: center;
+              align-items: start;
               .menu-icon {
-                width: 40px;
+                width: 48px;
+                height: 48px;
               }
             }
             .appCenterCardContent {
@@ -117,7 +117,9 @@
                   color: var(--o-text-color-primary);
                   font-size: 16px;
                   line-height: 24px;
+                  font-weight: 700;
                 }
+
                 .appCenterCardContentCollect {
                   width: 24px;
                   height: 24px;
@@ -140,8 +142,24 @@
                   }
                 }
               }
+              .appType {
+                .appTypeName {
+                  font-size: 12px;
+                  line-height: 16px;
+                  padding: 0 4px;
+                  border-radius: 2px;
+                }
+                .appTypeName__flow {
+                  color: rgb(109, 71, 245);
+                  background-color: rgb(109, 71, 245, 0.15);
+                }
+                .appTypeName__agent {
+                  color: rgb(249, 118, 17);
+                  background-color: rgb(249, 118, 17, 0.15);
+                }
+              }
               .appCenterCardContentDes {
-                .vue-text{
+                .vue-text {
                   cursor: pointer !important;
                   color: var(--o-api-description);
                 }
@@ -161,7 +179,6 @@
             }
             .appCenterCardOps {
               .el-button span {
-                color: #6395fd;
                 font-size: 12px;
               }
             }
@@ -179,6 +196,8 @@
         }
       }
       .appCenterNoData {
+        top: calc(50% - 80px);
+        position: relative;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -196,11 +215,6 @@
           color: var(--o-text-color-primary);
         }
       }
-    }
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 8px;
-      background: transparent;
     }
     @media screen and (width <= 1400px) {
       .appCenterCardContainer {

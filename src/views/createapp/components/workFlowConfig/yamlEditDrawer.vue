@@ -9,7 +9,9 @@
       :before-close="closeDrawer"
     >
       <template #header>
-        <div class="drawerHeader">{{$t('flow.step_configuration')}}-{{ yamlNodeName }}</div>
+        <div class="drawerHeader">
+          {{ $t('flow.step_configuration') }}-{{ yamlNodeName }}
+        </div>
       </template>
       <template #default>
         <div class="drawerBody">
@@ -29,10 +31,7 @@
                 </el-icon>
                 <span>{{ $t(item.title) }}</span>
               </template>
-              <div
-                class="yamlMonacoEditor"
-                v-if="item.type && index === 1"
-              >
+              <div class="yamlMonacoEditor" v-if="item.type && index === 1">
                 <MonacoEditor
                   :yamlContent="item.yamlCode"
                   placeholder="Code goes here..."
@@ -41,7 +40,7 @@
                 />
               </div>
               <div v-else-if="item.type && index === 2">
-                <YamlContentOutput :yamlOutPutContent="item.yamlCode"/>
+                <YamlContentOutput :yamlOutPutContent="item.yamlCode" />
               </div>
               <MirrorText
                 v-else-if="item.type && !index"
@@ -59,7 +58,10 @@
                   :rules="yamlBaseInfoRule"
                   label-position="left"
                 >
-                  <el-form-item prop="name" :label="$t('semantic.interface_name')">
+                  <el-form-item
+                    prop="name"
+                    :label="$t('semantic.interface_name')"
+                  >
                     <el-input
                       v-model="yamlExpress[0].name"
                       :placeholder="$t('semantic.pleaseEnter')"
@@ -68,7 +70,10 @@
                       clearable
                     ></el-input>
                   </el-form-item>
-                  <el-form-item prop="description" :label="$t('semantic.interface_introduction')">
+                  <el-form-item
+                    prop="description"
+                    :label="$t('semantic.interface_introduction')"
+                  >
                     <el-input
                       type="textarea"
                       show-word-limit
@@ -101,13 +106,13 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch, defineProps } from 'vue';
+import { ref, watch } from 'vue';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
 import { ElMessage } from 'element-plus';
 import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
-import YamlContentOutput  from 'src/components/yamloutput/yamlContentOutput.jsx';
+import YamlContentOutput from 'src/components/yamloutput/yamlContentOutput.jsx';
 import i18n from 'src/i18n';
 const visible = ref(true);
 const yamlInputCode = ref();
@@ -116,7 +121,7 @@ const yamlNodeName = ref();
 const infoDisabled = ref(true);
 const yamlExpress = ref([
   {
-    title:'semantic.baseMessage',
+    title: 'semantic.baseMessage',
     type: '',
     name: '',
     description: '',
@@ -209,20 +214,86 @@ const updateNodeYaml = () => {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+:deep(.el-collapse-item__arrow .is-active) {
+  top: 0px !important;
+}
+:deep(.el-collapse-item) {
+  margin-top: 0px;
+}
+:deep(.el-drawer__header) {
+  padding: 24px 24px 16px !important;
+  margin-bottom: 0px;
+}
 .yamlMonacoEditor {
   height: 400px;
 }
-
-.monacoEditorMask{
-  .view-lines{
+:deep(.el-drawer__body) {
+  padding: 0px 24px 16px !important;
+  .drawerBody {
+    height: 100%;
+    .yamlContent {
+      .el-collapse-item__header {
+        padding: 0;
+        height: 22px;
+        line-height: 22px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        display: flex;
+        gap: 4px;
+        span {
+          color: var(--o-text-color-primary);
+        }
+      }
+      .el-collapse-item__content {
+        margin-left: 20px;
+        .cm-editor {
+          .cm-lineNumbers {
+            .cm-gutterElement {
+              min-width: 31px;
+              padding-left: 0 0 0 9px;
+              text-align: center;
+            }
+          }
+          .cm-foldGutter {
+            padding-left: 0;
+          }
+        }
+        .baseInfo {
+          .el-form {
+            margin-top: 0px;
+          }
+          .el-form-item {
+            display: flex;
+            gap: 24px;
+            .el-form-item__label {
+              margin-left: -8px;
+              padding-right: 0px;
+            }
+            .el-form-item__content {
+              flex: 1;
+              .el-textarea__inner {
+                height: 56px;
+              }
+            }
+          }
+        }
+      }
+    }
+    textarea {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+.monacoEditorMask {
+  .view-lines {
     position: relative;
   }
-  .view-lines{
+  .view-lines {
     pointer-events: none;
-
   }
-  .view-lines::after{
+  .view-lines::after {
     content: '';
     display: block;
     position: absolute;
@@ -240,7 +311,8 @@ const updateNodeYaml = () => {
   width: 700px !important;
   height: calc(100% - 48px);
   .el-drawer__header {
-    padding: 24px 24px 16px;
+    font-weight: 700;
+    padding: 24px 24px 8px !important;
     margin-bottom: 0px;
     .drawerHeader {
       width: 100%;
@@ -252,58 +324,6 @@ const updateNodeYaml = () => {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-  }
-  .el-drawer__body {
-    padding: 0px 24px 16px;
-    .drawerBody {
-      height: 100%;
-      .yamlContent {
-        .el-collapse-item__header {
-          padding: 0;
-          height: 22px;
-          line-height: 22px;
-          margin-bottom: 8px;
-          font-size: 14px;
-          display: flex;
-          gap: 4px;
-        }
-        .el-collapse-item__content {
-          margin-left: 20px;
-          .cm-editor {
-            .cm-lineNumbers {
-              .cm-gutterElement {
-                min-width: 31px;
-                padding-left: 0 0 0 9px;
-                text-align: center;
-              }
-            }
-            .cm-foldGutter {
-              padding-left: 0;
-            }
-          }
-          .baseInfo {
-            .el-form-item {
-              display: flex;
-              gap: 24px;
-              .el-form-item__label {
-                margin-left: -8px;
-                padding-right: 0px;
-              }
-              .el-form-item__content {
-                flex: 1;
-                .el-textarea__inner {
-                  height: 56px;
-                }
-              }
-            }
-          }
-        }
-      }
-      textarea {
-        width: 100%;
-        height: 100%;
-      }
     }
   }
   .el-drawer__footer {

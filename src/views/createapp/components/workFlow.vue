@@ -3,7 +3,7 @@ import '../../styles/workFlowArrange.scss';
 import { onMounted, ref, watch, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElTooltip, ElMessage } from 'element-plus';
-import { VueFlow, useVueFlow, Panel, Position } from '@vue-flow/core';
+import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import BranchNode from './workFlowConfig/BranchNode.vue';
@@ -25,15 +25,9 @@ import {
 } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import { api } from 'src/apis';
-import { BranchSourceIdType, StatusInfoTitle } from './types';
+import { StatusInfoTitle } from './types';
 import { useRoute } from 'vue-router';
-import {
-  nodeTypeToIcon,
-  iconTypeList,
-  getSrcIcon,
-  DefaultViewPortZoom,
-} from './types';
-import yaml from 'js-yaml';
+import { getSrcIcon, DefaultViewPortZoom } from './types';
 import $bus from 'src/bus/index';
 import CustomLoading from '../../customLoading/index.vue';
 import EditFlowName from './workFlowConfig/editFlowName.vue';
@@ -151,7 +145,7 @@ onConnect((e) => {
     type: 'normal',
   });
 });
-const handleChange = (activeList) => {
+const handleChange = () => {
   activeNames.value = activeName.value;
 };
 
@@ -163,12 +157,12 @@ const addWorkFlow = () => {
 };
 // 关闭工作流弹出
 const handleClose = (flowId?: string) => {
-  if(isEditFlowName.value){
+  if (isEditFlowName.value) {
     api.querySingleAppData({ id: route.query.appId }).then((res) => {
       //workflowList 数据更新
       workFlowList.value = res[1]?.result.workflows;
-      choiceFlowId(workFlowList.value.find(item => item.id === flowId));
-    })
+      choiceFlowId(workFlowList.value.find((item) => item.id === flowId));
+    });
   }
   isEditFlowName.value = false;
   isAddWorkFlow.value = false;
@@ -247,7 +241,7 @@ async function layoutGraph(direction) {
 // 拖拽添加
 const dropFunc = (e) => {
   if (!flowObj.value?.flowId) {
-    ElMessage.warning(i18n.global.t('app.create_or_edit_workflow_first'),);
+    ElMessage.warning(i18n.global.t('app.create_or_edit_workflow_first'));
     return;
   }
   // 如果调试弹窗打开，不可拖拽
@@ -297,7 +291,7 @@ const handleDebugDialogOps = (visible) => {
   // 这里将对应的保存
   if (!debugDialogVisible.value) {
     //在点击调试时，默认该
-    if(!updateFlowsDebugStatus.value){
+    if (!updateFlowsDebugStatus.value) {
       flowObj.value.debug = false;
     }
     saveFlow();
@@ -382,8 +376,9 @@ const queryFlow = (deal: string) => {
               choiceFlowId(workFlowList.value[0]);
             }
           }
+          const flowDataList = res?.[1]?.result?.workflows || [];
           // 更新当前publish状态
-          emits('updateFlowsDebug');
+          emits('updateFlowsDebug', '', flowDataList);
           updateFlowsDebugStatus.value = true;
         }
         loading.value = false;
@@ -394,7 +389,7 @@ const openEditFlowDialog = (item) => {
   editFlowNameId.value = item.id;
   editFlow(item);
   isEditFlowName.value = true;
-}
+};
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
 const editFlow = (item) => {
   loading.value = true;
@@ -493,7 +488,7 @@ const redrageFlow = (nodesList, edgesList) => {
 };
 
 // 接受工作流调试时获取的相应的数据
-$bus.on('getNodesStatue', (item:any) => {
+$bus.on('getNodesStatue', (item: any) => {
   // 对相应节点修改状态--此处需要分为开始/结束,分支,普通三种节点修改
   try {
     const newLines = item;
@@ -547,7 +542,7 @@ $bus.on('getNodesStatue', (item:any) => {
     } else {
       // do nothing
     }
-  } catch (error) {
+  } catch {
     ElMessage.error(i18n.global.t('semantic.checkFormat'));
   }
   // 修改节点时，需要将对应节点的边也进行修改
@@ -556,7 +551,7 @@ $bus.on('getNodesStatue', (item:any) => {
 // 这里结束整个工作流对话
 $bus.on('debugChatEnd', () => {
   // 更新发布按钮状态
-  emits('updateFlowsDebug');
+  queryFlow('update');
   updateFlowsDebugStatus.value = true;
 });
 
@@ -591,7 +586,7 @@ const updateConnectHandle = (nodeId) => {
 };
 
 // 这里是松开鼠标时[拖拽结束]-恢复不再拖拽的handle节点默认状态【对应的是customNode里拖拽节点设置状态】
-const cancelConnectStatus = (e) => {
+const cancelConnectStatus = () => {
   if (connectHandleNodeId.value) {
     // 获取到当前的node,更新
     const node = findNode(connectHandleNodeId.value);
@@ -604,7 +599,7 @@ const cancelConnectStatus = (e) => {
   }
 };
 
-const saveFlow = (updateNodeParameter?) => {
+const saveFlow = (updateNodeParameter?, debug?) => {
   loading.value = true;
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
@@ -669,6 +664,9 @@ const saveFlow = (updateNodeParameter?) => {
       }
     });
   }
+  if (debug) {
+    flowObj.value.debug = true;
+  }
   // 更新最新的节点与边的数据
   api
     .createOrUpdateFlowTopology(
@@ -692,9 +690,7 @@ const saveFlow = (updateNodeParameter?) => {
       if (res[1]?.result) {
         queryFlow('update');
         const updatedCurFlow = res[1].result.flow;
-        console.log(res[1].result);
         isNodeConnect.value = res[1].result.connectivity;
-        console.log(isNodeConnect.value);
         redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
       }
       loading.value = false;
@@ -736,7 +732,9 @@ defineExpose({
         <div class="copilot-aside nodes" v-if="isCopilotAsideVisible">
           <CustomLoading :loading="apiLoading"></CustomLoading>
           <div class="apiCenterBox">
-            <div class="apiCenterTitle">{{ $t('semantic.semantic_interface_center') }}</div>
+            <div class="apiCenterTitle">
+              {{ $t('semantic.semantic_interface_center') }}
+            </div>
             <div class="apiCenterSearch">
               <el-input
                 v-model="apiSearchValue"
@@ -757,6 +755,7 @@ defineExpose({
                   title="Consistency"
                   :name="item.serviceId"
                   v-for="item in apiServiceList"
+                  :key="item.serviceId"
                 >
                   <template #title>
                     <el-icon
@@ -782,7 +781,13 @@ defineExpose({
                     "
                   >
                     <img class="nodeIcon" :src="getSrcIcon(node)" />
-                    <div class="stanceName">{{ node.name }}</div>
+                    <el-popover :content="node.name">
+                      <template #reference>
+                        <div class="stancesName">
+                          {{ node.name }}
+                        </div>
+                      </template>
+                    </el-popover>
                   </div>
                 </el-collapse-item>
               </el-collapse>
@@ -905,14 +910,17 @@ defineExpose({
           >
             <el-option
               class="workFlowOption"
-              v-for="(item, index) in workFlowList"
+              v-for="item in workFlowList"
               :label="item.name"
               :value="item.name"
               :key="item.id"
               @click="choiceFlowId(item)"
             >
               <div class="flowName">{{ item.name }}</div>
-              <div class="dealIcon editIcon" @click="openEditFlowDialog(item)"></div>
+              <div
+                class="dealIcon editIcon"
+                @click="openEditFlowDialog(item)"
+              ></div>
               <div class="dealIcon delIcon" @click.stop="delFlow(item)"></div>
             </el-option>
             <template #footer class="selectFooter">
@@ -956,19 +964,19 @@ defineExpose({
       <!-- 暂无工作流展示 -->
       <div class="noWorkFlow" v-else>
         <div class="noFlow"></div>
-        <div class="noFlowDesc">{{ $t('flow.no_flow')}}</div>
+        <div class="noFlowDesc">{{ $t('flow.no_flow') }}</div>
         <el-button type="primary" class="w96 addWorkFlow" @click="addWorkFlow">
           {{ $t('flow.create_flow') }}
         </el-button>
       </div>
     </div>
-    <EditFlowName 
-      v-model="isEditFlowName" 
+    <EditFlowName
+      v-model="isEditFlowName"
       :flowObj="flowObj"
       :appId="route.query?.appId"
       :editFlowNameId="editFlowNameId"
       @handleClose="handleClose"
-      ></EditFlowName>
+    ></EditFlowName>
     <!-- 工作流新建弹窗 -->
     <WorkFlowDialog
       v-if="isAddWorkFlow"
@@ -1019,7 +1027,6 @@ defineExpose({
   }
   .time {
     height: 16px;
-    line-height: 16px;
     padding: 0px 8px;
     border-radius: 4px;
   }

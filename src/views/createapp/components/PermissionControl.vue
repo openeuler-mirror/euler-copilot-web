@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Search } from '@element-plus/icons-vue';
 import { computed, ref } from 'vue';
-
+import i18n from 'src/i18n';
 type PermissionType = 'public' | 'private' | 'protected';
 
 const props = defineProps<{
@@ -63,7 +63,7 @@ const filteredOptionalList = computed(() => {
         :key="index"
         :value="item.value"
       >
-        {{ $t(item.label) }}
+        {{ i18n.global.t(item.label) }}
       </el-radio>
     </el-radio-group>
 
@@ -125,9 +125,15 @@ const filteredOptionalList = computed(() => {
 </template>
 <style lang="scss" scoped>
 .permission-control {
+  .permission-control__radio {
+    margin-bottom: 8px !important;
+  }
   :deep(.el-radio-group) {
+    margin-top: 8px !important;
     .el-radio {
       margin-right: 22px;
+      line-height: 16px;
+      height: 16px;
     }
   }
 

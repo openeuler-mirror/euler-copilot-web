@@ -1,47 +1,40 @@
 <script lang="ts" setup>
-import { computed, ComputedRef, nextTick, onMounted, ref } from 'vue';
+import { computed, ComputedRef, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { onHtmlEventDispatch } from 'src/utils';
+import { getBaseUrl } from 'src/utils/tools';
 import {
   useHistorySessionStore,
   useSessionStore,
   useAccountStore,
-  useLangStore,
 } from 'src/store';
-import { marked } from 'marked';
-import { ARGEEMENT_VERSION } from 'src/conf/version';
 import { useChangeThemeStore } from 'src/store';
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { api } from 'src/apis';
 import { ElMessage } from 'element-plus';
 import { watch } from 'vue';
 import i18n from 'src/i18n';
 import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import CopilotIcon from '@/assets/svgs/routerCopilot.svg';
 import CopilotIconSelected from '@/assets/svgs/routerCopilotSelected.svg';
-import ApiIcon from '@/assets/svgs/routerApi.svg';
-import ApiIconSelected from '@/assets/svgs/routerApiSelected.svg';
+import PluginCenter from '@/assets/svgs/plugin_center.svg';
+import PluginCenterSelected from '@/assets/svgs/plugin_center_active.svg';
 import AppIcon from '@/assets/svgs/routerApp.svg';
 import AppIconSelected from '@/assets/svgs/routerAppSelected.svg';
-import WitchainDIcon from '@/assets/svgs/witChainD.svg';
-import WitchainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
+import WitChainDIcon from '@/assets/svgs/witChainD.svg';
+import WitChainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
+import Setting from '@/assets/svgs/setting.svg';
+import SettingSelected from '@/assets/svgs/setting_active.svg';
 import tools from '../tools/index.vue';
+import TitleBar from './components/TitleBar.vue';
 
 const { userinfo } = storeToRefs(useAccountStore());
 const { getUserInfo } = useAccountStore();
 const { getHistorySession } = useHistorySessionStore();
 const { app } = storeToRefs(useSessionStore());
-const { createNewSession } = useHistorySessionStore();
 
 // 挂载全局事件
 window.onHtmlEventDispatch = onHtmlEventDispatch as any;
-const { logout } = useAccountStore();
-const { historySession } = storeToRefs(useHistorySessionStore());
-const { conversationList } = storeToRefs(useSessionStore());
-const { language } = storeToRefs(useLangStore());
-const { changeLanguage } = useLangStore();
-const dialogVisible = ref(false);
 const themeStore = useChangeThemeStore();
 const apikeyVisible = ref(false);
 const KnowledgeVisible = ref(false);
@@ -51,6 +44,7 @@ const revoke = ref(true);
 const isSubmitDisabled = ref(true);
 const ruleFormRef = ref<any>();
 const router = useRouter();
+const route = useRoute();
 const type = import.meta.env.VITE_USER_TYPE;
 let routerList: ComputedRef<
   Array<{
@@ -72,10 +66,10 @@ let routerList: ComputedRef<
       anotherName: 'copilot',
     },
     {
-      name: i18n.global.t('menu.semantic_center'),
+      name: i18n.global.t('menu.plugin_center'),
       path: '/api',
-      src: ApiIcon,
-      selectedSrc: ApiIconSelected,
+      src: PluginCenter,
+      selectedSrc: PluginCenterSelected,
       routerName: 'api',
     },
     {
@@ -89,8 +83,8 @@ let routerList: ComputedRef<
     {
       name: i18n.global.t('menu.sql'),
       path: '/witchainD',
-      src: WitchainDIcon,
-      selectedSrc: WitchainDIconSelected,
+      src: WitChainDIcon,
+      selectedSrc: WitChainDIconSelected,
       routerName: 'witchainD',
     },
   ];
@@ -112,46 +106,6 @@ const rules = ref();
 const formValidateStatus = ref<any>({
   kb_id: true,
 });
-
-const logoutHandler = () => {
-  logout();
-  historySession.value = [];
-  conversationList.value = [];
-};
-
-// 协议内容
-const agreement = ref<string>('');
-// 协议版本
-const agreementVersion = ref<string>(ARGEEMENT_VERSION);
-
-/**
- * 读取协议
- */
-const readAgreement = async () => {
-  const response = await import('src/conf/agreement.md?raw');
-  agreement.value = marked.parse(response.default) as string;
-};
-
-/**
- * 处理服务协议是否显示
- * @param CheckedVersion
- */
-const handleAgreement = async (CheckedVersion: string | null) => {
-  if (agreementVersion.value === CheckedVersion) {
-    return;
-  }
-  await readAgreement();
-  dialogVisible.value = true;
-};
-
-const theme = ref(localStorage.getItem('theme') || 'light');
-
-const changeTheme = () => {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark';
-  document.body.setAttribute('theme', theme.value);
-  localStorage.setItem('theme', theme.value);
-  themeStore.theme = theme.value;
-};
 
 const createApi = async () => {
   apikey.value = '';
@@ -193,11 +147,9 @@ const copy = () => {
   navigator.clipboard.writeText(apikey.value);
 };
 
-const lang = computed(() => (language.value === 'EN' ? 'English' : '简体中文'));
-
 const handleConfirmCreateModel = async (formData: any | undefined) => {
   const [_, res] = await api.updateKnowledgeList({
-    kb_id: ruleForm.kb_id || '',
+    kb_ids: ruleForm.kb_id || '',
   });
   if (!_ && res) {
     localStorage.setItem('kb_id', ruleForm.kb_id || '');
@@ -210,39 +162,33 @@ const handleConfirmCreateModel = async (formData: any | undefined) => {
   }
 };
 
-const changeLanguagefun = (lang: 'CN' | 'EN') => {
-  changeLanguage(lang);
-  // 同步语言到iframe
-  const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
-  if (iframe?.contentWindow) {
-    const data = { lang: localStorage.getItem('localeLang') ?? 'CN' ,type: 'changeLanguage'};
-    let target = window.location.origin.includes('localhost')?'http://localhost:3002/witchaind/' : `${window.location.origin}/witchaind/`;
-    iframe.contentWindow.postMessage(data, target);
-  }
-};
-
 const handleFormValidate = (prop: any, isValid: boolean, message: string) => {
   formValidateStatus.value[prop] = isValid;
 };
 
-onMounted(() => {
+onMounted(async () => {
+  const baseUrl = await getBaseUrl();
+  const origin = window.location.origin;
+  const isElectron = window.navigator.userAgent.includes('Electron');
+  const iframeTarget = isElectron
+    ? `${baseUrl}/witchaind`
+    : `${origin}/witchaind`;
+
   if (localStorage.getItem('theme')) {
-    document.body.setAttribute(
-      'theme',
-      localStorage.getItem('theme') || 'light',
-    );
+    // document.body.setAttribute(
+    //   'theme',
+    //   localStorage.getItem('theme') || 'light',
+    // );
   }
   if (localStorage.getItem('kb_id')) {
     ruleForm.kb_id = localStorage.getItem('kb_id');
   }
+
   initCopilot();
+
   const iframe = document.getElementById('my-iframe') as HTMLIFrameElement;
   if (iframe) {
-    if (window.location.origin === 'http://localhost:3000') {
-      iframe.src = `http://localhost:3002/witchaind/`;
-    } else {
-      iframe.src = `${window.location.origin}/witchaind/`;
-    }
+    iframe.src = iframeTarget;
   }
 });
 
@@ -263,18 +209,7 @@ watch(
   { deep: true },
 );
 
-const addNewSession = async (routerName: string) => {
-  if (routerName === 'dialogue') {
-    await createNewSession();
-  }
-};
-
 const initCopilot = async (): Promise<void> => {
-  if (localStorage.getItem('theme')) {
-    theme.value = localStorage.getItem('theme') || 'light';
-  } else {
-    localStorage.setItem('theme', 'light');
-  }
   const currRoute = router.currentRoute;
   if (currRoute.value.query.appId) {
     app.value = {
@@ -308,99 +243,54 @@ watch(
 
 <template>
   <div class="dialogue" id="dialogId">
-    <header
-      class="dialogue-header"
-      v-if="!qiankunWindow.__POWERED_BY_QIANKUN__"
-    >
-      <span>
-        <img src="@/assets/svgs/euler_copilot_logo.svg" />
-        <h4>{{ $t('home.name') }}</h4>
-      </span>
-      <div class="header-right">
-        <el-popover popper-class="popper-class">
-          <template #reference>
-            <span class="language">{{ lang }}</span>
-          </template>
-          <div
-            class="exit-button lang-button"
-            :class="lang === 'English' ? 'lang-selected' : ''"
-            @click="changeLanguagefun('EN')"
-          >
-            English
-          </div>
-          <div class="divider"></div>
-          <div
-            class="exit-button lang-button"
-            :class="lang === '简体中文' ? 'lang-selected' : ''"
-            @click="changeLanguagefun('CN')"
-          >
-            简体中文
-          </div>
-        </el-popover>
-        <div class="mode">
-          <span v-if="theme === 'light'" @click="changeTheme">
-            <img id="sun-icon" src="@/assets/svgs/sun.svg" alt="" />
-          </span>
-          <span v-else @click="changeTheme">
-            <img id="moon-icon" src="@/assets/svgs/moon.svg" alt="" />
-          </span>
-        </div>
-
-        <el-popover popper-class="popper-class">
-          <template #reference>
-            <img class="avatar" src="@/assets/svgs/user.svg" />
-          </template>
-          <div
-            class="exit-button lang-button"
-            type="primary"
-            @click="logoutHandler"
-          >
-            {{ $t('Login.logout') }}
-          </div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" @click="apikeyVisible = true">
-            API KEY
-          </div>
-          <div class="divider"></div>
-          <div class="exit-button lang-button" @click="KnowledgeVisible = true">
-            {{ i18n.global.t('witChainD.witChainD') }}
-          </div>
-        </el-popover>
-      </div>
-    </header>
+    <TitleBar />
     <div class="dialogue-container">
       <div class="dialogue-menu">
-        <router-link
-          v-for="item in routerList"
-          :key="item.path"
-          :to="item.path"
-          class="menu-item"
-        >
+        <div>
+          <router-link
+            v-for="item in routerList"
+            :key="item.path"
+            :to="item.path"
+            class="menu-item"
+          >
+            <span class="menu-icon">
+              <el-icon class="menu-icon">
+                <img
+                  v-if="
+                    router.currentRoute.value.name
+                      ?.toString()
+                      .indexOf(item.routerName) !== -1 ||
+                    router.currentRoute.value.name
+                      ?.toString()
+                      .indexOf(item.anotherName!) !== -1
+                  "
+                  class="create-button__icon"
+                  :src="item.selectedSrc"
+                />
+                <img v-else class="create-button__icon" :src="item.src" />
+              </el-icon>
+            </span>
+            <span class="menu-text">{{ item.name }}</span>
+          </router-link>
+        </div>
+
+        <router-link to="/settings" class="menu-item">
           <span class="menu-icon">
-            <el-icon class="menu-icon" @click="addNewSession(item.routerName)">
+            <el-icon class="menu-icon">
               <img
-                v-if="
-                  router.currentRoute.value.name
-                    ?.toString()
-                    .indexOf(item.routerName) !== -1 ||
-                  router.currentRoute.value.name
-                    ?.toString()
-                    .indexOf(item.anotherName!) !== -1
-                "
                 class="create-button__icon"
-                :src="item.selectedSrc"
+                :src="route.path === '/settings' ? SettingSelected : Setting"
               />
-              <img v-else class="create-button__icon" :src="item.src" />
             </el-icon>
           </span>
-          <span class="menu-text">{{ item.name }}</span>
+          <span class="menu-text">{{ i18n.global.t('menu.settings') }}</span>
         </router-link>
       </div>
       <div class="dialogue-content">
         <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
           <tools />
         </KeepAlive>
-          <RouterView v-show="router.currentRoute.value.name !== 'witchainD'"/>
+        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
       </div>
     </div>
     <el-dialog
@@ -508,61 +398,6 @@ watch(
 </template>
 
 <style lang="scss">
-.dialogue-container {
-  display: flex;
-  height: calc(100% - 48px);
-}
-//hover active selected 样式待填充
-.dialogue-menu {
-  position: relative;
-  z-index: 1;
-  width: 64px;
-  height: 100%;
-  padding-top: 8px;
-  background-color: var(--o-bg-color-base);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  .menu-item {
-    display: flex;
-    font-style: none;
-    text-decoration: none;
-    width: 64px;
-    height: 64px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 10px;
-    cursor: pointer;
-    .menu-icon {
-      align-items: center;
-      img {
-        //hover颜色待改进
-        width: 40px;
-        &:hover {
-          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
-            brightness(101%) contrast(101%);
-        }
-        &:active {
-          filter: invert(43%) sepia(94%) saturate(1622%) hue-rotate(190deg)
-            brightness(101%) contrast(101%);
-        }
-      }
-    }
-    .menu-text {
-      font-style: none;
-      display: block;
-      font-size: 12px;
-      color: var(--o-text-color-primary);
-      text-align: center;
-      padding: 0 1px;
-    }
-  }
-}
-.dialogue-content {
-  height: 100%;
-  flex: 1;
-}
 .model-dialog {
   padding: 0 !important;
   .el-dialog__title {
@@ -641,14 +476,11 @@ watch(
 
 .apikey {
   &_view {
-    // height: 400px;
     &_alert {
       margin-bottom: 8px;
     }
 
     &_main {
-      // background-color: pink;
-      // height: 336px;
       .main {
         display: flex;
         flex-direction: column;
@@ -722,7 +554,6 @@ watch(
 }
 
 #sun-icon {
-  // background-color: pink;
   &:hover {
     filter: invert(51%) sepia(95%) saturate(146%) hue-rotate(168deg)
       brightness(94%) contrast(83%);
@@ -755,47 +586,56 @@ watch(
   overflow: hidden;
   background-image: var(--o-bg-image);
   background-size: cover;
-  &-header {
+
+  .dialogue-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 48px;
-    padding: 0 24px;
-    background-color: var(--o-bg-color-base);
-    span {
+    height: calc(100% - 48px);
+
+    .dialogue-menu {
+      position: relative;
+      z-index: 1;
+      width: 64px;
+      height: 100%;
+      padding-top: 8px;
+      background-color: var(--o-bg-color-base);
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      display: flex;
-      align-content: center;
-      vertical-align: top;
-      font-size: 16px;
-      height: 48px;
-      img {
-        width: 24px;
-        height: 48px;
-        border-radius: 50%;
-      }
-      h4 {
-        font-size: 18px;
-        margin-left: 5px;
-        color: var(--o-text-color-primary);
-      }
-    }
-    .avatar {
-      width: 24px;
-      height: 48px;
-      border-radius: 50%;
-      cursor: pointer;
-      &:hover {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-    }
-    .header-right {
-      display: flex;
-      .mode {
+      justify-content: space-between;
+      .menu-item {
+        display: flex;
+        font-style: none;
+        text-decoration: none;
+        width: 64px;
+        height: 64px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
         cursor: pointer;
-        margin-right: 18px;
-        margin-left: 18px;
+        .menu-icon {
+          align-items: center;
+          img {
+            width: 40px;
+          }
+        }
+        .menu-text {
+          font-style: none;
+          display: block;
+          font-size: 12px;
+          color: var(--o-text-color-primary);
+          text-align: center;
+          padding: 0 1px;
+        }
       }
+    }
+
+    .dialogue-content {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      background-image: var(--o-bg-image);
+      background-size: cover;
     }
   }
 }

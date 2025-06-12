@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - electron-winstaller
+  - electron
+  - esbuild
+  - vue-demi
+patchedDependencies:
+  monaco-editor: patches/monaco-editor.patch

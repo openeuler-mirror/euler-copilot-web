@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import {
-  ref,
-  onMounted,
-  withDefaults,
-  watch,
-  shallowRef,
-} from 'vue';
+import { ref, onMounted, watch, shallowRef } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { json } from '@codemirror/lang-json';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { useHistorySessionStore } from 'src/store';
 import { storeToRefs } from 'pinia';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore, useHistorySessionStore } from '@/store/';
 const { params } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
 const CODE_STYLE = {
@@ -123,7 +116,6 @@ onMounted(() => {
 }
 .json-display {
   font-family: Arial, sans-serif;
-  /* max-width: 600px; */
   margin: 0 auto;
 }
 
@@ -184,9 +176,9 @@ pre {
   white-space: pre-wrap; /* 保持缩进同时允许换行 */
   margin: 8px 0px;
   border: 1px solid black;
-  /* max-height: 300px; */
   overflow-y: scroll;
   .code-toolbar {
+    user-select: none;
     background-color: var(--o-bash-bg);
     color: var(--o-text-color-primarys);
     display: flex;

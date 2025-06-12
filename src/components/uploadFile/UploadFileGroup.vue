@@ -9,8 +9,6 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { defineProps, defineEmits } from 'vue';
-
 import UploadCard from './UploadCard.vue';
 import type { UploadFileCard } from './type';
 

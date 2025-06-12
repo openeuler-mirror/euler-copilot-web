@@ -13,6 +13,7 @@ import {
 } from 'element-plus';
 import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
+import * as _ from 'lodash';
 import {
   useAccountStore,
   useHistorySessionStore,
@@ -24,7 +25,11 @@ import { useI18n } from 'vue-i18n';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import appIcon from '@/assets/svgs/myApp.svg';
-import { IconChevronUp } from '@computing/opendesign-icons';
+import {
+  IconCaretRight,
+  IconChevronUp,
+  IconChevronDown,
+} from '@computing/opendesign-icons';
 import router from 'src/router';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
@@ -50,7 +55,8 @@ const {
   currentSelectedSession,
 } = storeToRefs(useHistorySessionStore());
 const { app, appList } = storeToRefs(useSessionStore());
-const { getHistorySession } = useHistorySessionStore();
+const { getHistorySession, createNewSession, currentLLM } =
+  useHistorySessionStore();
 const { userinfo } = storeToRefs(useAccountStore());
 const deleteType = ref(true);
 // 搜索的关键词
@@ -127,6 +133,18 @@ onMounted(() => {
   getHistorySession();
 });
 
+watch(
+  () => currentSelectedSession.value,
+  () => {
+    if (currentSelectedSession.value) {
+      currentLLM();
+    }
+  },
+  {
+    immediate: true,
+  },
+);
+
 const deletedSessionName = ref('');
 const sessionList = ref();
 /**
@@ -177,6 +195,7 @@ const deleteSession = async () => {
       historySession.value = [];
       isBatchDeletion.value = false;
     } else {
+      console.log('删除会话时候记录');
       getHistorySession();
       isBatchDeletion.value = false;
     }
@@ -238,16 +257,29 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
+const handleNewChat = _.debounce(
+  () => {
+    selectedAppId.value = '';
+    user_selected_app.value = '';
+    app.value.selectedAppId = '';
+    app.value.appId = '';
+    createNewSession();
+  },
+  500,
+  { leading: true, trailing: false },
+);
+
 const selectApp = (id) => {
   if (selectedAppId.value === id) {
     selectedAppId.value = '';
-    user_selected_app.value = [''];
+    user_selected_app.value = '';
     app.value.selectedAppId = '';
+    app.value.appId = '';
   } else {
     selectedAppId.value = id;
-    user_selected_app.value = [id];
-    // app.value.appId = id;
+    user_selected_app.value = id;
     app.value.selectedAppId = id;
+    app.value.appId = id;
   }
   getHistorySession();
 };
@@ -255,7 +287,7 @@ function ensureAppAtFirstPosition() {
   if (!app.value.appId) {
     return;
   }
-  const newApp = app.value;
+  const newApp = JSON.parse(JSON.stringify(app.value));
   const index = apps.value.findIndex((app) => app.appId === newApp.appId);
   if (index !== -1 && index !== 0) {
     const [item] = apps.value.splice(index, 1);
@@ -264,7 +296,7 @@ function ensureAppAtFirstPosition() {
     apps.value.unshift(newApp);
   }
   selectedAppId.value = app.value.appId;
-  user_selected_app.value = [app.value.appId];
+  user_selected_app.value = app.value.appId;
 }
 
 const getAppsValue = async () => {
@@ -325,6 +357,10 @@ watch(
     </ElTooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
+        <ElButton class="create-button" @click="handleNewChat">
+          <img class="create-button__icon" src="@/assets/svgs/create.svg" />
+          <span>{{ $t('history.new_chat') }}</span>
+        </ElButton>
         <div class="collapsible-apps">
           <div class="collapsible-header" @click="toggleCollapse">
             <div class="header-content">
@@ -341,12 +377,12 @@ watch(
           <transition name="collapse">
             <ul v-if="!isCollapsed" class="app-list">
               <li
-                v-for="apps in displayedApps"
-                :key="apps.appId"
-                @click="selectApp(apps.appId)"
-                :class="{ selected: selectedAppId === apps.appId }"
+                v-for="app in displayedApps"
+                :key="app.appId"
+                @click="selectApp(app.appId)"
+                :class="{ selected: selectedAppId === app.appId }"
               >
-                <span>{{ apps.name }}</span>
+                <span>{{ app.name }}</span>
               </li>
             </ul>
           </transition>
@@ -408,19 +444,23 @@ watch(
             />
           </div>
           <ul v-if="filteredHistorySessions.length">
-            <ElCollapse v-model="activeNames">
+            <el-collapse
+              v-model="activeNames"
+              class="o-hpc-collapse"
+              :prefix-icon="IconChevronDown"
+            >
               <template v-for="item in filteredHistorySessions" :key="item.key">
-                <ElCollapseItem :name="item.key">
+                <el-collapse-item :name="item.key">
                   <template #title>
-                    {{ item.title }}
-                  </template>
-                  <template #icon="{ isActive }">
-                    <el-icon v-if="isActive" :size="16">
-                      <CaretBottom />
+                    <el-icon
+                      class="el-collapse-item__arrow"
+                      :class="{ 'is-active': activeNames.includes(item.key) }"
+                    >
+                      <IconCaretRight></IconCaretRight>
                     </el-icon>
-                    <el-icon v-else :size="16">
-                      <CaretRight />
-                    </el-icon>
+                    <span class="el-collapse-item__title">
+                      {{ item.title }}
+                    </span>
                   </template>
                   <template
                     v-for="session in item.list"
@@ -432,9 +472,9 @@ watch(
                       @deleteOne="deleteOne"
                     />
                   </template>
-                </ElCollapseItem>
+                </el-collapse-item>
               </template>
-            </ElCollapse>
+            </el-collapse>
           </ul>
 
           <div v-else class="history-record-null">
@@ -495,6 +535,13 @@ watch(
   </aside>
 </template>
 <style lang="scss" scoped>
+:deep(.el-collapse-item__title) {
+  line-height: 18px !important;
+}
+:deep(.el-collapse-item__arrow.is-active) {
+  transform: rotate(90deg);
+  padding-left: 3px;
+}
 :deep(.el-collapse-item__content) {
   border-bottom: none;
   padding-bottom: 0px;
@@ -503,8 +550,6 @@ watch(
 
 :deep(.el-collapse-item__header) {
   display: flex;
-  flex-direction: row-reverse;
-  justify-content: flex-end;
   align-items: center;
   height: 16px;
   margin-bottom: 8px;
@@ -709,11 +754,11 @@ watch(
     border-radius: 8px;
     border-color: #5ab3ff !important;
     padding-top: 8px;
-
+    margin-bottom: 16px;
     span {
       font-size: 16px;
       color: var(--o-color-white);
-      line-height: 24px;
+      line-height: 26px;
       vertical-align: inherit;
     }
 
@@ -732,24 +777,6 @@ watch(
     flex-direction: column;
     position: relative;
     overflow: auto;
-    /* 滚动条轨道样式 */
-    ::-webkit-scrollbar-track {
-      background-color: transparent !important;
-    }
-
-    ::-webkit-scrollbar {
-      background-color: transparent !important;
-      left: 12px;
-      width: 3px;
-      height: 3px;
-    }
-
-    /* 滚动条的滑块 */
-    ::-webkit-scrollbar-thumb {
-      background-color: #d3dce9 !important;
-      border-radius: 3px;
-    }
-
     &-blogroll {
       display: block;
       padding-right: 24px;
@@ -780,12 +807,6 @@ watch(
           color: #7aa5ff;
         }
       }
-    }
-
-    /* 滚动条滑块hover样式 */
-    ::-webkit-scrollbar-thumb:hover {
-      background-color: #d3dce9 !important;
-      /* 鼠标悬停时的滚动条按钮颜色 */
     }
 
     &-tips {
@@ -881,7 +902,8 @@ watch(
       margin-top: 8px;
       margin-bottom: 8px;
       & span {
-        color: var(--o-text-color-secondary);
+        font-weight: 700;
+        color: var(--o-text-color-record-number);
       }
     }
   }

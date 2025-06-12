@@ -2,11 +2,10 @@
 import { onMounted, ref } from 'vue';
 import { EG_LIST } from '../constants';
 import { IconLoad } from '@computing/opendesign-icons';
-import { useChangeThemeStore } from 'src/store';
 import router from 'src/router';
-const themeStore = useChangeThemeStore();
 import { useRoute } from 'vue-router';
 import { api } from 'src/apis';
+import defaultIcon from '@/assets/svgs/defaultIcon.webp';
 
 const route = useRoute();
 const appName = ref();
@@ -83,7 +82,7 @@ onMounted(() => {
       <p class="inital-panel-tips"></p>
       <div class="container">
         <div class="eg">
-          <p>{{ $t('main.left_describe') }}</p>
+          <p class="eg-title">{{ $t('main.left_describe') }}</p>
           <ul class="eg-list">
             <li
               class="eg-list-item"
@@ -91,8 +90,7 @@ onMounted(() => {
               :key="item.key"
               :style="item.style"
             >
-              <img v-if="themeStore.theme === 'dark'" :src="item.iconDark" />
-              <img v-else :src="item.icon" alt="" />
+              <img :src="defaultIcon" alt="" />
               <div class="eg-list-item__text">
                 <p>{{ $t('main.' + item.key) }}</p>
                 <span class="eg-list-item__text-desc">
@@ -130,11 +128,6 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.dialogue-shell {
-  width: 100%;
-  height: 100%;
-}
-
 .sidenav {
   height: 100%;
   /* 100% 全高 */
@@ -153,7 +146,6 @@ onMounted(() => {
   /* 禁用水平滚动 */
   padding-top: 60px;
   /* 将内容从顶部放置 60px */
-  // transition: 0.5s; /* 0.5 秒过渡效果在侧导航中滑动 */
 }
 
 /* 导航菜单链接 */
@@ -188,18 +180,28 @@ onMounted(() => {
 
 .question-list {
   margin-top: 16px;
+  font-size: 16px;
   li {
     margin-bottom: 16px;
     .blue {
-      color: #5ab3ff;
+      background: linear-gradient(
+        to bottom,
+        rgb(109, 117, 250),
+        rgb(90, 179, 255)
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
   }
   .question-number {
+    font-size: 14px;
     margin-right: 8px;
     color: var(--o-text-color-secondary);
   }
   .question-des {
-    color: var(--o-text-color-secondary);
+    font-size: 14px;
+    color: var(--o-text-color-primary);
   }
 }
 
@@ -255,7 +257,6 @@ onMounted(() => {
 }
 
 .inital-panel {
-  // background-color: var(--o-bg-color-base);
   background-color: transparent;
   border-radius: 8px;
   padding-top: 48px;
@@ -271,7 +272,7 @@ onMounted(() => {
     height: 36px;
     justify-content: center;
     line-height: 36px;
-    font-weight: 500;
+    font-weight: 700;
     font-size: 28px;
     color: var(--o-text-color-primary);
   }
@@ -293,9 +294,10 @@ onMounted(() => {
     border-radius: 8px;
     width: 492px;
     height: 320px;
-    p {
-      font-size: 16px;
-      color: var(--o-text-color-secondary);
+    &-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--o-text-color-primary);
     }
     &-btn {
       display: flex;
@@ -338,7 +340,7 @@ onMounted(() => {
       &-item {
         display: flex;
         align-items: center;
-        width: calc(50% - 8px);
+        width: 218px;
         height: 80px;
         background: var(--o-bg-color-base);
         overflow: hidden;
@@ -349,13 +351,14 @@ onMounted(() => {
         }
 
         img {
-          width: 37px;
-          height: 37px;
-          margin: 0 6px 0 8px;
+          width: 32px;
+          height: 32px;
+          margin: 16px 8px 32px 16px;
         }
 
         &__text {
-          width: 100%;
+          // width: 100%;
+          margin-right: 16px;
           display: flex;
           flex-direction: column;
           font-size: 16px;
@@ -364,7 +367,7 @@ onMounted(() => {
           line-height: 24px;
 
           &-desc {
-            font-size: 12px;
+            font-size: 14px;
             color: var(--o-text-color-secondary);
             font-weight: 400;
           }

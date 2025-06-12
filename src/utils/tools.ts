@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -30,11 +30,11 @@ type HtmlEvent = 'copyPreCode';
  * @param data 自定义属性
  */
 export const onHtmlEventDispatch = (
-  _t: any,
-  _ty: any,
-  event: any,
+  _t: EventTarget | null,
+  _ty: string,
+  _event: Event,
   type: HtmlEvent,
-  data: any,
+  data: string,
 ): void => {
   if (type === 'copyPreCode') {
     const code = document.getElementById(data);
@@ -69,8 +69,60 @@ export const writeText = (text: string): void => {
     textArea.focus();
     textArea.select();
     new Promise<void>((res, rej) => {
-      document.execCommand('copy') ? res() : rej(new Error(i18n.global.t('semantic.copyFailed')));
+      if (document.execCommand('copy')) {
+        res();
+      } else {
+        rej(new Error(i18n.global.t('semantic.copyFailed')));
+      }
       textArea.remove();
     });
   }
 };
+
+/**
+ * 获取后端代理URL，本地开发环境由 axios 拼接 path
+ */
+export async function getBaseProxyUrl(): Promise<string> {
+  // Electron 生产环境（file:协议）读取配置
+  if (window.eulercopilot && window.location.protocol === 'file:') {
+    try {
+      if (typeof window.eulercopilot.config?.get === 'function') {
+        const config = await window.eulercopilot.config.get();
+        if (config?.base_url) {
+          return config.base_url;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get base URL from config:', error);
+    }
+  }
+  // 本地开发环境（localhost:3000），直接返回空字符串，确保 axios 只拼接 path
+  if (window.location.hostname === 'localhost') {
+    return '';
+  }
+  // VITE_BASE_PROXY_URL 未定义时返回空字符串
+  const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
+  return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
+}
+
+/**
+ * 获取后端API URL
+ */
+export async function getBaseUrl(): Promise<string> {
+  // Electron 生产环境（file:协议）读取配置
+  if (window.eulercopilot) {
+    try {
+      if (typeof window.eulercopilot.config?.get === 'function') {
+        const config = await window.eulercopilot.config.get();
+        if (config?.base_url) {
+          return config.base_url;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get base URL from config:', error);
+    }
+  }
+  // VITE_BASE_API_URL 未定义时返回空字符串
+  const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
+  return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
+}

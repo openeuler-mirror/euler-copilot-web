@@ -7,6 +7,19 @@
           {{ interPreviewInfo.name }}
         </div>
       </div>
+      <div
+        v-if="interPreviewInfo.mcps && interPreviewInfo.mcps.length"
+        class="mcp-list"
+      >
+        MCP服务
+        <img
+          class="mcp-item"
+          v-for="mcp in interPreviewInfo.mcps"
+          :key="mcp.mcpserviceId"
+          :src="mcp.icon"
+          alt=""
+        />
+      </div>
     </div>
     <div class="preMain">
       <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
@@ -23,17 +36,17 @@
           v-if="
             interPreviewInfo.name.length ||
             interPreviewInfo.description.length ||
-            connnectLinkList.length
+            connectLinkList.length
           "
         >
           <div class="preMainContentTitle" v-if="interPreviewInfo.name.length">
             <div class="greetDes">
               <div class="greetDesContent">
-                {{ $t("main.describe1") }}
+                {{ $t('main.describe1') }}
                 <p class="greetDesAppName greetDesContent">
                   {{ interPreviewInfo.name }}
                 </p>
-                {{ $t("main.describe2") }}
+                {{ $t('main.describe2') }}
               </div>
             </div>
           </div>
@@ -43,12 +56,12 @@
           >
             {{ interPreviewInfo.description }}
           </div>
-          <div class="preMainContentLink" v-if="connnectLinkList.length">
-            <el-badge :value="connnectLinkList.length" class="linkBadge">
+          <div class="preMainContentLink" v-if="connectLinkList.length">
+            <el-badge :value="connectLinkList.length" class="linkBadge">
               <div class="contentLinkTitle">相关链接</div>
             </el-badge>
             <div class="connectBox">
-              <div v-for="(connect, index) in connnectLinkList">
+              <div v-for="(connect, index) in connectLinkList" :key="index">
                 <div v-if="connect.length" class="connectCard">
                   <div class="connectBoxIndex">{{ index + 1 }}</div>
                   <el-link
@@ -71,7 +84,7 @@
         <div class="preFooter" v-if="recommendQuestionList.length">
           <div class="preFooterTitle">推荐问题：</div>
           <div class="preFooterContent">
-            <div v-for="ques in recommendQuestionList">
+            <div v-for="(ques, idx) in recommendQuestionList" :key="idx">
               <div
                 class="preFooterContentQues"
                 v-if="ques.length"
@@ -95,8 +108,8 @@ interface InterPreProps {
 }
 const props = withDefaults(defineProps<InterPreProps>(), {});
 const interPreviewInfo = ref();
-const recommendQuestionList = ref();
-const connnectLinkList = ref<any>([]);
+const recommendQuestionList = ref<any>([]);
+const connectLinkList = ref<any>([]);
 const emit = defineEmits(['selectQuestion']);
 
 const selectQuestions = (event) => {
@@ -108,13 +121,20 @@ const selectQuestions = (event) => {
 
 watch(
   () => props.createAppForm,
-  (newValue, oldValue) => {
+  () => {
     interPreviewInfo.value = props.createAppForm;
-    connnectLinkList.value = props.createAppForm?.links?.filter(
-      (item) => item.length,
-    );
-    recommendQuestionList.value =
-      props.createAppForm?.recommendedQuestions?.filter((item) => item.length);
+
+    if (props.createAppForm.links) {
+      connectLinkList.value = props.createAppForm.links.filter(
+        (item) => item.length,
+      );
+    }
+    if (props.createAppForm.recommendedQuestions) {
+      recommendQuestionList.value =
+        props.createAppForm?.recommendedQuestions?.filter(
+          (item) => item.length,
+        );
+    }
   },
   {
     immediate: true,
@@ -134,6 +154,24 @@ watch(
     width: 100%;
     display: flex;
     justify-content: center;
+    align-items: center;
+    position: relative;
+
+    .mcp-list {
+      position: absolute;
+      right: 103px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      color: var(--o-text-color-tertiary);
+
+      .mcp-item {
+        width: 24px;
+        height: 24px;
+        margin-left: 8px;
+        border-radius: 50%;
+      }
+    }
 
     .preTopContent {
       display: flex;
@@ -162,7 +200,7 @@ watch(
   }
 
   .preMain {
-    padding-left: 40px;
+    justify-content: center;
     display: flex;
     gap: 16px;
 
@@ -188,6 +226,7 @@ watch(
     }
     .preMainContanter {
       width: calc(100% - 166px);
+      max-width: calc(1000px - 46px);
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -226,7 +265,7 @@ watch(
           line-height: 24px;
           margin-top: 8px;
           margin-bottom: 20px;
-          color: var(--o-text-color-primary);
+          color: var(--o-text-color-secondary);
         }
         .preMainContentLink {
           .contentLinkTitle {
@@ -303,7 +342,7 @@ watch(
             padding: 8px 16px;
             background-color: var(--o-bg-color-base);
             .vue-text {
-              color: #4e5865;
+              color: var(--o-question-color);
             }
           }
         }

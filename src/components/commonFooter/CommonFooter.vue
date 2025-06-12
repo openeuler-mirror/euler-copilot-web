@@ -120,30 +120,6 @@ const readPolicy = async () => {
     color: var(--o-text-color-primary);
     font-weight: 700 !important;
   }
-
-  ::-webkit-scrollbar-track {
-    background-image: linear-gradient(
-      180deg,
-      #e7f0fd 1%,
-      #daeafc 40%
-    ) !important;
-    display: none;
-  }
-
-  ::-webkit-scrollbar {
-    width: 3px;
-    height: 3px;
-    display: none;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: #d3dce9 !important;
-    border-radius: 3px;
-  }
-
-  .el-scrollbar__thumb {
-    width: 1px;
-  }
 }
 :deep(.dialog .el-dialog__header) {
   margin-right: 0px;

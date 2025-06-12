@@ -8,11 +8,13 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-.DS_Store
+release
 dist
 dist-ssr
 coverage
 *.local
+
+.DS_Store
 
 /cypress/videos/
 /cypress/screenshots/
@@ -29,6 +31,7 @@ coverage
 .env
 .env.development
 *-lock.*
+pnpm-lock.yaml
 
 *.tsbuildinfo
 

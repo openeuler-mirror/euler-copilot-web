@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2023-2024. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2023-2025. All rights reserved.
 // licensed under the Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
@@ -18,6 +18,7 @@ import type {
 } from 'axios';
 import { ElMessage } from 'element-plus';
 import { successMsg } from 'src/components/Message';
+import { getBaseProxyUrl } from 'src/utils/tools';
 
 export interface FcResponse<T> {
   error: string;
@@ -35,8 +36,16 @@ export interface IAnyObj {
 
 export type Fn = (data: FcResponse<any>) => unknown;
 
+const baseURL: string = './';
+if (import.meta.env.MODE === 'electron-production') {
+  getBaseProxyUrl().then((url) => {
+    server.defaults.baseURL = url;
+  });
+}
+
 // 创建 axios 实例
 export const server = axios.create({
+  baseURL,
   // API 请求的默认前缀
   timeout: 60 * 1000, // 请求超时时间
 });

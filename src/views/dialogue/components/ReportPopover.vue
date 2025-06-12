@@ -45,7 +45,7 @@ const descText = ref<string>('');
 const isErrorInputVisiable = computed(() => list.value[2].isChecked);
 
 const emits = defineEmits<{
-  (e: 'report', reason_type: string,reason: string): void;
+  (e: 'report', reason_type: string, reason: string): void;
   (e: 'close'): void;
 }>();
 
@@ -67,7 +67,7 @@ const handleComplaint = () => {
     <ul class="against-list">
       <el-radio-group v-model="radio" class="ml-4">
         <div
-          :class="[language === 'EN' ? 'radio-en' : 'radio']"
+          :class="[language === 'en' ? 'radio-en' : 'radio']"
           v-for="(item, index) in list"
           :key="index"
         >

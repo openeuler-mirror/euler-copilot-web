@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { Position, Handle } from '@vue-flow/core';
-import { ref, onMounted, watch } from 'vue';
+import { ref, watch } from 'vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
 import { CopyDocument, WarnTriangleFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { IconSuccess } from '@computing/opendesign-icons';
-import { nodeTypeToIcon, getSrcIcon, getNodeClass } from '../types';
+import { getSrcIcon, getNodeClass } from '../types';
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
   id: {
     type: String,
@@ -29,6 +30,7 @@ const props = defineProps({
   },
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle']);
+const { t } = useI18n();
 
 const statusList = ref(['running', 'success', 'error']);
 const nodeDescription = ref<string[]>([]);
@@ -107,7 +109,7 @@ const handleCopyTextToclipboard = (text) => {
   document.execCommand('copy');
   ElMessage({
     showClose: true,
-    message: $t('feedback.copied_successfully'),
+    message: t('feedback.copied_successfully'),
     icon: IconSuccess,
     customClass: 'o-message--success',
     duration: 2000,
@@ -137,20 +139,7 @@ const handleCopyTextToclipboard = (text) => {
           </el-icon>
           <div class="label">{{ props.data.name }}</div>
         </div>
-        <div class="nodeIdShow" v-if="props.id">
-          <div class="nodeIdText">
-            <span>ID:</span>
-            <span>
-              {{ props.id }}
-            </span>
-          </div>
-          <el-icon
-            class="copydocument"
-            @click="handleCopyTextToclipboard(props.id)"
-          >
-            <CopyDocument />
-          </el-icon>
-        </div>
+
         <div class="moreTip" :class="{ notAllow: props.disabled }">
           <el-popover
             :disabled="props.disabled"
@@ -176,7 +165,7 @@ const handleCopyTextToclipboard = (text) => {
                 )
               "
             >
-            {{ $t('semantic.edit') }}
+              {{ $t('semantic.edit') }}
             </el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">
               {{ $t('semantic.interface_delete') }}
@@ -188,9 +177,24 @@ const handleCopyTextToclipboard = (text) => {
         <div
           v-for="(desc, index) in nodeDescription"
           :class="{ descSign: nodeDescription.length > 1 && !index }"
+          :key="index"
         >
           {{ desc }}
         </div>
+      </div>
+      <div class="nodeIdShow" v-if="props.id">
+        <div class="nodeIdText">
+          <span>ID:</span>
+          <span>
+            {{ props.id }}
+          </span>
+        </div>
+        <el-icon
+          class="copydocument"
+          @click="handleCopyTextToclipboard(props.id)"
+        >
+          <CopyDocument />
+        </el-icon>
       </div>
     </div>
     <Handle

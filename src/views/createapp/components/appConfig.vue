@@ -14,6 +14,20 @@ import CustomLoading from '../../customLoading/index.vue';
 import AppInitalPreview from 'src/views/dialogue/components/AppInitalPreview.vue';
 import { ElMessage } from 'element-plus';
 import { useChangeThemeStore } from 'src/store';
+
+type AppConfig = {
+  icon: string;
+  name: string;
+  description: string;
+  links: string[];
+  recommendedQuestions: string[];
+  dialogRounds: number;
+  permission: {
+    visibility: string;
+    authorizedUsers: string[];
+  };
+};
+
 const activeName = ref([1, 2, 3]);
 const activeNames = ref([1, 2, 3]);
 const themeStore = useChangeThemeStore();
@@ -26,7 +40,7 @@ const props = withDefaults(
 );
 const emits = defineEmits(['getFlowList', 'getPublishStatus']);
 const loading = ref(false);
-const createAppForm = ref({
+const createAppForm = ref<AppConfig>({
   icon: '',
   name: '',
   description: '',
@@ -117,7 +131,7 @@ const changeActiveName = () => {
     activeNames.value.push(1);
     activeName.value.push(1);
   }
-}
+};
 const addLink = () => {
   createAppForm.value.links.push('');
 };
@@ -194,6 +208,7 @@ onMounted(() => {
           };
           publishStatus.value = appInfo.published;
           flowDataList.value = appInfo.workflows;
+          emits('getPublishStatus', publishStatus.value);
           emits('getFlowList', flowDataList.value);
         }
         loading.value = false;
@@ -272,7 +287,7 @@ const beforeUpload = async (file: ElFile) => {
     // 开始读取文件内容
     await new Promise((resolve, reject) => {
       reader.readAsText(file);
-      reader.onloadend = () => resolve(); // 当读取完成时解决 Promise
+      reader.onloadend = () => resolve(true); // 当读取完成时解决 Promise
       reader.onerror = (error) => reject(error); // 如果出错则拒绝 Promise
     });
     return true;
@@ -295,9 +310,16 @@ defineExpose({
   <CustomLoading :loading="loading"></CustomLoading>
   <!-- 将基本信息collapse提出 -->
   <div class="appConfig">
-    <div class="baseInfoTitle" :class="{ 'activeCollapse': activeNames.includes(1) }" @click="changeActiveName">
+    <div
+      class="baseInfoTitle"
+      :class="{ activeCollapse: activeNames.includes(1) }"
+      @click="changeActiveName"
+    >
       <span>{{ $t('semantic.baseMessage') }}</span>
-      <el-icon :class="{ 'is-active': activeNames.includes(1) }" class="el-collapse-item__arrow">
+      <el-icon
+        :class="{ 'is-active': activeNames.includes(1) }"
+        class="el-collapse-item__arrow"
+      >
         <IconCaretRight />
       </el-icon>
     </div>
@@ -324,7 +346,11 @@ defineExpose({
               <IconCaretRight />
             </el-icon>
           </template>
-          <el-form-item :label="$t('semantic.icon')" prop="icon" class="notRequired">
+          <el-form-item
+            :label="$t('semantic.icon')"
+            prop="icon"
+            class="notRequired"
+          >
             <div class="uploadArea">
               <el-upload
                 class="placeIcon avatar-uploader"
@@ -343,7 +369,7 @@ defineExpose({
                 <div v-else class="defaultIcon"></div>
                 <div class="uploadIcon"></div>
               </el-upload>
-              <span class="text">{{ $t('semantic.interface_upload')}}</span>
+              <span class="text">{{ $t('semantic.interface_upload') }}</span>
             </div>
           </el-form-item>
           <el-form-item :label="$t('app.app_name')" prop="name">
@@ -368,7 +394,11 @@ defineExpose({
             ></el-input>
           </el-form-item>
           <!-- 这里notRequired样式,在局部的通过校验时，控制局部的样式为正常。links为空时通过校验 -->
-          <el-form-item :label="$t('app.link')" prop="links" class="notRequired">
+          <el-form-item
+            :label="$t('app.link')"
+            prop="links"
+            class="notRequired"
+          >
             <div class="linkLine">
               <el-button
                 :icon="IconPlusCircle"
@@ -377,7 +407,7 @@ defineExpose({
               >
                 {{ $t('app.addLink') }}
               </el-button>
-              <span class="linkText">{{  $t('app.addFiveLinks') }}</span>
+              <span class="linkText">{{ $t('app.addFiveLinks') }}</span>
             </div>
             <div class="linkArea" v-for="(item, index) in createAppForm.links">
               <el-input
@@ -428,7 +458,7 @@ defineExpose({
         </el-collapse-item>
         <el-collapse-item class="chatsCollapse" title="Consistency" :name="2">
           <template #title>
-            <span>{{ $t('app.multi_Dialogue')}}</span>
+            <span>{{ $t('app.multi_Dialogue') }}</span>
             <el-icon
               class="el-collapse-item__arrow"
               :class="{ 'is-active': activeNames.includes(2) }"
@@ -436,7 +466,10 @@ defineExpose({
               <IconCaretRight />
             </el-icon>
           </template>
-          <el-form-item :label="$t('app.multi_Dialogue_select')" prop="dialogRounds">
+          <el-form-item
+            :label="$t('app.multi_Dialogue_select')"
+            prop="dialogRounds"
+          >
             <div class="multiSessionItem">
               <el-input-number
                 v-model="createAppForm.dialogRounds"
@@ -459,7 +492,11 @@ defineExpose({
               <IconCaretRight />
             </el-icon>
           </template>
-          <el-form-item :label="$t('app.permission')" prop="permission" class="permissionItem">
+          <el-form-item
+            :label="$t('app.permission')"
+            prop="permission"
+            class="permissionItem"
+          >
             <div class="permissionSelect">
               <el-radio-group v-model="createAppForm.permission.visibility">
                 <el-radio
@@ -506,7 +543,7 @@ defineExpose({
               </div>
               <div class="permissionChoice">
                 <div class="perimissionChoiceTitle">
-                  <div>{{ $t('app.selected')}}</div>
+                  <div>{{ $t('app.selected') }}</div>
                   <div class="choiceNum">
                     {{ createAppForm.permission.authorizedUsers.length }}
                   </div>
@@ -534,7 +571,7 @@ defineExpose({
     </el-form>
   </div>
   <div class="createAppContainerMainBox">
-    <div class="previewTitle">{{ $t("app.ui_preview") }}</div>
+    <div class="previewTitle">{{ $t('app.ui_preview') }}</div>
     <div class="createAppContainerMainRight" :class="themeStore.theme">
       <AppInitalPreview :createAppForm="createAppForm" />
     </div>
@@ -542,22 +579,4 @@ defineExpose({
 </template>
 <style lang="scss" scoped>
 /* 滚动条轨道样式 */
-::-webkit-scrollbar-track {
-  background-image: linear-gradient(180deg, #e7f0fd 1%, #daeafc 40%) !important;
-  display: none;
-}
-
-::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
-}
-
-/* 滚动条的滑块 */
-::-webkit-scrollbar-thumb {
-  background-color: var(--o-scrollbar-thumb);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
 </style>

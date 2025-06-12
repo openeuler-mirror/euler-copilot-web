@@ -29,11 +29,24 @@
     "paths": {
       "src*": ["src/*"],
       "@/*": ["src/*"],
-      "src/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "@deploy": ["electron/main/deploy"],
+      "@deploy/*": ["electron/main/deploy/*"]
     },
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
   },
-  "types": [ "vite/client" ],
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "vite.config.ts"],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
+  "types": ["vite/client"],
+  "include": [
+    "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "vite.config.ts",
+    "electron/**/*"
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -19,19 +19,23 @@
 <script setup lang="ts">
 import { watch, onMounted, ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import { getBaseUrl } from 'src/utils/tools';
 
 const router = useRouter();
 const iframeRef = ref<HTMLIFrameElement | null>(null);
 const isActive = ref(false);
 const isIframeLoaded = ref(false);
+const iframeTarget = ref<string>('');
 
 // 生产环境URL处理
-const iframeTarget = (() => {
+async function getIframeTarget() {
+  const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
-  const isLocalhost = origin.includes('localhost');
-  const target = isLocalhost ? 'http://localhost:3002' : `${origin}/witchaind`;
+  // Electron 环境的判断
+  const isElectron = window.navigator.userAgent.includes('Electron');
+  const target = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
   return target;
-})();
+}
 
 // 处理iframe加载完成事件
 const handleIframeLoad = () => {
@@ -39,6 +43,8 @@ const handleIframeLoad = () => {
   if (isActive.value) {
     sendMessageToIframe(false);
   }
+  const token = localStorage.getItem('ECSESSION') ?? '';
+  sendTokenToIframe(token);
 };
 
 // 处理iframe错误
@@ -48,18 +54,32 @@ const handleIframeError = (error: Event) => {
 };
 
 // 发送消息到iframe
-const sendMessageToIframe = (stopActive: boolean) => {
+const sendMessageToIframe = async (stopActive: boolean) => {
   const iframe = iframeRef.value;
   if (!iframe?.contentWindow) {
     return;
   }
-  
+
   try {
     const language = localStorage.getItem('localeLang');
-    const message = { StopActive: stopActive ,type: 'changeActive' };
-    iframe.contentWindow.postMessage({...message,lang:language}, iframeTarget);
+    const message = { StopActive: stopActive, type: 'changeActive' };
+    iframe.contentWindow.postMessage(
+      { ...message, lang: language },
+      iframeTarget.value,
+    );
   } catch (error) {
     console.error('send Message to iframe error:', error);
+  }
+};
+
+const sendTokenToIframe = async (token: string) => {
+  const iframe = iframeRef.value;
+  if (!iframe?.contentWindow) {
+    return;
+  }
+  if (token) {
+    const data = { parentToken: token, type: 'parentToken' };
+    iframe.contentWindow.postMessage(data, iframeTarget.value);
   }
 };
 
@@ -69,19 +89,21 @@ watch(
   async (newPath) => {
     const isWitchaindRoute = newPath === '/witchainD';
     isActive.value = isWitchaindRoute;
-    
+
     // 等待DOM更新完成
     await nextTick();
-    
-    if (isIframeLoaded.value) {
+    if (isIframeLoaded.value && iframeTarget.value) {
       sendMessageToIframe(!isWitchaindRoute);
+      const token = localStorage.getItem('ECSESSION') ?? '';
+      sendTokenToIframe(token);
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 添加错误处理
-onMounted(() => {
+onMounted(async () => {
+  iframeTarget.value = await getIframeTarget();
   const iframe = iframeRef.value;
   if (iframe) {
     iframe.onerror = (error) => {

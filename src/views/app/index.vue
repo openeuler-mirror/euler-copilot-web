@@ -17,43 +17,42 @@
               :suffix-icon="IconCaretDown"
             >
               <el-option :label="$t('app.all_select')" value="all" />
-              <el-option :label="$t('app.app_name')" value="name" />
-              <el-option
-                :label="$t('app.app_introduction')"
-                value="description"
-              />
-              <el-option :label="$t('app.username')" value="author" />
+              <el-option :label="$t('app.flow')" value="flow" />
+              <el-option :label="$t('app.agent')" value="agent" />
             </el-select>
           </template>
         </el-input>
-        <el-button type="primary" class="createApp" @click="handleCreateApp">
+        <el-button
+          type="primary"
+          class="createApp"
+          @click="isSelectAppTypeDialogVisible = true"
+        >
           {{ $t('app.app_create') }}
         </el-button>
       </div>
-      <div class="appCenterType">
-        <div
-          class="appCenterBtn"
-          :class="{ appCenterBtnActive: appType === 'my' }"
-          @click="handleSearchAppList('my')"
-        >
-          {{ $t('app.all_app') }}
-        </div>
-        <div
-          class="appCenterBtn"
-          :class="{ appCenterBtnActive: appType === 'createdByMe' }"
-          @click="handleSearchAppList('createdByMe')"
-        >
-          {{ $t('app.my_created') }}
-        </div>
-        <div
-          class="appCenterBtn"
-          :class="{ appCenterBtnActive: appType === 'favorited' }"
-          @click="handleSearchAppList('favorited')"
-        >
-          {{ $t('app.my_favorite') }}
-        </div>
-      </div>
       <div class="appCenterCardContainer">
+        <el-tabs
+          v-model="pluginType"
+          class="app-tabs"
+          @tab-click="(tab) => handleSearchAppList(tab.props.name)"
+        >
+          <el-tab-pane
+            :label="$t('semantic.all_select')"
+            name="my"
+            :lazy="true"
+          ></el-tab-pane>
+          <el-tab-pane
+            :label="$t('app.my_created')"
+            name="createdByMe"
+            :lazy="true"
+          ></el-tab-pane>
+          <el-tab-pane
+            :label="$t('semantic.my_favorite')"
+            name="favorited"
+            :lazy="true"
+          ></el-tab-pane>
+        </el-tabs>
+
         <div class="appCenterCardBox" v-if="appList?.length">
           <div
             v-for="(appItem, index) in appList"
@@ -85,8 +84,24 @@
                       v-if="appItem.favorited"
                       class="appFavorite"
                     />
-                    <IconUnfavorite v-else="appItem.favorited" />
+                    <IconUnfavorite v-else />
                   </div>
+                </div>
+                <div class="appType">
+                  <span
+                    class="appTypeName"
+                    :class="
+                      appItem.appType === 'flow'
+                        ? 'appTypeName__flow'
+                        : 'appTypeName__agent'
+                    "
+                  >
+                    {{
+                      appItem.appType === 'flow'
+                        ? $t('app.flow')
+                        : $t('app.agent')
+                    }}
+                  </span>
                 </div>
                 <div class="appCenterCardContentDes">
                   <TextMoreTootip :value="appItem.description" :row="2" />
@@ -132,11 +147,15 @@
         @change="handleChangePage"
       />
     </div>
+    <SelectAppTypeDialog
+      v-model:visible="isSelectAppTypeDialogVisible"
+      :title="$t('app.create_app')"
+      @select-type="handleCreateApp"
+    />
   </div>
 </template>
-<script setup lang="ts">
-import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 
+<script setup lang="ts">
 import {
   IconCaretDown,
   IconSearch,
@@ -145,92 +164,119 @@ import {
   IconSuccess,
 } from '@computing/opendesign-icons';
 import './style.scss';
-import { ref, onMounted, watch, markRaw } from 'vue';
-import { useRouter } from 'vue-router';
-import { api } from 'src/apis';
+import { ref, watch, markRaw } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { IconAlarm } from '@computing/opendesign-icons';
+import { api } from '@/apis';
+import { useAccountStore, useHistorySessionStore } from '@/store';
 import DefaultAppIcon from '../../assets/svgs/defaultIcon.webp';
-import { storeToRefs } from 'pinia';
-import { useAccountStore, useHistorySessionStore } from 'src/store';
 import CustomLoading from '../customLoading/index.vue';
-const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
-const publishStatus = ref('未发布');
+import SelectAppTypeDialog from './components/SelectAppTypeDialog.vue';
+import TextMoreTootip from '@/components/textMoreTootip/index.vue';
+import { useI18n } from 'vue-i18n';
+
+interface App {
+  appId: string;
+  author: string;
+  description: string;
+  favorited: boolean;
+  appType: 'flow' | 'agent';
+  icon: string;
+  name: string;
+  published: boolean;
+}
+const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
+
+const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
+const { createNewSession } = useHistorySessionStore();
 const appType = ref('my');
-const appSearchType = ref('all');
 const appSearchValue = ref();
-const appList = ref<any>([]);
+const appList = ref<App[]>([]);
 const pagination = ref({
-  pageSizes: [16, 32, 64],
-  layout: 'total,sizes,prev,pager,next,jumper',
+  pageSizes: [],
+  layout: 'total,prev,pager,next,jumper',
 });
 const { userinfo } = storeToRefs(useAccountStore());
-const currentPage = ref(1);
-const totalCount = ref(0);
+const currentPage = ref<number>(1);
+const totalCount = ref<number>(0);
 const loading = ref(false);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
   currentPageSize.value = pageSize;
-  handleParmasQueryAppList();
+  handleParamsQueryAppList();
 };
+
+type AppFilter = 'my' | 'createdByMe' | 'favorited';
+type AppType = 'flow' | 'agent' | 'all';
+const pluginType = ref<AppFilter>((route.query.to as AppFilter) || 'my');
+const appSearchType = ref<AppType>('all');
+
+const isSelectAppTypeDialogVisible = ref(false);
 
 const getImgBg = (appItem) => {
   return appItem.icon || DefaultAppIcon;
 };
 
-const handleCreateApp = () => {
-  api
-    .createOrUpdateApp({
-      name: '默认应用',
-      description: '我的应用',
-    })
-    .then((res) => {
-      if (res[1]) {
-        router.push(`/createApp?appId=${res?.[1]?.result.appId}`);
-      }
-    });
+/**
+ * 创建默认的应用
+ * @param appType
+ */
+const handleCreateApp = async (appType: 'flow' | 'agent') => {
+  const [, res] = await api.createOrUpdateApp({
+    appType,
+    name: appType === 'flow' ? '默认应用' : '智能体01',
+    description: '我的应用',
+  });
+
+  if (res) {
+    router.push(`/createApp?appId=${res.result.appId}&type=${appType}`);
+  }
 };
 
-const routerToDetail = (appItem) => {
+const routerToDetail = async (appItem) => {
   if (!appItem.published) {
     //未发布应用不允许跳转
     return;
   }
-  //获取appItem.id & appItem.name
-  router.push(`/copilot?appId=${appItem.appId}&name=${appItem.name}`);
-  //保证跳转后一定是一条选中的新会话
+  await createNewSession().finally(() => {
+    //保证跳转后一定是一条选中的新会话
+    router.push(`/?appId=${appItem.appId}&name=${appItem.name}`);
+  });
   currentSelectedSession.value = '';
 };
 
-const handleParmasQueryAppList = (params?: any) => {
+const handleParamsQueryAppList = (params?: any) => {
   let payload = {};
   if (appType.value !== 'my') {
     payload[appType.value] = true;
   }
   handleQueryAppList({
-    searchType: appSearchType.value,
+    appType: appSearchType.value !== 'all' ? appSearchType.value : undefined,
     keyword: appSearchValue.value,
     ...payload,
     ...params,
   });
 };
 
-const handleQueryAppList = (payload?: any) => {
+const handleQueryAppList = async (payload?: any) => {
   loading.value = true;
-  api
-    .queryAppList({
-      page: currentPage.value,
-      pageSize: currentPageSize.value,
-      ...payload,
-    })
-    .then((res) => {
-      appList.value = res[1]?.result.applications;
-      currentPage.value = res[1]?.result.currentPage;
-      totalCount.value = res[1]?.result.totalApps;
-      loading.value = false;
-    });
+  const [, res] = await api.queryAppList({
+    page: currentPage.value,
+    pageSize: currentPageSize.value,
+    ...payload,
+  });
+
+  if (res) {
+    appList.value = res.result.applications;
+    currentPage.value = res.result.currentPage;
+    totalCount.value = res.result.totalApps;
+  }
+  loading.value = false;
 };
 
 const handleFavorite = (e, item) => {
@@ -244,19 +290,19 @@ const handleFavorite = (e, item) => {
       id: item.appId,
       favorited: !item.favorited,
     })
-    .then((res) => {
-      handleParmasQueryAppList();
+    .then(() => {
+      handleParamsQueryAppList();
     });
 };
 
 const handleSearchAppList = (type) => {
   appType.value = type;
   if (type === 'my') {
-    handleParmasQueryAppList();
+    handleParamsQueryAppList();
   } else {
     currentPage.value = 1;
     currentPageSize.value = 16;
-    handleParmasQueryAppList({
+    handleParamsQueryAppList({
       [type]: true,
     });
   }
@@ -264,7 +310,9 @@ const handleSearchAppList = (type) => {
 
 const handleDelApp = (e, item) => {
   e.stopPropagation();
-  ElMessageBox.confirm('确定删除此应用吗？', '提示', {
+  ElMessageBox.confirm(t('app.confirm_delete_app'), t('common.tip'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning',
     icon: markRaw(IconAlarm),
   }).then(() => {
@@ -276,20 +324,20 @@ const handleDelApp = (e, item) => {
         if (res[1]) {
           ElMessage({
             showClose: true,
-            message: '删除成功',
+            message: t('common.delete_success'),
             icon: IconSuccess,
             customClass: 'o-message--success',
             duration: 3000,
           });
-          handleParmasQueryAppList();
+          handleParamsQueryAppList();
         }
       });
   });
 };
 
-const handleEditApp = (e, item) => {
+const handleEditApp = (e: MouseEvent, item: App) => {
   e.stopPropagation();
-  router.push(`/createApp?appId=${item.appId}`);
+  router.push(`/createApp?appId=${item.appId}&type=${item.appType || 'agent'}`);
 };
 
 watch(
@@ -298,7 +346,7 @@ watch(
     if (router.currentRoute.value.query.to === 'createdByMe') {
       handleSearchAppList('createdByMe');
     } else {
-      handleParmasQueryAppList();
+      handleParamsQueryAppList();
     }
   },
   { deep: true, immediate: true },
@@ -346,5 +394,14 @@ watch(
 img {
   width: 100%;
   max-width: 430px;
+}
+</style>
+
+<style>
+.app-tabs {
+  --o-tabs-font-size: 14px;
+  --o-tabs-item-padding: 5px 16px 0 5px;
+  --o-tabs-line-height: 32px;
+  --o-tabs-color_active: rgb(99, 149, 253);
 }
 </style>
