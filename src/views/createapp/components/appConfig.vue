@@ -369,12 +369,11 @@ defineExpose({
                 <div v-else class="defaultIcon"></div>
                 <div class="uploadIcon"></div>
               </el-upload>
-              <span class="text">{{ $t('semantic.interface_upload') }}</span>
+              <span class="text">{{ $t('plugin_center.upload_icon') }}</span>
             </div>
           </el-form-item>
           <el-form-item :label="$t('app.app_name')" prop="name">
             <el-input
-              class="w320"
               maxlength="20"
               v-model="createAppForm.name"
               clearable
@@ -383,7 +382,7 @@ defineExpose({
           </el-form-item>
           <el-form-item :label="$t('app.app_introduction')" prop="description">
             <el-input
-              class="w320 h80"
+              class="h80"
               v-model="createAppForm.description"
               maxlength="150"
               place
@@ -411,7 +410,6 @@ defineExpose({
             </div>
             <div class="linkArea" v-for="(item, index) in createAppForm.links">
               <el-input
-                class="w320"
                 maxlength="200"
                 :class="{ validUrl: checkUrl(createAppForm.links[index]) }"
                 v-model="createAppForm.links[index]"
@@ -444,7 +442,6 @@ defineExpose({
               v-for="(item, index) in createAppForm.recommendedQuestions"
             >
               <el-input
-                class="w320"
                 maxlength="30"
                 v-model="createAppForm.recommendedQuestions[index]"
                 :placeholder="$t('semantic.pleaseEnter')"
@@ -578,5 +575,8 @@ defineExpose({
   </div>
 </template>
 <style lang="scss" scoped>
+:deep(.el-collapse-item__content) {
+  margin: 0 32px 16px 0px;
+}
 /* 滚动条轨道样式 */
 </style>
