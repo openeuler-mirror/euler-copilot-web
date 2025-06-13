@@ -15,7 +15,8 @@ import useDragAndDrop from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
-import { useChangeThemeStore } from 'src/store/conversation';
+import { useChangeThemeStore } from '@/store';
+import i18n from '@/i18n';
 import {
   IconSearch,
   IconCaretRight,
@@ -246,7 +247,7 @@ async function layoutGraph(direction) {
 // 拖拽添加
 const dropFunc = (e) => {
   if (!flowObj.value?.flowId) {
-    ElMessage.warning('请先创建/编辑工作流');
+    ElMessage.warning(i18n.global.t('app.create_or_edit_workflow_first'),);
     return;
   }
   // 如果调试弹窗打开，不可拖拽
@@ -425,7 +426,7 @@ const delFlow = (item) => {
     })
     .then((res) => {
       if (res[1]?.result) {
-        ElMessage.success('删除工作流成功');
+        ElMessage.success(i18n.global.t('app.deleteWorkflowSuccessfully'));
         // 并且需要更新工作流下拉框--默认选中第一项
         queryFlow('del');
         loading.value = false;
@@ -547,7 +548,7 @@ $bus.on('getNodesStatue', (item:any) => {
       // do nothing
     }
   } catch (error) {
-    ElMessage.error('请检查格式是否正确');
+    ElMessage.error(i18n.global.t('semantic.checkFormat'));
   }
   // 修改节点时，需要将对应节点的边也进行修改
 });
@@ -735,12 +736,12 @@ defineExpose({
         <div class="copilot-aside nodes" v-if="isCopilotAsideVisible">
           <CustomLoading :loading="apiLoading"></CustomLoading>
           <div class="apiCenterBox">
-            <div class="apiCenterTitle">语义接口中心</div>
+            <div class="apiCenterTitle">{{ $t('semantic.semantic_interface_center') }}</div>
             <div class="apiCenterSearch">
               <el-input
                 v-model="apiSearchValue"
                 class="o-style-search"
-                placeholder="搜索"
+                :placeholder="$t('semantic.interface_search')"
                 @input="searchApiList"
                 :prefix-icon="IconSearch"
                 clearable
@@ -899,7 +900,7 @@ defineExpose({
           <el-select
             :disabled="debugDialogVisible"
             v-model="workFlowItemName"
-            placeholder="请选择"
+            :placeholder="$t('flow.choose_flow')"
             :suffix-icon="IconCaretDown"
           >
             <el-option
@@ -919,7 +920,7 @@ defineExpose({
                 <el-icon>
                   <IconPlusCircle></IconPlusCircle>
                 </el-icon>
-                <span>新建工作流</span>
+                <span>{{ $t('flow.create_flow') }}</span>
               </div>
             </template>
           </el-select>
@@ -927,7 +928,7 @@ defineExpose({
         <el-tooltip
           v-if="!isNodeAndLineConnect && !isNodeConnect"
           effect="dark"
-          content="节点连接完成才能进行调试"
+          :content="$t('semantic.publish_condition')"
           placement="top"
         >
           <div class="debugBtn isDebugDis"></div>
@@ -955,9 +956,9 @@ defineExpose({
       <!-- 暂无工作流展示 -->
       <div class="noWorkFlow" v-else>
         <div class="noFlow"></div>
-        <div class="noFlowDesc">暂无工作流</div>
+        <div class="noFlowDesc">{{ $t('flow.no_flow')}}</div>
         <el-button type="primary" class="w96 addWorkFlow" @click="addWorkFlow">
-          新建工作流
+          {{ $t('flow.create_flow') }}
         </el-button>
       </div>
     </div>
