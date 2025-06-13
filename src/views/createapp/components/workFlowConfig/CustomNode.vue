@@ -143,7 +143,7 @@ const handleCopyTextToclipboard = (text) => {
         <div class="moreTip" :class="{ notAllow: props.disabled }">
           <el-popover
             :disabled="props.disabled"
-            placement="right"
+            placement="bottom-end"
             trigger="hover"
             popper-class="nodeDealPopper"
           >

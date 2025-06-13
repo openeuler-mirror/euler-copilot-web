@@ -559,6 +559,9 @@
   height: 72px;
   padding: 4px 0px !important;
   border-radius: 4px;
+  .el-popper__arrow{
+    display: none;
+  }
   .dealItem {
     display: block;
     width: 100%;

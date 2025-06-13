@@ -1,5 +1,6 @@
 :root {
-  --el-color-primary: #0077ff;
+  --el-color-primary: #6395fd;
+  --o-func-base-primary: #6395fd;
   .el-button {
     --o-button-color_label: #6395fd;
     --o-button-color_label_hover: #7aa5ff;
@@ -9,6 +10,30 @@
     align-items: center;
     .el-message-box__message {
       padding: 0;
+    }
+  }
+  .el-checkbox.is-checked .el-checkbox__inner {
+    background-color: #6395fd !important;
+    border-color: #6395fd !important;
+    &:hover {
+      background-color: #7AA5FF !important;
+      border-color: #7AA5FF !important;
+    }
+    &:active {
+      background-color: #6395fd !important;
+      border-color: #6395fd !important;
+    }
+  }
+  .el-checkbox__input.is-checked .el-checkbox__inner {
+    background-color: #6395fd !important;
+    border-color: #6395fd !important;
+    &:hover {
+      background-color: #7AA5FF !important;
+      border-color: #7AA5FF !important;
+    }
+    &:active {
+      background-color: #6395fd !important;
+      border-color: #6395fd !important;
     }
   }
 }

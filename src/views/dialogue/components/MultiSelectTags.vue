@@ -3,9 +3,9 @@ import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
 import { api } from 'src/apis';
 import { IconCheckBold, IconXSolid } from '@computing/opendesign-icons';
 import { ref, computed, onMounted, watch } from 'vue';
-import { useHistorySessionStore } from 'src/store';
+import { useHistorySessionStore, useChangeThemeStore } from 'src/store';
 import { storeToRefs } from 'pinia';
-
+const themeStore = useChangeThemeStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const isModalOpen = ref(false);
 const searchKey = ref('');
@@ -150,6 +150,14 @@ const checkTagsOverflow = () => {
       <div class="select-content">
         <div class="label-text" @click="toggleModal">
           <img
+            v-if="themeStore.theme === 'light'"
+            class="label-img"
+            style="width: 16px"
+            src="@/assets/svgs/light_knowledge.svg"
+            alt=""
+          />
+          <img
+            v-else
             class="label-img"
             style="width: 16px"
             src="@/assets/svgs/dark_knowledge.svg"
@@ -357,7 +365,7 @@ const checkTagsOverflow = () => {
 .label-text {
   font-size: 12px;
   //   color: #303133;
-  color: var(--o-text-color-primary);
+  color: var(--o-text-color-secondary);
   margin-right: 16px;
   white-space: nowrap;
   flex-shrink: 0; /* 防止文字被压缩 */

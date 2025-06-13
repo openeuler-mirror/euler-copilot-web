@@ -540,7 +540,6 @@ watch(
 }
 :deep(.el-collapse-item__arrow.is-active) {
   transform: rotate(90deg);
-  padding-left: 3px;
 }
 :deep(.el-collapse-item__content) {
   border-bottom: none;
@@ -824,6 +823,13 @@ watch(
 
       :deep(.el-checkbox__label) {
         font-size: 12px;
+      }
+      :deep(.el-checkbox__inner) {
+        &::after {
+          height: 7px;
+          width: 2px;
+          left: 4px;
+        }
       }
     }
 

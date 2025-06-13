@@ -250,12 +250,10 @@ watch(
   }
   .el-collapse-item__arrow.is-active {
     transform: rotate(90deg);
-    padding-left: 3px;
   }
 }
 .el-collapse-item__arrow.is-active {
   transform: rotate(90deg);
-  padding-left: 3px;
 }
 .el-collapse-item__arrow {
   margin: 0px;

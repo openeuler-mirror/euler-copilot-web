@@ -16,7 +16,7 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
-import questions from 'src/views/dialogue/constants';
+const isDropdownOpen = ref(false);
 const { appList } = storeToRefs(useSessionStore());
 const { user_selected_app, selectLLM } = storeToRefs(useHistorySessionStore());
 const { getHistorySession } = useHistorySessionStore();
@@ -710,7 +710,10 @@ watch(
         </div>
         <div class="dialogue-conversation-bottom-selectGroup">
           <div class="modalSelectGroup">
-            <el-dropdown trigger="click">
+            <el-dropdown
+              trigger="click"
+              @visible-change="isDropdownOpen = $event"
+            >
               <div class="el-dropdown-link" v-if="selectedLLM.modelName">
                 <img style="width: 16px" :src="selectedLLM.icon" alt="" />
                 <span
@@ -723,13 +726,19 @@ watch(
                 >
                   {{ selectedLLM.modelName }}
                 </span>
-                <el-icon style="margin-left: auto">
+                <el-icon
+                  :class="{ rotated: isDropdownOpen }"
+                  style="margin-left: auto"
+                >
                   <IconCaretRight />
                 </el-icon>
               </div>
               <div class="el-dropdown-link" v-else>
                 <span>请选择模型</span>
-                <el-icon>
+                <el-icon
+                  :class="{ rotated: isDropdownOpen }"
+                  style="margin-left: auto"
+                >
                   <IconCaretRight />
                 </el-icon>
               </div>
@@ -842,7 +851,7 @@ watch(
 .modalSelectGroup {
   width: 140px;
   margin-right: 8px;
-  padding: 0 8px;
+  padding: 0 16px;
   margin-bottom: 8px;
   height: 32px;
   background-color: var(--o-bg-color-base);
@@ -854,15 +863,31 @@ watch(
   .el-dropdown {
     width: 100%;
     display: block;
+    color: var(--o-text-color-secondary) !important;
     span {
       line-height: 32px;
+      color: var(--o-text-color-secondary) !important;
     }
   }
   .el-dropdown-link {
+    color: var(--o-text-color-secondary) !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
+      .rotated {
+    transition: transform 0.3s;
+    transform: rotate(90deg);
+  }
+    .el-icon {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s;
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
   }
 }
 .dialogue-rightContainer {
