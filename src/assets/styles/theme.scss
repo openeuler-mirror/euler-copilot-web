@@ -93,11 +93,15 @@ body[theme='dark'] {
 }
 
 body[theme='light'] {
-  --o-content-bg: linear-gradient(
-    to right,
-    rgba(109, 117, 250, 0.2),
-    rgba(90, 179, 255, 0.2)
-  );
+  --o-checkbox-bg-color_checked: #6395fd !important;
+  --o-func-base-primary: 99, 149, 253;
+  --o-checkbox-bg-color_checked: #6395fd !important;
+  --o-checkbox-border-color_checked: #6395fd !important;
+  --o-content-bg:linear-gradient(
+        to right,
+        rgba(109, 117, 250, 0.2),
+        rgba(90, 179, 255, 0.2)
+      );
   --o-main-bg-color: #f1f8ff;
   --o-bg-image: url('../../assets/svgs/light_background.webp');
   --no-work-flow: url('../../assets/images/light_no_flow.png');

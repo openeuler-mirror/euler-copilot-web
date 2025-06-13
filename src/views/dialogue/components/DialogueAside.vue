@@ -824,6 +824,13 @@ watch(
       :deep(.el-checkbox__label) {
         font-size: 12px;
       }
+      :deep(.el-checkbox__inner) {
+        &::after {
+          height: 7px;
+          width: 2px;
+          left: 4px;
+        }
+      }
     }
 
     &-title {
