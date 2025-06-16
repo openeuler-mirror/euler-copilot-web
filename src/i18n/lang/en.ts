@@ -51,6 +51,7 @@ export default {
     settings: 'Settings',
   },
   semantic: {
+    close: 'Close',
     semantic_interface: 'Semantic Interface',
     max_select_mcp_server: 'Choose up to {num} mcp services',
     mcp_service: 'MCP Service',
@@ -72,7 +73,7 @@ export default {
     edit_semantic_interface: 'Edit Interface',
     view_semantic_interface: 'View Interface',
     choose_file: 'Choose File',
-    tip1: 'Drag file here or',
+    tip1: 'Drag file here',
     tip2: 'Format: YAML, Size < 2M',
     cancel: 'Cancel',
     submit: 'Submit',

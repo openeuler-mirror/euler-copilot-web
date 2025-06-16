@@ -90,10 +90,9 @@ onBeforeUnmount(() => {
 .editor-container {
   width: 100%;
   height: 355px;
-
+  border: 1px solid var(--o-time-text);
   :deep(.monaco-editor) {
     outline: none;
-
     .overflow-guard {
       border: 1px solid rgb(195, 206, 223);
       border-radius: 4px;

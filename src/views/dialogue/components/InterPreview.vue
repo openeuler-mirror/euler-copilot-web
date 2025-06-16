@@ -341,6 +341,7 @@ watch(
             padding: 8px 16px;
             background-color: var(--o-bg-color-base);
             .vue-text {
+              font-size: 12px;
               color: var(--o-question-color);
             }
           }

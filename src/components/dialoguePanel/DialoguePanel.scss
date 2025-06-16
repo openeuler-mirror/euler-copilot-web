@@ -224,7 +224,6 @@
       justify-content: center;
       color: #8d98aa;
       font-size: 12px;
-      margin-top: 16px;
     }
 
     p {
@@ -245,7 +244,7 @@
       width: 48px;
       height: 48px;
       position: absolute;
-      left: -10px;
+      // left: -10px;
     }
 
     .content {
@@ -256,9 +255,11 @@
       // display: flex;
       // align-items: center;
       color: var(--o-text-color-primary);
-      margin-left: 45px;
+      margin-left: calc(48px + 16px);
       background-image: var(--o-content-bg);
+      min-height: 48px;
       .messaege {
+        line-height: 24px !important;
         top: 10px;
         margin-top: 24px;
         display: block;
@@ -269,7 +270,7 @@
 
   &__robot {
     position: relative;
-    padding-left: 45px;
+    padding-left: calc(48px + 16px);
     border-radius: 8px;
 
     .loading {
@@ -296,7 +297,7 @@
         top: 0px;
         width: 48px;
         height: 48px;
-        left: -10px;
+        left: 0px;
         background-image: url('src/assets/svgs/robot.svg');
       }
 
@@ -325,7 +326,7 @@
       &::before {
         content: '';
         position: absolute;
-        left: -10px;
+        // left: -10px;
         top: 30px;
         width: 48px;
         height: 48px;
@@ -345,7 +346,7 @@
       &::before {
         content: '';
         position: absolute;
-        left: -10px;
+        left: 0px;
         top: 0px;
         width: 48px;
         height: 48px;
@@ -522,6 +523,7 @@
     }
   }
   .dialogue-panel__user-time {
+    margin-top: 0px;
     height: 20px;
     line-height: 20px;
   }

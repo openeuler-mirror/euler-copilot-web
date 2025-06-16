@@ -418,6 +418,7 @@ watch(
             <ElInput
               v-model="searchKey"
               :placeholder="$t('history.find_recent_chats')"
+              clearable
               class="search-input"
             >
               <template #suffix>
@@ -535,6 +536,22 @@ watch(
   </aside>
 </template>
 <style lang="scss" scoped>
+:deep(.el-dialog) {
+    --o-dialog-width: 432px;
+    border-radius: 12px;
+
+    .el-dialog__body {
+      padding: 16px 24px;
+      margin: 0;
+    }
+  .dialog-footer {
+    flex-direction: row;
+    .el-button {
+      width: 64px;
+      height: 24px;
+    }
+  }
+  }
 :deep(.el-collapse-item__title) {
   line-height: 18px !important;
 }
@@ -628,7 +645,6 @@ watch(
       align-items: center;
       border: 8px;
       border-radius: 8px;
-      margin: 1px 0;
       span {
         font-size: 12px;
         overflow: hidden;
@@ -771,7 +787,7 @@ watch(
   }
 
   .history-record {
-    margin-top: 15px;
+    margin-top: 24px;
     flex: 1;
     display: flex;
     height: 100%;
@@ -821,8 +837,6 @@ watch(
       color: #4e5865;
       display: flex;
       align-items: center;
-      margin-top: 3px;
-
       :deep(.el-checkbox__label) {
         font-size: 12px;
       }
@@ -847,7 +861,7 @@ watch(
         font-size: 16px;
         color: var(--o-text-color-primary);
         line-height: 24px;
-        font-weight: 500;
+        font-weight: 700;
       }
 
       span {

@@ -390,10 +390,10 @@ const deleteOne = (name: string, list: string[]) => {
   }
 }
 //dialog 顶部样式强制修改
-:deep(.el-dialog) {
-  width: 432px;
-  height: 184px;
-}
+// :deep(.el-dialog) {
+//   width: 432px !important;
+//   height: 184px !important;
+// }
 :deep(.dialog .el-dialog__header) {
   margin-right: 0px;
   border-radius: 4px 4px 0 0;

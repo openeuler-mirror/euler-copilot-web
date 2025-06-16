@@ -51,6 +51,7 @@ export default {
     settings: '设置',
   },
   semantic: {
+    close: '关闭',
     semantic_interface: '语义接口',
     max_select_mcp_server: '最多可选择 {num} 个MCP服务',
     mcp_service: 'MCP服务',
@@ -72,7 +73,7 @@ export default {
     edit_semantic_interface: '编辑语义接口',
     view_semantic_interface: '查看语义接口',
     choose_file: '选择文件',
-    tip1: '将文件拖拽到此处 或',
+    tip1: '将文件拖到此处',
     tip2: '格式: YAML, 大小 < 2M',
     interface_path: '接口路径',
     interface_description: '接口描述',

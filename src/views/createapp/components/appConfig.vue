@@ -532,7 +532,6 @@ defineExpose({
                       :key="index"
                       :value="item?.userSub"
                     >
-                      <span class="circle"></span>
                       {{ item?.userName }}
                     </el-checkbox>
                   </el-checkbox-group>
@@ -555,7 +554,6 @@ defineExpose({
                       :key="index"
                       :value="item"
                     >
-                      <span class="circle"></span>
                       {{ item }}
                     </el-checkbox>
                   </el-checkbox-group>
