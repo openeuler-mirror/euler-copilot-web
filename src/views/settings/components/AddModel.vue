@@ -1,15 +1,10 @@
 <script lang="ts" setup>
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { computed, nextTick, provide, reactive, ref, watch } from 'vue';
+import { ElMessage } from 'element-plus';
+import { computed, nextTick, ref, watch } from 'vue';
 import i18n from '@/i18n';
 import { api } from '@/apis';
 
-import type {
-  FormInstance,
-  FormItemProps,
-  FormProps,
-  FormRules,
-} from 'element-plus';
+import type { FormInstance, FormRules } from 'element-plus';
 
 const { t } = i18n.global;
 
@@ -77,39 +72,24 @@ const rules = computed<FormRules<typeof form>>(() => ({
       trigger: 'blur',
     },
   ],
+  url: [
+    {
+      required: true,
+      message: t('settings.placeHolder.url'),
+      trigger: 'blur',
+    },
+  ],
 }));
-
-const modelSelectLoading = ref(false);
-const modelOptions = ref<{ value: string; label: string }[]>([]);
-
-const remoteMethod = (query: string) => {
-  if (query) {
-    modelSelectLoading.value = true;
-    setTimeout(() => {
-      modelSelectLoading.value = false;
-      api.getAllModels(query).then(([, res]) => {
-        if (res) {
-          modelOptions.value = res.result.models.map((item) => ({
-            value: item.modelId,
-            label: item.modelName,
-          }));
-        }
-      });
-    }, 200);
-  } else {
-    modelOptions.value = [];
-  }
-};
 
 async function onConfirm(formEl: FormInstance | undefined) {
   if (!formEl) return;
   await formEl.validate(async (valid) => {
     if (!valid) return;
-    const [err, _] = await api.createOrUpdateModel({
+    const [err] = await api.createOrUpdateModel({
       llmId: props.model?.llmId || undefined,
       icon: props.provider?.icon || '',
       openaiApiKey: form.value.apiKey,
-      openaiBaseUrl: props.provider?.url,
+      openaiBaseUrl: props.provider?.url || form.value.url,
       modelName: form.value.model,
       maxTokens: Number(form.value.maxTokens),
     });
@@ -126,7 +106,9 @@ watch(
   () => [props.model, props.provider],
   () => {
     nextTick(() => {
-      formRef.value && formRef.value.resetFields();
+      if (formRef.value) {
+        formRef.value.resetFields();
+      }
 
       if (props.model) {
         const { openaiApiKey, openaiBaseUrl, maxTokens, modelName } =
