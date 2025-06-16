@@ -1,5 +1,3 @@
-AutoReq: no
-%undefine __find_requires
 # Be sure buildpolicy set to do nothing
 %define __spec_install_post %{nil}
 # Something that need for rpm-4.1
@@ -18,7 +16,7 @@ AutoReq: no
 BuildArch:        aarch64 x86_64
 Name:             euler-copilot-web
 Version:          0.9.6
-Release:          5%{?dist}
+Release:          6%{?dist}
 License:          MulanPSL-2.0
 Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
@@ -43,6 +41,15 @@ openEuler 智能化解决方案 Web 前端
 # Electron 客户端
 Group:            Applications/Utilities
 Summary:          openEuler 智能化解决方案桌面客户端
+
+# 启用自动 provide 但过滤掉 Electron 内部库
+# 过滤掉 Electron 应用内部的共享库，这些不应该作为系统级别的 provides
+%global __provides_exclude_from ^/opt/Intelligence/.*\\.so.*$
+%global __provides_exclude ^(libEGL\\.so|libGLESv2\\.so|libffmpeg\\.so|libvk_swiftshader\\.so|libvulkan\\.so).*$
+
+AutoReq: no
+%undefine __find_requires
+
 Requires:         which
 Requires:         at-spi2-core
 Requires:         gtk3
@@ -52,8 +59,6 @@ Requires:         nss
 Requires:         xdg-utils
 Requires:         (libXtst or libXtst6)
 Requires:         (libuuid or libuuid1)
-Requires(post):   /bin/sh
-Requires(postun): /bin/sh
 
 %description -n   euler-copilot-desktop
 openEuler 智能化解决方案桌面客户端
@@ -310,6 +315,9 @@ fi
 
 
 %changelog
+* Mon Jun 16 2025 openEuler <contact@openeuler.org> - 0.9.6-6
+- 优化 RPM 打包配置：启用自动 provide 并过滤 Electron 内部库
+
 * Wed Jun 11 2025 openEuler <contact@openeuler.org> - 0.9.6-5
 - 修复桌面端 YAML 编辑器无法粘贴文本的问题
 
