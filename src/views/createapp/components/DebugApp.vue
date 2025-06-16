@@ -387,11 +387,11 @@ watch(
               }"
             >
               <template #content>
-                <span class="custom-content">
+                <div class="custom-content">
                   你好，我是
-                  <span class="gradient-text">{{ config.name }}</span>
+                  <div class="gradient-text">{{ config.name }}</div>
                   ，很高兴为您服务
-                </span>
+                </div>
               </template>
               <template #footer>
                 <div class="description">{{ config.description }}</div>
@@ -620,7 +620,9 @@ watch(
 
         .custom-content {
           font-size: 24px;
+          line-height: 32px;
           font-weight: 700;
+          display: flex;
 
           .gradient-text {
             background: linear-gradient(
@@ -635,7 +637,9 @@ watch(
         }
 
         .description {
+          font-size: 16px;
           border-top: 1px solid var(--o-border-color-light);
+          color: rgb(78, 88, 101);
           display: flex;
           justify-content: space-between;
           align-items: center;
