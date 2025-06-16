@@ -66,6 +66,7 @@ const props = defineProps<CardInfo>();
         white-space: nowrap;
         text-overflow: ellipsis;
         width: 80%;
+        font-weight: 700;
       }
     }
   }

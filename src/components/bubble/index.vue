@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, VNode, h } from 'vue';
+import { VNode } from 'vue';
 import type { CSSProperties } from 'vue';
 
 type Style = Record<'avatar' | 'content', CSSProperties>;
@@ -15,7 +15,7 @@ interface BubbleProps {
   contentRender?: (content: string) => VNode;
 }
 
-const props = withDefaults(defineProps<BubbleProps>(), {
+withDefaults(defineProps<BubbleProps>(), {
   loading: false,
   placement: 'start',
   shape: 'corner',
@@ -72,6 +72,7 @@ const props = withDefaults(defineProps<BubbleProps>(), {
     justify-content: center;
     align-items: center;
     font-size: 12px;
+    line-height: 20px;
 
     span {
       padding: 0 8px;

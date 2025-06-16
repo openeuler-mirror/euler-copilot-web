@@ -264,7 +264,6 @@ watch(
           font-size: 16px;
           line-height: 24px;
           margin-top: 8px;
-          margin-bottom: 20px;
           color: var(--o-text-color-secondary);
         }
         .preMainContentLink {

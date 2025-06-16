@@ -403,5 +403,12 @@ img {
   --o-tabs-item-padding: 5px 16px 0 5px;
   --o-tabs-line-height: 32px;
   --o-tabs-color_active: rgb(99, 149, 253);
+  .el-tabs__header {
+    .el-tabs__nav-wrap {
+      .el-tabs__item {
+        height: 32px;
+      }
+    }
+  }
 }
 </style>

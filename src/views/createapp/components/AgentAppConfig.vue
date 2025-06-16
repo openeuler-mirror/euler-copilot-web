@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { CaretRight, CirclePlus } from '@element-plus/icons-vue';
+import { CaretRight, CirclePlus, CaretBottom } from '@element-plus/icons-vue';
 import AppInitalPreview from '@/views/dialogue/components/AppInitalPreview.vue';
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { ElMessage, FormRules, UploadProps } from 'element-plus';
@@ -299,6 +299,7 @@ onMounted(async () => {
               <el-select
                 v-model="createAppForm.model"
                 style="width: 100%"
+                :suffix-icon="CaretBottom"
                 :placeholder="t('app.modelSelected_input')"
               >
                 <el-option
@@ -379,7 +380,7 @@ onMounted(async () => {
             </el-form-item>
           </el-collapse-item>
 
-          <el-collapse-item name="ability">
+          <el-collapse-item class="ability-and-permissions" name="ability">
             <template #title>
               <span class="collapse-title">
                 {{ t('app.ability_Configuration') }}
@@ -431,7 +432,7 @@ onMounted(async () => {
             </el-form-item>
           </el-collapse-item>
 
-          <el-collapse-item name="permissions">
+          <el-collapse-item class="ability-and-permissions" name="permissions">
             <template #title>
               <span class="collapse-title">
                 {{ t('app.permissionConfiguration') }}
@@ -517,8 +518,7 @@ onMounted(async () => {
       align-items: center;
       font-weight: 700;
       color: var(--o-text-color-primary);
-      margin-bottom: 10px;
-      padding-left: 6px;
+      margin: 0 0 8px 8px;
       cursor: pointer;
       font-size: 16px;
     }
@@ -546,10 +546,19 @@ onMounted(async () => {
           top: 25%;
         }
       }
+      :deep(.el-collapse-item__header) {
+        margin-bottom: 8px;
+      }
 
       .hide-header {
         :deep(.el-collapse-item__header) {
           display: none;
+        }
+      }
+
+      .ability-and-permissions {
+        :deep(.el-collapse-item__header) {
+          margin-bottom: 16px;
         }
       }
 

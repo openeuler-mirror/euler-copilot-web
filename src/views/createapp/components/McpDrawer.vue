@@ -109,11 +109,12 @@ onMounted(() => {
       <div class="wrapper">
         <div class="search">
           <el-input
+            class="search-input"
             v-model="searchKeyword"
-            type="search"
             :placeholder="t('common.search')"
-            :suffix-icon="Search"
             @change="queryMcpList"
+            :suffix-icon="Search"
+            clearable
           ></el-input>
         </div>
 
@@ -173,6 +174,19 @@ onMounted(() => {
     height: calc(100vh - 160px);
     display: flex;
     flex-direction: column;
+
+    .search {
+      .search-input {
+        :deep(.el-input__suffix-inner) {
+          display: flex;
+          flex-direction: row-reverse;
+          .el-icon:not(:last-child) {
+            border-left: 1px solid var(--el-border-color);
+            padding-left: 8px;
+          }
+        }
+      }
+    }
 
     .mcp-list {
       flex: 1;
