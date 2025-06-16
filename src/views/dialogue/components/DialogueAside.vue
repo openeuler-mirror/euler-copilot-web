@@ -598,6 +598,7 @@ watch(
         width: 30px;
       }
       span {
+        font-size: 16px;
         font-weight: 600;
         color: var(--o-text-color-secondary);
       }
@@ -629,6 +630,7 @@ watch(
       border-radius: 8px;
       margin: 1px 0;
       span {
+        font-size: 12px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

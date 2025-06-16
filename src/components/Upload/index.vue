@@ -270,14 +270,14 @@ onMounted(() => {
         </el-icon>
         <div class="upload-tip">
           {{ $t('semantic.tip1') }}
-          <div style="margin-top: 16px">
-            <el-button type="primary" size="small">
-              {{ $t('semantic.choose_file') }}
-            </el-button>
+            <div class="upload-tip2">
+            {{ $t('semantic.tip2') }}
+            </div>
+            <div style="margin-top: 16px">
+              <el-button type="primary" size="small">
+                {{ $t('semantic.choose_file') }}
+              </el-button>
           </div>
-        </div>
-        <div class="upload-tip">
-          {{ $t('semantic.tip2') }}
         </div>
       </div>
       <div v-if="progressVal && !uploadDone" class="upload-loading">
@@ -453,8 +453,8 @@ onMounted(() => {
   color: var(--o-text-color-tertiary);
 }
 
-.upload-tip + .upload-tip {
-  margin-top: 24px;
+.upload-tip  .upload-tip2 {
+  margin-top: 4px;
 }
 
 .upload-preview {
