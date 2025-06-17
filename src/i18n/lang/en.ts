@@ -199,7 +199,7 @@ export default {
     openEuler_expertise_describe: 'Intelligent Diagnostics',
     beyond_openEuler: 'Tuning Assistant',
     beyond_openEuler_describe: 'Intelligent Tuning',
-    openEuler_use_cases: 'Container Stack Assistant',
+    openEuler_use_cases: 'Container Stack',
     openEuler_use_cases_describe: 'AI Container Stack assistant',
     question: 'Recommendation qustions',
     addQuestion: 'Add question',
