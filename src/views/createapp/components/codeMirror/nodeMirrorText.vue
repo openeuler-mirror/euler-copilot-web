@@ -98,7 +98,7 @@ watch(
   () => {
     resultInfo.value.status = props.status;
     // 目前props.status只有success、error、running三种
-    resultInfo.value.title = StatusInfoTitle[props.status];
+    resultInfo.value.title = $t(`flow.${StatusInfoTitle[props.status]}`);
     if (props?.inputAndOutput) {
       resultInfo.value.time =
         props.inputAndOutput.input_parameters.timeout ?? 0;

@@ -953,7 +953,7 @@ defineExpose({
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
           <div class="icon" :class="`${debugStatus}Icon`"></div>
-          <div class="resultText">{{ StatusInfoTitle[debugStatus] }}</div>
+          <div class="resultText">{{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}</div>
           <span
             class="time"
             :class="`${debugStatus}Bg`"
