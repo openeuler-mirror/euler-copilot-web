@@ -78,6 +78,9 @@ export const nodeTypeToIcon = {
 // 这里是对应的图标
 export const iconTypeList = [
   { name: 'HTTP请求', value: 'API', icon: API, class: 'otherNode' },
+  { name: 'MCP', value: 'MCP', icon: API, class: 'otherNode' },
+  { name: 'SQL查询', value: 'SQL', icon: API, class: 'otherNode' },
+  { name: '图表', value: 'Graph', icon: API, class: 'otherNode' },
   { name: '大模型', value: 'LLM', icon: LLM, class: 'systemNode' },
   { name: '知识库', value: 'RAG', icon: KENOWLEDGE_BASE, class: 'systemNode' },
   {

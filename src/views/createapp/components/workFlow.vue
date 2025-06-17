@@ -780,14 +780,16 @@ defineExpose({
                       })
                     "
                   >
-                    <img class="nodeIcon" :src="getSrcIcon(node)" />
-                    <el-popover :content="node.name">
-                      <template #reference>
+                    <el-tooltip
+                    class="popper-class"
+                    placement="top"
+                    :content="node.name">
                         <div class="stancesName">
+                    <img class="nodeIcon" :src="getSrcIcon(node)" />
+
                           {{ node.name }}
                         </div>
-                      </template>
-                    </el-popover>
+                    </el-tooltip>
                   </div>
                 </el-collapse-item>
               </el-collapse>
@@ -1034,5 +1036,15 @@ defineExpose({
     margin-left: auto;
     margin-right: -4px;
   }
+}
+
+.popper-class {
+  width: auto !important;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 8px;
 }
 </style>
