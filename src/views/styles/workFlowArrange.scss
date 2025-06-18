@@ -291,6 +291,9 @@
   .el-icon {
     color: var(--o-text-color-tertiary);
   }
+  span{
+    min-width: auto !important;
+  }
 }
 
 .workFlowOption {
