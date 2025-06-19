@@ -19,15 +19,13 @@
     min-height: 32px;
     margin-right: 24px;
     align-items: center;
-    border-bottom: 1px solid #dfe5ef;
     justify-content: space-between;
     .title {
       width: 28px;
       font-size: 14px;
       height: 32px;
       line-height: 32px;
-      color: #6395fd;
-      border-bottom: 1px solid #6395fd;
+      color: var(--o-text-color-primary);
     }
     .closeBtn {
       width: 16px;
@@ -61,10 +59,11 @@
         display: flex;
         height: 48px;
         textarea {
+          font-size: 14px;
           width: 100%;
           border: none;
           outline: none;
-          padding: 8px 16px;
+          padding: 16px 16px;
           height: 100%;
           background-color: transparent;
           color: var(--o-text-color-primary);

@@ -91,3 +91,6 @@ html.platform-linux {
   background-color: var(--o-scrollbar-thumb) !important;
   /* 鼠标悬停时的滚动条按钮颜色 */
 }
+:deep(.el-checkbox.el-checkbox--large){
+  height: auto !important;
+}

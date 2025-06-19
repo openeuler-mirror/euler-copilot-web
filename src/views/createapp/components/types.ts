@@ -41,10 +41,10 @@ export enum BranchSourceIdType {
 // 这里配置的是各节点运行状态
 export const StatusInfoTitle = {
   default: '',
-  success: '运行成功',
-  error: '运行失败',
-  running: '运行中',
-  pending: '运行中',
+  success: 'success',
+  error: 'error',
+  running: 'running',
+  pending: 'pending',
 };
 
 // 这里配置工作流画布默认的viewPort缩放级别
@@ -78,6 +78,9 @@ export const nodeTypeToIcon = {
 // 这里是对应的图标
 export const iconTypeList = [
   { name: 'HTTP请求', value: 'API', icon: API, class: 'otherNode' },
+  { name: 'MCP', value: 'MCP', icon: API, class: 'otherNode' },
+  { name: 'SQL查询', value: 'SQL', icon: API, class: 'otherNode' },
+  { name: '图表', value: 'Graph', icon: API, class: 'otherNode' },
   { name: '大模型', value: 'LLM', icon: LLM, class: 'systemNode' },
   { name: '知识库', value: 'RAG', icon: KENOWLEDGE_BASE, class: 'systemNode' },
   {

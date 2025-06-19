@@ -13,7 +13,7 @@
     >
       <template #title>
         <span class="icon" :class="`${resultInfo.status}Icon`"></span>
-        <span>{{ resultInfo.title }}</span>
+        <span>{{ $t(`flow.${resultInfo.title}`) }}</span>
         <!-- 这里接口返回的需要限制最大位数 -->
         <span
           class="time"
@@ -22,7 +22,7 @@
         >
           {{ resultInfo.time }}
         </span>
-        <span class="flexRight">展开结果</span>
+        <span class="flexRight">{{ $t('flow.result') }}</span>
         <el-icon class="el-collapse-item__arrow">
           <IconChevronDown></IconChevronDown>
         </el-icon>
@@ -33,7 +33,7 @@
         class="o-collapse-content"
       >
         <div class="itemTitle">
-          <div class="subName">{{ subItem.name }}</div>
+          <div class="subName">{{ $t(`flow.${subItem.name}`) }}</div>
           <div
             class="copyIcon"
             :class="themeStore.theme === 'light' ? 'lightCopy' : 'darkCopy'"
@@ -81,11 +81,11 @@ const resultInfo = ref({
       desc: [
         // 定义的假数据，后期由接口获取
         {
-          name: '输入',
+          name: 'input',
           code: '',
         },
         {
-          name: '输出',
+          name: 'output',
           code: '',
         },
       ],

@@ -4,7 +4,6 @@
       <div class="title">{{ $t('flow.debug') }}</div>
       <div class="closeBtn" @click="handleCloseDebugDialog"><IconX /></div>
     </div>
-    <div class="divider"></div>
     <div class="debugContent">
       <div class="debugCheckArea" v-if="testFlag">
         <DialoguePanel

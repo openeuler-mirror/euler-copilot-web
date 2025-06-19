@@ -1254,55 +1254,7 @@ button[disabled]:hover {
   width: 100%;
   display: flex;
   justify-content: center;
-  // padding-left: calc(50% - 0px);
-  align-items: center;
-  position: relative;
-
-  .mcp-list {
-    position: absolute;
-    right: 103px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    color: var(--o-text-color-tertiary);
-
-    .mcp-item {
-      width: 24px;
-      height: 24px;
-      margin-left: 8px;
-      border-radius: 50%;
-    }
-  }
-
-  .preTopContent {
-    display: flex;
-    align-items: center;
-    height: 40px;
-    padding: 8px;
-    border-radius: 20px;
-    gap: 8px;
-    background: linear-gradient(
-      122.39deg,
-      rgba(109, 117, 250, 0.2) -20.158%,
-      rgba(90, 179, 255, 0.2) 112.459%
-    );
-    .preTitleIcon {
-      width: 32px;
-      height: 32px;
-    }
-    .preMainAppName {
-      font-size: 16px;
-      margin-right: 8px;
-      line-height: 24px;
-      color: var(--o-text-color-primary);
-      font-weight: 700;
-    }
-  }
-}
-.preTop {
-  width: 100%;
-  display: flex;
-  justify-content: center;
+  margin-bottom: 16px;
   // padding-left: calc(50% - 0px);
   align-items: center;
   position: relative;

@@ -270,14 +270,14 @@ onMounted(() => {
         </el-icon>
         <div class="upload-tip">
           {{ $t('semantic.tip1') }}
-          <div style="margin-top: 16px">
-            <el-button type="primary" size="small">
-              {{ $t('semantic.choose_file') }}
-            </el-button>
+            <div class="upload-tip2">
+            {{ $t('semantic.tip2') }}
+            </div>
+            <div style="margin-top: 16px">
+              <el-button type="primary" size="small">
+                {{ $t('semantic.choose_file') }}
+              </el-button>
           </div>
-        </div>
-        <div class="upload-tip">
-          {{ $t('semantic.tip2') }}
         </div>
       </div>
       <div v-if="progressVal && !uploadDone" class="upload-loading">
@@ -303,6 +303,7 @@ onMounted(() => {
       @update="updateFunc"
       @change="handleChange"
     /> -->
+    <div class="monaco-editor-container">
     <MonacoEditor
       v-if="uploadtype === 'edit' && getServiceYaml"
       :yamlContent="getServiceYaml"
@@ -310,9 +311,11 @@ onMounted(() => {
       :readOnly="!editable"
       :handleQueryYamlValue="handleChange"
     />
+    </div>
   </div>
   <div class="json-container" v-if="uploadtype === 'get'">
     <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
+    <div class="collapse-container">
     <el-collapse
       v-model="activeServiceNameList"
       class="o-hpc-collapse"
@@ -348,6 +351,7 @@ onMounted(() => {
         </div>
       </el-collapse-item>
     </el-collapse>
+    </div>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'upload'">
     <el-button @click="handleClose">{{ $t('semantic.cancel') }}</el-button>
@@ -363,18 +367,20 @@ onMounted(() => {
     </el-button>
   </div>
   <div class="drawerFooter" v-if="uploadtype === 'get'">
-    <el-button @click="handleClose">{{ $t('semantic.cancel') }}</el-button>
-    <el-button type="primary" @click="handleClose">
-      {{ $t('semantic.submit') }}
-    </el-button>
+    <el-button @click="handleClose">{{ $t('semantic.close') }}</el-button>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.monaco-editor-container {
+  width: 100%;
+  height: calc(100%);
+  border: 1px solid var(--o-time-text);
+}
 .el-collapse-item__title {
   display: block;
   position: relative;
-  left: 4px;
+  left: -4px;
 }
 .code-container {
   height: calc(100% - 48px);
@@ -388,7 +394,7 @@ onMounted(() => {
 }
 .json-container {
   max-height: calc(100% - 8px);
-  overflow-y: scroll;
+  overflow-y: hidden;
 }
 .v-codemirror {
   height: 100%;
@@ -453,8 +459,8 @@ onMounted(() => {
   color: var(--o-text-color-tertiary);
 }
 
-.upload-tip + .upload-tip {
-  margin-top: 24px;
+.upload-tip  .upload-tip2 {
+  margin-top: 4px;
 }
 
 .upload-preview {
@@ -517,18 +523,30 @@ onMounted(() => {
     background-color: var(--el-collapse-header-bg) !important;
     height: 32px;
     padding: 8px 12px !important;
+    border-radius: 0px !important;
     border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
   }
   :deep(.el-collapse-item__content) {
     background-color: var(--el-collapse-content-bg) !important;
     margin: 0px;
+    border-radius: 0px !important;
     border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
   }
   :deep(.el-collapse-item__wrap) {
-    border-bottom: 1px solid var(--el-collapse-border) !important;
+    // border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
+    border-radius: 0px !important;
+  }
+  .collapse-container{
+    max-height: calc(100% - 48px);
+    overflow-y: auto;
+  }
+  :deep(.el-collapse-item) {
+    &:last-child {
+      margin-bottom: 0px !important;
+    }
   }
 }
 
@@ -548,8 +566,9 @@ onMounted(() => {
       color: var(--o-font-size-subtitle);
     }
     div:last-child {
-      padding: 0px 12px;
+      padding: 0px 24px;
       word-break: break-all;
+      color: var(--o-text-color-primary);
     }
   }
 }

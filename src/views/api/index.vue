@@ -615,8 +615,12 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   height: calc(100% - 32px);
 }
+:deep(.el-drawer) {
+  margin-top: 48px;
+  height: calc(100% - 48px);
+}
 .el-drawer {
-  margin: 0px;
+  margin-top: 48px !important;
   padding: 0px;
   &::v-deep(.el-drawer__header) {
     margin-bottom: 0px !important;
@@ -750,6 +754,7 @@ img {
 
 <style>
 .plugin-tabs {
+  padding-right: 8px;
   --o-tabs-font-size: 14px;
   --o-tabs-item-padding: 5px 16px 0 5px;
   --o-tabs-line-height: 32px;

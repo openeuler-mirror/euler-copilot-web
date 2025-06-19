@@ -399,6 +399,7 @@ img {
 
 <style>
 .app-tabs {
+  padding-right: 8px;
   --o-tabs-font-size: 14px;
   --o-tabs-item-padding: 5px 16px 0 5px;
   --o-tabs-line-height: 32px;

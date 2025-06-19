@@ -157,17 +157,21 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    .nodeIcon {
-      width: 24px;
-      height: 24px;
-      border-radius: 4px;
-    }
     .stancesName {
       width: 100%;
       text-align: left;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      .nodeIcon {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        line-height: 40px;
+        margin-right: 12px;
+      }
     }
     &:hover {
       background-color: var(--flow-bg-color);
@@ -286,6 +290,9 @@
   color: var(--o-text-color-secondary);
   .el-icon {
     color: var(--o-text-color-tertiary);
+  }
+  span{
+    min-width: auto !important;
   }
 }
 
@@ -523,6 +530,7 @@
     align-items: center;
     gap: 8px;
     .nodeIdText {
+      font-size: 12px;
       flex: 1;
       color: #575d6c;
       white-space: nowrap;
@@ -559,7 +567,7 @@
   height: 72px;
   padding: 4px 0px !important;
   border-radius: 4px;
-  .el-popper__arrow{
+  .el-popper__arrow {
     display: none;
   }
   .dealItem {

@@ -79,7 +79,8 @@ watch(
           v-else-if="props.data.name === '结束' || props.data.name === 'end'"
           class="saEIcon endIcon"
         ></div>
-        <div class="saEText">{{ props.data.name }}</div>
+        <div class="saEText"  v-if="props.data.name === '开始'|| props.data.name === 'start'">{{ $t('main.start') }}</div>
+        <div class="saEText"  v-else-if="props.data.name === '结束'|| props.data.name === 'end'">{{ $t('main.end') }}</div>
       </div>
     </div>
   </div>

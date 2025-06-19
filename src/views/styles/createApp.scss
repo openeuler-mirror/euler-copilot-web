@@ -260,6 +260,7 @@
         }
       }
       .permissionItem {
+        margin-top: 8px;
         .el-form-item__label,
         .el-form-item__content {
           padding: 0px;
@@ -464,6 +465,6 @@
 
 .workFlowDesc {
   .el-textarea__inner {
-    height: 56px;
+    height: 88px;
   }
 }

@@ -10,7 +10,6 @@
       class=""
       :model="workFlowData"
       :rules="workFlowRules"
-      label-width="120px"
       label-position="left"
     >
       <el-form-item prop="name" :label="$t('flow.flow_name')">
@@ -18,7 +17,7 @@
           v-model="workFlowData.name"
           :placeholder="$t('semantic.pleaseEnter')"
           maxlength="20"
-          class="w320 o-validate-input"
+          class="o-validate-input"
           clearable
         ></el-input>
       </el-form-item>
@@ -29,7 +28,7 @@
           maxlength="150"
           v-model="workFlowData.description"
           :placeholder="$t('semantic.pleaseEnter')"
-          class="w320 workFlowDesc o-validate-input"
+          class="workFlowDesc o-validate-input"
           clearable
         ></el-input>
       </el-form-item>
@@ -178,7 +177,9 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
 <style lang="scss">
 .workFlowDia.el-dialog {
   padding: 0px;
-  width: 560px;
+  width: 544px;
+  height: 304px;
+  border-radius: 8px;
   .el-form {
     margin-top: 0px;
     .el-form-item {
