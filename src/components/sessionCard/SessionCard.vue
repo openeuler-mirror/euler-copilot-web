@@ -389,39 +389,6 @@ const deleteOne = (name: string, list: string[]) => {
     color: var(--o-color-primary-secondary);
   }
 }
-//dialog 顶部样式强制修改
-// :deep(.el-dialog) {
-//   width: 432px !important;
-//   height: 184px !important;
-// }
-:deep(.dialog .el-dialog__header) {
-  margin-right: 0px;
-  border-radius: 4px 4px 0 0;
-  padding: 15px 20px 15px 20px;
-  border-bottom: 1px solid var(--o-border-color-light) !important;
-
-  .el-dialog__title {
-    font-size: 16px;
-    line-height: 25px;
-    font-weight: 1000;
-  }
-
-  .el-dialog__headerbtn {
-    top: 0px;
-  }
-}
-
-:deep(.dialog .el-dialog__body) {
-  padding: 24px 24px 32px 24px;
-}
-
-:deep(.dialog .el-dialog__footer) {
-  padding: 0px 24px 24px 24px;
-}
-
-:deep(.dialog .el-dialog__header .el-dialog__headerbtn) {
-  top: 18px !important;
-}
 
 .dialog-delete-one {
   font-size: 12px;

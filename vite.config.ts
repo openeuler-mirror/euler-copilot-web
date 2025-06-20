@@ -11,7 +11,6 @@ import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 
-import Qiankun from 'vite-plugin-qiankun';
 import { viteMockServe } from 'vite-plugin-mock';
 
 import { resolve } from 'path';
@@ -37,9 +36,6 @@ export default ({ mode }): UserConfigExport => {
     plugins: [
       vue(),
       vueJsx(),
-      Qiankun('copilot', {
-        useDevMode: mode === 'development',
-      }),
       viteMockServe({
         mockPath: 'mock',
         enable: mode !== 'production',
