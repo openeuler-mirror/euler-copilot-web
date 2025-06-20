@@ -612,8 +612,8 @@ onBeforeUnmount(() => {
   }
 }
 .drawerContent {
-  overflow-y: auto;
-  height: calc(100% - 32px);
+  overflow-y: scroll;
+  height: calc(100% - 40px);
 }
 .apiCenterCardSingle {
   position: relative;
