@@ -4,7 +4,6 @@ import { ARGEEMENT_VERSION } from 'src/conf/version';
 import DialogueAside from './components/DialogueAside.vue';
 import DialogueSession from './components/DialogueSession.vue';
 import EulerDialog from 'src/components/EulerDialog.vue';
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import { storeToRefs } from 'pinia';
 import { useRouter, useRoute } from 'vue-router';
 import { useSessionStore, useAccountStore } from 'src/store';
@@ -111,9 +110,6 @@ onMounted(async () => {
 <template>
   <div
     class="copilot-container"
-    :class="
-      qiankunWindow.__POWERED_BY_QIANKUN__ ? 'micro-copilot-container' : ''
-    "
   >
     <div class="copilot-container-main">
       <DialogueAside />
