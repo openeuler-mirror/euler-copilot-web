@@ -43,62 +43,70 @@ if (import.meta.env.MODE === 'electron-production') {
   });
 }
 
-// 创建 axios 实例
-export const server = axios.create({
-  baseURL,
-  // API 请求的默认前缀
-  timeout: 60 * 1000, // 请求超时时间
-});
+let server: ReturnType<typeof axios.create>; // axios 实例
 
-// request interceptor
-server.interceptors.request.use(
-  (
-    config: InternalAxiosRequestConfig<any>,
-  ):
-    | InternalAxiosRequestConfig<any>
-    | Promise<InternalAxiosRequestConfig<any>> => {
-    return handleChangeRequestHeader(config);
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+export const initServer = async () => {
+  const baseURL = await getBaseProxyUrl();
+  server = axios.create({
+    baseURL,
+    // API 请求的默认前缀
+    timeout: 60 * 1000, // 请求超时时间
+  });
 
-// response interceptor
-server.interceptors.response.use(
-  (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
-    if (response.status !== 200) {
-      ElMessage({
-        showClose: true,
-        message: response.statusText,
-        icon: IconError,
-        customClass: 'o-message--error',
-        duration: 3000,
-      });
-      return Promise.reject(new Error(response.statusText));
-    }
-    return Promise.resolve(response);
-  },
-  async (error: AxiosError) => {
-    if (error.status !== 401 && error.status !== 403 && error.status !== 409) {
-      ElMessage({
-        showClose: true,
-        message:
-          ((error as any)?.response?.data?.message as string) || error.message,
-        icon: IconError,
-        customClass: 'o-message--error',
-        duration: 3000,
-      });
-    }
-    if (error.status === 409) {
-      // 处理错误码为409的情况
-      successMsg('已是最新对话');
-      return Promise.reject(error as any);
-    }
-    return await handleStatusError(error);
-  },
-);
+  // request interceptor
+  server.interceptors.request.use(
+    (
+      config: InternalAxiosRequestConfig<any>,
+    ):
+      | InternalAxiosRequestConfig<any>
+      | Promise<InternalAxiosRequestConfig<any>> => {
+      return handleChangeRequestHeader(config);
+    },
+    (error) => {
+      return Promise.reject(error);
+    },
+  );
 
+  // response interceptor
+  server.interceptors.response.use(
+    (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
+      if (response.status !== 200) {
+        ElMessage({
+          showClose: true,
+          message: response.statusText,
+          icon: IconError,
+          customClass: 'o-message--error',
+          duration: 3000,
+        });
+        return Promise.reject(new Error(response.statusText));
+      }
+      return Promise.resolve(response);
+    },
+    async (error: AxiosError) => {
+      if (
+        error.status !== 401 &&
+        error.status !== 403 &&
+        error.status !== 409
+      ) {
+        ElMessage({
+          showClose: true,
+          message:
+            ((error as any)?.response?.data?.message as string) ||
+            error.message,
+          icon: IconError,
+          customClass: 'o-message--error',
+          duration: 3000,
+        });
+      }
+      if (error.status === 409) {
+        // 处理错误码为409的情况
+        successMsg('已是最新对话');
+        return Promise.reject(error as any);
+      }
+      return await handleStatusError(error);
+    },
+  );
+};
 /**
  * request with get
  * @param url

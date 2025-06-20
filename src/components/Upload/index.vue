@@ -313,8 +313,8 @@ onMounted(() => {
     />
     </div>
   </div>
-  <div class="json-container" v-if="uploadtype === 'get'">
     <span class="serviceName" v-if="getServiceName">{{ getServiceName }}</span>
+  <div class="json-container" v-if="uploadtype === 'get'">
     <div class="collapse-container">
     <el-collapse
       v-model="activeServiceNameList"
@@ -394,7 +394,6 @@ onMounted(() => {
 }
 .json-container {
   max-height: calc(100% - 8px);
-  overflow-y: hidden;
 }
 .v-codemirror {
   height: 100%;
@@ -538,6 +537,11 @@ onMounted(() => {
     // border-bottom: 1px solid var(--el-collapse-border) !important;
     border-bottom-color: var(--el-collapse-border) !important;
     border-radius: 0px !important;
+  }
+  :deep(.el-collapse-item__title) {
+    height: 56px;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
   .collapse-container{
     max-height: calc(100% - 48px);

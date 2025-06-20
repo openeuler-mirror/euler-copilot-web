@@ -89,6 +89,7 @@ export async function getBaseProxyUrl(): Promise<string> {
       if (typeof window.eulercopilot.config?.get === 'function') {
         const config = await window.eulercopilot.config.get();
         if (config?.base_url) {
+          console.log('Base URL from config:', config.base_url);
           return config.base_url;
         }
       }
