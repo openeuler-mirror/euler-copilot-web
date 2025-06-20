@@ -14,6 +14,7 @@ import { useRouter } from 'vue-router';
 import { LOGOUT_CALLBACK_URL } from 'src/views/dialogue/constants';
 import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
+import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 export const useAccountStore = defineStore('account', () => {
   const router = useRouter();
@@ -84,6 +85,11 @@ export const useAccountStore = defineStore('account', () => {
       userinfo.revsionNumber = null;
       sessionStorage.removeItem('csrftk');
       successMsg(i18n.global.t('Login.logout'));
+      if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
+        setTimeout(() => {
+          window.open(LOGOUT_CALLBACK_URL, '_self');
+        }, 500);
+      }
     }
   };
   /**

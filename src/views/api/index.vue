@@ -236,7 +236,7 @@
               v-if="actions === 'upload'"
               type="upload"
               @closeDrawer="handleClose"
-              serviceId=""
+              :serviceId="selectedServiceId"
             />
             <Upload
               v-if="actions === 'get'"
@@ -615,6 +615,20 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   height: calc(100% - 32px);
 }
+:deep(.el-drawer) {
+  margin-top: 48px;
+  height: calc(100% - 48px);
+}
+.el-drawer {
+  margin-top: 48px !important;
+  padding: 0px;
+  &::v-deep(.el-drawer__header) {
+    margin-bottom: 0px !important;
+    color: var(--o-text-color-primary) !important;
+    margin: 24px !important;
+    padding: 24px !important;
+  }
+}
 .apiCenterCardSingle {
   position: relative;
   .unPublishSymbol {
@@ -699,6 +713,9 @@ img {
   max-width: 430px;
 }
 :deep(.el-drawer__header) {
+  padding: 24px 24px 8px !important;
+  font-weight: 700;
+  margin-bottom: 0px;
   .drawerHeader {
     width: 100%;
     height: 24px;
@@ -713,6 +730,7 @@ img {
   }
 }
 :deep(.el-drawer__body) {
+  padding: 0px 24px 16px;
   .drawerBody {
     height: 100%;
     textarea {

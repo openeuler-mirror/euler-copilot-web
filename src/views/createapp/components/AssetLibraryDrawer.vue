@@ -122,24 +122,24 @@ onMounted(() => {
 </template>
 <style lang="scss" scoped>
 .asset-drawer {
-  // :deep(.el-drawer) {
-  //   top: 48px;
-  //   height: calc(100vh - 48px);
-  //   .el-drawer__header {
-  //     color: #000;
-  //     font-weight: 700;
-  //     padding: 24px 24px 16px 24px;
-  //     margin: 0;
-  //   }
-  //   .el-drawer__body {
-  //     padding: 0 24px;
-  //   }
-  //   .el-drawer__footer {
-  //     padding: 0;
-  //     padding: 8px 24px;
-  //     box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.1);
-  //   }
-  // }
+  :deep(.el-drawer) {
+    top: 48px;
+    height: calc(100vh - 48px);
+    .el-drawer__header {
+      color: #000;
+      font-weight: 700;
+      padding: 24px 24px 16px 24px;
+      margin: 0;
+    }
+    .el-drawer__body {
+      padding: 0 24px;
+    }
+    .el-drawer__footer {
+      padding: 0;
+      padding: 8px 24px;
+      box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.1);
+    }
+  }
 
   .collapse-title {
     margin-left: 6px;

@@ -20,10 +20,17 @@ import 'src/assets/styles/element/index.scss';
 import opendesign2 from '@computing/opendesign2';
 import '@computing/opendesign2/themes/es/css';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import { qiankunMounted } from './qiankun';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
 import App from './App.vue';
 import router from './router';
+
+import {
+  renderWithQiankun,
+  qiankunWindow,
+  QiankunProps,
+} from 'vite-plugin-qiankun/dist/helper';
 
 // 添加平台检测逻辑，为HTML添加平台特定类名
 const setPlatformClass = () => {
@@ -58,4 +65,25 @@ const render = (props: any = {}) => {
     .mount(selector);
 };
 
-render();
+const initQianKun = () => {
+  renderWithQiankun({
+    bootstrap() {},
+    mount(props: QiankunProps) {
+      render(props);
+      if (props) {
+        qiankunMounted(props);
+      }
+    },
+    unmount() {
+      if (app) {
+        app.unmount();
+        const appContainer = app._container as HTMLElement;
+        appContainer.innerHTML = '';
+        app = null;
+      }
+    },
+    update() {},
+  });
+};
+
+qiankunWindow.__POWERED_BY_QIANKUN__ ? initQianKun() : render();

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 import LinuxTitleBar from '@/components/LinuxTitleBar.vue';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
@@ -18,7 +19,7 @@ onMounted(() => {
 <template>
   <div
     class="eulercopilot-main"
-    :style="{ height: '100vh' }"
+    :style="{ height: qiankunWindow.__POWERED_BY_QIANKUN__ ? '100%' : '100vh' }"
   >
     <!-- Linux平台特定的标题栏，使用绝对定位 -->
     <LinuxTitleBar v-if="isLinuxPlatform" />
