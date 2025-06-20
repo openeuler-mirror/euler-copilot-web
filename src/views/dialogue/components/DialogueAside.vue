@@ -538,6 +538,12 @@ watch(
 <style lang="scss" scoped>
 :deep(.el-dialog) {
     --o-dialog-width: 432px;
+    border-radius: 12px;
+
+    .el-dialog__body {
+      padding: 16px 24px;
+      margin: 0;
+    }
   .dialog-footer {
     flex-direction: row;
     .el-button {
@@ -831,7 +837,6 @@ watch(
       color: #4e5865;
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
       :deep(.el-checkbox__label) {
         font-size: 12px;
       }

@@ -72,6 +72,12 @@ const selectedType = ref<AppType>('agent');
 .select-app {
   :deep(.el-dialog) {
     --o-dialog-width: 544px;
+    border-radius: 12px;
+
+    .el-dialog__body {
+      padding: 16px 24px;
+      margin: 0;
+    }
   }
 
   .dialog-body {

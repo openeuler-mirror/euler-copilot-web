@@ -121,7 +121,24 @@ const readPolicy = async () => {
     font-weight: 700 !important;
   }
 }
+:deep(.dialog .el-dialog__header) {
+  margin-right: 0px;
+  border-radius: 4px 4px 0 0;
+  padding: 15px 20px 15px 20px;
+  border-bottom: 1px solid transparent;
+  .el-dialog__title {
+    font-size: 16px;
+    line-height: 25px;
+    font-weight: 1000;
+  }
 
+  .el-dialog__headerbtn {
+    top: 0px;
+  }
+}
+:deep(.dialog .el-dialog__body) {
+  padding: 24px 24px 32px 24px;
+}
 :deep(.el-dialog__body) {
   overflow: hidden;
 }
