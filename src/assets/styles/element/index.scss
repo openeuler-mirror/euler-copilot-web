@@ -16,8 +16,8 @@
     background-color: #6395fd !important;
     border-color: #6395fd !important;
     &:hover {
-      background-color: #7AA5FF !important;
-      border-color: #7AA5FF !important;
+      background-color: #7aa5ff !important;
+      border-color: #7aa5ff !important;
     }
     &:active {
       background-color: #6395fd !important;
@@ -28,12 +28,50 @@
     background-color: #6395fd !important;
     border-color: #6395fd !important;
     &:hover {
-      background-color: #7AA5FF !important;
-      border-color: #7AA5FF !important;
+      background-color: #7aa5ff !important;
+      border-color: #7aa5ff !important;
     }
     &:active {
       background-color: #6395fd !important;
       border-color: #6395fd !important;
+    }
+  }
+  .el-message {
+    width: 30%;
+    border-radius: 5px;
+  }
+
+  .el-message--success {
+    background-color: #c2e7c7;
+    color: #000;
+    border-color: #24ab36;
+    border-radius: 10px;
+    .el-message__content {
+      color: #000;
+      font-size: 12px;
+    }
+  }
+
+  .el-message--warning {
+    background-color: #f9ecb8;
+    border-color: #ebaf00;
+    img {
+      width: 16px;
+      height: 16px;
+    }
+    .el-message__content {
+      color: #000;
+      font-size: 12px;
+    }
+  }
+
+  .el-message--error {
+    background-color: #f7c1c1;
+    color: #000;
+    border-color: #e42121;
+    .el-message__content {
+      color: #000;
+      font-size: 12px;
     }
   }
 }
@@ -127,5 +165,44 @@
   .el-icon {
     position: relative !important;
     top: unset !important;
+  }
+}
+
+.el-checkbox.el-checkbox--large {
+  height: auto !important;
+}
+.el-dialog {
+  border-radius: 8px !important;
+}
+.el-dialog__header {
+  margin-right: 0px !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 16px 24px 16px 24px !important;
+  .el-dialog__title {
+    font-size: 16px !important;
+    line-height: 24px !important;
+    font-weight: 700 !important;
+  }
+}
+.el-dialog__body {
+  padding: 16px 24px 16px 24px !important;
+  margin: 0 !important;
+}
+.el-drawer {
+  top: 48px !important;
+  height: calc(100vh - 48px) !important;
+  .el-drawer__header {
+    color: var(--o-text-color-primary) !important;
+    font-weight: 700 !important;
+    padding: 24px 24px 8px 24px !important;
+    margin: 0 !important;
+  }
+  .el-drawer__body {
+    padding: 0px 24px 16px !important;
+  }
+  .el-drawer__footer {
+    padding: 0;
+    padding: 8px 24px;
+    box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.1);
   }
 }
