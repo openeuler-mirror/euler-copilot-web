@@ -77,7 +77,7 @@ watch(
               </div>
               <div v-else class="loading-text">
                 <div class="textTitle">
-                  {{ StatusInfoTitle[props.flowdata.status] }}
+                  {{ $t(`flow.${StatusInfoTitle[props.flowdata.status]}`) }}
                 </div>
                 <div
                   v-if="

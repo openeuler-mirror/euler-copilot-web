@@ -1,7 +1,7 @@
 <template>
   <div class="workFlowDebug">
     <div class="workFlowDebugClose">
-      <div class="title">调试</div>
+      <div class="title">{{ $t('flow.debug') }}</div>
       <div class="closeBtn" @click="handleCloseDebugDialog"><IconX /></div>
     </div>
     <div class="divider"></div>

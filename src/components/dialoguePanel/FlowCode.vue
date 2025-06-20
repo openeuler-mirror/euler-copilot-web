@@ -88,10 +88,10 @@ onMounted(() => {
 <template>
   <div class="json-display">
     <div class="json-header">
-      <span v-if="props.title === 'input'">输入</span>
-      <span v-else-if="props.title === 'output'">输出</span>
-      <span v-else-if="props.title === 'params'">参数</span>
-      <span v-else>补充参数 {{ props.title }}</span>
+      <span v-if="props.title === 'input'">{{ $t('flow.input')}}</span>
+      <span v-else-if="props.title === 'output'">{{ $t('flow.output')}}</span>
+      <span v-else-if="props.title === 'params'">{{ $t('flow.params')}}</span>
+      <span v-else>{{ $t('flow.supplementaryParameters')}} {{ props.title }}</span>
       <span
         @click="copy()"
         class="copyIcon"

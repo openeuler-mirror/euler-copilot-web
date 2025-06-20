@@ -107,7 +107,7 @@ const handleCopyTextToclipboard = (text) => {
   document.execCommand('copy');
   ElMessage({
     showClose: true,
-    message: '复制成功',
+    message: $t('feedback.copied_successfully'),
     icon: IconSuccess,
     customClass: 'o-message--success',
     duration: 2000,
@@ -176,10 +176,10 @@ const handleCopyTextToclipboard = (text) => {
                 )
               "
             >
-              编辑
+            {{ $t('semantic.edit') }}
             </el-button>
             <el-button text class="dealItem" @click="delNode(props.id)">
-              删除
+              {{ $t('semantic.interface_delete') }}
             </el-button>
           </el-popover>
         </div>
