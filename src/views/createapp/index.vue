@@ -137,10 +137,11 @@ const saveApp = async (type: 'agent' | 'flow') => {
     } else if (type === 'agent') {
       const formData = agentAppConfigRef.value.createAppForm;
       if (!formData) return;
+      // 配置 agent 接口去掉icon
       const [, res] = await api.createOrUpdateApp({
         appId: route.query?.appId as string,
         appType: type,
-        icon: formData.icon,
+        // icon: formData.icon,
         name: formData.name,
         description: formData.description,
         dialogRounds: formData.dialogRounds,
