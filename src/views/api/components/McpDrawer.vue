@@ -56,6 +56,7 @@ const form = reactive<McpDetail>({
   description: '',
   type: 'stdio',
   mcpConfig: '',
+  rawFile: null,
 });
 
 const formRef = ref<FormInstance>();
@@ -113,6 +114,8 @@ const beforeIconUpload: UploadProps['beforeUpload'] = async (rawFile) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       form.icon = e.target?.result as string;
+      form.rawFile = rawFile;
+      console.log('Icon uploaded:', rawFile);
     };
     reader.readAsDataURL(rawFile);
     return false;
@@ -125,14 +128,17 @@ const beforeIconUpload: UploadProps['beforeUpload'] = async (rawFile) => {
     return false;
   }
 };
-
 async function onConfirm(formEl: FormInstance | undefined) {
   if (!formEl) return;
+
   const json = jsonEditorRef.value.getJsonValue();
   if (json) form.mcpConfig = json;
-  await formEl.validate(async (valid) => {
-    if (!valid) return;
-    const [, res] = await api.createOrUpdateMcpService({
+
+  const valid = await formEl.validate();
+  if (!valid) return;
+
+  try {
+    const [, serviceRes] = await api.createOrUpdateMcpService({
       serviceId: props.serviceId || undefined,
       overview: form.overview,
       icon: form.icon,
@@ -142,12 +148,37 @@ async function onConfirm(formEl: FormInstance | undefined) {
       mcpType: form.type,
     });
 
-    if (res) {
-      formEl.resetFields();
-      jsonEditorRef.value.setJsonValue('{\n  \n}');
-      emits('success');
+    console.log('MCP Service Response:', serviceRes);
+    console.log('MCP Service Response:', serviceRes.result.serviceId, form.rawFile);
+
+    const serviceId = serviceRes.result.serviceId;
+    if (form.rawFile) {
+      try {
+        await api.uploadMcpIcon({
+          serviceId,
+          icon: form.rawFile,
+        });
+      } catch (error) {
+        console.error('Error uploading icon:', error);
+        ElMessage({
+          message: 'Failed to upload icon!',
+          type: 'error',
+        });
+        // 不阻断流程，仅提示
+      }
     }
-  });
+
+    formEl.resetFields();
+    jsonEditorRef.value.setJsonValue('{\n  \n}');
+    emits('success');
+
+  } catch (error) {
+    console.error('Create or update MCP service failed:', error);
+    ElMessage({
+      message: 'Failed to create/update service!',
+      type: 'error',
+    });
+  }
 }
 
 async function getMcpServiceDetail(serviceId: string) {
