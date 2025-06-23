@@ -139,15 +139,6 @@ const beforeIconUpload: UploadProps['beforeUpload'] = async (rawFile) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       createAppForm.icon = e.target?.result as string;
-      // 在上传时直接upload icon
-    (async() => {
-      console.log('Uploading icon...',rawFile,e.target?.result);
-      await api.uploadMcpIcon({
-        icon: rawFile,
-        service_id: route.query?.appId as string,
-        edit: true,
-      });
-    })()
     };
     reader.readAsDataURL(rawFile);
     return false;

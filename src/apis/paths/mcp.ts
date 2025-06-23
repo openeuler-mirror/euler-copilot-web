@@ -83,32 +83,10 @@ const activeMcpService = (id: string, active: boolean) => {
   return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`, { active });
 };
 
-// 定义一个名为uploadMcpIcon的函数，接收两个参数id和active
-const uploadMcpIcon = (params: {
-  service_id: string;
-  edit: boolean;
-  icon: File;
-}) => {
-  console.log('uploadMcpIcon', params.icon);
-  const formData = new FormData();
-  formData.append('icon', params.icon);
-  // 使用post方法向MCP_BASE_URL/${id}发送请求，请求体为{ icon: params.icon }
-  return post<{ icon: string }>(
-    `${MCP_BASE_URL}`,
-    formData,
-    {
-      service_id: params.service_id,
-      edit: params.edit,
-    },
-    { 'Content-Type': 'multipart/form-data' },
-  );
-};
-
 export const mcpApi = {
   getMcpList,
   getMcpServiceDetail,
   createOrUpdateMcpService,
   deleteMcpService,
   activeMcpService,
-  uploadMcpIcon,
 };
