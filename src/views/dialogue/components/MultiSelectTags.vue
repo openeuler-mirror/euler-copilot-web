@@ -264,7 +264,7 @@ const checkTagsOverflow = () => {
 :deep(.el-collapse-item__content) {
   border-bottom: none;
   padding-bottom: 0px;
-  margin: 1px;
+  margin: 2px;
 }
 
 :deep(.el-collapse-item__header) {
@@ -273,7 +273,7 @@ const checkTagsOverflow = () => {
   justify-content: flex-end;
   align-items: center;
   height: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
   color: #8d98aa;
   font-size: 12px;
   border-top: none;
@@ -441,6 +441,7 @@ const checkTagsOverflow = () => {
 /* 全局样式，不使用scoped */
 .global-tag-modal {
   position: fixed;
+  border-radius: 8px;
   top: 60px;
   right: 16px;
   bottom: 46px;
@@ -457,7 +458,7 @@ const checkTagsOverflow = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 24px 24px 0px 24px;
 
   h3 {
     margin: 0;
@@ -487,7 +488,7 @@ const checkTagsOverflow = () => {
 .multi-select-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
@@ -501,8 +502,8 @@ const checkTagsOverflow = () => {
   border-radius: 8px;
   background-image: linear-gradient(
     to right,
-    rgba(109, 117, 250, 0.2),
-    rgba(90, 179, 255, 0.2)
+    rgb(231, 243, 255),
+    rgb(233, 237, 254)
   );
   cursor: pointer;
   transition: all 0.2s ease;
@@ -514,8 +515,9 @@ const checkTagsOverflow = () => {
   }
 
   &.selected {
-    border-color: #3498db;
-    background-color: rgba(52, 152, 219, 0.05);
+    border-color: #6395FD;
+    background-color: #6395FD;
+    outline: 2px solid #6395FD;
 
     &::after {
       content: '';
@@ -526,8 +528,8 @@ const checkTagsOverflow = () => {
       height: 0;
       border-style: solid;
       border-width: 0 24px 24px 0;
-      border-color: transparent #3498db transparent transparent;
-      border-radius: 4px;
+      border-color: transparent #6395FD transparent transparent;
+      border-radius: 0px 4px;
     }
   }
 }
