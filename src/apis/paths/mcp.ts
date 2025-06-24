@@ -72,7 +72,10 @@ const createOrUpdateMcpService = (params: {
   config: string;
   mcpType: 'stdio' | 'sse' | 'stream';
 }) => {
-  return post(`${MCP_BASE_URL}`, params);
+  return post<{
+    service_id: string;
+    name: string;
+  }>(`${MCP_BASE_URL}`, params);
 };
 
 const deleteMcpService = (id: string) => {
@@ -83,10 +86,9 @@ const activeMcpService = (id: string, active: boolean) => {
   return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`, { active });
 };
 
-// 定义一个名为uploadMcpIcon的函数，接收两个参数id和active
+// 定义一个名为uploadMcpIcon的函数，接收两个参数serviceId和icon
 const uploadMcpIcon = (params: {
-  service_id: string;
-  edit: boolean;
+  serviceId: string;
   icon: File;
 }) => {
   console.log('uploadMcpIcon', params.icon);
@@ -97,8 +99,7 @@ const uploadMcpIcon = (params: {
     `${MCP_BASE_URL}`,
     formData,
     {
-      service_id: params.service_id,
-      edit: params.edit,
+      serviceId: params.serviceId,
     },
     { 'Content-Type': 'multipart/form-data' },
   );
@@ -110,5 +111,5 @@ export const mcpApi = {
   createOrUpdateMcpService,
   deleteMcpService,
   activeMcpService,
-  uploadMcpIcon,
+  uploadMcpIcon
 };
