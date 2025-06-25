@@ -150,22 +150,26 @@
                   </template>
                   <template #footer>
                     <div class="apiCenterCardBottom">
-                      <div class="apiCenterCardId" v-if="pluginType === 'mcp'">
-                        <span>ID: {{ item.serviceId }}</span>
-                        <el-tooltip
-                          effect="dark"
-                          :content="$t('common.copy')"
-                          placement="top"
-                        >
-                          <el-icon
-                            @click.stop="onCopyServiceId(item.serviceId)"
-                          >
-                            <CopyDocument />
-                          </el-icon>
-                        </el-tooltip>
-                      </div>
                       <div class="apiCenterCardFooter">
                         <div class="apiCenterCardUser">@{{ item.author }}</div>
+                        <div
+                          class="apiCenterCardId"
+                          v-if="pluginType === 'mcp'"
+                        >
+                          <span style="font-weight: 700 !important;">ID: </span>
+                          <span>{{ item.serviceId }}</span>
+                          <el-tooltip
+                            effect="dark"
+                            :content="$t('common.copy')"
+                            placement="top"
+                          >
+                            <el-icon
+                              @click.stop="onCopyServiceId(item.serviceId)"
+                            >
+                              <CopyDocument />
+                            </el-icon>
+                          </el-tooltip>
+                        </div>
                         <div
                           class="apiCenterCardOps"
                           v-if="item.status !== 'installing'"

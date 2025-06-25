@@ -1,5 +1,4 @@
 <script setup>
-import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
 import { api } from 'src/apis';
 import { IconCheckBold, IconXSolid,IconCaretRight} from '@computing/opendesign-icons';
 import { ref, computed, onMounted, watch } from 'vue';
@@ -11,7 +10,7 @@ const isModalOpen = ref(false);
 const searchKey = ref('');
 const activeNames = ref([]);
 const emit = defineEmits(['updateValue']);
-const isTagsOverflow = ref(false);
+// const isTagsOverflow = ref(false);
 const filterKnowledgeList = computed(() => {
   // filter by searchKey
   if (!searchKey.value) return availableitems.value;
@@ -99,49 +98,49 @@ const toggleModal = () => {
 };
 
 // 待优化
-const checkTagsOverflow = () => {
-  const container = document.querySelector('.tags-container');
-  if (!container) return;
+// const checkTagsOverflow = () => {
+//   const container = document.querySelector('.tags-container');
+//   if (!container) return;
 
-  const tags = container.querySelectorAll('.tag');
-  if (!tags.length) return;
+//   const tags = container.querySelectorAll('.tag');
+//   if (!tags.length) return;
 
-  //重置所有标签的样式
-  tags.forEach((tag) => {
-    tag.style.maxWidth = 'none';
-    tag.querySelector('.tag-text').style.maxWidth = '120px';
-  });
+//   //重置所有标签的样式
+//   tags.forEach((tag) => {
+//     tag.style.maxWidth = 'none';
+//     tag.querySelector('.tag-text').style.maxWidth = '120px';
+//   });
 
-  if (container.scrollWidth >= container.clientWidth && !isTagsOverflow.value) {
-    console.log(container.scrollWidth, container.clientWidth);
-    isTagsOverflow.value = true;
-    let lastVisibleIndex = tags.length - 1;
-    while (lastVisibleIndex >= 0) {
-      const tagRect = tags[lastVisibleIndex].getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
+//   if (container.scrollWidth >= container.clientWidth && !isTagsOverflow.value) {
+//     console.log(container.scrollWidth, container.clientWidth);
+//     isTagsOverflow.value = true;
+//     let lastVisibleIndex = tags.length - 1;
+//     while (lastVisibleIndex >= 0) {
+//       const tagRect = tags[lastVisibleIndex].getBoundingClientRect();
+//       const containerRect = container.getBoundingClientRect();
 
-      if (tagRect.right <= containerRect.right) {
-        break;
-      }
-      lastVisibleIndex--;
-    }
+//       if (tagRect.right <= containerRect.right) {
+//         break;
+//       }
+//       lastVisibleIndex--;
+//     }
 
-    if (lastVisibleIndex >= 0) {
-      const lastTag = tags[lastVisibleIndex];
-      const tagText = lastTag.querySelector('.tag-text');
+//     if (lastVisibleIndex >= 0) {
+//       const lastTag = tags[lastVisibleIndex];
+//       const tagText = lastTag.querySelector('.tag-text');
 
-      // 计算可用空间
-      const containerRight = container.getBoundingClientRect().right;
-      const tagRight = lastTag.getBoundingClientRect().right;
-      const deleteBtnWidth = 20; // 关闭按钮的预估宽度
+//       // 计算可用空间
+//       const containerRight = container.getBoundingClientRect().right;
+//       const tagRight = lastTag.getBoundingClientRect().right;
+//       const deleteBtnWidth = 20; // 关闭按钮的预估宽度
 
-      // 设置最大宽度
-      const availableWidth =
-        containerRight - lastTag.getBoundingClientRect().left - deleteBtnWidth;
-      tagText.style.maxWidth = `${Math.max(0, availableWidth)}px`;
-    }
-  }
-};
+//       // 设置最大宽度
+//       const availableWidth =
+//         containerRight - lastTag.getBoundingClientRect().left - deleteBtnWidth;
+//       tagText.style.maxWidth = `${Math.max(0, availableWidth)}px`;
+//     }
+//   }
+// };
 </script>
 
 <template>
@@ -220,7 +219,6 @@ const checkTagsOverflow = () => {
                   <template
                     v-for="(item, index) in item.kb_list"
                     :key="index"
-                    class="list-item"
                   >
                     <div
                       class="list-item"

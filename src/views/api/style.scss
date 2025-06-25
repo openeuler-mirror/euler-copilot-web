@@ -112,6 +112,9 @@
               display: flex;
               align-items: center;
               justify-content: space-between;
+              span {
+                margin-right: 4px;
+              }
             }
             .apiCenterCardFooter {
               display: flex;

@@ -269,7 +269,7 @@ onMounted(() => {
           <IconUpload />
         </el-icon>
         <div class="upload-tip">
-          {{ $t('semantic.tip1') }}
+          <span>{{ $t('semantic.tip1') }}</span>
             <div class="upload-tip2">
             {{ $t('semantic.tip2') }}
             </div>
@@ -452,13 +452,19 @@ onMounted(() => {
   color: var(--o-text-color-tertiary);
 }
 
-.upload-tip {
+.upload-tip span{
   width: 100%;
-  font-size: var(--o-font-size-info);
-  color: var(--o-text-color-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  display: inline-block;
+  color: var(--o-question-color);
 }
 
 .upload-tip  .upload-tip2 {
+  color: var(--o-text-color-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  display: inline-block;
   margin-top: 4px;
 }
 
