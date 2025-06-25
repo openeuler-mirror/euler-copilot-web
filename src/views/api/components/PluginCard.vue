@@ -56,6 +56,7 @@ const props = defineProps<CardInfo>();
     gap: 4px;
 
     &__top {
+      min-height: 24px;
       display: flex;
       justify-content: space-between;
       .title {

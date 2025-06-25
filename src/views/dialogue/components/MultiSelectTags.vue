@@ -1,7 +1,6 @@
 <script setup>
-import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
 import { api } from 'src/apis';
-import { IconCheckBold, IconXSolid } from '@computing/opendesign-icons';
+import { IconCheckBold, IconXSolid,IconCaretRight} from '@computing/opendesign-icons';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useHistorySessionStore, useChangeThemeStore } from 'src/store';
 import { storeToRefs } from 'pinia';
@@ -197,24 +196,29 @@ const checkTagsOverflow = () => {
             </template>
           </ElInput>
           <ul v-if="filterKnowledgeList.length">
-            <ElCollapse v-model="activeNames">
+            <el-collapse v-model="activeNames">
               <template v-for="item in filterKnowledgeList" :key="item.key">
-                <ElCollapseItem :name="item.key">
-                  <template #title>
-                    {{ item.teamName }}
+                <el-collapse-item :name="item.key" icon="CaretLeft" >
+                  <template #title="{ isActive }"> 
+                    <el-icon
+                    class="el-collapse-item__arrow"
+                    :class="{ 'is-active': isActive }">{{isActive}}
+                      <IconCaretRight></IconCaretRight>
+                    </el-icon>{{activeNames.includes(item.key) }}{{activeNames}}
+                    <span>
+                      {{ item.teamName }}
+                    </span>
                   </template>
                   <template #icon="{ isActive }">
-                    <el-icon v-if="isActive" :size="16">
-                      <CaretBottom />
-                    </el-icon>
-                    <el-icon v-else :size="16">
-                      <CaretRight />
-                    </el-icon>
+                     <el-icon
+                    class="el-collapse-item__arrow"
+                    :class="{ 'is-active': isActive }">{{isActive}}
+                      <IconCaretRight></IconCaretRight>
+                    </el-icon>{{activeNames.includes(item.key) }}{{activeNames}}
                   </template>
                   <template
                     v-for="(item, index) in item.kb_list"
                     :key="index"
-                    class="list-item"
                   >
                     <div
                       class="list-item"
@@ -228,16 +232,16 @@ const checkTagsOverflow = () => {
                             <el-icon>
                               <IconCheckBold />
                             </el-icon>
-                          </span>
+                          </span> 
                         </div>
                         <p class="item-description">{{ item.description }}</p>
                         <div class="item-id">ID: {{ item.kbId }}</div>
                       </div>
                     </div>
                   </template>
-                </ElCollapseItem>
+                </el-collapse-item>
               </template>
-            </ElCollapse>
+            </el-collapse>
           </ul>
         </div>
       </div>
@@ -246,6 +250,12 @@ const checkTagsOverflow = () => {
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-collapse-item__title) {
+  line-height: 18px !important;
+}
+:deep(.el-collapse-item__arrow.is-active) {
+  transform: rotate(90deg);
+}
 .search-input {
   margin-top: 8px;
   width: calc(100% - 48px) !important;

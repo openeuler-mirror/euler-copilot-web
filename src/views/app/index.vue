@@ -407,7 +407,7 @@ img {
   .el-tabs__header {
     .el-tabs__nav-wrap {
       .el-tabs__item {
-        height: 32px;
+        height: 32px !important;
       }
     }
   }

@@ -270,7 +270,18 @@ watch(
                 <img v-else class="create-button__icon" :src="item.src" />
               </el-icon>
             </span>
-            <span class="menu-text">{{ item.name }}</span>
+            <span 
+            class="menu-text"
+            :class="{
+              'menu-text__selected':
+                router.currentRoute.value.name
+                  ?.toString()
+                  .indexOf(item.routerName) !== -1 ||
+                router.currentRoute.value.name
+                  ?.toString()
+                  .indexOf(item.anotherName!) !== -1,
+            }"
+            >{{ item.name }}</span>
           </router-link>
         </div>
 
@@ -283,7 +294,12 @@ watch(
               />
             </el-icon>
           </span>
-          <span class="menu-text">{{ i18n.global.t('menu.settings') }}</span>
+          <span 
+          class="menu-text"
+          :class="{
+            'menu-text__selected': route.path === '/settings',
+          }"
+          >{{ i18n.global.t('menu.settings') }}</span>
         </router-link>
       </div>
       <div class="dialogue-content">
@@ -623,9 +639,14 @@ watch(
           font-style: none;
           display: block;
           font-size: 12px;
-          color: var(--o-text-color-primary);
+          color: var(--o-think-header-text);
           text-align: center;
           padding: 0 1px;
+
+          &__selected {
+            color: #6395FD;
+            font-weight: 600;
+          }
         }
       }
     }

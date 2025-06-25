@@ -188,7 +188,7 @@ onMounted(() => {
       color: rgb(99, 149, 253);
 
       .disabled {
-        color: #d1cfcf;
+        color: var(--o-text-disable);
       }
 
       a {

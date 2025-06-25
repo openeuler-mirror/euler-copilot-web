@@ -96,32 +96,20 @@ const headerStyles = computed<CSSProperties>(() => {
       <h4>openEuler Intelligence</h4>
     </span>
     <div class="header-right">
-      <el-popover popper-class="popper-class">
-        <template #reference>
-          <span class="language">{{ lang }}</span>
-        </template>
-        <div
-          class="exit-button lang-button"
-          :class="lang === 'English' ? 'lang-selected' : ''"
-          @click="changeLanguagefun('en')"
-        >
-          English
-        </div>
-        <div class="divider"></div>
-        <div
-          class="exit-button lang-button"
-          :class="lang === '简体中文' ? 'lang-selected' : ''"
-          @click="changeLanguagefun('zh_cn')"
-        >
-          简体中文
-        </div>
-      </el-popover>
+      <div class="language">
+        <span v-if="lang === 'English'" @click="changeLanguagefun('zh_cn')">
+          <img id="sun-icon" src="@/assets/svgs/language-en.svg" alt="" />
+        </span>
+        <span v-else @click="changeLanguagefun('en')">
+          <img id="moon-icon" src="@/assets/svgs/language-cn.svg" alt="" />
+        </span>
+      </div>
       <div class="mode">
         <span v-if="theme === 'light'" @click="changeTheme">
-          <img id="sun-icon" src="@/assets/svgs/sun.svg" alt="" />
+          <img id="sun-icon" src="@/assets/svgs/moon.svg" alt="" />
         </span>
         <span v-else @click="changeTheme">
-          <img id="moon-icon" src="@/assets/svgs/moon.svg" alt="" />
+          <img id="moon-icon" src="@/assets/svgs/sun.svg" alt="" />
         </span>
       </div>
 
@@ -177,7 +165,7 @@ const headerStyles = computed<CSSProperties>(() => {
     border-radius: 50%;
     cursor: pointer;
     &:hover {
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      // box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
   }
   .header-right {

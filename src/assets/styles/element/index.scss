@@ -206,3 +206,13 @@
     box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.1);
   }
 }
+
+.el-tabs__header{
+  height: 32px !important;
+  .el-tabs__nav-scroll{
+    height: 32px !important;
+    .el-tabs__item{
+      padding: 0px 16px 0px 0px !important;
+    }
+  }
+}

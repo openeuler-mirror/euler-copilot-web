@@ -150,22 +150,26 @@
                   </template>
                   <template #footer>
                     <div class="apiCenterCardBottom">
-                      <div class="apiCenterCardId" v-if="pluginType === 'mcp'">
-                        <span>ID: {{ item.serviceId }}</span>
-                        <el-tooltip
-                          effect="dark"
-                          :content="$t('common.copy')"
-                          placement="top"
-                        >
-                          <el-icon
-                            @click.stop="onCopyServiceId(item.serviceId)"
-                          >
-                            <CopyDocument />
-                          </el-icon>
-                        </el-tooltip>
-                      </div>
                       <div class="apiCenterCardFooter">
                         <div class="apiCenterCardUser">@{{ item.author }}</div>
+                        <div
+                          class="apiCenterCardId"
+                          v-if="pluginType === 'mcp'"
+                        >
+                          <span style="font-weight: 700 !important;">ID: </span>
+                          <span>{{ item.serviceId }}</span>
+                          <el-tooltip
+                            effect="dark"
+                            :content="$t('common.copy')"
+                            placement="top"
+                          >
+                            <el-icon
+                              @click.stop="onCopyServiceId(item.serviceId)"
+                            >
+                              <CopyDocument />
+                            </el-icon>
+                          </el-tooltip>
+                        </div>
                         <div
                           class="apiCenterCardOps"
                           v-if="item.status !== 'installing'"
@@ -440,6 +444,8 @@ const handleClose = () => {
 };
 
 let timer: NodeJS.Timeout | null = null;
+let polling = false;
+
 const queryList = async (type: 'semantic_interface' | 'mcp') => {
   loading.value = true;
   const payload = {
@@ -451,6 +457,7 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
     clearInterval(timer);
     timer = null;
   }
+  polling = false;
   if (type === 'semantic_interface') {
     payload[apiType.value] = true;
     const [, res] = await api.queryApiList({
@@ -465,9 +472,17 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
       loading.value = false;
     }
   } else if (type === 'mcp') {
-    queryMcpServices();
-    timer = setInterval(() => {
-      queryMcpServices();
+    polling = true;
+    serialMcpPolling();
+  }
+};
+
+const serialMcpPolling = async () => {
+  if (!polling) return;
+  await queryMcpServices();
+  if (polling) {
+    timer = setTimeout(() => {
+      serialMcpPolling();
     }, 3000);
   }
 };
