@@ -153,6 +153,7 @@ const disabledUrl = computed(() => {
           <el-input
             v-model="form.url"
             :disabled="disabledUrl"
+            clearable
             :placeholder="t('settings.placeHolder.url')"
           />
         </el-form-item>
@@ -160,6 +161,7 @@ const disabledUrl = computed(() => {
           <el-input
             v-model="form.model"
             :placeholder="t('settings.placeHolder.model_name')"
+            clearable
           ></el-input>
         </el-form-item>
         <el-form-item label="API_Key" prop="apiKey">
@@ -173,6 +175,7 @@ const disabledUrl = computed(() => {
         <el-form-item label="Max-token" prop="maxTokens">
           <el-input
             v-model="form.maxTokens"
+            clearable
             :placeholder="t('settings.placeHolder.max_token')"
           />
         </el-form-item>
@@ -213,5 +216,13 @@ const disabledUrl = computed(() => {
   .el-select > .el-select__wrapper {
     --o-select-border-radius: 4px;
   }
+}
+.el-form{
+  .el-form-item:last-child {
+    margin-bottom: 0;
+  }
+}
+.el-dialog__footer{
+  padding-top: 16px !important;
 }
 </style>

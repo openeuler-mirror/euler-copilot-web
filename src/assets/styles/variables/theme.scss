@@ -4,6 +4,7 @@ body[theme='dark'] {
     rgba(109, 117, 250, 0.5),
     rgba(90, 179, 255, 0.5)
   );
+  --o-text-disable: #626D7C;
   --o-main-bg-color: #131415;
   --o-bg-image: url('../../assets/svgs/dark_background.svg');
   --no-work-flow: url('../../assets/images/dark_no_flow.png');
@@ -93,6 +94,7 @@ body[theme='dark'] {
 }
 
 body[theme='light'] {
+  --o-text-disable: #BFC7D7;
   --o-checkbox-bg-color_checked: #6395fd !important;
   --o-func-base-primary: 99, 149, 253;
   --o-checkbox-bg-color_checked: #6395fd !important;

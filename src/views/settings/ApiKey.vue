@@ -71,7 +71,7 @@ onMounted(() => {
             backgroundColor: 'rgb(244,246,250)',
             boxShadow: '0 -1 0 0 rgb(223,229,239)',
             height: '32px',
-            fontSize: '14px',
+            fontSize: '12px',
           } as CSSProperties
         "
         :data="apiKeys"
@@ -80,7 +80,6 @@ onMounted(() => {
           <template #header>
             <div class="name-col">
               <el-icon size="14"><View /></el-icon>
-              <!-- <el-icon><Hide /></el-icon> -->
               {{ t('settings.secret_key') }}
             </div>
           </template>
