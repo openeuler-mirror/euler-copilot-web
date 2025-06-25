@@ -444,6 +444,8 @@ const handleClose = () => {
 };
 
 let timer: NodeJS.Timeout | null = null;
+let polling = false;
+
 const queryList = async (type: 'semantic_interface' | 'mcp') => {
   loading.value = true;
   const payload = {
@@ -455,6 +457,7 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
     clearInterval(timer);
     timer = null;
   }
+  polling = false;
   if (type === 'semantic_interface') {
     payload[apiType.value] = true;
     const [, res] = await api.queryApiList({
@@ -469,9 +472,17 @@ const queryList = async (type: 'semantic_interface' | 'mcp') => {
       loading.value = false;
     }
   } else if (type === 'mcp') {
-    queryMcpServices();
-    timer = setInterval(() => {
-      queryMcpServices();
+    polling = true;
+    serialMcpPolling();
+  }
+};
+
+const serialMcpPolling = async () => {
+  if (!polling) return;
+  await queryMcpServices();
+  if (polling) {
+    timer = setTimeout(() => {
+      serialMcpPolling();
     }, 3000);
   }
 };
