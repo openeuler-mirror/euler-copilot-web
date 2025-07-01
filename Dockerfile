@@ -24,8 +24,8 @@ RUN sed -i 's|repo.openeuler.org|repo.huaweicloud.com/openeuler|g' /etc/yum.repo
 
 COPY --from=0 /opt/dist /usr/share/nginx/html
 COPY --from=0 /opt/public /usr/share/nginx/html
-COPY --from=0 /opt/nginx.conf.tmpl /opt/nginx.conf.tmpl
-COPY --from=0 /opt/start.sh /opt/start.sh
+COPY --from=0 /opt/deploy/nginx.conf.tmpl /opt/nginx.conf.tmpl
+COPY --from=0 /opt/deploy/start.sh /opt/start.sh
 
 EXPOSE 8080
 WORKDIR /opt
