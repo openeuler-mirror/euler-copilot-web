@@ -15,7 +15,7 @@ ENV TZ Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone
 
-RUN sed -i 's|repo.openeuler.org|mirrors.nju.edu.cn/openeuler|g' /etc/yum.repos.d/openEuler.repo && \
+RUN sed -i 's|repo.openeuler.org|repo.huaweicloud.com/openeuler|g' /etc/yum.repos.d/openEuler.repo && \
     sed -i '/metalink/d' /etc/yum.repos.d/openEuler.repo && \
     sed -i '/metadata_expire/d' /etc/yum.repos.d/openEuler.repo && \
     yum update -y && \
