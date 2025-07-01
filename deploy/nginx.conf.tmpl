@@ -1,7 +1,7 @@
 worker_processes auto;
 worker_rlimit_nofile 4096;
-error_log ${ERROR_FILE} info;
-pid ${PID_FILE};
+error_log /dev/stderr info;
+pid /var/lib/nginx/tmp/nginx.pid;
 
 include /usr/share/nginx/modules/*.conf;
 
@@ -15,7 +15,7 @@ http {
                       '$status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
-    access_log  ${LOG_FILE} main;
+    access_log  /dev/stdout main;
 
     autoindex off;
     server_tokens off;
@@ -59,8 +59,8 @@ http {
     include /etc/nginx/conf.d/*.conf;
 
     server {
-        listen 8080 ${SSL_ENABLE} default_server;
-        server_name ${SERVER_NAME};
+        listen 8080 default_server;
+        server_name localhost;
         charset utf-8;
 
         add_header X-XSS-Protection "1; mode=block";
@@ -71,13 +71,8 @@ http {
         add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: base64;";
        
         limit_conn limitperip 50;
-        
-        ${SSL_SETTINGS}
-
         resolver 8.8.8.8 8.8.4.4 valid=60s;
         resolver_timeout 5s;
-
-        ${DOMAIN_LIMIT}
 
         if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$) {
             return 444;
@@ -87,7 +82,6 @@ http {
             deny all;
             return 404;
         }
-        
    
         location / {
             limit_req zone=ratelimit burst=50 nodelay;
@@ -129,6 +123,19 @@ http {
             proxy_connect_timeout 500s;
 
             proxy_pass ${FRAMEWORK_URL}/api/;
+        }
+        
+        location /witchaind/ {
+            proxy_set_header X-Forwarded-For $http_x_real_ip;
+            add_header X-Accel-Buffering no;
+            proxy_buffering off;
+            proxy_intercept_errors on;
+            
+            error_page 404 /404.html;
+            proxy_read_timeout 500s;
+            proxy_connect_timeout 500s;
+
+            proxy_pass ${RAG_WEB_URL}/;
         }
 
         error_page 401 402 403 405 406 407 413 414 /error.html;
