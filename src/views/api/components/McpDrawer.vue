@@ -5,6 +5,7 @@ import MonacoEditor from './MonacoEditor.vue';
 import defaultIcon from '@/assets/svgs/app_upload.svg';
 import { api } from '@/apis';
 import i18n from 'src/i18n';
+import CustomLoading from '../../customLoading/index.vue';
 
 interface McpDetail {
   icon: string;
@@ -42,6 +43,8 @@ const URL_TEMPLATE = {
   autoInstall: true,
   disabled: false,
 };
+
+const loading = ref(false);
 
 const mcpConfigTemplate = {
   stdio: COMMAND_TEMPLATE,
@@ -137,6 +140,8 @@ async function onConfirm(formEl: FormInstance | undefined) {
   const valid = await formEl.validate();
   if (!valid) return;
 
+  loading.value = true;
+
   try {
     const [, serviceRes] = await api.createOrUpdateMcpService({
       serviceId: props.serviceId || undefined,
@@ -165,12 +170,14 @@ async function onConfirm(formEl: FormInstance | undefined) {
           type: 'error',
         });
         // 不阻断流程，仅提示
+        loading.value = false;
       }
     }
 
     formEl.resetFields();
     jsonEditorRef.value.setJsonValue('{\n  \n}');
     emits('success');
+    loading.value = false;
 
   } catch (error) {
     console.error('Create or update MCP service failed:', error);
@@ -178,7 +185,9 @@ async function onConfirm(formEl: FormInstance | undefined) {
       message: 'Failed to create/update service!',
       type: 'error',
     });
+    loading.value = false;
   }
+  loading.value = false;
 }
 
 async function getMcpServiceDetail(serviceId: string) {
@@ -231,6 +240,7 @@ watch(
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
+    <CustomLoading :loading="loading"></CustomLoading>
       <div class="wrapper">
         <div class="content">
           <el-form
