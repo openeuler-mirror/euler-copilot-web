@@ -91,13 +91,6 @@ http {
                 return 404;
             }
         }
-
-        location /copilot {
-            limit_req zone=ratelimit burst=50 nodelay;
-            alias /usr/share/nginx/html;
-            index index.html;
-            try_files $uri $uri/ /index.html;
-        }
         
         location /login {
             limit_req zone=ratelimit burst=50 nodelay;
@@ -135,7 +128,7 @@ http {
             proxy_read_timeout 500s;
             proxy_connect_timeout 500s;
 
-            proxy_pass ${RAG_WEB_URL}/;
+            proxy_pass ${RAG_WEB_URL}/witchaind/;
         }
 
         error_page 401 402 403 405 406 407 413 414 /error.html;
