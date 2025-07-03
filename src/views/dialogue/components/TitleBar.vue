@@ -113,7 +113,7 @@ const headerStyles = computed<CSSProperties>(() => {
         </span>
       </div>
 
-      <el-popover popper-class="popper-class">
+      <el-popover popper-class="popper-class" :offset="4">
         <template #reference>
           <img class="avatar" src="@/assets/svgs/user.svg" />
         </template>
@@ -164,8 +164,12 @@ const headerStyles = computed<CSSProperties>(() => {
     height: 48px;
     border-radius: 50%;
     cursor: pointer;
+    //待替换icon资源
     &:hover {
-      // box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-image: url('@/assets/svgs/user.svg');
+    }
+    &:active {
+      background-image: url('@/assets/svgs/user.svg');
     }
   }
   .header-right {
