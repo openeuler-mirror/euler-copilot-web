@@ -297,7 +297,7 @@ watch(
       }
 
       :deep(.el-tabs__content) {
-        padding: 16px 0;
+        padding: 8px 0;
         height: 100%;
         .el-tab-pane {
           height: 100%;
@@ -322,6 +322,7 @@ watch(
           font-size: 14px;
           font-weight: 500;
           line-height: 22px;
+          margin-bottom: 8px;
         }
 
         &-description {
@@ -372,6 +373,14 @@ watch(
             justify-content: start;
             flex: 1 0 90%;
             order: 1;
+            font-size: 12px;
+            color: var(--o-text-color-primary);
+          }
+          .collapse-icon{
+            margin-right: 8px !important;
+          }
+          .collapse-icon-active{
+            transform: rotate(90deg);
           }
           .el-collapse-item__header {
             background-color: var(--c-collapse-bg);

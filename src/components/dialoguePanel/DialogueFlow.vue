@@ -264,22 +264,25 @@ watch(
 }
 
 .border-red {
-  border: 1px solid red;
+  border: 1px solid #F7C1C1;
 }
 
 .border-green {
-  border: 1px solid green;
+  border: 1px solid #C2E7C7;
 }
 
 .border-blue {
-  border: 1px solid rgba(109, 117, 250, 0.2);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: 
+    linear-gradient(white, white) padding-box,
+    linear-gradient(180deg, #6C77FA, #6DB9F9) border-box;
 }
 .demo-collapse {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   width: 100%;
   height: auto;
-  border-radius: 0px 0px 4px 4px;
-  border: 1px solid var(--o-border-color-base);
+  border-radius: 4px !important;
   :deep(.el-collapse-item__wragop) {
     margin-top: 12px !important;
     margin-bottom: 2px !important;

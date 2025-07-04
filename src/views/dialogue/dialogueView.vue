@@ -540,6 +540,7 @@ watch(
 .el-popover.popper-class {
   padding: 5px 0 !important;
   border-radius: 8px;
+  background-color: var(--o-bg-color-base) !important;
   .exit-button {
     width: 100%;
     border-radius: 0;
@@ -561,6 +562,9 @@ watch(
   }
   .divider {
     border-bottom: 1px solid var(--o-text-color-tertiary);
+  }
+  .el-popper__arrow{
+    display: none;
   }
 }
 

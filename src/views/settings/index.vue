@@ -71,7 +71,7 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
   flex: 1;
 
   .el-tabs__content {
-    padding: 16px 0;
+    padding: 8px 0;
     height: 100%;
     .el-tab-pane {
       height: 100%;

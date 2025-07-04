@@ -377,7 +377,7 @@ watch(
           <div v-if="!conversations.length">
             <Bubble
               class="bubble-item"
-              :avatar="DefaultAgentIcon"
+              :avatar="config.icon?config.icon:DefaultAgentIcon"
               :styles="{
                 content: {
                   width: '100%',
@@ -404,7 +404,7 @@ watch(
               { id, role, question, answer, answerIndex, createdAt }, idx
             ) in conversations"
             :key="id"
-            :avatar="role === 'user' ? userAvatar : robotAvatar"
+            :avatar="role === 'user' ? userAvatar : (config.icon?config.icon:robotAvatar)"
             :content="
               role === 'assistant'
                 ? markedContent(answer[answerIndex].content)
@@ -510,12 +510,20 @@ watch(
             :placeholder="$t('main.ask_me_anything')"
             @keydown="handleKeydown"
           />
-          <div class="sender-button-group">
+          <div class="send-button-group">
             <div class="upload-button">
               <img src="@/assets/svgs/upload_light.svg" alt="" />
             </div>
-            <div class="sender-button">
+            <div class="send-button">
+               <img
+                v-if="
+                  dialogueInput.length <= 0
+                "
+                src="@/assets/svgs/send_disabled.svg"
+                alt=""
+              />
               <img
+                v-else
                 :src="isStreaming ? SendDisabledIcon : SendEnableIcon"
                 alt=""
                 @click="onSend(dialogueInput)"
@@ -771,7 +779,7 @@ watch(
         }
       }
 
-      .sender-button-group {
+      .send-button-group {
         display: flex;
         justify-content: space-between;
         align-items: end;
