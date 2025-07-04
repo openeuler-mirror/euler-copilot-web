@@ -150,7 +150,7 @@ export default {
     create_app: 'Create App',
     app_published: 'Published',
     app_config: 'App Config',
-    agent_app: 'Agent App',
+    workflow_app: 'WorkFlow App',
     mcp_app: 'MCP App',
     confirm_delete_app: 'Are you sure to delete this application?',
     create_or_edit_workflow_first: 'Please create/edit a workflow first',
