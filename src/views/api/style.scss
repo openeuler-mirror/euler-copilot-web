@@ -137,6 +137,15 @@
                 .el-button span {
                   color: #6395fd;
                   font-size: 12px;
+                  &:hover {
+                    color: #7aa5ff !important;
+                  }
+                  &:active {
+                    color: #6395fd !important;
+                  }
+                  &:disabled {
+                    color: #6395fd !important;
+                  }
                 }
               }
             }
@@ -215,19 +224,5 @@
       width: 64px;
       height: 24px;
     }
-  }
-}
-
-.el-button span {
-  color: #6395fd;
-  font-size: 12px;
-  &:hover {
-    color: #7aa5ff !important;
-  }
-  &:active {
-    color: #6395fd !important;
-  }
-  &:disabled {
-    color: #6395fd !important;
   }
 }

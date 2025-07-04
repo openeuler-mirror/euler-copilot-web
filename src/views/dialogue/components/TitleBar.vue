@@ -115,7 +115,7 @@ const headerStyles = computed<CSSProperties>(() => {
 
       <el-popover popper-class="popper-class" :offset="4">
         <template #reference>
-          <img class="avatar" src="@/assets/svgs/user.svg" />
+          <div class="avatar" ></div>
         </template>
         <div
           class="exit-button lang-button"
@@ -164,8 +164,13 @@ const headerStyles = computed<CSSProperties>(() => {
     height: 48px;
     border-radius: 50%;
     cursor: pointer;
+    background-image: url('@/assets/svgs/user.svg');
+    background-repeat: no-repeat; /* 防止重复 */
+    background-position: center; /* 居中 */
+    background-size: contain; /* 适应容器 */
     //待替换icon资源
     &:hover {
+      height: 48px;
       background-image: url('@/assets/svgs/user.svg');
     }
     &:active {
@@ -181,5 +186,8 @@ const headerStyles = computed<CSSProperties>(() => {
       margin-left: 18px;
     }
   }
+}
+.popper-class{
+  height: 42px !important;
 }
 </style>

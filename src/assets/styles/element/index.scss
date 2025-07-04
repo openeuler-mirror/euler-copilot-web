@@ -1,19 +1,6 @@
 :root {
   --el-color-primary: #6395fd;
   --o-func-base-primary: #6395fd;
-  .el-button {
-    --o-button-color_label: #6395fd;
-    --o-button-color_label_hover: #7aa5ff;
-      &:hover{
-        color: #7aa5ff;
-      }
-      &:active{
-        color: #6395fd;
-      }
-      &:disabled{
-        color: #6395fd;
-      }
-  }
   .el-message-box__container {
     display: flex;
     align-items: center;

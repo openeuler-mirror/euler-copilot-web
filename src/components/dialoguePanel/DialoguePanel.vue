@@ -509,7 +509,17 @@ const chatWithParams = async () => {
     </div>
     <!-- AI回答 -->
     <div class="dialogue-panel__robot" v-else>
-      <div class="dialogue-panel__robot-content">
+      <div
+        class="dialogue-panel__robot-content"
+        :class="{
+          'loading-style':
+            !contentAfterMark &&
+            !isFinish &&
+            !$slots.default &&
+            !flowdata &&
+            !thoughtContent,
+        }"
+      >
         <!-- 这里是flowData -->
         <DialogueFlow
           v-if="flowdata"

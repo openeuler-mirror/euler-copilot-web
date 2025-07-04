@@ -214,7 +214,8 @@
   }
 }
 .dialogue-panel {
-  width: 1000px;
+  width: 1064px;
+  padding-left: 60px;
   &__user {
     position: relative;
     margin-bottom: 24px;
@@ -244,18 +245,16 @@
       width: 48px;
       height: 48px;
       position: absolute;
-      // left: -10px;
     }
 
     .content {
-      //min-height: 48px;
+      font-size: 16px;
+      align-items: center;
+      align-content: center;
       border-radius: 8px;
       border-top-left-radius: 0px;
       padding: 12px;
-      // display: flex;
-      // align-items: center;
       color: var(--o-text-color-primary);
-      margin-left: calc(48px + 16px);
       background-image: var(--o-content-bg);
       min-height: 48px;
       .messaege {
@@ -270,16 +269,13 @@
 
   &__robot {
     position: relative;
-    padding-left: calc(48px + 16px);
     border-radius: 8px;
 
     .loading {
       display: flex;
-      // min-height: 72px;
-      // padding: 24px;
       background-color: var(--o-bg-color-base);
-      border-radius: 8px;
-      border-top-left-radius: 0px;
+      border-radius: 8px !important;
+      border-top-left-radius: 0px !important;
 
       @keyframes rotate-img {
         from {
@@ -297,7 +293,7 @@
         top: 0px;
         width: 48px;
         height: 48px;
-        left: 0px;
+        left: -64px;
         background-image: url('src/assets/svgs/robot.svg');
       }
 
@@ -308,7 +304,7 @@
       &-text {
         font-size: 16px;
         line-height: 24px;
-        padding-left: 12px;
+        padding-left: 4px;
         color: var(--o-text-color-primary);
       }
     }
@@ -326,7 +322,6 @@
       &::before {
         content: '';
         position: absolute;
-        // left: -10px;
         top: 30px;
         width: 48px;
         height: 48px;
@@ -346,7 +341,7 @@
       &::before {
         content: '';
         position: absolute;
-        left: 0px;
+        left: -64px;
         top: 0px;
         width: 48px;
         height: 48px;
@@ -507,13 +502,6 @@
   }
   .dialogue-panel__content {
     gap: 16px;
-    .userArea {
-      min-width: 48px;
-      height: 48px;
-      img {
-        left: 0px;
-      }
-    }
     .content {
       margin-left: 0px;
       min-height: 48px;
@@ -522,16 +510,11 @@
       }
     }
   }
-  .dialogue-panel__user-time {
-    margin-top: 0px;
-    height: 20px;
-    line-height: 20px;
-  }
   .dialogue-panel__robot {
     gap: 16px;
-    padding-left: 64px;
+    border-radius: 8px;
     .dialogue-panel__robot-content {
-      border-radius: 8px;
+      border-radius: 8px !important;
       // 工作流调试时控制显示
       .dialogue-thought {
         // ai思考无需显示
@@ -558,7 +541,23 @@
   color: var(--o-question-color) !important;
   width: 136px;
   line-height: 20px;
-  padding: 0 8px;
+  padding: 0px 8px;
   background-color: var(--o-time-text);
   border-radius: 12px;
+}
+.loading-style {
+  border-radius: 8px !important;
+  border-top-left-radius: 0px !important;
+  border: 24px;
+}
+.dialogue-panel__user-time {
+  margin-top: 16px;
+  height: 20px;
+  line-height: 20px;
+}
+.userArea {
+  height: 48px;
+  img {
+    left: -64px !important;
+  }
 }
