@@ -1,9 +1,14 @@
 <script setup>
 import { api } from 'src/apis';
-import { IconCheckBold, IconXSolid,IconCaretRight} from '@computing/opendesign-icons';
+import {
+  IconCheckBold,
+  IconXSolid,
+  IconCaretRight,
+} from '@computing/opendesign-icons';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useHistorySessionStore, useChangeThemeStore } from 'src/store';
 import { storeToRefs } from 'pinia';
+import TextMoreTootip from '@/components/textMoreTootip/index.vue';
 const themeStore = useChangeThemeStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 const isModalOpen = ref(false);
@@ -11,6 +16,7 @@ const searchKey = ref('');
 const activeNames = ref([]);
 const emit = defineEmits(['updateValue']);
 const isTagsOverflow = ref(false);
+const popoverVisible = ref(false);
 const filterKnowledgeList = computed(() => {
   // filter by searchKey
   if (!searchKey.value) return availableitems.value;
@@ -80,6 +86,12 @@ const handleKnowledgeList = async () => {
       selectedTags.value.map((item) => item.kbId),
     );
     activeNames.value = res.result.teamKbList.map((item) => item.teamName);
+    popoverVisible.value = true;
+    document.querySelectorAll('.item-description').forEach((el) => {
+      if (isOverflow(el, 2)) {
+        el.classList.add('text-overflow-ellipsis');
+      }
+    });
   }
 };
 
@@ -198,28 +210,31 @@ const checkTagsOverflow = () => {
           <ul v-if="filterKnowledgeList.length">
             <el-collapse v-model="activeNames">
               <template v-for="item in filterKnowledgeList" :key="item.key">
-                <el-collapse-item :name="item.key" icon="CaretLeft" >
-                  <template #title="{ isActive }"> 
+                <el-collapse-item :name="item.key" icon="CaretLeft">
+                  <template #title="{ isActive }">
                     <el-icon
-                    class="el-collapse-item__arrow"
-                    :class="{ 'is-active': isActive }">{{isActive}}
+                      class="el-collapse-item__arrow"
+                      :class="{ 'is-active': isActive }"
+                    >
+                      {{ isActive }}
                       <IconCaretRight></IconCaretRight>
-                    </el-icon>{{activeNames.includes(item.key) }}
+                    </el-icon>
+                    {{ activeNames.includes(item.key) }}
                     <span>
                       {{ item.teamName }}
                     </span>
                   </template>
                   <template #icon="{ isActive }">
-                     <el-icon
-                    class="el-collapse-item__arrow"
-                    :class="{ 'is-active': isActive }">{{isActive}}
+                    <el-icon
+                      class="el-collapse-item__arrow"
+                      :class="{ 'is-active': isActive }"
+                    >
+                      {{ isActive }}
                       <IconCaretRight></IconCaretRight>
-                    </el-icon>{{activeNames.includes(item.key) }}{{activeNames}}
+                    </el-icon>
+                    {{ activeNames.includes(item.key) }}{{ activeNames }}
                   </template>
-                  <template
-                    v-for="(item, index) in item.kb_list"
-                    :key="index"
-                  >
+                  <template v-for="(item, index) in item.kb_list" :key="index">
                     <div
                       class="list-item"
                       :class="{ selected: isSelected(item) }"
@@ -232,9 +247,17 @@ const checkTagsOverflow = () => {
                             <el-icon>
                               <IconCheckBold />
                             </el-icon>
-                          </span> 
+                          </span>
                         </div>
-                        <p class="item-description">{{ item.description }}</p>
+                        <!-- <p class="item-description">{{ item.description }}</p> -->
+                        <div class="item-description">
+                          <TextMoreTootip
+                            v-if="popoverVisible"
+                            :value="item.description"
+                            :row="2"
+                            :placement="left"
+                          />
+                        </div>
                         <div class="item-id">ID: {{ item.kbId }}</div>
                       </div>
                     </div>
@@ -458,7 +481,7 @@ const checkTagsOverflow = () => {
   width: 342px;
   background-color: var(--el-bg-color);
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 9999; /* 非常高的z-index确保在最上层 */
+  z-index: 99; /* 非常高的z-index确保在最上层 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -525,9 +548,9 @@ const checkTagsOverflow = () => {
   }
 
   &.selected {
-    border-color: #6395FD;
-    background-color: #6395FD;
-    outline: 2px solid #6395FD;
+    border-color: #6395fd;
+    background-color: #6395fd;
+    outline: 2px solid #6395fd;
 
     &::after {
       content: '';
@@ -538,7 +561,7 @@ const checkTagsOverflow = () => {
       height: 0;
       border-style: solid;
       border-width: 0 24px 24px 0;
-      border-color: transparent #6395FD transparent transparent;
+      border-color: transparent #6395fd transparent transparent;
       border-radius: 0px 4px;
     }
   }
@@ -582,10 +605,14 @@ const checkTagsOverflow = () => {
 }
 
 .item-description {
-  font-size: 12px !important;
-  margin: 0;
-  color: var(--o-text-color-secondary);
-  font-size: 14px;
+  width: 100%;
+  min-height: 42.45px;
+  .vue-text {
+    font-size: 12px !important;
+    margin: 0;
+    color: var(--o-text-color-secondary) !important;
+    font-size: 14px;
+  }
 }
 
 .item-id {
@@ -621,5 +648,9 @@ const checkTagsOverflow = () => {
 .slide-enter-to,
 .slide-leave-from {
   transform: translateX(0);
+}
+
+.popover {
+  z-index: 999999;
 }
 </style>
