@@ -261,7 +261,7 @@ onMounted(() => {
   border-radius: 8px;
   padding-top: 48px;
   display: block;
-  width: 1000px;
+  width: 1128px;
 
   @media screen and (max-width: 1368px) and (max-height: 768px) {
     padding: 16px 24px 16px 24px;

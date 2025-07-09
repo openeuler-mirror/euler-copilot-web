@@ -12,14 +12,14 @@ onMounted(() => {
   if (window.electronProcess?.platform === 'linux') {
     isLinuxPlatform.value = true;
   }
+  if (window.electronProcess?.platform) {
+    document.body.classList.add('electron-env');
+  }
 });
 </script>
 
 <template>
-  <div
-    class="eulercopilot-main"
-    :style="{ height: '100vh' }"
-  >
+  <div class="eulercopilot-main" :style="{ height: '100vh' }">
     <!-- Linux平台特定的标题栏，使用绝对定位 -->
     <LinuxTitleBar v-if="isLinuxPlatform" />
 

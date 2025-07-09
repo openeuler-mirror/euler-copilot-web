@@ -198,4 +198,7 @@ watch(
 .controlBtn:focus-visible {
   outline: unset !important;
 }
+.controlScaleNumber{
+  font-size: 16px;
+}
 </style>

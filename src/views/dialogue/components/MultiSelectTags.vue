@@ -204,7 +204,7 @@ const checkTagsOverflow = () => {
                     class="el-collapse-item__arrow"
                     :class="{ 'is-active': isActive }">{{isActive}}
                       <IconCaretRight></IconCaretRight>
-                    </el-icon>{{activeNames.includes(item.key) }}{{activeNames}}
+                    </el-icon>{{activeNames.includes(item.key) }}
                     <span>
                       {{ item.teamName }}
                     </span>

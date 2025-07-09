@@ -781,6 +781,7 @@ defineExpose({
                     "
                   >
                     <el-tooltip
+                    :disabled="true"
                     class="popper-class"
                     placement="top"
                     :content="node.name">
@@ -822,11 +823,13 @@ defineExpose({
           :gap="8"
         />
         <MiniMap
+          v-if="workFlowList.length"
           :width="220"
           :mask-color="themeStore.theme === 'dark' ? '#2a2f37' : '#f4f6fa'"
           :mask-stroke-width="250"
         />
         <CustomControl
+          v-if="workFlowList.length"
           :handleChangeZoom="handleChangeZoom"
           :flowZoom="flowZoom"
           :layoutGraph="layoutGraph"

@@ -968,6 +968,7 @@ button[disabled]:hover {
     flex-direction: column;
     align-items: center;
     width: 100%;
+    height: 100%;
     overflow-y: auto;
     margin-left: 16px;
     .initial-message {
@@ -978,8 +979,7 @@ button[disabled]:hover {
   &-bottom {
     margin-top: 24px;
     height: auto;
-    width: 1064px;
-    padding-left: 64px;
+    width: 1000px;
 
     .sendbox-wrapper {
       position: relative;
@@ -1121,8 +1121,7 @@ button[disabled]:hover {
   display: flex;
   margin-top: 16px;
   bottom: 160px;
-  width: 1064px;
-  padding-left: 64px;
+  width: 1000px;
   max-height: 100px;
   overflow-y: auto;
 
