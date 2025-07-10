@@ -267,7 +267,7 @@ const deleteOne = (name: string, list: string[]) => {
 }
 
 .conversation-card {
-  width: calc(100% - 18px);
+  width: 264px;
   &:last-child .conversation-card-item {
     margin-bottom: 0px;
   }
@@ -287,8 +287,7 @@ const deleteOne = (name: string, list: string[]) => {
     &__box {
       flex: 1;
       border-radius: 8px;
-      // width: 100%;
-      width: 202px;
+      height: 66px;
       background-color: var(--o-bg-color-light);
       padding: 0px 5px 12px 15px;
       display: flex;
@@ -301,8 +300,7 @@ const deleteOne = (name: string, list: string[]) => {
           rgba(109, 117, 250, 0.1),
           rgba(90, 179, 255, 0.1)
         );
-        outline: 1px solid #7aa5ff;
-        // border: -1px solid transparent;
+        box-shadow: inset 0 0 0 1px #7aa5ff;
         .conversation-title__button {
           display: flex;
 

@@ -67,61 +67,59 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="dialogue-panel">
-    <div class="inital-panel">
-      <div class="introduction">
-        {{ $t('main.describe1') }}
-        <img
-          src="@/assets/images/logo-euler-copilot.png"
-          alt=""
-          v-if="!appName?.length"
-        />
-        <div class="appNameTitle">{{ appName }}</div>
-        {{ $t('main.describe2') }}
-      </div>
-      <p class="inital-panel-tips"></p>
-      <div class="container">
-        <div class="eg">
-          <p class="eg-title">{{ $t('main.left_describe') }}</p>
-          <ul class="eg-list">
-            <li
-              class="eg-list-item"
-              v-for="item in EG_LIST"
-              :key="item.key"
-              :style="item.style"
-            >
-              <img :src="defaultIcon" alt="" />
-              <div class="eg-list-item__text">
-                <p>{{ $t('main.' + item.key) }}</p>
-                <span class="eg-list-item__text-desc">
-                  {{ $t('main.' + item.insertMessage) }}
-                </span>
-              </div>
-            </li>
-          </ul>
-          <div class="eg-btn">
-            <p @click="routerToAppCenter()">{{ $t('main.try_app') }}</p>
-          </div>
-        </div>
-        <div class="question">
-          <div class="question-title">
-            <p class="title">{{ $t('main.question') }}</p>
-            <div class="change">
-              <el-icon><IconLoad /></el-icon>
-              {{ $t('main.refresh') }}
+  <div class="inital-panel">
+    <div class="introduction">
+      {{ $t('main.describe1') }}
+      <img
+        src="@/assets/images/logo-euler-copilot.png"
+        alt=""
+        v-if="!appName?.length"
+      />
+      <div class="appNameTitle">{{ appName }}</div>
+      {{ $t('main.describe2') }}
+    </div>
+    <p class="inital-panel-tips"></p>
+    <div class="container">
+      <div class="eg">
+        <p class="eg-title">{{ $t('main.left_describe') }}</p>
+        <ul class="eg-list">
+          <li
+            class="eg-list-item"
+            v-for="item in EG_LIST"
+            :key="item.key"
+            :style="item.style"
+          >
+            <img :src="defaultIcon" alt="" />
+            <div class="eg-list-item__text">
+              <p>{{ $t('main.' + item.key) }}</p>
+              <span class="eg-list-item__text-desc">
+                {{ $t('main.' + item.insertMessage) }}
+              </span>
             </div>
-          </div>
-          <ul class="question-list">
-            <li class="question-item" v-for="item in questions" :key="item.id">
-              <span class="question-number" :class="{ blue: item.id <= 3 }">
-                {{ item.id }}
-              </span>
-              <span class="question-des" @click="selectQuestions">
-                {{ $t('question.' + item.question) }}
-              </span>
-            </li>
-          </ul>
+          </li>
+        </ul>
+        <div class="eg-btn">
+          <p @click="routerToAppCenter()">{{ $t('main.try_app') }}</p>
         </div>
+      </div>
+      <div class="question">
+        <div class="question-title">
+          <p class="title">{{ $t('main.question') }}</p>
+          <div class="change">
+            <el-icon><IconLoad /></el-icon>
+            {{ $t('main.refresh') }}
+          </div>
+        </div>
+        <ul class="question-list">
+          <li class="question-item" v-for="item in questions" :key="item.id">
+            <span class="question-number" :class="{ blue: item.id <= 3 }">
+              {{ item.id }}
+            </span>
+            <span class="question-des" @click="selectQuestions">
+              {{ $t('question.' + item.question) }}
+            </span>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -210,13 +208,11 @@ onMounted(() => {
   justify-content: center;
 
   .question {
-    // display: block;
-    width: 492px;
+    width: calc(50% - 8px);
     height: auto;
     box-shadow: 0px 5.18px 20.72px 0px var(--question-shadow);
     background: var(--question-bg);
     background-blend-mode: overlay;
-    // opacity: 0.5;
     border-radius: 8px;
     background-size: 100% 100%;
     margin-left: 16px;
@@ -259,13 +255,11 @@ onMounted(() => {
 .inital-panel {
   background-color: transparent;
   border-radius: 8px;
-  padding-top: 48px;
+  padding-top: 64px;
   display: block;
-  width: 1128px;
-
-  @media screen and (max-width: 1368px) and (max-height: 768px) {
-    padding: 16px 24px 16px 24px;
-  }
+  max-width: 1000px;
+  min-width: 806px;
+  width: calc(100% - 176px);
 
   .introduction {
     display: flex;
@@ -291,9 +285,10 @@ onMounted(() => {
   .eg {
     background-color: var(--o-bg-color-base);
     padding: 24px;
+    box-shadow: 0px 5.18px 20.72px 0px var(--question-shadow);
     border-radius: 8px;
-    width: 492px;
-    height: 320px;
+    width: calc(50% - 8px);
+    height: auto;
     &-title {
       font-size: 18px;
       font-weight: 700;
@@ -301,8 +296,8 @@ onMounted(() => {
     }
     &-btn {
       display: flex;
-      position: relative;
-      top: 53px;
+      margin-top: 48px;
+      margin-bottom: 16px;
       cursor: pointer;
       p {
         display: block;
@@ -339,9 +334,10 @@ onMounted(() => {
       }
       &-item {
         display: flex;
-        align-items: center;
-        width: 218px;
-        height: 80px;
+        align-items: flex-start;
+        min-width: 169px;
+        max-width: 218px;
+        width: calc(50% - 4px);
         background: var(--o-bg-color-base);
         overflow: hidden;
         border-radius: 8px;
@@ -357,8 +353,8 @@ onMounted(() => {
         }
 
         &__text {
-          // width: 100%;
           margin-right: 16px;
+          margin-top: 16px;
           display: flex;
           flex-direction: column;
           font-size: 16px;
@@ -370,6 +366,9 @@ onMounted(() => {
             font-size: 14px;
             color: var(--o-text-color-secondary);
             font-weight: 400;
+            line-height: 22px;
+            margin-top: 4px;
+            margin-bottom: 14px;
           }
         }
 

@@ -214,8 +214,9 @@
   }
 }
 .dialogue-panel {
-  width: 1128px;
-  padding: 0 60px;
+  width: calc(100% - 176px);
+  max-width: 1000px;
+  min-width: 806px;
   &__user {
     position: relative;
     margin-bottom: 24px;
