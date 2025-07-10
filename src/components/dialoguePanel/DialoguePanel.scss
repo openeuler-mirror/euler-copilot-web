@@ -216,7 +216,6 @@
 .dialogue-panel {
   width: calc(100% - 176px);
   max-width: 1000px;
-  min-width: 806px;
   &__user {
     position: relative;
     margin-bottom: 24px;
@@ -506,11 +505,11 @@
 .workFlowDebugStyle {
   width: auto;
   padding-right: 24px;
+  padding-left: 64px;
   .loading {
     display: none;
   }
   .dialogue-panel__content {
-    gap: 16px;
     .content {
       margin-left: 0px;
       min-height: 48px;
@@ -536,9 +535,6 @@
       }
       .loading-echarts {
         display: none;
-      }
-      &::before {
-        left: 0;
       }
     }
   }

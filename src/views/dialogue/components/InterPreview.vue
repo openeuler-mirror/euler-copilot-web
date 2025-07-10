@@ -207,7 +207,6 @@ watch(
     .preMainContanter {
       width: calc(100% - 176px);
       max-width: 1000px;
-      min-width: 806px;
       position: relative;
       display: flex;
       flex-direction: column;

@@ -258,7 +258,6 @@ onMounted(() => {
   padding-top: 64px;
   display: block;
   max-width: 1000px;
-  min-width: 806px;
   width: calc(100% - 176px);
 
   .introduction {

@@ -970,7 +970,6 @@ button[disabled]:hover {
   &-bottom {
     margin-top: 24px;
     height: auto;
-    min-width: 806px;
     max-width: 1000px;
     width: calc(100% - 176px);
 
