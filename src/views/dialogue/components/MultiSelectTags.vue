@@ -216,10 +216,8 @@ const checkTagsOverflow = () => {
                       class="el-collapse-item__arrow"
                       :class="{ 'is-active': isActive }"
                     >
-                      {{ isActive }}
                       <IconCaretRight></IconCaretRight>
                     </el-icon>
-                    {{ activeNames.includes(item.key) }}
                     <span>
                       {{ item.teamName }}
                     </span>
@@ -229,10 +227,9 @@ const checkTagsOverflow = () => {
                       class="el-collapse-item__arrow"
                       :class="{ 'is-active': isActive }"
                     >
-                      {{ isActive }}
                       <IconCaretRight></IconCaretRight>
                     </el-icon>
-                    {{ activeNames.includes(item.key) }}{{ activeNames }}
+                    {{ activeNames }}
                   </template>
                   <template v-for="(item, index) in item.kb_list" :key="index">
                     <div
