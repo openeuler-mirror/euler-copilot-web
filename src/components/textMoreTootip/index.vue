@@ -12,7 +12,7 @@
       class="box-item"
       effect="dark"
       :content="value"
-      placement="top"
+      :placement="placement"
     >
       {{ value }}
     </el-tooltip>
@@ -32,6 +32,11 @@ export default {
       //最多显示几行，超过后会...隐藏 为0时不隐藏
       type: [Number, String],
       default: 0,
+    },
+     placement: {
+      //tooltip显示位置
+      type: String,
+      default: 'top',
     },
   },
   data() {
@@ -60,10 +65,28 @@ export default {
         this.getStyle(this.row - 0);
       });
     },
+    placement: function () {
+      this.isShowHover = false;
+      this.textStyle = {
+        cursor: 'text',
+      };
+      this.$nextTick(() => {
+        this.getStyle(this.row - 0);
+      });
+    },
   },
   mounted() {
-    this.init();
-  },
+   this.observer = new ResizeObserver(() => {
+    // 监听窗口变化并保证div已经渲染完成
+    if (getComputedStyle(this.text).height !== 'auto') {
+        this.init();
+        this.getStyle(this.row - 0);
+        //及时关闭
+        this.observer?.disconnect();
+      }
+  });
+  this.observer.observe(this.text);
+},
   methods: {
     init() {
       this.div = document.querySelector('.hover-wrap');
