@@ -22,15 +22,15 @@
       </div>
     </div>
     <div class="preMain">
-      <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
-        <img
-          :src="interPreviewInfo.icon"
-          class="preMainAvator"
-          v-if="interPreviewInfo.icon.length"
-        />
-        <div v-else class="defaultIconNoCamera"></div>
-      </div>
       <div class="preMainContanter">
+        <div class="preMainImg" v-if="interPreviewInfo?.name?.length">
+          <img
+            :src="interPreviewInfo.icon"
+            class="preMainAvator"
+            v-if="interPreviewInfo.icon.length"
+          />
+          <div v-else class="defaultIconNoCamera"></div>
+        </div>
         <div
           class="preMainContent"
           v-if="
@@ -146,7 +146,6 @@ watch(
 .interPreviewBox {
   display: flex;
   flex: auto;
-  margin-top: 32px;
   width: 100%;
   gap: 32px;
   flex-direction: column;
@@ -156,6 +155,7 @@ watch(
     justify-content: center;
     align-items: center;
     position: relative;
+    margin-top: 64px;
 
     .mcp-list {
       position: absolute;
@@ -200,36 +200,42 @@ watch(
   }
 
   .preMain {
-    justify-content: center;
     display: flex;
-    gap: 16px;
+    justify-content: center;
+    align-items: flex-start;
 
-    .preMainImg {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      .preMainAvator {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background-size: contain;
-      }
-      .defaultIconNoCamera {
-        width: 100%;
-        height: 100%;
-        background: url('@/assets/svgs/dark_user.svg');
-        background-size: contain !important;
-        &:hover {
-          background: url('@/assets/svgs/light_user.svg');
-        }
-      }
-    }
     .preMainContanter {
-      width: calc(100% - 166px);
-      max-width: calc(1000px - 46px);
+      width: calc(100% - 176px);
+      max-width: 1000px;
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 16px;
+
+      .preMainImg {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        position: absolute;
+        left: -62px;
+        top: 0;
+        .preMainAvator {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background-size: contain;
+        }
+        .defaultIconNoCamera {
+          width: 100%;
+          height: 100%;
+          background: url('@/assets/svgs/dark_user.svg');
+          background-size: contain !important;
+          &:hover {
+            background: url('@/assets/svgs/light_user.svg');
+          }
+        }
+      }
+
       .preMainContent {
         width: 100%;
         padding: 24px;

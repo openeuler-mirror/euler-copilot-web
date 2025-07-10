@@ -115,7 +115,7 @@ const headerStyles = computed<CSSProperties>(() => {
 
       <el-popover popper-class="popper-class" :offset="4">
         <template #reference>
-          <div class="avatar" ></div>
+          <div class="avatar"></div>
         </template>
         <div
           class="exit-button lang-button"
@@ -131,6 +131,8 @@ const headerStyles = computed<CSSProperties>(() => {
 
 <style lang="scss" scoped>
 .dialogue-header {
+  z-index: 1;
+  box-shadow: 0 0 8px 0 rgba(var(--o-black), 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -187,7 +189,7 @@ const headerStyles = computed<CSSProperties>(() => {
     }
   }
 }
-.popper-class{
+.popper-class {
   height: 42px !important;
 }
 </style>

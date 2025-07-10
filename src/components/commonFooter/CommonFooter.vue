@@ -75,6 +75,7 @@ const readPolicy = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  line-height: 16px;
   span {
     font-size: 12px;
     color: var(--o-text-color-tertiary);

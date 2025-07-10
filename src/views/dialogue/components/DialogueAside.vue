@@ -537,7 +537,7 @@ watch(
 </template>
 <style lang="scss" scoped>
 :deep(.el-dialog) {
-    --o-dialog-width: 432px;
+  --o-dialog-width: 432px;
   .dialog-footer {
     flex-direction: row;
     .el-button {
@@ -545,7 +545,7 @@ watch(
       height: 24px;
     }
   }
-  }
+}
 :deep(.el-collapse-item__title) {
   line-height: 18px !important;
 }
@@ -554,8 +554,8 @@ watch(
 }
 :deep(.el-collapse-item__content) {
   border-bottom: none;
-  padding-bottom: 0px;
-  margin: 1px;
+  padding-bottom: 0;
+  margin: 0;
 }
 
 :deep(.el-collapse-item__header) {
@@ -587,7 +587,7 @@ watch(
 }
 
 .collapsible-apps {
-  width: 17rem;
+  width: 264px;
   border-radius: 8px;
   .collapsible-header {
     border-radius: 8px;
@@ -722,6 +722,9 @@ watch(
 }
 
 .aside-wrapper {
+  padding-left: 8px;
+  padding-top: 16px;
+  padding-bottom: 16px;
   position: relative;
   height: 100%;
 
@@ -758,7 +761,7 @@ watch(
 
   .create-button {
     position: relative;
-    width: calc(100% - 18px);
+    width: 264px;
     height: 40px;
     font-size: 16px;
     background-image: linear-gradient(to right, #6d75fa, #5ab3ff);
@@ -845,10 +848,10 @@ watch(
     }
 
     &-title {
+      width: 264px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-right: 18px;
       cursor: pointer;
       user-select: none;
 
@@ -878,7 +881,7 @@ watch(
 
     .search-input {
       margin-top: 8px;
-      width: calc(100% - 18px);
+      width: 264px;
       font-size: 12px;
       border-radius: 4px;
       border-color: var(--o-border-color-lighter);

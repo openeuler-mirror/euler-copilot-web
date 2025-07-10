@@ -214,8 +214,8 @@
   }
 }
 .dialogue-panel {
-  width: 1128px;
-  padding: 0 60px;
+  width: calc(100% - 176px);
+  max-width: 1000px;
   &__user {
     position: relative;
     margin-bottom: 24px;
@@ -505,11 +505,11 @@
 .workFlowDebugStyle {
   width: auto;
   padding-right: 24px;
+  padding-left: 64px;
   .loading {
     display: none;
   }
   .dialogue-panel__content {
-    gap: 16px;
     .content {
       margin-left: 0px;
       min-height: 48px;
@@ -535,9 +535,6 @@
       }
       .loading-echarts {
         display: none;
-      }
-      &::before {
-        left: 0;
       }
     }
   }

@@ -672,25 +672,19 @@ watch(
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
-        <div
-          v-if="
-            conversationList.length === 0 &&
-            (app.selectedAppId === '' || !app.selectedAppId)
-          "
-        >
-          <InitalPanel @selectQuestion="selectQuestion" />
-        </div>
-        <div
-          class="dialogue-interPreview-main"
-          v-if="conversationList.length === 0 && app.selectedAppId !== ''"
-        >
-          <InterPreview
-            :createAppForm="Form"
+        <template v-if="conversationList.length === 0">
+          <InitalPanel
+            v-if="app.selectedAppId === '' || !app.selectedAppId"
             @selectQuestion="selectQuestion"
           />
-        </div>
+          <div v-else class="dialogue-interPreview-main">
+            <InterPreview
+              :createAppForm="Form"
+              @selectQuestion="selectQuestion"
+            />
+          </div>
+        </template>
       </div>
-      <div class="createApp-demo"></div>
       <div class="dialogue-conversation-bottom">
         <!-- 问题换一换 -->
         <div
@@ -875,10 +869,10 @@ watch(
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
-      .rotated {
-    transition: transform 0.3s;
-    transform: rotate(90deg);
-  }
+    .rotated {
+      transition: transform 0.3s;
+      transform: rotate(90deg);
+    }
     .el-icon {
       width: 16px;
       height: 16px;
@@ -894,7 +888,7 @@ watch(
   height: 100%;
   width: 100%;
   display: flex;
-  min-width: 1028px;
+  min-width: 982px;
 }
 .dialogue-panel__stop {
   display: flex;
@@ -943,13 +937,12 @@ button[disabled]:hover {
 
 .dialogue-conversation {
   flex: 1;
-  border-radius: 0 8px 8px 0;
   display: flex;
   flex-direction: column;
   position: relative;
   align-items: center;
   justify-content: space-between;
-  min-width: 500px;
+  min-width: 982px;
 
   &::before {
     content: '';
@@ -959,7 +952,6 @@ button[disabled]:hover {
     top: 0;
     left: 0;
     opacity: 0.4;
-    // background-image: linear-gradient(180deg, #e7f0fd 1%, #accbee 100%);
     z-index: -1;
   }
 
@@ -970,7 +962,6 @@ button[disabled]:hover {
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    margin-left: 16px;
     .initial-message {
       background-color: #fff;
     }
@@ -979,7 +970,8 @@ button[disabled]:hover {
   &-bottom {
     margin-top: 24px;
     height: auto;
-    width: 1000px;
+    max-width: 1000px;
+    width: calc(100% - 176px);
 
     .sendbox-wrapper {
       position: relative;
@@ -1245,19 +1237,20 @@ button[disabled]:hover {
 }
 
 .copilot-footer {
-  margin-top: 16px;
+  margin: 12px;
 }
 
 .dialogue-interPreview-main {
   width: 100%;
 }
+
 .preTop {
   width: 100%;
   display: flex;
   justify-content: center;
-  // padding-left: calc(50% - 0px);
   align-items: center;
   position: relative;
+  margin-top: 64px;
 
   .mcp-list {
     position: absolute;

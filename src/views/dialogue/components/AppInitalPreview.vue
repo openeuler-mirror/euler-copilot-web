@@ -62,7 +62,7 @@ watch(
   border-radius: 8px;
   bottom: 0px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin: 12px 104px;
+  margin: 12px 88px;
 }
 
 .dialogue-conversation-bottom-sendbox {

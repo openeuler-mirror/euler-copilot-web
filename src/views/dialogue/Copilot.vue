@@ -108,9 +108,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <div
-    class="copilot-container"
-  >
+  <div class="copilot-container">
     <div class="copilot-container-main">
       <DialogueAside />
       <DialogueSession :createAppForm="createAppForm" />
@@ -135,11 +133,12 @@ onMounted(async () => {
 </template>
 <style lang="scss" scoped>
 .copilot-container {
-  padding: 16px 24px 16px 8px;
+  width: 100%;
   height: 100%;
   display: flex;
   justify-content: space-between;
   &-main {
+    width: 100%;
     display: flex;
     flex: 1;
   }
