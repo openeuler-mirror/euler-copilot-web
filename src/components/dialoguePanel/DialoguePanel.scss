@@ -47,15 +47,23 @@
 }
 
 .el-popper[role='tooltip'] {
+  background-color: var(--o-bg-color-base) !important;
   max-width: 500px;
 }
 
 .el-popper {
   border: none;
+  background-color: pink !important;
+  background-color: var(--o-bg-color-base) !important;
+
+  .against-popover {
+    padding: 16px;
+  }
 
   .against-popover-title {
     color: var(--o-text-color-primary);
     font-size: 16px;
+    padding-bottom: 16px;
     font-weight: 700;
     line-height: 24px;
   }
@@ -80,15 +88,18 @@
       border: 1px solid #7aa5ff;
     }
   }
+  .cancel_button_light[data-v-74300042]:not(.is-disabled) {
+    color: var(--o-text-color-primary);
+  }
 
   .against-popover .against-button button:first-child:hover {
     background-color: transparent;
   }
 
   .against-button button:last-child {
-    background-color: var(--o-color-primary);
+    background-color: var(--el-color-primary);
     border: none;
-    color: var(--o-color-white);
+    color: var(--o-bg-color-base) !important;
 
     &:hover {
       background-color: #7aa5ff;
@@ -102,9 +113,15 @@
     color: #e1eaff;
   }
 
+  .error-input {
+    margin-bottom: 16px;
+  }
+
   .against-popover .error-input__link,
   .against-popover .error-input__desc {
     background-color: var(--o-bg-color-light);
+    padding: 8px 16px;
+    margin-bottom: 8px;
   }
 }
 
@@ -158,11 +175,6 @@
 
 .el-tooltip {
   float: left; //解决整体右浮动.提示语位置偏差
-}
-
-::deep .el-popper .el-popper.is-customized {
-  float: right; //解决整体右浮动.提示语位置偏差
-  background-color: pink;
 }
 
 .el-popper.is-customized {
@@ -583,4 +595,7 @@
   img {
     left: -64px !important;
   }
+}
+.disliked-button {
+  background-color: #5ab3ff !important;
 }

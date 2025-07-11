@@ -7,6 +7,7 @@ import { useSessionStore, useChangeThemeStore, echartsObj } from '@/store';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
+import './DialoguePanel.scss'
 import xss from 'xss';
 import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
@@ -692,7 +693,7 @@ const chatWithParams = async () => {
             >
               <el-popover
                 placement="bottom-end"
-                class="disliked-button"
+                popper-class="disliked-button"
                 :visible="isAgainstVisible"
                 width="328"
                 height="328"
@@ -783,6 +784,3 @@ const chatWithParams = async () => {
     <img :src="txt2imgPathZoom" />
   </div>
 </template>
-<style lang="sass" scoped>
-@import './DialoguePanel.scss'
-</style>
