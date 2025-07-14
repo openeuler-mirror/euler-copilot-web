@@ -24,7 +24,6 @@
 <script setup>
 import { IconCaretDown } from '@computing/opendesign-icons';
 import { ref, computed } from 'vue';
-import marked from 'src/utils/marked';
 import xss from 'xss';
 const props = defineProps({
   content: {
@@ -41,11 +40,9 @@ const contentAfterMark = computed(() => {
   if (!props.content) {
     return '';
   }
-  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
-  let str = marked.parse(
-    xss(props.content).replace(/&gt;/g, '>').replace(/&lt;/g, '<'),
-  );
-  return str;
+  // think 内容作为纯文本显示，不进行 markdown 解析
+  // 只进行 XSS 过滤，内容已经在父组件中转换了换行符
+  return xss(props.content);
 });
 </script>
 
