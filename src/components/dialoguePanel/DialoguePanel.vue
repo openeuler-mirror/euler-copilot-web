@@ -74,6 +74,7 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
 });
 const messageArray = ref<MessageArray>(props.messageArray);
 const thoughtContent = ref('');
+const contentAfterMark = ref('');
 const index = ref(0);
 const isComment = ref('none');
 
@@ -329,7 +330,6 @@ const unbindReportClick = () => {
 const isAgainstVisible = ref<boolean>(false);
 const isReportVisible = ref<boolean>(false);
 const txt2imgPathZoom = ref('');
-const contentAfterMark = ref('');
 
 const prePageHandle = (cid: number) => {
   thoughtContent.value = '';
