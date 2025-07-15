@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { writeText } from 'src/utils';
 import { useSessionStore, useChangeThemeStore, echartsObj } from '@/store';
 import { useHistorySessionStore } from 'src/store';
@@ -25,51 +25,33 @@ const echartsDraw = ref();
 const visible = ref(false);
 export interface DialoguePanelProps {
   key: number;
-  //
   cid: number;
-  // groupid
   groupId: string;
-  // 用来区分是用户还是ai的输入
   type: DialoguePanelType;
-  // 文本内容
   inputParams: object;
-  // 文本内容
   content?: string[] | string;
-  // 当前选中的第n次回答的索引，默认是最新回答
+  // 当前选中的第n次回答的索引
   currentSelected?: number;
-  // 文本内容是否生成完毕
   isFinish?: boolean;
-  // 是否在loading
   isLoading?: boolean;
-  // 创建时间
   createdAt?: string | Date;
-  // 用户头像
   avatar?: string;
-  // 是否需要重新生成
   needRegernerate?: boolean;
-  // 是否选择插件
   userSelectedApp?: any;
-  //
   recordList?: string[] | undefined;
-  // MessageList 结构
   messageArray?: MessageArray[] | undefined;
-  //
   isCommentList?: string[] | undefined;
-  //
   search_suggestions?: any;
-  //
   echartsObj?: any;
-  //
   test?: any;
-  //--时间-问题数-token
+  // 元数据：时间、问题数、token
   metadata?: Metadata;
-  // -工作流的相关数据
+  // 工作流相关数据
   flowdata?: any;
-  // 缺少的参数列表-有可能
+  // 缺少的参数列表
   paramsList?: any;
-  // 工作流调试用不到
   modeOptions: any;
-  // 新增是否是工作流调试的-用于修改调试抽屉样式
+  // 是否是工作流调试模式
   isWorkFlowDebug: boolean;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
@@ -88,14 +70,133 @@ var myChart;
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 const props = withDefaults(defineProps<DialoguePanelProps>(), {
   isFinish: false,
-  // 当前选中的第n次回答的索引
-  // currentSelected: 0,
   needRegernerate: false,
 });
 const messageArray = ref<MessageArray>(props.messageArray);
 const thoughtContent = ref('');
+const contentAfterMark = ref('');
 const index = ref(0);
 const isComment = ref('none');
+
+// 处理内容，分离 think 标签和主要内容
+const processContent = (content: string) => {
+  if (!content) {
+    thoughtContent.value = '';
+    contentAfterMark.value = '';
+    return;
+  }
+
+  const startIndex = content.indexOf('<think>');
+  const endIndex = content.indexOf('</think>');
+
+  if (startIndex !== -1 && endIndex === -1) {
+    // 未完成的 think 标签
+    const thinkContent = content.substring(startIndex + 7);
+    thoughtContent.value = thinkContent.replace(/\n/g, '<br>');
+
+    const beforeThink = content.substring(0, startIndex);
+    updateMainContent(beforeThink);
+  } else if (startIndex !== -1 && endIndex !== -1) {
+    // 完整的 think 标签
+    const thinkContent = content.substring(startIndex + 7, endIndex);
+    thoughtContent.value = thinkContent.replace(/\n/g, '<br>');
+
+    const contentWithoutThink = content
+      .replace(/<think>[\s\S]*?<\/think>/g, '')
+      .trim();
+    updateMainContent(contentWithoutThink);
+  } else {
+    // 没有 think 标签
+    thoughtContent.value = '';
+    updateMainContent(content);
+  }
+};
+
+// 更新主内容区域并进行 markdown 解析
+const updateMainContent = (newContent: string) => {
+  if (!newContent.trim()) {
+    contentAfterMark.value = '';
+    return;
+  }
+
+  // 立即显示内容，先转换换行符
+  contentAfterMark.value = newContent.replace(/\n/g, '<br>');
+
+  // 检查是否包含 markdown 语法
+  const hasMarkdownSyntax = /[*_`#[\]()!]|```|---|>=?|<=?|\n\s*[-*+]\s+/.test(
+    newContent,
+  );
+
+  if (hasMarkdownSyntax) {
+    // 异步解析 markdown
+    processMarkdownAsync(newContent)
+      .then((html) => {
+        contentAfterMark.value = html;
+      })
+      .catch((error) => {
+        console.error('Markdown parsing failed:', error);
+        contentAfterMark.value = newContent.replace(/\n/g, '<br>');
+      });
+  }
+};
+
+// 异步处理 markdown 解析和 table 包装
+const processMarkdownAsync = async (content: string): Promise<string> => {
+  if (!content.trim()) return '';
+
+  try {
+    let str = await marked.parse(
+      xss(content).replace(/&gt;/g, '>').replace(/&lt;/g, '<'),
+    );
+
+    // 处理 table 包装
+    let tableStart = str.indexOf('<table>');
+    if (tableStart !== -1) {
+      str =
+        str.slice(0, tableStart) +
+        '<div class="overflowTable">' +
+        str
+          .slice(tableStart, str.indexOf('</table>') + '</table>'.length)
+          .replace('</table>', '</table></div>') +
+        str.slice(str.indexOf('</table>') + '</table>'.length);
+    }
+
+    return str;
+  } catch (error) {
+    console.error('Markdown parsing error:', error);
+    return content;
+  }
+};
+
+// 监听 props 变化，重置状态
+watch(
+  () => [props.content, props.groupId],
+  () => {
+    thoughtContent.value = '';
+    contentAfterMark.value = '';
+    index.value = 0;
+  },
+  { immediate: false },
+);
+
+// 监听内容变化，处理内容解析
+watch(
+  () => [props.content, index.value],
+  () => {
+    if (props.content && Array.isArray(props.content)) {
+      const currentContent = props.content[index.value];
+      if (currentContent !== undefined) {
+        processContent(currentContent);
+      }
+    } else if (typeof props.content === 'string') {
+      processContent(props.content);
+    } else {
+      thoughtContent.value = '';
+      contentAfterMark.value = '';
+    }
+  },
+  { immediate: true, deep: true },
+);
 const emits = defineEmits<{
   (e: 'handleReport', qaRecordId: string, reason?: string): void;
   (
@@ -107,31 +208,7 @@ const emits = defineEmits<{
   (e: 'clearSuggestion', index: number): void;
 }>();
 
-// #region ----------------------------------------< pause and regenerate >--------------------------------------
-
-/**
- * 暂停和重新生成问答
- */
-const handlePauseAndReGenerate = (cid?: number) => {
-  if (!cid) {
-    return;
-  }
-  emits('clearSuggestion', props.key);
-  if (props.isFinish) {
-    // 重新生成
-    thoughtContent.value = '';
-    reGenerateAnswer(cid, user_selected_app.value);
-    index.value = messageArray.value.getAllItems().length - 1;
-    isComment.value = 'none';
-  } else {
-    // 停止生成
-    pausedStream(cid);
-  }
-};
-
-// #endregion
-
-// 复制
+// 复制功能
 const handleCopy = (): void => {
   if (!props.content || !Array.isArray(props.content)) {
     errorMsg(i18n.global.t('feedback.copied_failed'));
@@ -141,9 +218,8 @@ const handleCopy = (): void => {
   successMsg(i18n.global.t('feedback.copied_successfully'));
   return;
 };
-/**
- * 赞同与反对
- */
+
+// 点赞与反对
 const handleLike = async (
   type: 'liked' | 'disliked' | 'report',
 ): Promise<void> => {
@@ -188,12 +264,7 @@ const handleLike = async (
   }
 };
 
-/**
- * 反对
- * @param reason
- * @param reasionLink
- * @param reasonDescription
- */
+// 反对功能
 const handleDislike = async (
   reason: string,
   reasionLink?: string,
@@ -244,58 +315,21 @@ const handleReport = async (
   isAgainstVisible.value = false;
 };
 
-//处理举报逻辑
 const handleReportClick = () => {
   isReportVisible.value = false;
 };
 
-//处理举报逻辑
 const bindReportClick = () => {
   document.addEventListener('click', handleReportClick);
 };
 
-//处理举报逻辑
 const unbindReportClick = () => {
   document.removeEventListener('click', handleReportClick);
 };
 
 const isAgainstVisible = ref<boolean>(false);
 const isReportVisible = ref<boolean>(false);
-
 const txt2imgPathZoom = ref('');
-// 解析完成后的文本内容
-const contentAfterMark = computed(() => {
-  if (!props.content) {
-    return '';
-  }
-  //xxs将大于号转为html实体以防歧义；将< >替换为正常字符；
-  let str = marked.parse(
-    xss(props.content[index.value]).replace(/&gt;/g, '>').replace(/&lt;/g, '<'),
-  );
-  //将table提取出来中加一个<div>父节点控制溢出
-  let tableStart = str.indexOf('<table>');
-  if (tableStart !== -1) {
-    str =
-      str.slice(0, tableStart) +
-      '<div class="overflowTable">' +
-      str
-        .slice(tableStart, str.indexOf('</table>') + '</table>'.length)
-        .replace('</table>', '</table></div>') +
-      str.slice(str.indexOf('</table>') + '</table>'.length);
-  }
-  //仅获取第一个遇到的 think 标签
-  const startIndex = str.indexOf('<think>');
-  const endIndex = str.indexOf('</think>');
-  if (startIndex !== -1 && endIndex === -1) {
-    // 计算 <a> 之后的字符串
-    const contentAfterA = str.substring(startIndex + 7); // +2 是因为我们要跳过 <a> 这两个字符
-    thoughtContent.value = contentAfterA;
-    return '';
-  } else if (startIndex !== -1 && endIndex !== -1) {
-    thoughtContent.value = str.match(/<think>([\s\S]*?)<\/think>/)[1];
-  }
-  return str.replace(/<think>([\s\S]*?)<\/think>/g, '');
-});
 
 const prePageHandle = (cid: number) => {
   thoughtContent.value = '';
@@ -419,8 +453,10 @@ watch(
 );
 
 onBeforeUnmount(() => {
-  isComment.value = undefined;
+  isComment.value = 'none';
   index.value = 0;
+  thoughtContent.value = '';
+  contentAfterMark.value = '';
 });
 
 const answer_zoom = ref(false);

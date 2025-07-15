@@ -287,6 +287,7 @@ const deleteOne = (name: string, list: string[]) => {
     &__box {
       flex: 1;
       border-radius: 8px;
+      width: 264px;
       height: 66px;
       background-color: var(--o-bg-color-light);
       padding: 0px 5px 12px 15px;
