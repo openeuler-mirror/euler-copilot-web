@@ -173,10 +173,10 @@ const headerStyles = computed<CSSProperties>(() => {
     //待替换icon资源
     &:hover {
       height: 48px;
-      background-image: url('@/assets/svgs/user.svg');
+      background-image: url('@/assets/svgs/user-hover.svg');
     }
     &:active {
-      background-image: url('@/assets/svgs/user.svg');
+      background-image: url('@/assets/svgs/user-active.svg');
     }
   }
   .header-right {
@@ -190,6 +190,6 @@ const headerStyles = computed<CSSProperties>(() => {
   }
 }
 .popper-class {
-  height: 42px !important;
+  height: 44px !important;
 }
 </style>
