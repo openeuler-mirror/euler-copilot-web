@@ -611,7 +611,7 @@ watch(
       span {
         font-size: 16px;
         font-weight: 600;
-        color: var(--o-text-color-secondary);
+        color: var(--o-text-color-primary);
       }
     }
 
