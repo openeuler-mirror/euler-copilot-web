@@ -200,7 +200,7 @@ function onDebugSuccess(status: boolean) {
           </span>
           <span>/</span>
           <span class="createAppContainerMenuText">
-            {{ appType === 'flow' ? $t('app.workflow_app') : $t('app.mcp_app') }}
+            {{ appType === 'flow' ? $t('app.create_workflow_app') : $t('app.create_mcp_app') }}
           </span>
         </div>
         <div

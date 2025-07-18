@@ -19,6 +19,7 @@ import type {
 import { ElMessage } from 'element-plus';
 import { successMsg } from 'src/components/Message';
 import { getBaseProxyUrl } from 'src/utils/tools';
+import i18n from 'src/i18n';
 
 export interface FcResponse<T> {
   error: string;
@@ -100,7 +101,7 @@ export const initServer = async () => {
       }
       if (error.status === 409) {
         // 处理错误码为409的情况
-        successMsg('已是最新对话');
+        successMsg(i18n.global.t('history.latestConversation'));
         return Promise.reject(error as any);
       }
       return await handleStatusError(error);

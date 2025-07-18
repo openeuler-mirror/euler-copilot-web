@@ -211,4 +211,9 @@ body {
     cursor: pointer;
   }
   --o-border-radius-small: 4px;
+
+  .el-popper[role=tooltip].is-light .el-popper__arrow::before {
+    background: var(--o-bg-color-base);
+    border: 1px solid var(--o-tooltip-border-color);
+}
 }

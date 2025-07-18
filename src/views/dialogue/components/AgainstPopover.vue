@@ -58,7 +58,7 @@ const handleSubmit = () => {
     return;
   }
   if (!descText.value) {
-    warningMsg('请输入描述');
+    warningMsg(i18n.global.t('feedback.describe_the_error'));
     return;
   }
   emits('submit', checkedValue.value, referLink.value, descText.value);
@@ -93,22 +93,10 @@ const handleSubmit = () => {
       />
     </div>
     <div class="against-button">
-      <el-button
-        :class="[
-          themeStore.theme === 'dark'
-            ? 'cancel_button_light'
-            : 'cancel_button_dark',
-        ]"
-        @click="emits('close')"
-      >
+      <el-button @click="emits('close')">
         {{ $t('history.cancel') }}
       </el-button>
-      <el-button
-        class="comment_button"
-        color="#0077ff"
-        :disabled="!checkedValue"
-        @click="handleSubmit"
-      >
+      <el-button primary :disabled="!checkedValue" @click="handleSubmit">
         {{ $t('feedback.submit') }}
       </el-button>
     </div>
