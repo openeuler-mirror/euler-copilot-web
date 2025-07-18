@@ -73,13 +73,13 @@ const filteredOptionalList = computed(() => {
     >
       <div class="optional-user">
         <div class="title">
-          <div class="label">可选</div>
+          <div class="label">{{ i18n.global.t('app.optional') }}</div>
           <div class="count">{{ optionalList.length }}</div>
         </div>
         <el-input
           v-model="searchKeyword"
           class="user-input"
-          placeholder="搜索用户"
+          :placeholder="$t('app.searchUser')"
           type="search"
           :suffix-icon="Search"
         ></el-input>
@@ -101,7 +101,7 @@ const filteredOptionalList = computed(() => {
       </div>
       <div class="selected-user">
         <div class="title">
-          <div class="label">已选</div>
+          <div class="label">{{ $t('app.selected') }}</div>
           <div class="count">{{ checkedList.length }}</div>
         </div>
 

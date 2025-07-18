@@ -149,8 +149,12 @@ export default {
     create_app: '创建应用',
     app_published: '已发布',
     app_config: '界面配置',
-    workflow_app: '创建工作流应用',
-    mcp_app: '创建智能体应用',
+    workflow_app: '工作流应用',
+    create_workflow_app: '创建工作流应用',
+    workflow_app_desc: '建拖拽式工作流应用，精筑生产级AI',
+    mcp_app: '智能体应用',
+    create_mcp_app: '创建智能体应用',
+    mcp_app_desc: '创插件Agent应用，速构个人AI助手',
     confirm_delete_app: '确定删除此应用吗?',
     create_or_edit_workflow_first: '请先创建/编辑工作流',
     ui_preview: '界面预览',
@@ -174,6 +178,8 @@ export default {
     pleasemodifyTheName: '当前应用下已有该工作流名称，请修改名称',
     deleteWorkflowSuccessfully: '删除工作流成功',
     createSuccessfully: '创建成功',
+    createFailed: '创建失败',
+    editable: '可编辑',
     successfully: '成功',
     failed: '失败',
     inputContent: '输入内容',
@@ -372,6 +378,7 @@ export default {
     no_apikey: '暂无可用的 API Key',
     create_apikey: '新建 API Key',
     cancel: '取消',
+    confirm: '请输入密钥描述',
   },
   witChainD: {
     witChainD: '资产库配置',
@@ -412,4 +419,13 @@ export default {
     prev: 'Previous',
     next: 'Next',
   },
+  zoom: {
+    reduce: "缩小",
+    amplify: "放大",
+    adaptive: "自适应",
+    scaleTo50: "缩放到50%",
+    scaleTo100: "缩放到100%",
+    scaleTo150: "缩放到150%",
+    scaleTo200: "缩放到200%"
+  }
 };

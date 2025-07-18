@@ -151,7 +151,11 @@ export default {
     app_published: 'Published',
     app_config: 'App Config',
     workflow_app: 'WorkFlow App',
+    create_workflow_app: 'Create WorkFlow App',
+    workflow_app_desc: '(待翻译)建拖拽式工作流应用，精筑生产级AI',
     mcp_app: 'MCP App',
+    create_mcp_app: 'Create MCP App',
+    mcp_app_desc: '(待翻译)创插件Agent应用，速构个人AI助手',
     confirm_delete_app: 'Are you sure to delete this application?',
     create_or_edit_workflow_first: 'Please create/edit a workflow first',
     ui_preview: 'UI Preview',
@@ -176,7 +180,9 @@ export default {
       'The workflow name already exists under the current application, please modify the name and try again',
     deleteWorkflowSuccessfully: 'Delete workflow successfully',
     createSuccessfully: 'Create successfully',
+    createFailed: 'Create failed',
     successfully: 'Successfully',
+    editable: 'Editable',
     failed: 'Failed',
     inputContent: 'Input content',
     outputContent: 'Output content',
@@ -383,6 +389,7 @@ export default {
     no_apikey: 'No available API key',
     create_apikey: 'Create new API key',
     cancel: 'Cancel',
+    confirm: 'Please enter the description of the API key',
   },
   witChainD: {
     witChainD: 'WitChainD',
@@ -424,4 +431,13 @@ export default {
     prev: 'Previous',
     next: 'Next',
   },
+  zoom: {
+    reduce: "Zoom Out",
+    amplify: "Zoom In",
+    adaptive: "Fit to Screen",
+    scaleTo50: "Zoom to 50%",
+    scaleTo100: "Zoom to 100%",
+    scaleTo150: "Zoom to 150%",
+    scaleTo200: "Zoom to 200%"
+  }
 };

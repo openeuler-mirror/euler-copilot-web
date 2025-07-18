@@ -17,6 +17,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { useChangeThemeStore } from '@/store';
 import CustomLoading from 'src/views/customLoading/index.vue';
 import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
+import i18n from 'src/i18n';
 
 const loading = ref(false);
 const themeStore = useChangeThemeStore();
@@ -35,9 +36,9 @@ const handleCreateapi = async () => {
         (item) => item.name,
       );
       uploadtype.value = 'get';
-      successMsg('创建成功');
+      successMsg(i18n.global.t('app.createSuccessfully'));
     } else {
-      errorMsg('创建失败');
+      errorMsg(i18n.global.t('app.createFailed'));
     }
     loading.value = false;
   } else {
@@ -90,7 +91,7 @@ const handleClose = () => {
 
 const handleEdit = () => {
   //edit数据
-  successMsg('可编辑');
+  successMsg(i18n.global.t('app.editable'));
   editable.value = true;
 };
 

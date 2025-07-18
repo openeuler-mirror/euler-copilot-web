@@ -82,7 +82,7 @@
           </div>
         </div>
         <div class="preFooter" v-if="recommendQuestionList.length">
-          <div class="preFooterTitle">推荐问题：</div>
+          <div class="preFooterTitle">{{ $t("main.question") }}：</div>
           <div class="preFooterContent">
             <div v-for="(ques, idx) in recommendQuestionList" :key="idx">
               <div

@@ -26,7 +26,7 @@
               )
             "
           >
-            缩小
+            {{ $t('zoom.reduce') }}
           </el-dropdown-item>
           <el-dropdown-item
             class="amplify"
@@ -36,26 +36,26 @@
               )
             "
           >
-            放大
+            {{ $t('zoom.amplify') }}
           </el-dropdown-item>
           <el-dropdown-item class="adaptive" @click="handleSacl(1)">
-            自适应
+            {{ $t('zoom.adaptive') }}
           </el-dropdown-item>
           <el-dropdown-item
             class="scaleOther scaleHalf"
             divided
             @click="handleSacl(0.5)"
           >
-            缩放到50%
+            {{ $t('zoom.scaleTo50') }}
           </el-dropdown-item>
           <el-dropdown-item class="scaleOther" @click="handleSacl(1)">
-            缩放到100%
+            {{ $t('zoom.scaleTo100') }}
           </el-dropdown-item>
           <el-dropdown-item class="scaleOther" @click="handleSacl(1.5)">
-            缩放到150%
+            {{ $t('zoom.scaleTo150') }}
           </el-dropdown-item>
           <el-dropdown-item class="scaleTwice" @click="handleSacl(2)">
-            缩放到200%
+            {{ $t('zoom.scaleTo200') }}
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>

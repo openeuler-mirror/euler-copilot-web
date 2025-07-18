@@ -130,7 +130,7 @@ onMounted(() => {
             maxlength="200"
             show-word-limit
             :rows="6"
-            placeholder="请输入密钥描述"
+            :placeholder="$t('apikey.confirm')"
             v-model="apiKeyDescription"
           />
         </el-form-item>

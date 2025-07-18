@@ -32,16 +32,16 @@ const selectedType = ref<AppType>('agent');
           :class="{ 'app-type__active': selectedType === 'agent' }"
           @click="selectedType = 'agent'"
         >
-          <p>智能体应用</p>
-          <span>创插件Agent应用，速构个人AI助手</span>
+          <p>{{ $t('app.mcp_app') }}</p>
+          <span>{{ $t('app.mcp_app_desc') }}</span>
         </div>
         <div
           class="workflow app-type"
           :class="{ 'app-type__active': selectedType === 'flow' }"
           @click="selectedType = 'flow'"
         >
-          <p>工作流应用</p>
-          <span>建拖拽式工作流应用，精筑生产级AI</span>
+          <p>{{ $t('app.workflow_app') }}</p>
+          <span>{{ $t('app.workflow_app_desc') }}</span>
         </div>
       </div>
       <template #footer>

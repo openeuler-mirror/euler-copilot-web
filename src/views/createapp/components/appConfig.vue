@@ -2,6 +2,7 @@
 import { ref, reactive, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
+import i18n from 'src/i18n';
 import {
   IconCaretRight,
   IconPlusCircle,
@@ -56,18 +57,19 @@ const flowDataList = ref([]);
 const searchName = ref('');
 const permissionTypeList = [
   {
-    label: '公开（所有人可见）',
+    label: 'app.permission_public',
     value: 'public',
   },
   {
-    label: '私密（仅自己可见）',
+    label: 'app.permission_private',
     value: 'private',
   },
   {
-    label: '部分人可见',
+    label: 'app.somePeople',
     value: 'protected',
   },
 ];
+
 const base64Image: any = ref('');
 const permissionList = ref([]);
 const curPersonList = ref([]);
@@ -501,7 +503,7 @@ defineExpose({
                   :key="index"
                   :value="item.value"
                 >
-                  {{ item.label }}
+                  {{ i18n.global.t(item.label) }}
                 </el-radio>
               </el-radio-group>
             </div>

@@ -58,7 +58,7 @@ const handleSubmit = () => {
     return;
   }
   if (!descText.value) {
-    warningMsg('请输入描述');
+    warningMsg(i18n.global.t('feedback.describe_the_error'));
     return;
   }
   emits('submit', checkedValue.value, referLink.value, descText.value);
