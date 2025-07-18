@@ -199,6 +199,6 @@ watch(
   outline: unset !important;
 }
 .controlScaleNumber{
-  font-size: 16px;
+  font-size: 12px;
 }
 </style>
