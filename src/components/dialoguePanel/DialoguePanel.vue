@@ -378,6 +378,7 @@ onMounted(() => {
   if (props.messageArray?.value) {
     isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
   }
+  popperSize();
   setTimeout(() => {
     handleIsLike();
   }, 200);
@@ -442,7 +443,7 @@ watch(
 watch(
   () => language.value,
   () => {
-    popperSize();
+      popperSize();
   },
 );
 
@@ -482,12 +483,14 @@ const selectQuestion = (item: Suggestion) => {
 };
 
 const popperSize = () => {
-  if (language.value == 'EN') {
+  if (language.value == 'en') {
     size.width = 418;
     size.height = 496;
     return size;
   } else {
-    return size;
+    size.width = 328;
+    size.height = 416;
+    return size
   }
 };
 const { conversationList } = storeToRefs(useSessionStore());

@@ -304,16 +304,6 @@
         }
       }
 
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0px;
-        width: 48px;
-        height: 48px;
-        left: -64px;
-        left: -64px;
-        background-image: url('src/assets/svgs/robot.svg');
-      }
 
       &-icon {
         animation: rotate-img 1s infinite linear;
@@ -518,9 +508,6 @@
   width: auto;
   padding-right: 24px;
   padding-left: 64px;
-  .loading {
-    display: none;
-  }
   .dialogue-panel__content {
     .content {
       margin-left: 0px;
@@ -598,4 +585,18 @@
 }
 .disliked-button {
   background-color: #5ab3ff !important;
+  :deep(.el-popper__arrow){
+    display: none !important;
+  }
+}
+:deep(.el-popper){
+  :deep(.el-popper__arrow){
+    display: none !important;
+  }
+}
+
+:deep(.el-popper[role=tooltip]){
+  :deep(.el-popper__arrow){
+    display: none !important;
+  }
 }

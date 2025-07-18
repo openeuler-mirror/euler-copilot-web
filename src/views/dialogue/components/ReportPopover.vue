@@ -94,16 +94,56 @@ const handleComplaint = () => {
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-radio-button__original-radio:hover + .el-radio-button__inner){
+  // background-color: transparent !important;
+  background-image: var(--o-content-bg);
+  color: #6395FD;
+
+}
+:deep(.el-radio-button.is-active .el-radio-button__original-radio:not(:disabled)+.el-radio-button__inner){
+    background-image: var(--o-content-bg);
+    background-color: transparent !important;
+    color: #6395FD;
+
+}
+:deep(.el-radio-button:not(.is-disabled):hover .el-radio-button__inner){
+  background-image: linear-gradient(
+        to right,
+        rgba(109, 117, 250, 0.05),
+        rgba(90, 179, 255, 0.05)
+      );
+    background-color: transparent !important;
+    outline: 1px solid #7AA5FF;
+    border-radius: 4px;
+    color: #7aa5ff;
+}
+:deep(.el-popper__arrow){
+  display: none;
+}
+.radio{
+  .is-active{
+    background-color: var(--o-primary-color);
+    color: #fff;
+    span{
+      background-color: pink !important;
+    }
+    .el-radio-button__inner{
+      width: auto;
+      background-color: pink !important;
+    }
+  }
+}
 :deep(.el-radio-button__inner) {
   display: block;
   align-content: center;
-  width: 87px;
-  background-color: #f4f6fa;
+  width: auto;
+  background-color: var(--o-bash-bg);
   font-size: 12px;
   margin-bottom: 8px;
   padding: 8px;
   border: 1px;
-  color: #000;
+  color: var(--o-primary-color);
+
 }
 
 :deep(.el-radio-button:first-child .el-radio-button__inner) {
@@ -113,9 +153,13 @@ const handleComplaint = () => {
 }
 :deep(.el-radio-button__original-radio:hover) {
   & + .el-radio-button__inner {
-    // background-image: linear-gradient(to 127.72, #6D75FA, #5AB3FF);
-    background-color: #b8d9ff;
-    outline: 1px solid #0077ff;
+    background-image: linear-gradient(
+        to right,
+        rgba(109, 117, 250, 0.05),
+        rgba(90, 179, 255, 0.05)
+      );
+    background-color: transparent !important;
+    outline: 1px solid #7AA5FF;
     border-radius: 4px;
     color: #7aa5ff;
   }
@@ -134,7 +178,8 @@ const handleComplaint = () => {
 .radio {
   align-items: center;
   text-align: center;
-  margin-right: 8px;
+  margin-left: 8px;
+  margin-bottom: 8px;
   width: 87px;
   height: 32px;
   border: 0px;
@@ -143,14 +188,14 @@ const handleComplaint = () => {
     margin: 0px;
   }
   &:nth-child(3n + 3) {
-    margin-left: 0px;
+    margin-left: 8px;
   }
 }
 
 .radio-en {
   align-items: center;
   text-align: center;
-  margin-right: 8px;
+  margin-left: 8px;
   margin-bottom: 8px;
   width: 118px;
   height: 48px;
@@ -160,17 +205,18 @@ const handleComplaint = () => {
     margin: 0px;
   }
   &:nth-child(3n + 3) {
-    margin-left: 0px;
+    margin-left: 8px;
   }
 }
 .against-popover {
-  padding: 12px;
+  padding: 8px;
   &-title {
     font-size: 16px;
     padding-bottom: 16px;
+    margin-left: 8px;
     font-weight: 500;
     line-height: 24px;
-    color: #000;
+    color: var(--o-text-color-primary);
   }
   .against-item {
     display: flex;
@@ -191,14 +237,14 @@ const handleComplaint = () => {
   }
 
   .error-input {
-    margin-right: 8px;
+    margin: 0px 8px;
     &__link,
     &__desc {
       color: var(--o-text-color-tertiary);
       border: none;
-      background-color: #f4f6fa;
+      background-color: var(error-input__desc);
       border-radius: 4px;
-      padding: 5px 0px 5px 16px;
+      padding: 8px 0px 8px 16px;
       font-size: 12px;
       width: 100%;
       font-weight: 100;
@@ -237,7 +283,7 @@ const handleComplaint = () => {
     width: 100%;
     height: 100%;
     display: flex;
-    margin: 11px 0px 0px 0px;
+    margin: 8px 0px 0px 0px;
     justify-content: center;
 
     button {

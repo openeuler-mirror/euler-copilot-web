@@ -568,7 +568,7 @@ watch(
     border-bottom: 1px solid var(--o-text-color-tertiary);
   }
   .el-popper__arrow {
-    display: none;
+    display: none !important;
   }
 }
 
