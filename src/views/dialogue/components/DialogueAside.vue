@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { CaretRight, CaretBottom } from '@element-plus/icons-vue';
 import {
   ElButton,
   ElInput,
@@ -9,7 +8,6 @@ import {
   ElDialog,
   ElCollapse,
   ElCollapseItem,
-  ElTooltip,
 } from 'element-plus';
 import { computed, onMounted, ref, watch } from 'vue';
 import SessionCard from '@/components/sessionCard/SessionCard.vue';
@@ -343,7 +341,7 @@ watch(
 
 <template>
   <aside class="aside-wrapper" ref="copilotAside">
-    <ElTooltip
+    <el-tooltip
       placement="right"
       :content="
         isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
@@ -354,7 +352,7 @@ watch(
         :class="{ isExpandIcon: isCopilotAsideVisible }"
         @click="hanleAsideVisible"
       />
-    </ElTooltip>
+    </el-tooltip>
     <transition name="transition-fade">
       <div class="copilot-aside" v-if="isCopilotAsideVisible">
         <ElButton class="create-button" @click="handleNewChat">
