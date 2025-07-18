@@ -27,3 +27,22 @@ div{
   // 全局 div 默认光标
   cursor: default !important;
 }
+textarea::-webkit-input-placeholder {
+    color: var(--o-think-header-text);
+    font-size: 14px;  
+}
+input::-moz-placeholder, 
+textarea::-moz-placeholder {  /* Mozilla Firefox 19+ */
+    color: var(--o-think-header-text);
+    font-size: 14px;  
+}
+input:-moz-placeholder, 
+textarea:-moz-placeholder {  /* Mozilla Firefox 4 to 18 */
+    color: var(--o-think-header-text);
+    font-size: 14px;  
+}
+input:-ms-input-placeholder, 
+textarea:-ms-input-placeholder {  /* Internet Explorer 10-11 */
+    color: var(--o-think-header-text);
+    font-size: 14px;  
+}
