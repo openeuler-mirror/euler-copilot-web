@@ -3,6 +3,10 @@ import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch } from 'vue';
 import { BranchSourceIdType } from '../types';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
+import { CopyDocument } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { IconSuccess } from '@computing/opendesign-icons';
+import { useI18n } from 'vue-i18n';
 const props = defineProps({
   id: {
     type: String,
@@ -24,6 +28,10 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  selected: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer']);
 
@@ -42,6 +50,13 @@ const inputAndOutput = ref({
   input_parameters: {},
   output_parameters: {},
 });
+
+// 处理节点点击事件
+const handleNodeClick = () => {
+  if (!props.disabled) {
+    editYaml(props.data.name, props.data.description, props.data.parameters);
+  }
+};
 
 watch(
   () => props.data,
@@ -88,78 +103,108 @@ const delNode = (id) => {
 const editYaml = (nodeName, nodeDesc, yamlCode) => {
   emits('editYamlDrawer', nodeName, nodeDesc, yamlCode, props.id);
 };
+
+const { t } = useI18n();
+
+const handleCopyTextToclipboard = (text) => {
+  const input = document.createElement('input');
+  input.value = text;
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand('copy');
+  ElMessage({
+    showClose: true,
+    message: t('feedback.copied_successfully'),
+    icon: IconSuccess,
+    customClass: 'o-message--success',
+    duration: 2000,
+  });
+  document.body.removeChild(input);
+};
 </script>
 
 <template>
-  <div class="customNodeStyle" :class="curStatus">
+  <div class="customNodeStyle" :class="[curStatus, { 'node-selected': selected }]">
     <Handle type="target" :position="Position.Left"></Handle>
     <div class="outHandleRing outRingLeft"></div>
     <div class="delOverShadow leftBox"></div>
     <div class="delOverShadow leftNodeBox"></div>
-    <div class="nodeBox">
-      <div class="title" v-if="props.data.name">
-        <div class="iconStyle"></div>
-        <div class="label">{{ props.data.name }}</div>
-        <div class="moreTip" :class="{ notAllow: props.disabled }">
-          <el-popover
-            :disabled="props.disabled"
-            placement="bottom-end"
-            trigger="hover"
-            popper-class="nodeDealPopper"
-          >
-            <template #reference>···</template>
-            <el-button
-              text
-              class="dealItem"
-              @click="
-                editYaml(
-                  props.data.name,
-                  props.data.description,
-                  props.data.parameters,
-                )
-              "
+    <div class="nodeContainer">
+      <div class="nodeBox" @click="handleNodeClick">
+        <div class="title" v-if="props.data.name">
+          <div class="iconStyle"></div>
+          <div class="label">{{ props.data.name }}</div>
+          <div class="moreTip" :class="{ notAllow: props.disabled }">
+            <el-popover
+              :disabled="props.disabled"
+              placement="bottom-end"
+              trigger="hover"
+              popper-class="nodeDealPopper"
             >
-              {{ $t('semantic.edit') }}
-            </el-button>
-            <el-button text class="dealItem" @click="delNode(props.id)">
-              {{ $t('semantic.interface_delete') }}
-            </el-button>
-          </el-popover>
+              <template #reference>···</template>
+              <el-button
+                text
+                class="dealItem"
+                @click="
+                  editYaml(
+                    props.data.name,
+                    props.data.description,
+                    props.data.parameters,
+                  )
+                "
+              >
+                {{ $t('semantic.edit') }}
+              </el-button>
+              <el-button text class="dealItem" @click="delNode(props.id)">
+                {{ $t('semantic.interface_delete') }}
+              </el-button>
+            </el-popover>
+          </div>
         </div>
-      </div>
-      <div class="desc" v-if="props.data.description">
-        {{ props.data.description }}
-      </div>
-      <div
-        class="branchDesc"
-        v-if="props.data?.parameters?.input_parameters?.choices"
-      >
+        <!-- 移除description显示 -->
         <div
-          class="branchItem"
-          v-for="(item, index) in props.data?.parameters?.input_parameters
-            ?.choices"
-          :key="index"
+          class="branchDesc"
+          v-if="props.data?.parameters?.input_parameters?.choices"
         >
-          {{ item.description }}
-          <Handle
-            class="souceFirstHandle"
-            :id="branchIdList[index]"
-            type="source"
-            :position="Position.Right"
-          ></Handle>
-          <div class="delOverShadow rightBox" style="top: 0%"></div>
-          <div class="outHandleRing outRingRight" style="top: 30%"></div>
+          <div
+            class="branchItem"
+            v-for="(item, index) in props.data?.parameters?.input_parameters
+              ?.choices"
+            :key="index"
+          >
+            {{ item.description }}
+            <Handle
+              class="souceFirstHandle"
+              :id="branchIdList[index]"
+              type="source"
+              :position="Position.Right"
+            ></Handle>
+            <div class="delOverShadow rightBox" style="top: 0%"></div>
+            <div class="outHandleRing outRingRight" style="top: 30%"></div>
+          </div>
         </div>
       </div>
+      <!-- 将ID移到footer位置，设为次要样式 -->
+      <div class="nodeFooter" v-if="props.id">
+        <div class="nodeIdText">
+          <span>{{ props.id }}</span>
+        </div>
+        <el-icon
+          class="copydocument"
+          @click="handleCopyTextToclipboard(props.id)"
+        >
+          <CopyDocument />
+        </el-icon>
+      </div>
+      <!-- 调试时出现-暂时隐藏 -->
+      <NodeMirrorText
+        v-if="curStatus !== 'default'"
+        :status="curStatus"
+        :costTime="costTime"
+        :inputAndOutput="inputAndOutput"
+        style="display: block"
+      ></NodeMirrorText>
     </div>
-    <!-- 调试时出现-暂时隐藏 -->
-    <NodeMirrorText
-      v-if="curStatus !== 'default'"
-      :status="curStatus"
-      :costTime="costTime"
-      :inputAndOutput="inputAndOutput"
-      style="display: block"
-    ></NodeMirrorText>
   </div>
 </template>
 

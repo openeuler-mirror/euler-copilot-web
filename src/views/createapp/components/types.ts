@@ -26,6 +26,7 @@ import GATHER_METRICS from '@/assets/svgs/gatherMetrics.svg';
 // 引入图片--其他相关图标
 import API from '@/assets/svgs/API.svg';
 import TASK_CHOICE from '@/assets/svgs/taskChoice.svg';
+import CODE from '@/assets/svgs/userCode.svg';
 // 引入图片--用户自上传相关图标
 import USER_CODE from '@/assets/svgs/userCode.svg';
 import USER_DATABASE_CLASS from '@/assets/svgs/userDatabaseClass.svg';
@@ -68,6 +69,7 @@ export const nodeTypeToIcon = {
   // 其他相关图标
   API,
   TASK_CHOICE,
+  CODE,
 
   // 用户自上传相关图标
   USER_CODE,
@@ -81,6 +83,7 @@ export const iconTypeList = [
   { name: 'MCP', value: 'MCP', icon: API, class: 'otherNode' },
   { name: 'SQL查询', value: 'SQL', icon: API, class: 'otherNode' },
   { name: '图表', value: 'Graph', icon: API, class: 'otherNode' },
+  { name: '代码执行', value: 'Code', icon: CODE, class: 'otherNode' },
   { name: '大模型', value: 'LLM', icon: LLM, class: 'systemNode' },
   { name: '知识库', value: 'RAG', icon: KENOWLEDGE_BASE, class: 'systemNode' },
   {

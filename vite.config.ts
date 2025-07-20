@@ -13,7 +13,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 
 import { viteMockServe } from 'vite-plugin-mock';
 
-import { resolve } from 'path';
+import path, { resolve } from 'path';
 import type { UserConfigExport } from 'vite';
 // import babel from '@rollup/plugin-babel';
 
@@ -21,7 +21,8 @@ import type { UserConfigExport } from 'vite';
 export default ({ mode }): UserConfigExport => {
   const env = loadEnv(mode, process.cwd());
   
-  const baseUrl = './';
+  // 开发模式使用 '/'，生产模式使用 './'
+  const baseUrl = mode === 'development' ? '/' : './';
   return defineConfig({
     base: baseUrl,
     resolve: {
@@ -71,12 +72,17 @@ export default ({ mode }): UserConfigExport => {
     },
 
     server: {
-      host: 'localhost',
+      host: '10.211.55.10',
       hmr: true,
-      port: 3000,
-      origin: 'http://localhost:3000',
+      port: 8080,
+      origin: 'http://10.211.55.10:8080',
       headers: {
         'Access-Control-Allow-Origin': '*',
+      },
+      cors: {
+        origin: true, // 允许所有来源
+        methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+        credentials: true
       },
       proxy: {
         '/api': {
@@ -86,7 +92,7 @@ export default ({ mode }): UserConfigExport => {
           ws: false,
           rewrite: (path: string) => path,
           cookieDomainRewrite: '.euler-copilot-master.test.osinfra.cn',
-        },
+        }
       },
     },
   });

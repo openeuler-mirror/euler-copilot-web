@@ -1,0 +1,21 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="7.86671" y1="13.5833" x2="31.2467" y2="31.6666">
+      <stop stop-color="#6D75FA"/>
+      <stop offset="1" stop-color="#5AB3FF"/>
+    </linearGradient>
+    <linearGradient id="grad2" x1="13" y1="12.5" x2="27.5" y2="27.5">
+      <stop stop-color="#6A80FB"/>
+      <stop offset="1" stop-color="#5FA6FE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 主形状（星形 + 中间圆形镂空） -->
+  <path fill-rule="evenodd" clip-rule="evenodd" 
+        d="M20 8.33L16.5 11.83L11.83 11.83L11.83 16.49L8.33 19.99L11.83 23.49L11.83 28.16L16.5 28.16L20 31.66L23.5 28.16L28.16 28.16L28.16 23.49L31.66 19.99L28.16 16.49L28.16 11.83L23.5 11.83L20 8.33ZM20 23.5C21.93 23.5 23.5 21.93 23.5 20C23.5 18.06 21.93 16.5 20 16.5C18.06 16.5 16.5 18.06 16.5 20C16.5 21.93 18.06 23.5 20 23.5Z" 
+        fill="url(#grad1)"/>
+
+  <!-- 边框（单独绘制，避免镂空影响） -->
+  <path d="M16.5 11.83L11.83 11.83L11.83 16.49L8.33 19.99L11.83 23.49L11.83 28.16L16.5 28.16L20 31.66L23.5 28.16L28.16 28.16L28.16 23.49L31.66 19.99L28.16 16.49L28.16 11.83L23.5 11.83L20 8.33L16.5 11.83Z" 
+        stroke="url(#grad2)" stroke-width="2" fill="none"/>
+</svg>

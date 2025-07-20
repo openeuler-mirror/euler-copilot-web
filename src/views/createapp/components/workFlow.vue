@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
-import { onMounted, ref, watch, onUnmounted } from 'vue';
-import { IconSuccess, IconError } from '@computing/opendesign-icons';
+import { onMounted, ref, watch, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
@@ -25,7 +24,12 @@ import {
   IconPlusCircle,
 } from '@computing/opendesign-icons';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
+import VariableBasedStartNodeDrawer from './workFlowConfig/VariableBasedStartNodeDrawer.vue';
+import CodeNodeDrawer from './workFlowConfig/CodeNodeDrawer.vue';
+import DirectReplyDrawer from './workFlowConfig/DirectReplyDrawer.vue';
 import { api } from 'src/apis';
+// 导入变量API
+import { listVariables } from '@/api/variable';
 import { StatusInfoTitle } from './types';
 import { useRoute } from 'vue-router';
 import { getSrcIcon, DefaultViewPortZoom } from './types';
@@ -46,8 +50,13 @@ const editFlowNameId = ref();
 const editData = ref();
 const dialogType = ref('');
 const isEditYaml = ref(false);
+const isEditStartNode = ref(false);
+const isEditCodeNode = ref(false);
+const isEditDirectReplyNode = ref(false);
 const nodeName = ref('');
 const nodeDesc = ref('');
+const currentCodeNodeData = ref({});
+const currentDirectReplyNodeData = ref({});
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const apiServiceList = ref([]);
@@ -70,6 +79,14 @@ const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
 const connectHandleNodeId = ref('');
 const updateFlowsDebugStatus = ref(false);
+// 添加选中节点状态管理
+const selectedNodeId = ref('');
+
+// 变量相关状态管理
+const variablesCache = ref(new Map());
+const variablesLoading = ref(false);
+const conversationId = ref(''); // 从路由或props获取
+
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -117,18 +134,7 @@ const viewportChangeEndFunc = (e) => {
   sessionStorage.setItem('workflowViewPortY', e.y);
 };
 
-watch(
-  props,
-  () => {
-    // 获取当前工作流
-    workFlowList.value = [...props.flowList];
-    if (workFlowList.value.length) {
-      // 默认选中第一个
-      choiceFlowId(workFlowList.value?.[0]);
-    }
-  },
-  { deep: true, immediate: true },
-);
+// 将watch移动到函数定义之后，避免提升问题
 
 onConnect((e) => {
   // 边的起点和终点节点的两个状态
@@ -175,6 +181,128 @@ const delNode = (id) => {
     node ? removeNodes(node) : '';
   }
 };
+
+// 注意：变量管理通过variable接口直接处理，不需要附加到工作流节点中
+
+// 获取对话变量用于显示 - 使用computed确保响应式更新
+const conversationVariablesForDisplay = computed(() => {
+  const conversationVars = variablesCache.value.get('conversation') || [];
+  console.log('🎯 获取对话变量用于显示 (computed) - 重新计算触发!');
+  console.log('🎯 当前变量数据:', conversationVars);
+  console.log('🎯 变量数量:', conversationVars.length);
+  console.log('🎯 变量名列表:', conversationVars.map(v => v?.name || 'unnamed'));
+  console.log('🎯 缓存Map引用:', variablesCache.value);
+  console.log('🎯 conversation键是否存在:', variablesCache.value.has('conversation'));
+  return conversationVars;
+});
+
+// 处理变量更新事件
+const handleVariablesUpdated = async () => {
+  console.log('🔄 收到变量更新通知，延迟300ms后重新加载变量数据...');
+  console.log('🔄 删除前缓存的对话变量:', variablesCache.value.get('conversation'));
+  
+  // 延迟加载，确保后端数据已经同步
+  setTimeout(async () => {
+    await loadWorkflowVariables();
+    console.log('✅ 父组件变量数据已重新加载');
+    console.log('📊 删除后缓存的对话变量:', variablesCache.value.get('conversation'));
+  }, 300);
+};
+
+// 加载工作流变量
+const loadWorkflowVariables = async () => {
+  if (!flowObj.value?.flowId) {
+    console.warn('没有flowId，跳过变量加载');
+    return;
+  }
+  
+  variablesLoading.value = true;
+  
+  try {
+    console.log('🔄 开始加载工作流变量...');
+    
+    // 加载系统变量
+    const systemVars = await listVariables({ scope: 'system' });
+    const systemVariables = systemVars?.result?.variables || systemVars?.variables || (Array.isArray(systemVars) ? systemVars : []);
+    if (systemVariables.length > 0) {
+      variablesCache.value.set('system', systemVariables);
+      console.log('✅ 系统变量加载成功:', systemVariables.length, '个');
+    }
+    
+    // 加载用户变量  
+    const userVars = await listVariables({ scope: 'user' });
+    const userVariables = userVars?.result?.variables || userVars?.variables || (Array.isArray(userVars) ? userVars : []);
+    if (userVariables.length > 0) {
+      variablesCache.value.set('user', userVariables);
+      console.log('✅ 用户变量加载成功:', userVariables.length, '个');
+    }
+    
+    // 加载环境变量
+    const envVars = await listVariables({ scope: 'env' });
+    const envVariables = envVars?.result?.variables || envVars?.variables || (Array.isArray(envVars) ? envVars : []);
+    if (envVariables.length > 0) {
+      variablesCache.value.set('env', envVariables);
+      console.log('✅ 环境变量加载成功:', envVariables.length, '个');
+    }
+    
+    // 加载对话变量（使用flowId）
+    console.log('🔄 准备调用对话变量API, flowId:', flowObj.value.flowId);
+    console.log('🔍 父组件LIST API使用的flowId:', flowObj.value.flowId);
+    const convVars = await listVariables({ 
+      scope: 'conversation', 
+      flow_id: flowObj.value.flowId 
+    });
+    console.log('📥 对话变量API响应:', convVars);
+    
+    // 修复：支持多种API响应结构
+    let variables = null;
+    if (convVars?.result?.variables) {
+      // 结构1: { result: { variables: [...] } }
+      variables = convVars.result.variables;
+      console.log('📋 使用result.variables结构');
+    } else if (convVars?.variables) {
+      // 结构2: { variables: [...], total: 1 }
+      variables = convVars.variables;
+      console.log('📋 使用直接variables结构');
+    } else if (Array.isArray(convVars)) {
+      // 结构3: 直接返回数组
+      variables = convVars;
+      console.log('📋 使用数组结构');
+    }
+    
+    if (variables && Array.isArray(variables)) {
+      // 无论数组是否为空，都要更新缓存
+      variablesCache.value.set('conversation', variables);
+      if (variables.length > 0) {
+        console.log('✅ 对话变量加载成功:', variables.length, '个');
+        console.log('📋 变量详情:', variables);
+      } else {
+        console.log('✅ 对话变量已清空（空数组）');
+      }
+    } else {
+      // API返回的不是数组，设置为空数组
+      variablesCache.value.set('conversation', []);
+      console.log('⚠️ 对话变量API返回非数组，设置为空数组 - API响应结构:', {
+        convVars,
+        hasResult: !!convVars?.result,
+        hasResultVariables: !!convVars?.result?.variables,
+        hasDirectVariables: !!convVars?.variables,
+        isArray: Array.isArray(convVars),
+        variablesLength: variables?.length || 0
+      });
+    }
+    
+    console.log('🎉 所有变量加载完成');
+  } catch (error) {
+    console.error('❌ 加载变量失败:', error);
+    ElMessage.error('加载变量失败');
+  } finally {
+    variablesLoading.value = false;
+  }
+};
+
+
+
 // 验证节点是否都连接
 const nodeAndLineConnection = () => {
   // 获取当前所有节点和边
@@ -212,17 +340,157 @@ const nodeAndLineConnection = () => {
 };
 // 编辑yaml
 const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
-  yamlContent.value = yamlCode;
-  nodeName.value = name;
-  nodeDesc.value = desc;
-  isEditYaml.value = true;
-  nodeYamlId.value = nodeId;
-  // 编辑 yaml 时，需要debug 后才可发布
+  // 查找当前节点
+  const currentNode = findNode(nodeId);
+  
+  // 检查是否为Code类型节点
+  if (currentNode && currentNode.data.callId === 'Code') {
+    // 打开代码节点编辑器
+    currentCodeNodeData.value = {
+      name: currentNode.data.name,
+      description: currentNode.data.description,
+      callId: currentNode.data.callId,
+      
+      // 代码节点自身属性
+      code: currentNode.data.code || '',
+      codeType: currentNode.data.codeType || 'python',
+      securityLevel: currentNode.data.securityLevel || 'low',
+      timeoutSeconds: currentNode.data.timeoutSeconds || 30,
+      memoryLimitMb: currentNode.data.memoryLimitMb || 128,
+      cpuLimit: currentNode.data.cpuLimit || 0.5,
+      
+      // 用户定义的输入输出参数
+      input_parameters: currentNode.data.parameters?.input_parameters || {},
+      output_parameters: currentNode.data.parameters?.output_parameters || {},
+    };
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+    isEditCodeNode.value = true;
+  } else if (currentNode && currentNode.data.callId === 'DirectReply') {
+    // 打开直接回复节点编辑器
+    currentDirectReplyNodeData.value = {
+      name: currentNode.data.name,
+      description: currentNode.data.description,
+      callId: currentNode.data.callId,
+      parameters: {
+        input_parameters: {
+          answer: currentNode.data.parameters?.input_parameters?.answer || ''
+        },
+        output_parameters: currentNode.data.parameters?.output_parameters || {}
+      }
+    };
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+    isEditDirectReplyNode.value = true;
+  } else {
+    // 打开YAML编辑器（其他节点类型）
+    yamlContent.value = yamlCode;
+    nodeName.value = name;
+    nodeDesc.value = desc;
+    isEditYaml.value = true;
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+  }
+  
+  // 编辑时，需要debug 后才可发布
   emits('updateFlowsDebug', false);
 };
 // 关闭抽屉
 const closeDrawer = () => {
   isEditYaml.value = false;
+  // 清除选中状态
+  selectedNodeId.value = '';
+};
+
+// 关闭代码节点抽屉
+const closeCodeNodeDrawer = () => {
+  isEditCodeNode.value = false;
+  selectedNodeId.value = '';
+  currentCodeNodeData.value = {};
+};
+
+// 保存代码节点
+const saveCodeNode = (nodeData, nodeId) => {
+  // 更新节点数据
+  const updateNodeParameter = {
+    id: nodeId,
+    ...nodeData,
+  };
+  
+  // 调用保存接口
+  saveFlow(updateNodeParameter);
+  
+  // 关闭抽屉
+  closeCodeNodeDrawer();
+  
+  ElMessage.success('代码节点保存成功');
+};
+
+// 关闭直接回复节点抽屉
+const closeDirectReplyDrawer = () => {
+  isEditDirectReplyNode.value = false;
+  selectedNodeId.value = '';
+  currentDirectReplyNodeData.value = {};
+};
+
+// 保存直接回复节点
+const saveDirectReplyNode = (nodeData, nodeId) => {
+  // 更新节点数据
+  const updateNodeParameter = {
+    id: nodeId,
+    ...nodeData,
+  };
+  
+  // 调用保存接口
+  saveFlow(updateNodeParameter);
+  
+  // 关闭抽屉
+  closeDirectReplyDrawer();
+  
+  ElMessage.success('直接回复节点保存成功');
+};
+
+// 编辑开始节点
+const editStartNodeDrawer = async (name, desc, yamlCode, nodeId) => {
+  yamlContent.value = yamlCode;
+  nodeName.value = name;
+  nodeDesc.value = desc;
+  nodeYamlId.value = nodeId;
+  // 设置选中的节点
+  selectedNodeId.value = nodeId;
+  
+  // 加载变量数据
+  await loadWorkflowVariables();
+  
+  isEditStartNode.value = true;
+  // 编辑 yaml 时，需要debug 后才可发布
+  emits('updateFlowsDebug', false);
+};
+
+// 关闭开始节点抽屉
+const closeStartNodeDrawer = () => {
+  isEditStartNode.value = false;
+  // 清除选中状态
+  selectedNodeId.value = '';
+};
+
+// 保存开始节点 - 注意：变量管理通过variable接口，这里只保存节点基础信息
+const saveStartNode = (nodeId, name, description) => {
+  // 只更新节点的基础信息
+  const updateNodeParameter = {
+    id: nodeId,
+    name,
+    description,
+  };
+  saveFlow(updateNodeParameter);
+};
+
+// 处理保存节点描述事件
+const handleSaveNodeDescription = (nodeInfo) => {
+  console.log('📝 收到保存节点描述事件:', nodeInfo);
+  // 调用saveFlow方法保存到后端
+  saveFlow(nodeInfo);
+  console.log('✅ 节点描述已通过saveFlow方法保存到后端');
 };
 
 const handleZommOnScroll = () => {
@@ -260,10 +528,33 @@ onMounted(() => {
       pageSize: 10,
     })
     .then((res) => {
-      apiServiceList.value = res[1]?.result.services;
-      allApiServiceList.value = res[1]?.result.services;
-      activeName.value = [res[1]?.result.services[0]?.serviceId];
-      activeNames.value = [res[1]?.result.services[0]?.serviceId];
+      const services = res[1]?.result.services || [];
+      
+      // 添加"直接回复"节点到第一个服务组中
+      if (services.length > 0) {
+        const directReplyNode = {
+          name: '直接回复',
+          callId: 'DirectReply',
+          nodeId: 'DirectReply',
+          type: 'custom',
+          description: '直接回复用户输入的内容，支持变量插入'
+        };
+        
+        if (!services[0].nodeMetaDatas) {
+          services[0].nodeMetaDatas = [];
+        }
+        
+        // 检查是否已经存在DirectReply节点，避免重复添加
+        const existingDirectReply = services[0].nodeMetaDatas.find(node => node.callId === 'DirectReply');
+        if (!existingDirectReply) {
+          services[0].nodeMetaDatas.unshift(directReplyNode);
+        }
+      }
+      
+      apiServiceList.value = services;
+      allApiServiceList.value = services;
+      activeName.value = [services[0]?.serviceId];
+      activeNames.value = [services[0]?.serviceId];
       apiLoading.value = false;
     });
   handleChangeZoom(DefaultViewPortZoom);
@@ -392,20 +683,27 @@ const openEditFlowDialog = (item) => {
   isEditFlowName.value = true;
 };
 // 点击编辑工作流--查询当前工作流数据-后续添加回显
-const editFlow = (item) => {
+const editFlow = async (item) => {
   loading.value = true;
-  api
-    .querySingleFlowTopology({
+  try {
+    const res = await api.querySingleFlowTopology({
       appId: route.query?.appId,
       flowId: item.id,
-    })
-    .then((res) => {
-      if (res[1]?.result?.flow) {
-        flowObj.value = res[1].result.flow;
-        redrageFlow(flowObj.value.nodes, flowObj.value.edges);
-      }
-      loading.value = false;
     });
+    
+    if (res[1]?.result?.flow) {
+      flowObj.value = res[1].result.flow;
+      redrageFlow(flowObj.value.nodes, flowObj.value.edges);
+      
+      // 加载工作流变量
+      console.log('🔄 工作流加载完成，开始加载变量...');
+      await loadWorkflowVariables();
+    }
+  } catch (error) {
+    console.error('加载工作流失败:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 删除工作流
@@ -438,6 +736,20 @@ const choiceFlowId = (flowItem) => {
   }
 };
 
+// 监听props变化，选择默认工作流
+watch(
+  props,
+  () => {
+    // 获取当前工作流
+    workFlowList.value = [...props.flowList];
+    if (workFlowList.value.length) {
+      // 默认选中第一个
+      choiceFlowId(workFlowList.value?.[0]);
+    }
+  },
+  { deep: true, immediate: true },
+);
+
 // 回显工作流节点和边
 const redrageFlow = (nodesList, edgesList) => {
   const newNodeList = nodesList.map((node) => {
@@ -465,6 +777,28 @@ const redrageFlow = (nodesList, edgesList) => {
       newNode.deletable = false;
     } else if (node.callId === 'choice') {
       newNode.type = 'branch';
+    } else if (node.callId === 'Code') {
+      // Code节点特殊处理：从parameters中提取特有属性并添加到data中
+      newNode.type = 'custom';
+      newNode.data = {
+        ...newNode.data,
+        nodeId: 'Code',  // 设置正确的nodeId
+        // 从parameters中提取Code节点特有的配置属性
+        code: node.parameters?.code || '',
+        codeType: node.parameters?.codeType || 'python',
+        securityLevel: node.parameters?.securityLevel || 'low',
+        timeoutSeconds: node.parameters?.timeoutSeconds || 30,
+        memoryLimitMb: node.parameters?.memoryLimitMb || 128,
+        cpuLimit: node.parameters?.cpuLimit || 0.5,
+      };
+    } else if (node.callId === 'DirectReply') {
+      // DirectReply节点特殊处理
+      newNode.type = 'custom';
+      newNode.data = {
+        ...newNode.data,
+        nodeId: 'DirectReply',
+        callId: 'DirectReply',
+      };
     } else {
       newNode.type = 'custom';
     }
@@ -616,9 +950,36 @@ const saveFlow = (updateNodeParameter?, debug?) => {
       apiId: item.data.nodeId,
       serviceId: item.data.serviceId,
       stepId: item.id,
+      nodeId: item.data.nodeId,  // 添加nodeId字段
       type: item.data.nodeId,
-      ...otherItem,
     };
+    
+    // 对于Code节点，需要特殊处理parameters结构
+    if (item.data.callId === 'Code') {
+      // Code节点：将所有配置放在parameters中
+      newItem = {
+        ...newItem,
+        callId: item.data.callId,
+        name: item.data.name,
+        description: item.data.description,
+        parameters: {
+          input_parameters: item.data.parameters?.input_parameters || {},
+          output_parameters: item.data.parameters?.output_parameters || {},
+          code: item.data.code || '',
+          codeType: item.data.codeType || 'python',
+          securityLevel: item.data.securityLevel || 'low',
+          timeoutSeconds: item.data.timeoutSeconds || 30,
+          memoryLimitMb: item.data.memoryLimitMb || 128,
+          cpuLimit: item.data.cpuLimit || 0.5,
+        }
+      };
+    } else {
+      // 其他节点：使用原有逻辑
+      newItem = {
+        ...newItem,
+        ...otherItem,
+      };
+    }
     if (item.type === 'end' || item.type === 'start') {
       // 更新开始结束节点结构
       newItem = {
@@ -655,10 +1016,49 @@ const saveFlow = (updateNodeParameter?, debug?) => {
     updateNodes.forEach((item) => {
       if (item.stepId === updateNodeParameter.id) {
         if (item.type === 'choice') {
+          // 确保parameters对象存在
+          if (!item.parameters) {
+            item.parameters = {};
+          }
+          if (!item.parameters.input_parameters) {
+            item.parameters.input_parameters = {};
+          }
           item.parameters.input_parameters.choices =
             updateNodeParameter.inputStream;
-        } else {
-          item.parameters.input_parameters = updateNodeParameter.inputStream;
+        } else if (item.type === 'Code') {
+          item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+          item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+          item.parameters.code = updateNodeParameter.parameters.code;
+          item.parameters.codeType = updateNodeParameter.parameters.codeType;
+          item.parameters.securityLevel = updateNodeParameter.parameters.securityLevel;
+          item.parameters.timeoutSeconds = updateNodeParameter.parameters.timeoutSeconds;
+          item.parameters.memoryLimitMb = updateNodeParameter.parameters.memoryLimitMb;
+          item.parameters.cpuLimit = updateNodeParameter.parameters.cpuLimit;
+        } else if (item.callId === 'DirectReply') {
+          // 确保parameters对象存在
+          if (!item.parameters) {
+            item.parameters = {};
+          }
+          item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+          item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+        } else if (item.type === 'start') {
+          item.variables == updateNodeParameter.variables;
+        } else if (item.inputStream !== undefined) {
+          // 确保parameters对象存在
+          if (!item.parameters) {
+            item.parameters = {};
+          }
+          // 当Node以yaml编辑器形式修改了参数
+          // 检查updateNodeParameter.inputStream是否包含新的数据结构
+          if (updateNodeParameter.inputStream.input_parameters !== undefined && 
+              updateNodeParameter.inputStream.output_parameters !== undefined) {
+            
+            item.parameters.input_parameters = updateNodeParameter.inputStream.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.inputStream.output_parameters;
+          } else {
+            // 旧格式：兼容处理
+            item.parameters.input_parameters = updateNodeParameter.inputStream;
+          }
         }
         item.name = updateNodeParameter.name;
         item.description = updateNodeParameter.description;
@@ -698,6 +1098,7 @@ const saveFlow = (updateNodeParameter?, debug?) => {
     });
 };
 
+// TODO saveNode -> saveNodeYaml，仅当以yaml形式保存时才调用
 const saveNode = (yamlCode, nodeId, name, description) => {
   // 调用更新接口更新当前节点数据
   const updateNodeParameter = {
@@ -840,6 +1241,7 @@ defineExpose({
           <CustomNode
             v-bind="customNodeProps"
             :disabled="debugDialogVisible"
+            :selected="selectedNodeId === customNodeProps.id"
             @delNode="delNode"
             @editYamlDrawer="editYamlDrawer"
             @updateConnectHandle="updateConnectHandle"
@@ -851,6 +1253,7 @@ defineExpose({
           <BranchNode
             v-bind="branchNodeProps"
             :disabled="debugDialogVisible"
+            :selected="selectedNodeId === branchNodeProps.id"
             @delNode="delNode"
             @editYamlDrawer="editYamlDrawer"
           ></BranchNode>
@@ -860,6 +1263,10 @@ defineExpose({
         <template #node-start="nodeStartProps">
           <CustomSaENode
             @updateConnectHandle="updateConnectHandle"
+            @editYamlDrawer="editYamlDrawer"
+            @editStartNodeDrawer="editStartNodeDrawer"
+            :selected="selectedNodeId === nodeStartProps.id"
+            :conversationVariables="conversationVariablesForDisplay"
             v-bind="nodeStartProps"
           ></CustomSaENode>
         </template>
@@ -867,6 +1274,9 @@ defineExpose({
         <template #node-end="nodeEndProps">
           <CustomSaENode
             @updateConnectHandle="updateConnectHandle"
+            @editYamlDrawer="editYamlDrawer"
+            @editStartNodeDrawer="editStartNodeDrawer"
+            :selected="selectedNodeId === nodeEndProps.id"
             v-bind="nodeEndProps"
           ></CustomSaENode>
         </template>
@@ -1005,50 +1415,40 @@ defineExpose({
     :nodeDesc="nodeDesc"
     :nodeYamlId="nodeYamlId"
   ></EditYamlDrawer>
+  
+  <!-- 开始节点表单编辑器 - 基于变量接口 -->
+  <VariableBasedStartNodeDrawer
+    v-if="isEditStartNode"
+    @closeDrawer="closeStartNodeDrawer"
+    @saveStartNode="saveStartNode"
+    @variablesUpdated="handleVariablesUpdated"
+    @saveNodeDescription="handleSaveNodeDescription"
+    :appId="route.query?.appId"
+    :flowId="flowObj?.flowId"
+    :yamlContent="yamlContent"
+    :nodeName="nodeName"
+    :nodeDesc="nodeDesc"
+    :nodeYamlId="nodeYamlId"
+    :conversationId="conversationId"
+  ></VariableBasedStartNodeDrawer>
+  
+  <!-- 代码节点编辑器 - 基于变量逻辑 -->
+  <CodeNodeDrawer
+    :visible="isEditCodeNode"
+    :nodeData="currentCodeNodeData"
+    :nodeId="nodeYamlId"
+    :flowId="flowObj?.flowId"
+    @update:visible="closeCodeNodeDrawer"
+    @saveNode="saveCodeNode"
+  />
+  
+  <!-- 直接回复节点编辑器 -->
+  <DirectReplyDrawer
+    :visible="isEditDirectReplyNode"
+    :nodeData="currentDirectReplyNodeData"
+    :nodeId="nodeYamlId"
+    :flowId="flowObj?.flowId"
+    @update:visible="closeDirectReplyDrawer"
+    @saveNode="saveDirectReplyNode"
+  />
 </template>
-<style lang="scss">
-.debugStatus {
-  display: flex;
-  height: 32px;
-  padding: 8px 0px;
-  gap: 8px;
-  align-items: center;
-  .icon {
-    width: 16px;
-    height: 16px;
-    background-size: contain !important;
-  }
-  .successIcon {
-    background: url(@/assets/images/flow_success.png) center center no-repeat;
-  }
-
-  .errorIcon {
-    background: url(@/assets/images/flow_fail.png) center center no-repeat;
-  }
-
-  .runningIcon,
-  .pendingIcon {
-    background: url(@/assets/images/loading.png) center center no-repeat;
-    animation: spin 2s linear infinite;
-  }
-  .time {
-    height: 16px;
-    padding: 0px 8px;
-    border-radius: 4px;
-  }
-  .flexRight {
-    margin-left: auto;
-    margin-right: -4px;
-  }
-}
-
-.popper-class {
-  width: auto !important;
-  height: 32px;
-  line-height: 32px;
-  text-align: center;
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 8px;
-}
-</style>

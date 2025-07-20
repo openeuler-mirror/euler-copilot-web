@@ -1,0 +1,16 @@
+<svg width="24.000000" height="24.000000" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip1685_11730">
+			<rect id="svg" width="16.000000" height="16.000000" transform="translate(4.000000 4.000000)" fill="white" fill-opacity="0"/>
+		</clipPath>
+	</defs>
+	<rect id="矩形备份 24" rx="4.000000" width="24.000000" height="24.000000" fill="#30B7BB" fill-opacity="1.000000"/>
+	<rect id="矩形备份 24" x="0.500000" y="0.500000" rx="4.000000" width="23.000000" height="23.000000" stroke="#7AA5FF" stroke-opacity="0" stroke-width="1.000000"/>
+	<g clip-path="url(#clip1685_11730)">
+		<path id="矢量 391" d="M7.83 7L10.75 7C11.21 7 11.58 7.37 11.58 7.83L11.58 9.5C11.58 9.95 11.21 10.33 10.75 10.33L7.83 10.33C7.37 10.33 7 9.95 7 9.5L7 7.83C7 7.37 7.37 7 7.83 7ZM16.16 7L13.25 7C12.79 7 12.41 7.37 12.41 7.83L12.41 12C12.41 12.46 12.79 12.83 13.25 12.83L16.16 12.83C16.62 12.83 17 12.46 17 12L17 7.83C17 7.37 16.62 7 16.16 7ZM10.75 11.16L7.83 11.16C7.37 11.16 7 11.54 7 12L7 16.16C7 16.62 7.37 17 7.83 17L10.75 17C11.21 17 11.58 16.62 11.58 16.16L11.58 12C11.58 11.54 11.21 11.16 10.75 11.16ZM13.25 13.66L16.16 13.66C16.62 13.66 17 14.04 17 14.5L17 16.16C17 16.62 16.62 17 16.16 17L13.25 17C12.79 17 12.41 16.62 12.41 16.16L12.41 14.5C12.41 14.04 12.79 13.66 13.25 13.66Z" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<path id="矢量 391" d="" fill="#7AA5FF" fill-opacity="0" fill-rule="evenodd"/>
+	</g>
+</svg>

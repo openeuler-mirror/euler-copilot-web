@@ -28,6 +28,10 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  selected: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle']);
 const { t } = useI18n();
@@ -101,6 +105,13 @@ const setConnectStatus = (type) => {
   emits('updateConnectHandle', props.id);
 };
 
+// 处理节点点击事件
+const handleNodeClick = () => {
+  if (!props.disabled) {
+    editYaml(props.data.name, props.data.description, props.data.parameters);
+  }
+};
+
 const handleCopyTextToclipboard = (text) => {
   const input = document.createElement('input');
   input.value = text;
@@ -119,75 +130,67 @@ const handleCopyTextToclipboard = (text) => {
 </script>
 
 <template>
-  <div class="customNodeStyle" :class="curStatus">
+  <div class="customNodeStyle" :class="[curStatus, { 'node-selected': selected }]">
     <Handle
       :class="{ isConnecting: handleTargetConnecting }"
       @mousedown="setConnectStatus('target')"
       type="target"
       :position="Position.Left"
     ></Handle>
-    <div class="nodeBox" :class="getNodeClass(props.data)">
-      <div class="title" v-if="props.data.name">
-        <div class="iconLabel">
-          <img
-            class="iconStyle"
-            v-if="props.data.nodeId"
-            :src="getSrcIcon(props.data)"
-          />
-          <el-icon v-else class="warnTiangleIcon">
-            <WarnTriangleFilled />
-          </el-icon>
-          <div class="label">{{ props.data.name }}</div>
-        </div>
+    <div class="nodeContainer">
+      <div class="nodeBox" :class="getNodeClass(props.data)" @click="handleNodeClick">
+        <div class="title" v-if="props.data.name">
+          <div class="iconLabel">
+            <img
+              class="iconStyle"
+              v-if="props.data.nodeId"
+              :src="getSrcIcon(props.data)"
+            />
+            <el-icon v-else class="warnTiangleIcon">
+              <WarnTriangleFilled />
+            </el-icon>
+            <div class="label">{{ props.data.name }}</div>
+          </div>
 
-        <div class="moreTip" :class="{ notAllow: props.disabled }">
-          <el-popover
-            :disabled="props.disabled"
-            placement="bottom-end"
-            trigger="hover"
-            popper-class="nodeDealPopper"
-          >
-            <template #reference>
-              <div class="moreDots">
-                <div class="nodeDot"></div>
-                <div class="nodeDot"></div>
-                <div class="nodeDot"></div>
-              </div>
-            </template>
-            <el-button
-              text
-              class="dealItem"
-              @click="
-                editYaml(
-                  props.data.name,
-                  props.data.description,
-                  props.data.parameters,
-                )
-              "
+          <div class="moreTip" :class="{ notAllow: props.disabled }">
+            <el-popover
+              :disabled="props.disabled"
+              placement="bottom-end"
+              trigger="hover"
+              popper-class="nodeDealPopper"
             >
-              {{ $t('semantic.edit') }}
-            </el-button>
-            <el-button text class="dealItem" @click="delNode(props.id)">
-              {{ $t('semantic.interface_delete') }}
-            </el-button>
-          </el-popover>
+              <template #reference>
+                <div class="moreDots">
+                  <div class="nodeDot"></div>
+                  <div class="nodeDot"></div>
+                  <div class="nodeDot"></div>
+                </div>
+              </template>
+              <el-button
+                text
+                class="dealItem"
+                @click="
+                  editYaml(
+                    props.data.name,
+                    props.data.description,
+                    props.data.parameters,
+                  )
+                "
+              >
+                {{ $t('semantic.edit') }}
+              </el-button>
+              <el-button text class="dealItem" @click="delNode(props.id)">
+                {{ $t('semantic.interface_delete') }}
+              </el-button>
+            </el-popover>
+          </div>
         </div>
+        <!-- 移除description显示 -->
       </div>
-      <div class="desc" v-if="props.data.description">
-        <div
-          v-for="(desc, index) in nodeDescription"
-          :class="{ descSign: nodeDescription.length > 1 && !index }"
-          :key="index"
-        >
-          {{ desc }}
-        </div>
-      </div>
-      <div class="nodeIdShow" v-if="props.id">
+      <!-- 将ID移到footer位置，设为次要样式 -->
+      <div class="nodeFooter" v-if="props.id">
         <div class="nodeIdText">
-          <span>ID:</span>
-          <span>
-            {{ props.id }}
-          </span>
+          <span>{{ props.id }}</span>
         </div>
         <el-icon
           class="copydocument"

@@ -1,46 +1,50 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, shallowRef } from 'vue';
-import { Codemirror } from 'vue-codemirror';
-import { json } from '@codemirror/lang-json';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { ref, watch, computed } from 'vue';
+import JSONMonacoEditor from '@/components/JSONMonacoEditor.vue';
 import { storeToRefs } from 'pinia';
 import { useChangeThemeStore, useHistorySessionStore } from '@/store/';
+
 const { params } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
+
 const CODE_STYLE = {
   width: '100%',
   height: '100%',
   maxHeight: '200px',
   overflowY: 'auto',
-  // backgroundColor: '#f4f6fa',
   fontSize: '14px',
   lineHeight: '16px',
 };
+
 const props = withDefaults(
   defineProps<{
-    code: object; // 添加jsonData属性
+    code: object;
     title: string;
     disabled?: boolean;
   }>(),
   {
-    needCheck: true,
+    disabled: false,
   },
 );
 
 const code = ref(JSON.stringify(props.code, null, 2));
+const monacoEditorRef = ref();
 
-const codeMirrorView = shallowRef();
-// const extensions = [StreamLanguage.define(json)];
-const extensions = ref([json()]);
-const handleReady = (payload) => {
-  codeMirrorView.value = payload.view;
+const currentTheme = computed(() => {
+  return themeStore.theme === 'dark' ? 'dark' : 'light';
+});
+
+const handleReady = (payload: any) => {
+  monacoEditorRef.value = payload.editor;
 };
-const handleChange = (payload) => {
-  params.value = payload;
+
+const handleChange = (value: string) => {
+  code.value = value;
+  params.value = value;
 };
 
 const copy = () => {
-  if (codeMirrorView.value) {
+  if (monacoEditorRef.value) {
     navigator.clipboard
       .writeText(code.value)
       .then(() => {
@@ -53,29 +57,11 @@ const copy = () => {
 };
 
 watch(
-  () => code,
+  () => code.value,
   () => {
-    params.value = code;
+    params.value = code.value;
   },
 );
-
-watch(
-  () => themeStore.theme,
-  () => {
-    if (themeStore.theme === 'dark') {
-      extensions.value = [json(), oneDark];
-    } else {
-      extensions.value = [json()];
-    }
-  },
-);
-onMounted(() => {
-  if (themeStore.theme === 'dark') {
-    extensions.value = [json(), oneDark];
-  } else {
-    extensions.value = [json()];
-  }
-});
 </script>
 
 <template>
@@ -92,15 +78,13 @@ onMounted(() => {
       ></span>
     </div>
     <div class="code-container">
-      <Codemirror
+      <JSONMonacoEditor
         v-model="code"
         placeholder="Code goes here..."
         :style="CODE_STYLE"
         :autofocus="true"
-        :indent-with-tab="true"
-        :tab-size="2"
-        :extensions="extensions"
-        :disabled="disabled"
+        :theme="currentTheme"
+        :disabled="props.disabled"
         @ready="handleReady"
         @change="handleChange"
       />

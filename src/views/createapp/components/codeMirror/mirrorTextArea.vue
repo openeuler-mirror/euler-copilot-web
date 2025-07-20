@@ -1,34 +1,40 @@
 <template>
-  <codemirror
+  <YAMLMonacoEditor
     v-model="code"
-    class="codeMirror"
-    ref="mycodemirror"
+    ref="myMonacoEditor"
     :autofocus="true"
-    :extensions="extensions"
-    :indent-with-tab="true"
     :disabled="isDisabled"
+    :theme="currentTheme"
     @change="handleChange"
-    @update="updateFunc"
-    :tab-size="2"
+    class="yaml-monaco-wrapper"
   />
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { Codemirror } from 'vue-codemirror';
-import { yaml } from '@codemirror/lang-yaml';
+import { ref, watch, computed } from 'vue';
+import YAMLMonacoEditor from '@/components/YAMLMonacoEditor.vue';
+import { useChangeThemeStore } from '@/store';
+
+const themeStore = useChangeThemeStore();
 
 const emits = defineEmits(['update:updateVal']);
 const code = ref('');
 const isDisabled = ref(false);
-const extensions = [yaml()];
-const handleChange = (e: string) => {
-  code.value = e;
+const myMonacoEditor = ref();
+
+const currentTheme = computed(() => {
+  return themeStore.theme === 'dark' ? 'dark' : 'light';
+});
+
+const handleChange = (value: string) => {
+  code.value = value;
   emits('update:updateVal', code.value);
 };
+
 const props = defineProps<{
   yamlCode: any;
   disabled: boolean;
 }>();
+
 watch(
   () => props.yamlCode,
   () => {
@@ -38,66 +44,41 @@ watch(
   { deep: true, immediate: true },
 );
 
+// 为了保持与旧组件的兼容性，保留updateFunc方法
 const updateFunc = () => {
-  const foldDoms = document.querySelectorAll('span[title="Fold line"]');
-  foldDoms.forEach((dom) => {
-    dom.innerText = '';
-  });
-
-  const unFoldDoms = document.querySelectorAll('span[title="Unfold line"]');
-  unFoldDoms.forEach((dom) => {
-    dom.innerText = '';
-  });
+  // Monaco Editor自动处理折叠标记，无需手动清理
 };
+
+// 暴露方法以保持兼容性
+defineExpose({
+  updateFunc
+});
 </script>
 <style lang="scss">
+.yaml-monaco-wrapper {
+  height: 100%;
+  width: 100%;
+  
+  :deep(.yaml-monaco-editor) {
+    height: 100%;
+    
+    .editor-container {
+      height: 100%;
+      border: 1px solid var(--o-time-text);
+    }
+  }
+}
+
+// 保持原有的样式类名以兼容现有代码
 .v-codemirror {
   height: 100%;
   width: 100%;
-  ::v-deep(.cm-editor) {
-    height: 100%;
-    border: 1px solid var(--o-time-text);
-    .cm-gutters {
-      background-color: var(--o-bash-bg);
-      span[title='Fold line'] {
-        width: 0;
-        height: 0;
-        display: block;
-        border: 4px solid transparent;
-        border-top: 4px solid #8d98aa;
-        margin-top: 8px;
-        padding: 0;
-      }
-      span[title='Unfold line'] {
-        width: 0;
-        height: 0;
-        display: block;
-        border: 4px solid transparent;
-        border-left: 4px solid #8d98aa;
-        margin-top: 6px;
-        margin-left: 4px;
-        padding: 0;
-      }
-    }
-  }
-  .cm-focused {
-    outline: none;
-  }
 }
+
 .outputYaml {
-  .cm-editor {
-    border: none;
-    .cm-gutters {
-      display: none;
-    }
-    .cm-content {
-      .cm-activeLine {
-        background-color: transparent;
-      }
-      .ͼl {
-        color: var(--o-text-color-secondary);
-      }
-    }
-  }
+  background: var(--o-fill-color-extra-light);
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 12px;
 }
 </style>

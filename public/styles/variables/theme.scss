@@ -1,0 +1,214 @@
+body[theme='dark'] {
+  --o-content-bg: linear-gradient(
+    to right,
+    rgba(109, 117, 250, 0.5),
+    rgba(90, 179, 255, 0.5)
+  );
+  --o-text-disable: #626D7C;
+  --o-main-bg-color: #131415;
+  --o-bg-image: url('../../assets/svgs/dark_background.svg');
+  --no-work-flow: url('../../assets/images/dark_no_flow.png');
+  --o-question-color: #d3dce9;
+  --o-text-color-record-number: rgb(211, 220, 233);
+  --o-button-color: #576372;
+  --o-button-border-color: #576372;
+  --o-button-disable-color: #626d7c;
+  --o-button-disable-background: #203052;
+  --o-button-disable-border: #626d7c;
+  --o-time-text: #3e4551;
+  --o-bash-bg: #2a2f37;
+  --o-flow-code-bg: rgb(42, 47, 55);
+  --o-flow-code-border: rgb(62, 69, 81);
+  --flow-canvas-bg: rgb(24, 27, 32);
+  --flow-instance-hover-color: #1f2329;
+  --flow-instance-shadow: 0 4px 16px 0 rgba(253, 254, 255, 0.1);
+  --flow-nodeBox-shadow: 0 8px 16px 0 rgba(253, 254, 255, 0.1);
+  // 工作流节点背景色
+  --flow-bg-color: #343a43;
+  --o-bash-box-shadow: 0 4px 16px 0 rgba(255, 255, 255, 0.1);
+  // 工作流开始节点结束背景渐变色
+  --flow-startEnd-bg: linear-gradient(
+    rgba(132, 149, 253, 0.3),
+    rgba(104, 113, 129, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-system-bg: linear-gradient(
+    rgba(113, 225, 229, 0.3),
+    rgba(97, 119, 121, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-apos-apollo-bg: linear-gradient(
+    rgba(137, 212, 255, 0.3),
+    rgba(103, 111, 130, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-euler-copilot-tune-bg: linear-gradient(
+    rgba(156, 237, 203, 0.3),
+    rgba(101, 125, 110, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-other-node-bg: linear-gradient(
+    rgba(252, 154, 186, 0.3),
+    rgba(117, 99, 110, 0.15),
+    rgba(52, 58, 67, 0)
+  );
+  --flow-node-default-over-color: #25303e;
+  --flow-node-boder-default-over: #314265;
+  --flow-node-success-over-color: #1f312a;
+  --flow-node-error-over-color: #332127;
+  --flow-branch-node-error-node-cover-color: #602c27;
+  --flow-branch-node-success-node-cover-color: #295336;
+  --o-think-border: #8d98aa;
+  --o-think-header-bg: #2a2f37;
+  --o-think-header-text: #e4e8ee;
+  --el-drawer-bg-color: #000000;
+  --el-bg-color: #1f2329;
+  --question-bg: linear-gradient(
+    0deg,
+    rgb(47, 57, 66),
+    rgb(32, 35, 37) 33.232%,
+    rgb(41, 43, 55) 85.699%
+  );
+  --el-collapse-header-bg: rgb(42, 47, 55);
+  --el-collapse-border: rgb(62, 69, 81, 0.5);
+  --el-collapse-content-bg: rgb(42, 47, 55, 0.5);
+  --applist-hover: #313741;
+  --flow-running-bg: linear-gradient(
+    127.95deg,
+    rgb(39, 39, 76) -1.967%,
+    rgba(28, 57, 81, 0.929) 98.202%
+  );
+  --o-api-description: rgb(211, 220, 233);
+  --el-drawer-padding-primary: 24px !important;
+  // 这里是不同种类的debug图标
+  --flow-debug-default: url('../../assets/svgs/dark_debug.svg');
+  --flow-debug-hover: url('../../assets/svgs/dark_debug_hover.svg');
+  --flow-debug-active: url('../../assets/svgs/dark_debug_active.svg');
+  --flow-debug-dis: url('../../assets/svgs/dark_debug_dis.svg');
+  // 这里是不同种类的展开收起图标
+  --expand-fold-default: url('../../assets/svgs/dark_expand_fold.svg');
+  --expand-fold-hover: url('../../assets/svgs/dark_expand_fold_hover.svg');
+  --expand-fold-active: url('../../assets/svgs/dark_expand_fold_active.svg');
+  --o-scrollbar-thumb: #576372;
+  --o-apiBox-bg: rgb(253, 254, 255);
+}
+
+body[theme='light'] {
+  --o-text-disable: #BFC7D7;
+  --o-checkbox-bg-color_checked: #6395fd !important;
+  --o-func-base-primary: 99, 149, 253;
+  --o-checkbox-bg-color_checked: #6395fd !important;
+  --o-checkbox-border-color_checked: #6395fd !important;
+  --o-content-bg:linear-gradient(
+        to right,
+        rgba(109, 117, 250, 0.2),
+        rgba(90, 179, 255, 0.2)
+      );
+  --o-main-bg-color: #f1f8ff;
+  --o-bg-image: url('../../assets/svgs/light_background.webp');
+  --no-work-flow: url('../../assets/images/light_no_flow.png');
+  --o-question-color: #4e5865;
+  --o-text-color-record-number: rgb(78, 88, 101);
+  --o-button-color: #c3cedf;
+  --o-button-border-color: #d3dce9;
+  --o-button-disable-color: #bfc7d7;
+  --o-button-disable-background: #ebedf3;
+  --o-button-disable-border: #ebedf3;
+  --o-time-text: #dfe5ef;
+  --o-bash-bg: #f4f6fa;
+  --o-flow-code-bg: rgb(244, 256, 258);
+  --o-flow-code-border: rgb(223, 229, 239);
+  --flow-canvas-bg: rgba(235, 239, 246);
+  --flow-instance-hover-color: #fdfeff;
+  --flow-instance-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+  --flow-nodeBox-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
+  // 工作流节点背景色
+  --flow-bg-color: #fdfeff;
+  --o-bash-box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+  // 工作流开始节点结束背景渐变色
+  --flow-startEnd-bg: linear-gradient(
+    rgba(133, 148, 253, 0.3),
+    rgba(210, 231, 252, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-system-bg: linear-gradient(
+    rgba(156, 237, 203, 0.3),
+    rgba(240, 253, 244, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-apos-apollo-bg: linear-gradient(
+    rgba(137, 212, 255, 0.3),
+    rgba(230, 237, 255, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-euler-copilot-tune-bg: linear-gradient(
+    rgba(156, 237, 203, 0.3),
+    rgba(240, 253, 248, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-other-node-bg: linear-gradient(
+    rgba(252, 154, 186, 0.3),
+    rgba(253, 240, 248, 0.15),
+    rgba(255, 255, 255, 0)
+  );
+  --flow-node-boder-default-over: #c7d6f5;
+  --flow-node-success-over-color: #e6f6e9;
+  --flow-node-error-over-color: #f8e7e7;
+  --o-think-border: #ccc;
+  --o-think-header-bg: #f8f8f8;
+  --o-think-header-text: #8d98aa;
+  --flow-branch-node-error-node-cover-color: #edb3b3;
+  --flow-branch-node-success-node-cover-color: #b3dbb8;
+  --el-collapse-header-bg: rgb(244, 246, 250);
+  --el-collapse-border: rgb(223, 229, 239);
+  --el-collapse-content-bg: rgb(244, 246, 250, 0.5);
+  --question-bg: linear-gradient(
+      177.93deg,
+      rgba(255, 255, 255, 0) -40.031%,
+      rgba(255, 255, 255, 0.35) 1.263%,
+      rgba(255, 255, 255) 36.178%
+    ),
+    linear-gradient(
+      270deg,
+      rgb(227, 242, 255, 0.5),
+      rgb(195, 227, 255, 0.5) 33.232%,
+      rgb(197, 203, 249, 0.5) 85.699%
+    );
+  --question-shadow: rgba(221, 225, 240, 0.5);
+  --applist-hover: #f3f4f6;
+  --flow-running-bg: linear-gradient(
+    127.95deg,
+    rgba(109, 117, 250, 0.2) -1.967%,
+    rgba(90, 179, 255, 0.2) 98.202%
+  );
+  --o-api-description: rgb(78, 88, 101);
+  // 这里是不同种类的debug图标
+  --flow-debug-default: url('../../assets/svgs/light_debug.svg');
+  --flow-debug-hover: url('../../assets/svgs/light_debug_hover.svg');
+  --flow-debug-active: url('../../assets/svgs/light_debug_active.svg');
+  --flow-debug-dis: url('../../assets/svgs/light_debug_dis.svg');
+  // 这里是不同种类的展开收起图标
+  --expand-fold-default: url('../../assets/svgs/light_expand_fold.svg');
+  --expand-fold-hover: url('../../assets/svgs/light_expand_fold_hover.svg');
+  --expand-fold-active: url('../../assets/svgs/light_expand_fold_active.svg');
+  --o-scrollbar-thumb: #c3cedf;
+  --o-apiBox-bg: rgb(253, 254, 255);
+  --el-drawer-padding-primary: 24px !important;
+}
+
+body {
+  // 这里替换下拉框的选中颜色，无论亮暗都是一致
+  .el-select-dropdown__item.is-selected {
+    background-color: #6395fd !important;
+    font-weight: normal !important;
+  }
+  // 悬浮优先级高于选中
+  .el-select-dropdown__item:hover {
+    background-color: #7aa5ff !important;
+  }
+  .el-select-dropdown__footer {
+    border-top: none !important;
+    cursor: pointer;
+  }
+  --o-border-radius-small: 4px;
+}

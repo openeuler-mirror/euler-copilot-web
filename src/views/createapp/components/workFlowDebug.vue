@@ -5,6 +5,17 @@
       <div class="closeBtn" @click="handleCloseDebugDialog"><IconX /></div>
     </div>
     <div class="debugContent">
+      <!-- 变量配置面板 -->
+      <DebugVariablePanel
+        v-if="shouldShowVariablePanel"
+        :visible="variablePanelVisible"
+        :conversation-variables="conversationVariables"
+        :variables-loading="variablesLoading"
+        :flow-id="props.flowId"
+        @toggle-visibility="toggleVariablePanel"
+        @variable-updated="handleVariableUpdated"
+      />
+      
       <div class="debugCheckArea" v-if="testFlag">
         <DialoguePanel
           v-for="(item, index) in conversationList"
@@ -62,9 +73,10 @@
 </template>
 <script setup lang="ts">
 import '../../styles/workFlowDebug.scss';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { IconX } from '@computing/opendesign-icons';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
+import DebugVariablePanel from './workFlowConfig/DebugVariablePanel.vue';
 import type {
   ConversationItem,
   RobotConversationItem,
@@ -74,6 +86,7 @@ import { useHistorySessionStore } from 'src/store/historySession';
 import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { onBeforeRouteLeave } from 'vue-router';
+import { listVariables } from '@/api/variable';
 // 对话列表
 const { sendQuestion, stopDebug } = useSessionStore();
 const testFlag = ref(true);
@@ -98,6 +111,56 @@ const props = defineProps({
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
+
+// 变量面板相关状态
+const variablePanelVisible = ref(true);
+const conversationVariables = ref<any[]>([]);
+const variablesLoading = ref(false);
+
+// 计算属性：是否应该显示变量面板
+const shouldShowVariablePanel = computed(() => {
+  return conversationVariables.value.length > 0;
+});
+
+// 切换变量面板显示/隐藏
+const toggleVariablePanel = () => {
+  variablePanelVisible.value = !variablePanelVisible.value;
+};
+
+// 处理变量更新
+const handleVariableUpdated = () => {
+  loadConversationVariables();
+};
+
+// 加载对话变量
+const loadConversationVariables = async () => {
+  if (!props.flowId) return;
+  
+  variablesLoading.value = true;
+  try {
+    const response = await listVariables({ 
+      scope: 'conversation', 
+      flow_id: props.flowId 
+    });
+    
+    // 处理API响应
+    let variables = null;
+    if (response?.result?.variables) {
+      variables = response.result.variables;
+    } else if ((response as any)?.variables) {
+      variables = (response as any).variables;
+    } else if (Array.isArray(response)) {
+      variables = response;
+    }
+    
+    conversationVariables.value = variables || [];
+  } catch (error) {
+    console.error('加载对话变量失败:', error);
+    conversationVariables.value = [];
+  } finally {
+    variablesLoading.value = false;
+  }
+};
 /**
  *
  * @param item
@@ -115,6 +178,9 @@ onMounted(() => {
   selectedSessionIds.value = [];
   currentSelectedSession.value = '';
   historySession.value = [];
+  
+  // 加载对话变量
+  loadConversationVariables();
 });
 
 /**

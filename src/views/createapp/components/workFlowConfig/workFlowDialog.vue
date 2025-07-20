@@ -39,9 +39,11 @@
           class="o-dlg-btn"
           type="primary"
           size="small"
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
           @click="handleSubmit(workFlowForm)"
         >
-          {{ $t('semantic.submit') }}
+          {{ isSubmitting ? '提交中...' : $t('semantic.submit') }}
         </el-button>
         <el-button class="o-dlg-btn" size="small" @click="onCancel">
           {{ $t('semantic.cancel') }}
@@ -59,6 +61,8 @@ import { ElMessage, FormInstance } from 'element-plus';
 import i18n from 'src/i18n';
 const workFlowDiaVisible = ref(true);
 const route = useRoute();
+// 添加loading状态
+const isSubmitting = ref(false);
 const props = defineProps({
   diaType: {
     type: String,
@@ -101,6 +105,9 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
         ElMessage.warning(i18n.global.t('app.pleasemodifyTheName'));
         return;
       }
+
+      // 设置提交状态为loading
+      isSubmitting.value = true;
 
       // 创建工作流
       const appId = route.query?.appId;
@@ -169,6 +176,14 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
             emits('createFlowId', { ...res[1].result.flow });
             onCancel();
           }
+        })
+        .catch((error) => {
+          console.error('创建工作流失败:', error);
+          ElMessage.error(i18n.global.t('app.createFailed') || '创建失败，请重试');
+        })
+        .finally(() => {
+          // 无论成功或失败都要重置loading状态
+          isSubmitting.value = false;
         });
     }
   });
@@ -185,6 +200,30 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
     .el-form-item {
       &:last-child {
         margin-bottom: 0px;
+      }
+    }
+  }
+  
+  // 按钮样式修复
+  .dialog-footer {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    
+    .o-dlg-btn {
+      min-width: 80px; // 设置最小宽度防止loading时宽度变化
+      height: 32px; // 固定高度
+      
+      // 提交按钮特殊处理
+      &.el-button--primary {
+        min-width: 88px; // 提交按钮稍宽一些
+      }
+      
+      // loading状态下保持按钮稳定
+      &.is-loading {
+        .el-icon {
+          margin-right: 6px; // 确保loading图标与文字间距
+        }
       }
     }
   }

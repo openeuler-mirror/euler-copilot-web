@@ -3,10 +3,10 @@
     <el-drawer
       v-model="visible"
       :show-close="false"
-      :wrapperClosable="false"
       :modal="true"
+      modal-class="transparent-modal"
       class="flowDrawer"
-      :before-close="closeDrawer"
+      @close="closeDrawer"
     >
       <template #header>
         <div class="drawerHeader">
@@ -48,7 +48,7 @@
                 class="outputYaml"
                 v-model:updateVal="item.yamlCode"
                 :yamlCode="item.yamlCode"
-                :disabled="item.disabled"
+                :disabled="!!item.disabled"
               ></MirrorText>
               <div class="baseInfo" v-else>
                 <el-form
@@ -74,14 +74,29 @@
                     prop="description"
                     :label="$t('semantic.interface_introduction')"
                   >
+                    <!-- 描述显示/编辑模式 -->
+                    <div v-if="!isEditingDesc && !yamlExpress[0].description" 
+                         class="descPlaceholder" 
+                         @click="startEditDesc">
+                      {{ $t('flow.add_description') }}
+                    </div>
+                    <div v-else-if="!isEditingDesc" 
+                         class="descDisplay" 
+                         @click="startEditDesc">
+                      {{ yamlExpress[0].description }}
+                    </div>
                     <el-input
+                      v-else
                       type="textarea"
                       show-word-limit
                       maxlength="150"
                       v-model="yamlExpress[0].description"
-                      :placeholder="$t('semantic.pleaseEnter')"
+                      :placeholder="$t('flow.add_description')"
                       class="workFlowDesc o-validate-input"
                       clearable
+                      @blur="finishEditDesc"
+                      @keyup.enter="finishEditDesc"
+                      ref="descInputRef"
                     ></el-input>
                   </el-form-item>
                 </el-form>
@@ -106,7 +121,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import MirrorText from '../codeMirror/mirrorTextArea.vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import yaml from 'js-yaml';
@@ -114,11 +129,14 @@ import { ElMessage } from 'element-plus';
 import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
 import YamlContentOutput from 'src/components/yamloutput/yamlContentOutput.jsx';
 import i18n from 'src/i18n';
+
 const visible = ref(true);
 const yamlInputCode = ref();
 const yamlOutputCode = ref();
 const yamlNodeName = ref();
 const infoDisabled = ref(true);
+const isEditingDesc = ref(false);
+const descInputRef = ref();
 const yamlExpress = ref([
   {
     title: 'semantic.baseMessage',
@@ -196,21 +214,34 @@ const closeDrawer = () => {
 };
 // 完成yaml更新
 const updateNodeYaml = () => {
-  let transResult;
+  let transResult: any;
   try {
     transResult = yaml.load(yamlExpress.value[1].yamlCode);
     // 调用接口并更新--根据id包含更新后的yamlCode, name, desc
     emits(
       'saveNode',
-      transResult,
-      props.nodeYamlId,
-      yamlExpress.value[0].name,
-      yamlExpress.value[0].description,
+      transResult || {},
+      props.nodeYamlId || '',
+      yamlExpress.value[0].name || '',
+      yamlExpress.value[0].description || '',
     );
     closeDrawer();
   } catch (error) {
     ElMessage.error(i18n.global.t('semantic.checkFormat'));
   }
+};
+
+// 开始编辑描述
+const startEditDesc = () => {
+  isEditingDesc.value = true;
+  nextTick(() => {
+    descInputRef.value?.focus();
+  });
+};
+
+// 完成编辑描述
+const finishEditDesc = () => {
+  isEditingDesc.value = false;
 };
 </script>
 
@@ -225,8 +256,47 @@ const updateNodeYaml = () => {
   padding: 24px 24px 16px !important;
   margin-bottom: 0px;
 }
+
+// 透明遮罩样式
+:deep(.transparent-modal) {
+  background-color: transparent !important;
+}
+
 .yamlMonacoEditor {
   height: 400px;
+}
+
+// 描述编辑样式
+.descPlaceholder {
+  color: var(--o-text-color-placeholder);
+  cursor: pointer;
+  padding: 8px 0;
+  min-height: 32px;
+  line-height: 32px;
+  border: 1px dashed var(--o-border-color-lighter);
+  border-radius: 4px;
+  text-align: center;
+  
+  &:hover {
+    color: var(--o-text-color-secondary);
+    border-color: var(--o-border-color);
+  }
+}
+
+.descDisplay {
+  cursor: pointer;
+  padding: 8px 12px;
+  color: var(--o-text-color-primary);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  min-height: 32px;
+  line-height: 1.5;
+  background: var(--o-fill-color-extra-light);
+  
+  &:hover {
+    background: var(--o-fill-color-light);
+    border-color: var(--o-border-color-light);
+  }
 }
 :deep(.el-drawer__body) {
   padding: 0px 24px 16px !important;

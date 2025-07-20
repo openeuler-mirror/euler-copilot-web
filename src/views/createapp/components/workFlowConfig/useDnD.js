@@ -91,12 +91,42 @@ export default function useDragAndDrop() {
 
     const nodeId = getId();
 
+    // 清洗节点数据，确保Code节点有正确的parameters结构
+    let cleanNodeData = { ...nodeData.value };
+    
+    // 如果是Code节点，确保parameters结构正确
+    if (cleanNodeData.callId === 'Code' || cleanNodeData.type === 'Code') {
+      // 清洗parameters，只保留input_parameters和output_parameters
+      cleanNodeData.parameters = {
+        input_parameters: {},  // 默认为空对象
+        output_parameters: {   // 修复：确保是正确的变量映射格式
+          result: {
+            type: 'string',
+            description: ''
+          }
+        }
+      };
+      
+      // 确保代码节点的其他配置属性在正确位置
+      cleanNodeData = {
+        ...cleanNodeData,
+        nodeId: 'Code',  // 设置正确的nodeId
+        // 确保这些字段在节点数据的根级别，而不是在parameters中
+        code: cleanNodeData.code || '',
+        codeType: cleanNodeData.codeType || 'python',
+        securityLevel: cleanNodeData.securityLevel || 'low',
+        timeoutSeconds: cleanNodeData.timeoutSeconds || 30,
+        memoryLimitMb: cleanNodeData.memoryLimitMb || 128,
+        cpuLimit: cleanNodeData.cpuLimit || 0.5,
+      };
+    }
+
     const newNode = {
       id: nodeId,
       type: draggedType.value,
       position,
       class: 'round-start',
-      data: nodeData.value,
+      data: cleanNodeData,
     };
 
     /**

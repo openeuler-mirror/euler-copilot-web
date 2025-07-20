@@ -335,7 +335,7 @@
     width: 320px;
     height: fit-content;
     border-radius: 4px;
-    background: var(--el-bg-color);
+    background: white;
     border: 2px solid transparent;
     position: relative;
     border-radius: 10px;
@@ -344,7 +344,7 @@
       min-height: 80px;
       padding: 16px;
       display: flex;
-      background: var(--flow-system-bg);
+      background: white;
       flex-direction: column;
       gap: 8px;
       border-radius: 8px;
@@ -427,10 +427,10 @@
       }
     }
     .nodeBox.otherNode {
-      background: var(--flow-other-node-bg);
+      background: white;
     }
     .nodeBox.aposNode {
-      background: var(--flow-apos-apollo-bg);
+      background: white;
     }
     .vue-flow__handle-right {
       top: 50%;
@@ -587,5 +587,68 @@
   }
   &:hover {
     border: 1px solid var(--o-color-primary-secondary) !important;
+  }
+}
+
+// 选中节点的蓝色边框样式
+.node-selected {
+  .nodeBox {
+    border: 2px solid #409eff !important;
+    box-shadow: 0 0 8px rgba(64, 158, 255, 0.3) !important;
+  }
+}
+
+// 节点点击样式优化
+.customNodeStyle {
+  .nodeContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .nodeBox {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+// 统一的节点footer样式
+.nodeFooter {
+  padding: 4px 8px;
+  background: var(--o-fill-color-extra-light);
+  border-top: 1px solid var(--o-border-color-light);
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  
+  .nodeIdText {
+    font-size: 11px;
+    color: var(--o-text-color-placeholder);
+    
+    span {
+      font-family: 'Monaco', 'Consolas', monospace;
+    }
+  }
+  
+  .copydocument {
+    font-size: 12px;
+    color: var(--o-text-color-placeholder);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    
+    &:hover {
+      opacity: 1;
+      color: var(--o-text-color-secondary);
+    }
   }
 }
