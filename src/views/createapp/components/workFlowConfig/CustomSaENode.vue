@@ -81,7 +81,6 @@ const getInputParamKeys = () => {
 const conversationVariables = computed(() => {
   // 优先使用外部传入的conversationVariables props
   if (props.conversationVariables && props.conversationVariables.length > 0) {
-    console.log('🎯 使用外部传入的对话变量数据:', props.conversationVariables);
     return props.conversationVariables.map((variable: any) => ({
       name: variable.name,
       type: getVariableTypeDisplay(variable.var_type || variable.type || 'string'),
@@ -89,17 +88,9 @@ const conversationVariables = computed(() => {
     }));
   }
   
-  // 降级处理：从节点数据中获取（保持向后兼容）
-  console.log('🔍 CustomSaENode computed - props.data:', props.data);
-  console.log('🔍 props.data.variables:', props.data.variables);
-  console.log('🔍 props.data.parameters?.conversation_variables:', props.data.parameters?.conversation_variables);
-  
   const variables = props.data.variables || props.data.parameters?.conversation_variables || {};
   
-  console.log('🔍 最终使用的variables:', variables);
-  
   if (!variables || Object.keys(variables).length === 0) {
-    console.log('⚠️ 变量为空，返回空数组');
     return [];
   }
   
@@ -109,19 +100,8 @@ const conversationVariables = computed(() => {
     value: value?.value !== undefined ? value.value : value
   }));
   
-  console.log('✅ conversationVariables computed result:', result);
   return result;
 });
-
-// 获取对话级变量的键名数组，用于显示（保持向后兼容）
-const getConversationVariableKeys = () => {
-  return conversationVariables.value.map(v => v.name);
-};
-
-// 获取对话级变量的详细信息，包括类型等（保持向后兼容）
-const getConversationVariables = () => {
-  return conversationVariables.value;
-};
 
 // 获取变量类型的显示名称
 const getVariableTypeDisplay = (type: string): string => {

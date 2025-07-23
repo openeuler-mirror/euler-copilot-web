@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import JSONMonacoEditor from '@/components/JSONMonacoEditor.vue';
 import { storeToRefs } from 'pinia';
 import { useChangeThemeStore, useHistorySessionStore } from '@/store/';
@@ -27,7 +27,37 @@ const props = withDefaults(
   },
 );
 
-const code = ref(JSON.stringify(props.code, null, 2));
+const code = ref('');
+
+// 智能处理不同类型的数据
+const formatCodeData = (data: any) => {
+  console.log('🔧 FlowCode formatCodeData input:', data, 'type:', typeof data);
+  
+  if (data === null || data === undefined) {
+    return '{}';
+  }
+  
+  if (typeof data === 'string') {
+    // 如果是字符串，检查是否是有效的JSON
+    try {
+      const parsed = JSON.parse(data);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      // 如果不是JSON，直接返回字符串
+      return data;
+    }
+  }
+  
+  if (typeof data === 'object') {
+    return JSON.stringify(data, null, 2);
+  }
+  
+  // 其他类型转为字符串
+  return String(data);
+};
+
+// 初始化数据
+code.value = formatCodeData(props.code);
 const monacoEditorRef = ref();
 
 const currentTheme = computed(() => {
@@ -36,6 +66,18 @@ const currentTheme = computed(() => {
 
 const handleReady = (payload: any) => {
   monacoEditorRef.value = payload.editor;
+  console.log('📝 Monaco editor ready, current code:', code.value);
+  
+  // 确保编辑器显示当前内容
+  if (payload.editor && code.value) {
+    setTimeout(() => {
+      if (payload.editor && typeof payload.editor.setValue === 'function') {
+        payload.editor.setValue(code.value);
+        payload.editor.layout && payload.editor.layout();
+        console.log('🔄 Monaco Editor forced update on ready with value:', code.value);
+      }
+    }, 100);
+  }
 };
 
 const handleChange = (value: string) => {
@@ -43,18 +85,84 @@ const handleChange = (value: string) => {
   params.value = value;
 };
 
-const copy = () => {
+// 强制刷新编辑器
+const forceRefresh = () => {
   if (monacoEditorRef.value) {
+    console.log('🔄 Force refreshing Monaco Editor');
+    // 触发布局更新
+    monacoEditorRef.value.layout && monacoEditorRef.value.layout();
+    // 重新设置值
+    const currentValue = code.value;
+    nextTick(() => {
+      if (monacoEditorRef.value && typeof monacoEditorRef.value.setValue === 'function') {
+        monacoEditorRef.value.setValue(currentValue);
+      }
+    });
+  }
+};
+
+const copy = () => {
+  console.log('Copy button clicked, code.value:', code.value);
+  console.log('monacoEditorRef.value:', monacoEditorRef.value);
+  
+  const textToCopy = code.value || JSON.stringify(props.code, null, 2);
+  
+  if (navigator.clipboard) {
     navigator.clipboard
-      .writeText(code.value)
+      .writeText(textToCopy)
       .then(() => {
-        console.log('文本已复制到剪切板');
+        console.log('文本已复制到剪切板:', textToCopy);
+        // 可以在这里添加用户友好的提示
       })
       .catch((err) => {
         console.error('复制文本时出错:', err);
+        // 降级到旧的复制方法
+        fallbackCopy(textToCopy);
       });
+  } else {
+    // 不支持 navigator.clipboard 的浏览器降级方法
+    fallbackCopy(textToCopy);
   }
 };
+
+const fallbackCopy = (text: string) => {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    console.log('文本已通过降级方法复制到剪切板');
+  } catch (err) {
+    console.error('降级复制方法也失败了:', err);
+  }
+  document.body.removeChild(textArea);
+};
+
+watch(
+  () => props.code,
+  (newCode) => {
+    console.log('🔄 FlowCode props.code changed:', newCode);
+    const formattedCode = formatCodeData(newCode);
+    console.log('📝 FlowCode formatted result:', formattedCode);
+    code.value = formattedCode;
+    
+    // 强制更新 Monaco Editor（如果存在）
+    if (monacoEditorRef.value) {
+      console.log('🔄 Force updating Monaco Editor with new value');
+      // 使用 nextTick 确保更新在下一个 tick 执行
+      nextTick(() => {
+        if (monacoEditorRef.value && typeof monacoEditorRef.value.setValue === 'function') {
+          monacoEditorRef.value.setValue(formattedCode);
+          // 强制刷新布局
+          forceRefresh();
+        }
+      });
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 watch(
   () => code.value,
@@ -72,12 +180,22 @@ watch(
       <span v-else-if="props.title === 'params'">{{ $t('flow.params')}}</span>
       <span v-else>{{ $t('flow.supplementaryParameters')}} {{ props.title }}</span>
       <span
+        @click="forceRefresh()"
+        style="cursor: pointer; margin-right: 8px; font-size: 12px; color: #666; padding: 2px 4px; border-radius: 3px; background: #f0f0f0;"
+        title="刷新编辑器"
+      >🔄</span>
+      <span
         @click="copy()"
         class="copyIcon"
         :class="themeStore.theme === 'light' ? 'lightCopy' : 'darkCopy'"
       ></span>
     </div>
     <div class="code-container">
+      <!-- 调试信息：显示当前数据（仅当有内容时显示） -->
+      <div v-if="code && code.trim() !== '{}'" style="background: #e8f5e8; padding: 4px; font-size: 10px; border-bottom: 1px solid #ccc; color: #666;">
+        ✅ 数据: {{ code.length }} 字符
+      </div>
+      
       <JSONMonacoEditor
         v-model="code"
         placeholder="Code goes here..."

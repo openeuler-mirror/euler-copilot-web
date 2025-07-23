@@ -53,6 +53,8 @@ export interface DialoguePanelProps {
   modeOptions: any;
   // 是否是工作流调试模式
   isWorkFlowDebug: boolean;
+  // 是否隐藏输入参数（用于对话页面）
+  hideInputParams?: boolean;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
@@ -540,7 +542,7 @@ const chatWithParams = async () => {
           <JsonFormComponent
             :code="props.inputParams"
             title="参数补充"
-            v-if="props.inputParams"
+            v-if="props.inputParams && !props.isWorkFlowDebug && !props.hideInputParams"
             type="input"
           />
         </div>

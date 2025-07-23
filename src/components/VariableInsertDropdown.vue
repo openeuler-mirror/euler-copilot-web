@@ -23,7 +23,7 @@
         v-loading="loading"
       >
         <div class="group-header">
-          <span class="group-title">{{ getScopeLabel(group.scope) }}</span>
+          <span class="group-title">{{ getScopeLabel(group.scope, group.nodeId, group.nodeName) }}</span>
           <span class="group-count">{{ group.variables.length }}</span>
         </div>
         
@@ -65,6 +65,7 @@ interface Props {
   supportedScopes?: string[]
   flowId?: string
   conversationId?: string
+  currentStepId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -86,7 +87,7 @@ const {
   getVariableTypeDisplay,
   getScopeLabel,
   loadVariables
-} = useVariables(props.supportedScopes, props.flowId, props.conversationId)
+} = useVariables(props.supportedScopes, props.flowId, props.conversationId, props.currentStepId)
 
 // 生命周期
 onMounted(() => {
@@ -94,7 +95,7 @@ onMounted(() => {
 })
 
 // 监听属性变化
-watch([() => props.flowId, () => props.conversationId], () => {
+watch([() => props.flowId, () => props.conversationId, () => props.currentStepId], () => {
   loadVariables()
 })
 

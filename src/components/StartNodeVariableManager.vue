@@ -93,8 +93,26 @@ const addVariableRules = {
 const loadSystemVariables = async () => {
   loading.value = true
   try {
-    const response = await listVariables({ scope: 'system' })
+    let params: any = { scope: 'system' }
+    
+    // 根据是否有conversation_id选择参数
+    if (props.conversationId) {
+      // 对话阶段：使用conversation_id查询实例
+      params.conversation_id = props.conversationId
+      console.log('🔄 加载系统变量（对话阶段）, conversationId:', props.conversationId)
+    } else if (props.flowId) {
+      // 配置阶段：使用flow_id查询模板
+      params.flow_id = props.flowId
+      console.log('🔄 加载系统变量（配置阶段）, flowId:', props.flowId)
+    } else {
+      console.warn('⚠️ 缺少conversationId和flowId，跳过系统变量加载')
+      systemVariables.value = []
+      return
+    }
+    
+    const response = await listVariables(params)
     systemVariables.value = response.result?.variables || []
+    console.log('✅ 系统变量加载成功:', systemVariables.value.length, '个')
   } catch (error) {
     console.error('加载系统变量失败:', error)
     ElMessage.error('加载系统变量失败')

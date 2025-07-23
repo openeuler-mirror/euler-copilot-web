@@ -83,6 +83,7 @@
                             v-model:selected-variable="variable.selectedVariable"
                             :supported-scopes="['conversation', 'system', 'env']"
                             :flow-id="flowId"
+                            :current-step-id="nodeId"
                             :show-variable-reference="true"
                             :show-actions="true"
                             :show-variable-info="true"
@@ -713,7 +714,6 @@ const handleLanguageChange = (language: string) => {
   if (!nodeConfig.value.code || nodeConfig.value.code.trim() === '') {
     nodeConfig.value.code = generateTemplateByLanguage(language)
   }
-  console.log('Language changed to:', language)
 }
 
 const addInputVariable = () => {
@@ -883,7 +883,6 @@ watch(drawerVisible, (newVal) => {
 
 // 监听nodeData变化
 watch(() => props.nodeData, (newData: any) => {
-  console.log(newData);
   if (newData) {
     loadNodeData(newData)
   }

@@ -33,6 +33,7 @@
                     <VariableInsertDropdown
                     :supported-scopes="['conversation', 'system', 'env', 'user']"
                     :flow-id="flowId"
+                    :current-step-id="currentStepId"
                     @variable-selected="handleVariableSelection"
                     @variables-loaded="handleVariablesLoaded"
                     />
@@ -96,11 +97,12 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElInput, ElMessage } from 'element-plus'
 import { IconCopy } from '@computing/opendesign-icons'
 import VariableInsertDropdown from '@/components/VariableInsertDropdown.vue'
-import { type Variable } from 'srccomponents/useVariables'
+import { type Variable } from '@/components/useVariables'
 
 interface Props {
   modelValue: string
   flowId?: string
+  currentStepId?: string
   placeholder?: string
 }
 
@@ -140,7 +142,74 @@ const getVariableDisplayName = (variable: Variable): string => {
     }
     return nameMap[variable.name] || `system.${variable.name}`
   }
+  
+  // 特殊处理具备step_id的conversation变量
+  if (variable.scope === 'conversation' && variable.step_id && variable.step) {
+    return `${variable.step}.${variable.name}`
+  }
+  
   return `${variable.scope}.${variable.name}`
+}
+
+// 生成插入用的变量名格式
+const getVariableInsertName = (variable: Variable): string => {
+  if (variable.scope === 'system') {
+    const nameMap = {
+      'query': 'system.query',
+      'files': 'system.files',
+      'dialogue_count': 'system.dialogue_count',
+      'app_id': 'system.app_id',
+      'flow_id': 'system.flow_id',
+      'user_id': 'system.user_id',
+      'session_id': 'system.session_id',
+      'timestamp': 'system.timestamp'
+    }
+    return nameMap[variable.name] || `system.${variable.name}`
+  }
+  
+  // 特殊处理具备step_id的conversation变量
+  if (variable.scope === 'conversation' && variable.step_id) {
+    return `conversation.${variable.step_id}.${variable.name}`
+  }
+  
+  return `${variable.scope}.${variable.name}`
+}
+
+// 根据插入格式的变量名获取显示文本
+const getDisplayTextFromInsertName = (insertName: string): string => {
+  if (!availableVariables.value || availableVariables.value.length === 0) {
+    return insertName
+  }
+  
+  // 查找匹配的变量对象
+  const matchedVariable = availableVariables.value.find(variable => {
+    const expectedInsertName = getVariableInsertName(variable)
+    return expectedInsertName === insertName
+  })
+  
+  if (matchedVariable) {
+    return getVariableDisplayName(matchedVariable)
+  }
+  
+  // 如果找不到匹配的变量，尝试解析conversation.step_id.variable_name格式
+  if (insertName.includes('.')) {
+    const parts = insertName.split('.')
+    
+    // 处理conversation.step_id.variable_name格式
+    if (parts.length === 3 && parts[0] === 'conversation') {
+      const [scope, stepId, varName] = parts
+      const conversationVariable = availableVariables.value.find(variable => 
+        variable.scope === scope && variable.step_id === stepId && variable.name === varName
+      )
+      
+      if (conversationVariable && conversationVariable.step) {
+        return `${conversationVariable.step}.${conversationVariable.name}`
+      }
+    }
+  }
+  
+  // fallback：返回原始名称
+  return insertName
 }
 
 // 检查变量是否在可用变量列表中
@@ -149,30 +218,43 @@ const isVariableValid = (variableName: string): boolean => {
     return true
   }
   
-  let scopeToCheck = ''
-  let nameToCheck = ''
-  
-  if (variableName.includes('.')) {
-    const parts = variableName.split('.')
-    scopeToCheck = parts[0]
-    nameToCheck = parts[1]
-  } else {
-    nameToCheck = variableName
-  }
-  
   return availableVariables.value.some(variable => {
-    const expectedDisplayName = getVariableDisplayName(variable)
+    // 检查插入格式是否匹配
+    const expectedInsertName = getVariableInsertName(variable)
+    if (expectedInsertName === variableName) {
+      return true
+    }
     
+    // 检查显示格式是否匹配（为了兼容性）
+    const expectedDisplayName = getVariableDisplayName(variable)
     if (expectedDisplayName === variableName) {
       return true
     }
     
-    if (!scopeToCheck && variable.name === nameToCheck) {
-      return true
-    }
-    
-    if (scopeToCheck && nameToCheck && variable.scope === scopeToCheck && variable.name === nameToCheck) {
-      return true
+    // 特殊处理conversation.step_id.variable_name格式
+    if (variableName.includes('.')) {
+      const parts = variableName.split('.')
+      
+      // 处理conversation.step_id.variable_name格式
+      if (parts.length === 3 && parts[0] === 'conversation') {
+        const [scope, stepId, varName] = parts
+        if (variable.scope === scope && variable.step_id === stepId && variable.name === varName) {
+          return true
+        }
+      }
+      
+      // 处理scope.variable_name格式
+      if (parts.length === 2) {
+        const [scope, varName] = parts
+        if (variable.scope === scope && variable.name === varName) {
+          return true
+        }
+      }
+    } else {
+      // 没有scope的情况，仅通过变量名匹配
+      if (variable.name === variableName) {
+        return true
+      }
     }
     
     return false
@@ -203,7 +285,7 @@ const updateTagEditor = (content: string) => {
       
       const titleAttribute = isValid ? '' : `title="变量 ${variableName} 不存在"`
       
-      return `<span class="${tagClass}" contenteditable="false" data-variable="${escapedVariableName}" data-original-name="${escapedVariableName}" data-valid="${isValid}" ${titleAttribute} style="display: inline-block !important; padding: 2px 8px !important; margin: 0 2px !important; ${backgroundStyle} color: white !important; border-radius: 4px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; user-select: none !important; vertical-align: middle !important; direction: ltr !important; unicode-bidi: normal !important; text-align: center !important; writing-mode: horizontal-tb !important;">${variableName}</span>`
+      return `<span class="${tagClass}" contenteditable="false" data-variable="${escapedVariableName}" data-original-name="${escapedVariableName}" data-valid="${isValid}" ${titleAttribute} style="display: inline-block !important; padding: 2px 8px !important; margin: 0 2px !important; ${backgroundStyle} color: white !important; border-radius: 4px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; user-select: none !important; vertical-align: middle !important; direction: ltr !important; unicode-bidi: normal !important; text-align: center !important; writing-mode: horizontal-tb !important;">${getDisplayTextFromInsertName(variableName)}</span>`
     })
     
     tagEditorRef.value.innerHTML = htmlContent
@@ -262,7 +344,7 @@ const handleVariablesLoaded = (variables: Variable[]) => {
 const handleVariableSelection = (variable: Variable) => {
   isSelectingVariable.value = true
   
-  const variableName = getVariableDisplayName(variable)
+  const variableName = getVariableInsertName(variable)
   
   try {
     if (displayMode.value === 'tag') {
@@ -349,7 +431,7 @@ const insertVariableAtTriggerPosition = (variableName: string) => {
       variableSpan.setAttribute('title', `变量 ${variableName} 不存在`)
     }
     
-    variableSpan.textContent = variableName
+    variableSpan.textContent = getDisplayTextFromInsertName(variableName)
     
     const backgroundStyle = isValid 
       ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;'
@@ -494,7 +576,7 @@ const insertVariableAtSavedPosition = (variableName: string, savedPosition: numb
       variableSpan.setAttribute('title', `变量 ${variableName} 不存在`)
     }
     
-    variableSpan.textContent = variableName
+    variableSpan.textContent = getDisplayTextFromInsertName(variableName)
     
     const backgroundStyle = isValid 
       ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;'
@@ -681,10 +763,6 @@ const getTagEditorContent = (): string => {
 
 const handleTagInput = () => {
   if (isComposing.value) return
-  
-  if (isHandlingBackspace.value) {
-    return
-  }
   
   const triggerInfo = checkAndSaveVariableTrigger()
   const cursorPos = saveCursorPosition()
@@ -1058,15 +1136,9 @@ const handleKeyDown = (event: KeyboardEvent) => {
         
         handleTagInput()
         return
-      } else {
-        isHandlingBackspace.value = true
-        
-        setTimeout(() => {
-          isHandlingBackspace.value = false
-        }, 50)
-        
-        return
       }
+      // 对于普通字符删除，让默认行为发生，不设置任何标志
+      // handleTagInput会通过input事件自动被调用，并会检查触发条件
     }
   }
 }
@@ -1332,7 +1404,7 @@ const autoConvertVariableSyntaxInDOM = (): { hasConversions: boolean, newCursorN
               variableSpan.style.pointerEvents = 'auto'
             }
             
-            variableSpan.textContent = item.name
+            variableSpan.textContent = getDisplayTextFromInsertName(item.name)
             
             const backgroundStyle = isValid 
               ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;'
@@ -1489,7 +1561,7 @@ const insertVariableAtCursor = (variableName: string, variable: Variable) => {
     variableSpan.setAttribute('title', `变量 ${variableName} 不存在`)
   }
   
-  variableSpan.textContent = variableName
+  variableSpan.textContent = getDisplayTextFromInsertName(variableName)
   
   const backgroundStyle = isValid 
     ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;'
@@ -1625,7 +1697,6 @@ const dropdownPosition = computed(() => {
 // 防抖控制
 const isToggling = ref(false)
 const isInsertingTriggerChar = ref(false)
-const isHandlingBackspace = ref(false)
 
 // 工具栏事件处理 - 在光标位置插入/字符触发变量选择
 const toggleVariableDropdown = (event?: Event) => {
@@ -1802,15 +1873,18 @@ const fallbackCopyTextToClipboard = (text: string) => {
 
 // 外部调用的插入变量方法
 const insertVariable = (variableName: string, variable: Variable) => {
+  // 使用插入格式而不是传入的variableName
+  const insertName = getVariableInsertName(variable)
+  
   if (displayMode.value === 'tag') {
-    insertVariableAtCursor(variableName, variable)
+    insertVariableAtCursor(insertName, variable)
   } else {
     const cursorPos = textEditorRef.value?.$refs?.textarea?.selectionStart || textContent.value.length
     const before = textContent.value.substring(0, cursorPos)
     const after = textContent.value.substring(cursorPos)
-    textContent.value = before + `{{${variableName}}}` + after
+    textContent.value = before + `{{${insertName}}}` + after
     emit('update:modelValue', textContent.value)
-    emit('variable-inserted', variableName)
+    emit('variable-inserted', insertName)
   }
 }
 

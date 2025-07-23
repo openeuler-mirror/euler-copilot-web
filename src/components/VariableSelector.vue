@@ -10,6 +10,8 @@ interface Variable {
   scope: string
   value: string
   description?: string
+  step?: string  // 节点名称（前置节点变量专用）
+  step_id?: string  // 节点ID（前置节点变量专用）
 }
 
 interface Props {
@@ -20,6 +22,7 @@ interface Props {
   flowId?: string
   conversationId?: string
   showVariableReference?: boolean
+  currentStepId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -61,20 +64,59 @@ const groupedVariables = computed(() => {
     env: envVariables.value,
     user: userVariables.value, 
   }
+  
+  const result: Array<{
+    scope: string
+    nodeId?: string | null
+    nodeName?: string | null
+    variables: Variable[]
+    hasVariables: boolean
+  }> = []
+  
   // 按照supportedScopes的顺序返回分组，确保渲染顺序正确
-  return props.supportedScopes.map(scope => {
+  for (const scope of props.supportedScopes) {
     const variables = groups[scope] || []
+    
+    if (scope === 'conversation') {
+      // 对话变量需要特殊处理，按节点分组
+      const nodeGroups = groupConversationVariablesByNode(variables)
+      
+      for (const nodeGroup of nodeGroups) {
+        const filteredVariables = nodeGroup.variables.filter(variable => 
+          !searchText.value || 
+          variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
+          variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
+        )
+        
+        if (filteredVariables.length > 0) {
+          result.push({
+            scope: nodeGroup.scope,
+            nodeId: nodeGroup.nodeId,
+            nodeName: nodeGroup.nodeName,
+            variables: filteredVariables,
+            hasVariables: true
+          })
+        }
+      }
+    } else {
+      // 其他作用域保持原有逻辑
     const filteredVariables = variables.filter(variable => 
       !searchText.value || 
       variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
       variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
     )
-    return {
+      
+      if (filteredVariables.length > 0) {
+        result.push({
       scope,
       variables: filteredVariables,
-      hasVariables: filteredVariables.length > 0
+          hasVariables: true
+        })
+      }
     }
-      }).filter(group => group.hasVariables)
+  }
+  
+  return result
 })
 
 const scopeLabels: Record<string, string> = {
@@ -82,6 +124,13 @@ const scopeLabels: Record<string, string> = {
   user: '用户变量', 
   env: '环境变量',
   conversation: '对话变量'
+}
+
+const getScopeLabel = (scope: string, nodeId?: string | null, nodeName?: string | null): string => {
+  if (scope.startsWith('conversation_node_') && nodeName) {
+    return `节点 ${nodeName} 输出`
+  }
+  return scopeLabels[scope] || scope
 }
 
 const typeLabels = {
@@ -101,15 +150,63 @@ const typeLabels = {
 }
 
 // 方法
+const groupConversationVariablesByNode = (variables: Variable[]) => {
+  const groups: Record<string, {scope: string, nodeId: string | null, nodeName: string | null, variables: Variable[]}> = {}
+  
+  for (const variable of variables) {
+    if (variable.step_id && variable.scope === 'conversation') {
+      // 前置节点变量（基于step_id字段）
+      const groupKey = `conversation_${variable.step_id}`
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          scope: `conversation_node_${variable.step_id}`,
+          nodeId: variable.step_id,
+          nodeName: variable.step || variable.step_id, // 优先使用step名称，降级使用step_id
+          variables: []
+        }
+      }
+      groups[groupKey].variables.push(variable)
+    } else {
+      // 普通对话变量
+      const groupKey = 'conversation_base'
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          scope: 'conversation',
+          nodeId: null,
+          nodeName: null,
+          variables: []
+        }
+      }
+      groups[groupKey].variables.push(variable)
+    }
+  }
+  
+  return Object.values(groups)
+}
+
 const loadVariables = async () => {
   loading.value = true
   try {
+    console.log('🔄 VariableSelector开始加载变量，当前参数:', {
+      supportedScopes: props.supportedScopes,
+      flowId: props.flowId,
+      conversationId: props.conversationId,
+      currentStepId: props.currentStepId
+    })
+    
     // 并行加载所有支持的作用域的变量
     const promises = props.supportedScopes.map(scope => {
-      const params = {
+      const params: any = {
         scope,
         flow_id: props.flowId,
         conversation_id: props.conversationId
+      }
+      
+      // 只有对话变量需要传current_step_id以获取前置节点变量
+      if (scope === 'conversation' && props.currentStepId) {
+        params.current_step_id = props.currentStepId
+        console.log('🎯 对话变量查询带有current_step_id:', props.currentStepId)
       }
       
       return listVariables(params).then(response => {
@@ -128,8 +225,10 @@ const loadVariables = async () => {
           variables = responseAny
         }
         
+        console.log(`📋 ${scope}变量加载结果:`, variables.length, '个')
         return {scope, variables: Array.isArray(variables) ? variables : []}
       }).catch(error => {
+        console.error(`❌ ${scope}变量加载失败:`, error)
         return {scope, variables: []}
       })
     })
@@ -168,12 +267,13 @@ const loadVariables = async () => {
       ...conversationVariables.value
     ]
     
-    console.log('✅ 变量加载完成:', {
+    console.log('✅ VariableSelector变量加载完成:', {
       总数: variables.value.length,
       系统变量: systemVariables.value.length,
       用户变量: userVariables.value.length,
       环境变量: envVariables.value.length,
-      对话变量: conversationVariables.value.length
+      对话变量: conversationVariables.value.length,
+      前置节点变量: conversationVariables.value.filter(v => v.name.includes('.') && !v.name.startsWith('system.')).length
     })
   } catch (error) {
     console.error('❌ 变量加载失败:', error)
@@ -205,6 +305,13 @@ const formatVariableReference = (variable: Variable): string => {
     env: 'env',
     conversation: 'conversation'
   }
+  
+  // 前置节点变量需要使用step_id.name的格式
+  if (variable.step_id && variable.scope === 'conversation') {
+    return `{{${scopeMap[variable.scope]}.${variable.step_id}.${variable.name}}}`
+  }
+  
+  // 普通变量使用原有格式
   return `{{${scopeMap[variable.scope]}.${variable.name}}}`
 }
 
@@ -225,7 +332,7 @@ onMounted(() => {
 })
 
 // 监听属性变化
-watch([() => props.flowId, () => props.conversationId], (newValues, oldValues) => {
+watch([() => props.flowId, () => props.conversationId, () => props.currentStepId], (newValues, oldValues) => {
   loadVariables()
 })
 </script>
@@ -272,7 +379,7 @@ watch([() => props.flowId, () => props.conversationId], (newValues, oldValues) =
             class="variable-group"
           >
             <div class="group-header">
-              <span class="group-title">{{ scopeLabels[group.scope] }}</span>
+              <span class="group-title">{{ getScopeLabel(group.scope, group.nodeId, group.nodeName) }}</span>
               <ElTag size="small" type="info">{{ group.variables.length }}</ElTag>
             </div>
             

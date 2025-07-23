@@ -68,6 +68,7 @@
                    ref="textEditorRef"
                    v-model="nodeConfig.answer"
                    :flow-id="flowId"
+                   :current-step-id="nodeId"
                    placeholder="请输入回复内容，可以使用变量插入功能..."
                  />
                 

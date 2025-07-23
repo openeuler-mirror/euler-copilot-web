@@ -1,5 +1,5 @@
 <template>
-  <g class="flowEdge">
+  <g class="flowEdge" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <linearGradient id="success_error">
       <stop offset="0" stop-color="#24ab36" />
       <stop offset="100" stop-color="#e32020" />
@@ -8,6 +8,8 @@
       <stop offset="0" stop-color="#e32020" />
       <stop offset="100" stop-color="#24ab36" />
     </linearGradient>
+    
+    <!-- 主路径 -->
     <path
       v-if="status === 'success_error' || status === 'error_success'"
       :d="`M ${targetX - 10} ${targetY - 60}` + path"
@@ -15,6 +17,7 @@
       :stroke="`url(#${status})`"
       stroke-width="2"
       stroke-dasharray="0"
+      class="edge-path"
     />
     <path
       v-else
@@ -23,7 +26,19 @@
       :stroke="strokeColor[status]"
       stroke-width="2"
       :stroke-dasharray="status === 'running' ? 5 : 0"
+      class="edge-path"
     />
+    
+    <!-- 不可见的更宽路径，用于更好的悬停检测 -->
+    <path
+      :d="`M ${targetX - 10} ${targetY - 60}` + path"
+      fill="none"
+      stroke="transparent"
+      stroke-width="20"
+      class="edge-interaction"
+    />
+
+    <!-- 箭头 -->
     <path
       class="markEnd"
       :transform="transform"
@@ -31,6 +46,33 @@
       :fill="strokeColor[status] || '#c3cedf'"
       stroke="none"
     />
+    
+    <!-- 插入节点按钮 - 仅在非连接状态且悬停时显示 -->
+    <g
+      class="insert-node-button"
+      :class="{ 'show': !isConnection && isHovered && !disabled }"
+      @click="handleInsertNode"
+    >
+      <!-- 按钮背景圆圈 -->
+      <circle
+        :cx="midX"
+        :cy="midY"
+        :r="buttonRadius"
+        fill="#6395fd"
+        class="button-bg"
+        @mouseenter="handleButtonHover"
+        @mouseleave="handleButtonLeave"
+      />
+      <!-- + 图标 -->
+      <path
+        :d="`M${midX - 4} ${midY}h8M${midX} ${midY - 4}v8`"
+        stroke="#ffffff"
+        stroke-width="2"
+        stroke-linecap="round"
+        class="plus-icon"
+        :class="{ 'visible': isButtonHovered }"
+      />
+    </g>
   </g>
 </template>
 <script setup>
@@ -40,9 +82,13 @@ import {
   getSimpleBezierPath,
 } from '@vue-flow/core';
 import { computed, watch, ref, onMounted } from 'vue';
+
+// 状态管理
 const status = ref('default');
 const startOffset = ref(0);
 const endOffset = ref(100);
+const isHovered = ref(false);
+const isButtonHovered = ref(false);
 // default状态默认第一位，以便于判断包含时正好不包含index为0的default
 const connectStatus = ref([
   'defau1lt',
@@ -99,7 +145,65 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+// 事件定义
+const emit = defineEmits(['insertNode']);
+
+// 计算边的中点坐标
+const midX = computed(() => {
+  return (props.sourceX + props.targetX) / 2;
+});
+
+const midY = computed(() => {
+  return (props.sourceY + props.targetY) / 2;
+});
+
+// 计算按钮半径
+const buttonRadius = computed(() => {
+  return isButtonHovered.value ? 12 : 6;
+});
+
+// 悬停事件处理 - 统一处理所有悬停区域
+const handleMouseEnter = () => {
+  if (!props.disabled && !props.isConnection) {
+    isHovered.value = true;
+  }
+};
+
+const handleMouseLeave = () => {
+  isHovered.value = false;
+};
+
+// 按钮区域悬停事件处理
+const handleButtonHover = () => {
+  if (!props.disabled && !props.isConnection) {
+    isButtonHovered.value = true;
+  }
+};
+
+const handleButtonLeave = () => {
+  isButtonHovered.value = false;
+};
+
+// 插入节点事件处理
+const handleInsertNode = (event) => {
+  event.stopPropagation();
+  if (props.disabled || props.isConnection) {
+    return;
+  }
+  
+  // 发射插入节点事件，传递边的信息和中点坐标
+  emit('insertNode', {
+    edgeId: props.id,
+    midX: midX.value,
+    midY: midY.value,
+  });
+};
 watch(
   () => props.data,
   () => {
@@ -169,12 +273,57 @@ function getArrowTransform(props) {
 <style lang="scss">
 .flowEdge {
   &:hover {
-    path {
+    .edge-path {
       stroke: #6395fd;
     }
     .markEnd {
       fill: #6395fd;
     }
+  }
+  
+  .edge-interaction {
+    cursor: pointer;
+  }
+  
+  .insert-node-button {
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    
+    &.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    
+    .button-bg {
+      transition: r 0.2s ease;
+    }
+    
+    .plus-icon {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      
+      &.visible {
+        opacity: 1;
+      }
+    }
+  }
+
+}
+
+/* 删除全局动画样式，现在由.show类控制 */
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 </style>

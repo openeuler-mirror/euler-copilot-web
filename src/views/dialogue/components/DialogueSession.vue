@@ -16,6 +16,8 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
+import DialogueVariablePanel from './DialogueVariablePanel.vue';
+import { listVariables } from '@/api/variable';
 const isDropdownOpen = ref(false);
 const { appList } = storeToRefs(useSessionStore());
 const { user_selected_app, selectLLM } = storeToRefs(useHistorySessionStore());
@@ -43,12 +45,150 @@ const { app } = storeToRefs(useSessionStore());
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
+// 变量配置相关状态
+const conversationVariables = ref<any[]>([]);
+const variablesLoading = ref(false);
+const showVariablePanel = ref(false);
+const variablePanelMinimized = ref(false);
+const conversationStarted = ref(false);
+const currentFlowId = ref<string>('');
+
 // 对话列表
 const { sendQuestion } = useSessionStore();
 const { conversationList, isAnswerGenerating, dialogueRef } =
   storeToRefs(useSessionStore());
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
+
+// 加载对话变量
+const loadConversationVariables = async () => {
+  if (!user_selected_app.value) return;
+  
+  variablesLoading.value = true;
+  try {
+    // 首先根据 app_id 获取应用详情，从中获取 flow_id
+    console.log('📤 根据 app_id 查询应用详情:', user_selected_app.value);
+    const [appError, appResponse] = await api.querySingleAppData({
+      id: user_selected_app.value
+    });
+    
+    if (appError || !appResponse?.result) {
+      console.log('❌ 获取应用信息失败:', appError, appResponse);
+      conversationVariables.value = [];
+      currentFlowId.value = '';
+      showVariablePanel.value = false;
+      conversationStarted.value = true;
+      return;
+    }
+    
+    const workflows = appResponse.result.workflows;
+    if (!workflows || !Array.isArray(workflows) || workflows.length === 0) {
+      console.log('❌ 应用没有工作流:', workflows);
+      conversationVariables.value = [];
+      currentFlowId.value = '';
+      showVariablePanel.value = false;
+      conversationStarted.value = true;
+      return;
+    }
+    
+    // 获取第一个工作流的ID作为flow_id（通常应用只有一个主工作流）
+    const flowId = workflows[0].id;
+    currentFlowId.value = flowId;
+    console.log('✅ 获取到 flow_id:', flowId, '工作流列表:', workflows);
+    
+    // 使用 flow_id 查询变量列表
+    const queryParams: any = { 
+      scope: 'conversation',
+      flow_id: flowId
+    };
+    
+    console.log('📤 查询变量参数:', queryParams);
+    const response = await listVariables(queryParams);
+    
+    console.log('📥 对话变量查询响应:', response);
+    
+    // 处理API响应
+    let variables: any[] = [];
+    if (response?.result?.variables) {
+      variables = response.result.variables;
+    } else if ((response as any)?.variables) {
+      variables = (response as any).variables;
+    } else if (Array.isArray(response)) {
+      variables = response as any[];
+    }
+    
+    // 过滤出 conversation 类型的用户可编辑变量
+    const conversationVars = variables.filter(variable => 
+      variable.scope === 'conversation' && 
+      !variable.name.includes('.result') &&
+      !variable.name.match(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\./)
+    );
+    
+    conversationVariables.value = conversationVars || [];
+    
+    // 如果有可编辑的变量，则显示变量面板
+    if (conversationVars.length > 0) {
+      // 如果没有对话，显示完整的变量面板
+      if (conversationList.value.length === 0) {
+        showVariablePanel.value = true;
+        variablePanelMinimized.value = false;
+        conversationStarted.value = false;
+      } else {
+        // 如果已有对话，显示最小化的变量面板
+        showVariablePanel.value = false;
+        variablePanelMinimized.value = true;
+        conversationStarted.value = true;
+      }
+    } else {
+      showVariablePanel.value = false;
+      variablePanelMinimized.value = false;
+      conversationStarted.value = true;
+    }
+    
+    console.log('✅ 变量加载完成:', conversationVariables.value);
+    console.log('🎛️ 变量面板显示状态:', {
+      showVariablePanel: showVariablePanel.value,
+      variablePanelMinimized: variablePanelMinimized.value,
+      conversationStarted: conversationStarted.value,
+      conversationListLength: conversationList.value.length,
+      conversationVarsLength: conversationVars.length
+    });
+    
+      } catch (error) {
+      console.error('❌ 加载变量失败:', error);
+      conversationVariables.value = [];
+      currentFlowId.value = '';
+      showVariablePanel.value = false;
+      conversationStarted.value = true;
+  } finally {
+    variablesLoading.value = false;
+  }
+};
+
+// 处理变量面板展开
+const handleVariablePanelExpand = () => {
+  showVariablePanel.value = true;
+  variablePanelMinimized.value = false;
+  conversationStarted.value = false;
+};
+
+// 处理开始对话
+const handleStartConversation = () => {
+  showVariablePanel.value = false;
+  variablePanelMinimized.value = true;
+  conversationStarted.value = true;
+  
+  // 聚焦到输入框
+  if (inputRef.value) {
+    inputRef.value.focus();
+  }
+};
+
+// 处理变量更新
+const handleVariableUpdated = () => {
+  console.log('🔄 变量已更新');
+};
+
 /**
  * 发送消息
  */
@@ -518,6 +658,14 @@ onMounted(() => {
   if (!inputRef.value) return;
   inputRef.value.focus();
   getProviderLLM();
+  
+  // 加载变量配置（如果有选中的应用）
+  if (user_selected_app.value) {
+    console.log('🚀 页面加载时检查变量配置, appId:', user_selected_app.value);
+    loadConversationVariables();
+  }
+  
+
 });
 
 watch(selectLLM, (newValue) => {
@@ -582,6 +730,8 @@ watch(
     }
     if (user_selected_app.value && !isCreateApp.value) {
       getappMode(user_selected_app.value);
+      // 加载变量配置
+      loadConversationVariables();
     }
     if (!isCreateApp.value) {
       Form.value = props.createAppForm;
@@ -591,6 +741,27 @@ watch(
     immediate: true,
     deep: true,
   },
+);
+
+// 监听对话列表变化，调整变量面板显示状态
+watch(
+  conversationList,
+  (newList) => {
+    if (conversationVariables.value.length > 0) {
+      if (newList.length > 0) {
+        // 有对话时，如果有变量则显示最小化面板
+        showVariablePanel.value = false;
+        variablePanelMinimized.value = true;
+        conversationStarted.value = true;
+      } else {
+        // 没有对话时，如果有变量则显示完整面板
+        showVariablePanel.value = true;
+        variablePanelMinimized.value = false;
+        conversationStarted.value = false;
+      }
+    }
+  },
+  { deep: true }
 );
 
 watch(
@@ -623,6 +794,35 @@ watch(
   <div class="dialogue-rightContainer">
     <!-- 会话区域 -->
     <div style="height: 100%" class="dialogue-conversation">
+      <!-- 变量面板固定区域 -->
+      <div class="dialogue-variable-section" v-if="!isCreateApp">
+        <DialogueVariablePanel
+          v-if="showVariablePanel && conversationVariables.length > 0"
+          :is-minimized="variablePanelMinimized"
+          :conversation-variables="conversationVariables"
+          :variables-loading="variablesLoading"
+          :conversation-id="currentSelectedSession"
+          :app-id="currentFlowId"
+          @expand="handleVariablePanelExpand"
+          @start-conversation="handleStartConversation"
+          @variable-updated="handleVariableUpdated"
+        />
+        
+        <!-- 最小化的变量面板 -->
+        <DialogueVariablePanel
+          v-if="variablePanelMinimized && conversationVariables.length > 0"
+          :is-minimized="true"
+          :conversation-variables="conversationVariables"
+          :variables-loading="variablesLoading"
+          :conversation-id="currentSelectedSession"
+          :app-id="currentFlowId"
+          @expand="handleVariablePanelExpand"
+          @start-conversation="handleStartConversation"
+          @variable-updated="handleVariableUpdated"
+        />
+      </div>
+
+      <!-- 对话内容滚动区域 -->
       <div
         class="dialogue-conversation-main"
         ref="dialogueRef"
@@ -642,6 +842,7 @@ watch(
             </div>
           </div>
         </div>
+
         <DialoguePanel
           v-for="(item, index) in conversationList"
           :cid="item.cid"
@@ -668,21 +869,28 @@ watch(
           :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
+          :modeOptions="{}"
+          :isWorkFlowDebug="false"
+          :hideInputParams="true"
           @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
         />
+
         <template v-if="conversationList.length === 0">
-          <InitalPanel
-            v-if="app.selectedAppId === '' || !app.selectedAppId"
-            @selectQuestion="selectQuestion"
-          />
-          <div v-else class="dialogue-interPreview-main">
-            <InterPreview
-              :createAppForm="Form"
+          <!-- 原有的初始面板，只在对话还没开始且没有显示变量配置面板时显示 -->
+          <template v-if="!showVariablePanel || conversationVariables.length === 0">
+            <InitalPanel
+              v-if="app.selectedAppId === '' || !app.selectedAppId"
               @selectQuestion="selectQuestion"
             />
-          </div>
+            <div v-else class="dialogue-interPreview-main">
+              <InterPreview
+                :createAppForm="Form"
+                @selectQuestion="selectQuestion"
+              />
+            </div>
+          </template>
         </template>
       </div>
       <div class="dialogue-conversation-bottom">
@@ -943,6 +1151,7 @@ button[disabled]:hover {
   align-items: center;
   justify-content: space-between;
   min-width: 982px;
+  height: 100%;
 
   &::before {
     content: '';
@@ -955,13 +1164,25 @@ button[disabled]:hover {
     z-index: -1;
   }
 
+  // 变量面板固定区域
+  .dialogue-variable-section {
+    width: 100%;
+    flex-shrink: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    padding: 0 88px; // 与主内容区域保持一致的边距
+  }
+
   &-main {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 100%;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0; // 确保flex子项可以收缩
+    
     .initial-message {
       background-color: #fff;
     }

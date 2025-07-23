@@ -12,6 +12,13 @@ const props = withDefaults(
   }>(),
   {},
 );
+
+// 调试方法
+const debugCode = (desc: any, title: string) => {
+  console.log(`🎯 DialogueFlow passing to FlowCode - title: "${title}", code:`, desc);
+  return desc;
+};
+
 const contents = ref();
 const totalTime = ref(0);
 if (props.flowdata) {
@@ -145,7 +152,7 @@ watch(
                     />
                     <div class="loading-icon-box">
                       <el-icon
-                        class="loading-icon"
+                        class="status-icon"
                         v-if="secItem.status === 'success'"
                       >
                         <IconSuccess />
@@ -153,7 +160,7 @@ watch(
                     </div>
                     <div class="loading-icon-box">
                       <el-icon
-                        class="loading-icon"
+                        class="status-icon"
                         v-if="secItem.status === 'error'"
                       >
                         <IconError />
@@ -185,7 +192,7 @@ watch(
                   class="o-collapse-content"
                 >
                   <div class="code-bar">
-                    <FlowCode :code="desc" :title="index" :disabled="true" />
+                    <FlowCode :code="debugCode(desc, String(index))" :title="String(index)" :disabled="true" />
                   </div>
                 </div>
               </el-collapse-item>
@@ -283,6 +290,18 @@ watch(
     width: 21px;
     height: auto;
     display: block;
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+  .status-icon {
+    width: 21px;
+    height: auto;
+    display: block;
+    margin-right: 8px;
+    /* 确保状态图标不会旋转 */
+    animation: none !important;
     svg {
       width: 14px;
       height: 14px;
