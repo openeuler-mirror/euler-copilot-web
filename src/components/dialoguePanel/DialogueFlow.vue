@@ -2,7 +2,6 @@
 import { ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
 import { StatusInfoTitle } from '@/views/createapp/components/types';
-import { IconSuccess, IconError } from '@computing/opendesign-icons';
 
 const props = withDefaults(
   defineProps<{
@@ -61,28 +60,18 @@ watch(
                 alt=""
                 class="loading-animeIcon"
               />
-              <div class="loading-icon-box">
-                <el-icon
-                  class="loading-title-icon"
-                  v-if="props.flowdata.status === 'success'"
-                >
-                  <IconSuccess />
-                </el-icon>
-              </div>
-              <!-- <img
+              <img
+                v-if="props.flowdata.status === 'success'"
+                src="@/assets/images/flow_success.png"
+                alt=""
+                class="loading-icon"
+              />
+              <img
                 v-if="props.flowdata.status === 'error'"
                 src="@/assets/images/flow_fail.png"
                 alt=""
                 class="loading-icon"
-              /> -->
-              <div class="loading-icon-box">
-                <el-icon
-                  class="loading-title-icon"
-                  v-if="props.flowdata.status === 'error'"
-                >
-                  <IconError />
-                </el-icon>
-              </div>
+              />
               <div v-if="!props.isWorkFlowDebug" class="loading-text">
                 {{ props.flowdata.title }}
               </div>
@@ -143,22 +132,18 @@ watch(
                       alt=""
                       class="loading-animeIcon"
                     />
-                    <div class="loading-icon-box">
-                      <el-icon
-                        class="loading-icon"
-                        v-if="secItem.status === 'success'"
-                      >
-                        <IconSuccess />
-                      </el-icon>
-                    </div>
-                    <div class="loading-icon-box">
-                      <el-icon
-                        class="loading-icon"
-                        v-if="secItem.status === 'error'"
-                      >
-                        <IconError />
-                      </el-icon>
-                    </div>
+                    <img
+                      v-if="secItem.status === 'success'"
+                      src="@/assets/images/flow_success.png"
+                      alt=""
+                      class="loading-icon"
+                    />
+                    <img
+                      v-if="secItem.status === 'error'"
+                      src="@/assets/images/flow_fail.png"
+                      alt=""
+                      class="loading-icon"
+                    />
                     <span class="title">{{ secItem.title }}</span>
                     <div v-if="secItem.costTime" class="time">
                       <span :class="`${secItem.status}Bg`">
@@ -277,43 +262,21 @@ watch(
   margin-right: 8px;
   padding-right: 8px;
 }
-.loading-icon-box {
-  align-content: center;
-  .loading-icon {
-    width: 21px;
-    height: auto;
-    display: block;
-    svg {
-      width: 14px;
-      height: 14px;
-    }
-  }
-  .loading-title-icon{
-    width: 24px;
-    height: 24px;
-    display: block;
-    margin-right: 12px;
-    svg {
-      width: 21px;
-      height: 21px;
-    }
-  }
-}
 
 .border-red {
-  border: 1px solid #f7c1c1;
+  border: 1px solid #F7C1C1;
 }
 
 .border-green {
-  border: 1px solid #c2e7c7;
+  border: 1px solid #C2E7C7;
 }
 
 .border-blue {
   border: 1px solid transparent;
   border-radius: 4px;
-  background:
+  background: 
     linear-gradient(white, white) padding-box,
-    linear-gradient(180deg, #6c77fa, #6db9f9) border-box;
+    linear-gradient(180deg, #6C77FA, #6DB9F9) border-box;
 }
 .demo-collapse {
   margin-bottom: 16px;
@@ -353,8 +316,8 @@ watch(
 
   &-animeIcon {
     margin-right: 8px;
-    width: 21px;
-    height: 21px;
+    width: 24px;
+    height: 24px;
     align-items: center;
     align-self: center;
     animation: rotate-img 1s infinite linear;
