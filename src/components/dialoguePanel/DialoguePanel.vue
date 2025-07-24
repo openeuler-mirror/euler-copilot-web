@@ -7,7 +7,7 @@ import { useSessionStore, useChangeThemeStore, echartsObj } from '@/store';
 import { useHistorySessionStore } from 'src/store';
 import AgainstPopover from 'src/views/dialogue/components/AgainstPopover.vue';
 import dayjs from 'dayjs';
-import './DialoguePanel.scss'
+// import './DialoguePanel.scss'
 import xss from 'xss';
 import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
@@ -787,3 +787,6 @@ const chatWithParams = async () => {
     <img :src="txt2imgPathZoom" />
   </div>
 </template>
+<style lang="scss" scoped>
+@import './DialoguePanel.scss'
+</style>
