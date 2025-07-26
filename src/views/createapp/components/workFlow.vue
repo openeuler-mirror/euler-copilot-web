@@ -1323,7 +1323,7 @@ defineExpose({
             <div class="collapse-arrow">‹</div>
           </div>
         </div>
-      </ElTooltip>
+      </el-tooltip>
 
       <transition name="transition-fade">
         <div class="copilot-aside-new" v-if="isCopilotAsideVisible">
