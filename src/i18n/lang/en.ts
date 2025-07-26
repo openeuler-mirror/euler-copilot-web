@@ -228,7 +228,7 @@ export default {
     service_agreement: 'Service Agreement',
     privacy_policy: 'Privacy Policy',
     contact_us: 'Contact Us',
-    version: 'Version 0.9.6-Beta',
+    version: 'Version 0.10.0-Beta',
   },
   history: {
     new_chat: 'New Chat',
@@ -432,12 +432,12 @@ export default {
     next: 'Next',
   },
   zoom: {
-    reduce: "Zoom Out",
-    amplify: "Zoom In",
-    adaptive: "Fit to Screen",
-    scaleTo50: "Zoom to 50%",
-    scaleTo100: "Zoom to 100%",
-    scaleTo150: "Zoom to 150%",
-    scaleTo200: "Zoom to 200%"
-  }
+    reduce: 'Zoom Out',
+    amplify: 'Zoom In',
+    adaptive: 'Fit to Screen',
+    scaleTo50: 'Zoom to 50%',
+    scaleTo100: 'Zoom to 100%',
+    scaleTo150: 'Zoom to 150%',
+    scaleTo200: 'Zoom to 200%',
+  },
 };

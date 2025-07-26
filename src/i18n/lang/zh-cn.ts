@@ -224,7 +224,7 @@ export default {
     service_agreement: '服务协议',
     privacy_policy: '隐私政策',
     contact_us: '联系我们',
-    version: '版本号0.9.6-内测版',
+    version: '版本号0.10.0-内测版',
   },
   history: {
     new_chat: '新建对话',
@@ -420,12 +420,12 @@ export default {
     next: 'Next',
   },
   zoom: {
-    reduce: "缩小",
-    amplify: "放大",
-    adaptive: "自适应",
-    scaleTo50: "缩放到50%",
-    scaleTo100: "缩放到100%",
-    scaleTo150: "缩放到150%",
-    scaleTo200: "缩放到200%"
-  }
+    reduce: '缩小',
+    amplify: '放大',
+    adaptive: '自适应',
+    scaleTo50: '缩放到50%',
+    scaleTo100: '缩放到100%',
+    scaleTo150: '缩放到150%',
+    scaleTo200: '缩放到200%',
+  },
 };

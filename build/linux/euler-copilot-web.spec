@@ -15,7 +15,7 @@
 
 BuildArch:        aarch64 x86_64
 Name:             euler-copilot-web
-Version:          0.9.6
+Version:          0.10.0
 Release:          6%{?dist}
 License:          MulanPSL-2.0
 Summary:          openEuler 智能化解决方案 Web 前端
