@@ -483,11 +483,11 @@ const selectQuestion = (item: Suggestion) => {
 
 const popperSize = () => {
   if (language.value == 'en') {
-    size.width = 418;
+    size.width = 420;
     size.height = 496;
     return size;
   } else {
-    size.width = 328;
+    size.width = 330;
     size.height = 416;
     return size
   }
@@ -786,6 +786,6 @@ const chatWithParams = async () => {
     <img :src="txt2imgPathZoom" />
   </div>
 </template>
-<style lang="scss" scoped>
-@import './DialoguePanel.scss'
+<style lang="scss">
+@import './DialoguePanel.scss';
 </style>

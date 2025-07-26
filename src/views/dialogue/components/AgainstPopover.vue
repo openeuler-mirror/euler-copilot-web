@@ -206,7 +206,8 @@ const handleSubmit = () => {
       border-radius: 4px;
       padding: 5px 0 5px 16px;
       font-size: 12px;
-      width: 100%;
+      width: 280px;
+      margin-left: -8px;
       &:focus {
         outline: none;
       }
