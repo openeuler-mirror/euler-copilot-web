@@ -15,16 +15,13 @@
   z-index: 99999;
   .workFlowDebugClose {
     display: flex;
-    height: 32px;
-    min-height: 32px;
+    line-height: 24px;
     margin-right: 24px;
     align-items: center;
     justify-content: space-between;
     .title {
-      width: 28px;
-      font-size: 14px;
-      height: 32px;
-      line-height: 32px;
+      font-size: 16px;
+      height: 24px;
       color: var(--o-text-color-primary);
     }
     .closeBtn {

@@ -3,7 +3,7 @@ import '../../styles/workFlowArrange.scss';
 import { onMounted, ref, watch, onUnmounted } from 'vue';
 import { IconSuccess, IconError } from '@computing/opendesign-icons';
 import { useI18n } from 'vue-i18n';
-import { ElTooltip, ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
@@ -716,7 +716,7 @@ defineExpose({
 <template>
   <div class="workFlowContainer" @drop="dropFunc">
     <aside class="aside-wrapper" ref="copilotAside">
-      <ElTooltip
+      <el-tooltip
         placement="right"
         :content="
           isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
@@ -727,7 +727,7 @@ defineExpose({
           :class="{ isExpandIcon: isCopilotAsideVisible }"
           @click="hanleAsideVisible"
         />
-      </ElTooltip>
+      </el-tooltip>
 
       <transition name="transition-fade">
         <div class="copilot-aside nodes" v-if="isCopilotAsideVisible">

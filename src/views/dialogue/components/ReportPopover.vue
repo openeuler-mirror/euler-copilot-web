@@ -178,7 +178,7 @@ const handleComplaint = () => {
 .radio {
   align-items: center;
   text-align: center;
-  margin-left: 8px;
+  margin-right: 8px;
   margin-bottom: 8px;
   width: 87px;
   height: 32px;
@@ -188,14 +188,15 @@ const handleComplaint = () => {
     margin: 0px;
   }
   &:nth-child(3n + 3) {
-    margin-left: 8px;
+    margin-left: 0px;
+    margin-right: 0px !important; 
   }
 }
 
 .radio-en {
   align-items: center;
   text-align: center;
-  margin-left: 8px;
+  margin-right: 8px;
   margin-bottom: 8px;
   width: 118px;
   height: 48px;
@@ -205,7 +206,8 @@ const handleComplaint = () => {
     margin: 0px;
   }
   &:nth-child(3n + 3) {
-    margin-left: 8px;
+    margin-left: 0px;
+    margin-right: 0px !important; 
   }
 }
 .against-popover {
@@ -237,7 +239,6 @@ const handleComplaint = () => {
   }
 
   .error-input {
-    margin: 0px 8px;
     &__link,
     &__desc {
       color: var(--o-text-color-tertiary);
