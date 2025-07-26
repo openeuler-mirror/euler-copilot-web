@@ -1,0 +1,28 @@
+<svg width="16.000000" height="16.000000" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip124_13903">
+			<rect id="txt" width="16.000000" height="16.000000" fill="white" fill-opacity="0"/>
+		</clipPath>
+		<linearGradient x1="8.000781" y1="0.500000" x2="8.000781" y2="15.214617" id="paint_linear_124_13899_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#61E1AC"/>
+			<stop offset="1.000000" stop-color="#22B076"/>
+		</linearGradient>
+		<linearGradient x1="10.090332" y1="1.526557" x2="14.252831" y2="5.783542" id="paint_linear_124_13900_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#FFFFFF"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.054902"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.000000"/>
+		</linearGradient>
+	</defs>
+	<g clip-path="url(#clip124_13903)">
+		<rect id="文档" width="16.000000" height="16.000000" fill="#FFFFFF" fill-opacity="0"/>
+		<path id="path5" d="M14.25 4.85L14.25 13.39C14.25 14.55 13.3 15.5 12.14 15.5L3.85 15.5C2.69 15.5 1.75 14.55 1.75 13.39L1.75 2.61C1.75 1.44 2.69 0.5 3.85 0.5L9.79 0.5C9.98 0.5 10.15 0.57 10.29 0.7L14.04 4.35C14.17 4.48 14.25 4.67 14.25 4.85Z" fill="url(#paint_linear_124_13899_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<path id="path5" d="" fill="#979797" fill-opacity="0" fill-rule="evenodd"/>
+		<g opacity="0.600000">
+			<path id="path6" d="M10.08 0.5L14.25 4.56L11.49 4.56C10.71 4.56 10.08 3.93 10.08 3.15L10.08 0.5Z" fill="url(#paint_linear_124_13900_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		</g>
+		<path id="txt" d="M6.37 10.17Q6.08 10.41 5.56 10.41Q5.13 10.41 4.85 10.21Q4.81 10.19 4.78 10.16Q4.49 9.91 4.49 9.25L4.49 8.06L3.97 8.06L3.97 7.39L4.49 7.39L4.49 6.49L5.28 6.49L5.28 7.39L6.17 7.39L6.17 8.06L5.28 8.06L5.28 9.12Q5.28 9.42 5.39 9.57Q5.41 9.61 5.45 9.64Q5.55 9.73 5.72 9.73C5.85 9.73 5.97 9.69 6.09 9.61L6.37 10.17ZM11.13 10.41Q11.65 10.41 11.94 10.17L11.66 9.61C11.54 9.69 11.42 9.73 11.29 9.73C11.13 9.73 11.02 9.67 10.96 9.57C10.89 9.47 10.85 9.32 10.85 9.12L10.85 8.06L11.74 8.06L11.74 7.39L10.85 7.39L10.85 6.49L10.06 6.49L10.06 7.39L9.54 7.39L9.54 8.06L10.06 8.06L10.06 9.25Q10.06 9.91 10.35 10.16C10.55 10.33 10.81 10.41 11.13 10.41ZM7.9 8.27L8.53 7.39L9.39 7.39L8.31 8.85L9.39 10.35L8.49 10.35L7.87 9.46L7.25 10.35L6.38 10.35L7.46 8.89L6.38 7.39L7.29 7.39L7.9 8.27Z" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+	</g>
+</svg>

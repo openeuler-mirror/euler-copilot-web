@@ -288,9 +288,8 @@ const deleteOne = (name: string, list: string[]) => {
       flex: 1;
       border-radius: 8px;
       width: 264px;
-      height: 66px;
       background-color: var(--o-bg-color-light);
-      padding: 0px 5px 12px 15px;
+      padding: 12px 15px;
       display: flex;
       justify-content: center;
       flex-direction: column;
@@ -319,7 +318,6 @@ const deleteOne = (name: string, list: string[]) => {
       .conversation-title {
         display: flex;
         justify-content: space-between;
-        margin-top: 12px;
         &__text {
           display: flex;
           font-weight: 500;
@@ -332,6 +330,10 @@ const deleteOne = (name: string, list: string[]) => {
           white-space: nowrap;
           height: 22px;
           align-self: center;
+          &-span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
           &-input {
             width: 100%;
             height: 22px;
@@ -372,15 +374,15 @@ const deleteOne = (name: string, list: string[]) => {
   align-items: center;
   margin-top: 4px;
   img {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     margin-right: 4px;
     display: inline-block;
     cursor: pointer;
   }
   div {
-    height: 18px;
-    line-height: 18px;
+    height: 16px;
+    line-height: 16px;
     color: var(--o-text-color-secondary);
   }
   span {

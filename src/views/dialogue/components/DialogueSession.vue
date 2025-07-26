@@ -6,7 +6,7 @@ import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
 import InterPreview from 'src/views/dialogue/components/InterPreview.vue';
 import MultiSelectTags from 'src/views/dialogue/components/MultiSelectTags.vue';
 import { storeToRefs } from 'pinia';
-import { IconCaretRight } from '@computing/opendesign-icons';
+import { IconCaretRight, IconX } from '@computing/opendesign-icons';
 import { useSessionStore, useChangeThemeStore } from 'src/store';
 import type { ConversationItem, RobotConversationItem } from '../types';
 import type { UploadFileCard } from 'src/components/uploadFile/type.ts';
@@ -16,6 +16,37 @@ import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
+import docSvg from '@/assets/svgs/doc.svg';
+import docxSvg from '@/assets/svgs/docx.svg';
+import mdSvg from '@/assets/svgs/md.svg';
+import pdfSvg from '@/assets/svgs/pdf.svg';
+import txtSvg from '@/assets/svgs/txt_green.svg';
+import xlsxSvg from '@/assets/svgs/xlsx.svg';
+import htmlSvg from '@/assets/svgs/html.svg';
+import jpegSvg from '@/assets/svgs/jpeg.svg';
+import pngSvg from '@/assets/svgs/png.svg';
+import jsonSvg from '@/assets/svgs/json.svg';
+import pptxSvg from '@/assets/svgs/pptx.svg';
+import yamlSvg from '@/assets/svgs/yaml.svg';
+import zipSvg from '@/assets/svgs/zip.svg';
+import { ElMessage } from 'element-plus';
+
+const typeSvgMap = {
+  doc: docSvg,
+  docx: docxSvg,
+  md: mdSvg,
+  pdf: pdfSvg,
+  txt: txtSvg,
+  xlsx: xlsxSvg,
+  html: htmlSvg,
+  jpeg: jpegSvg,
+  png: pngSvg,
+  json: jsonSvg,
+  pptx: pptxSvg,
+  yaml: yamlSvg,
+  zip: zipSvg,
+};
+
 const isDropdownOpen = ref(false);
 const { appList } = storeToRefs(useSessionStore());
 const { user_selected_app, selectLLM } = storeToRefs(useHistorySessionStore());
@@ -34,11 +65,21 @@ const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
 const selectedLLM = ref({});
+const curFileList = ref<Array<any>>([]);
 const handleChangeMode = (val: string) => {
   selectedLLM.value = val;
 };
 const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
+const showFileSource = ref(false);
+
+const closeShowFileSource = () => {
+  showFileSource.value = false;
+};
+const openShowFileSource = (fileList: Array<any>) => {
+  showFileSource.value = true;
+  curFileList.value = fileList;
+};
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -194,6 +235,7 @@ const isAllowToSend = computed(() => {
 // 会话切换时
 watch(currentSelectedSession, async (newVal) => {
   if (!newVal) return;
+  closeShowFileSource();
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
   let curPolling = pollingMap.get(newVal);
@@ -617,6 +659,85 @@ watch(
     deep: true,
   },
 );
+function downloadFun(url: string) {
+  const token = localStorage.getItem('ECSESSION');
+  if (!token) {
+    ElMessage.error(`Token is not available yet`);
+    return;
+  }
+  fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // 提取 Content-Disposition 头部
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let fileName = 'default-filename';
+      // 解析文件名（处理编码及格式）
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = decodeURIComponent(fileNameMatch[1].replace(/"/g, ''));
+        }
+      }
+      return response.blob().then((blob) => ({ blob,fileName }));
+    })
+    .then(({ blob,fileName }) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.style.display = 'none';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((error) => {
+      ElMessage.error(`下载失败: ${error}`);
+    });
+}
+const downLoadSourceFile = (file: any) => {
+  if (!file) return;
+  const url = `${window.origin}/wtd/api/doc/download?docId=${file.documentId}`;
+  downloadFun(url);
+};
+
+const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp * 1000); // 秒转毫秒
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+/**
+  * @description 处理并过滤文件列表，将文件列表中的字段名统一为指定格式
+  * @param {ConversationItem} ConversationItem - 对话项对象
+  * @param {string} str - 字段名
+  * @returns {Array} 格式化后的文件列表
+ */
+const getFormatFileList = (ConversationItem,str)=>{
+  let fileList: any= getItem(ConversationItem,str);
+  if (!fileList || fileList?.length === 0) return;
+  let newFileList:any = [];
+   fileList?.forEach((file) => {
+    if(file.associated === 'answer'){
+      newFileList.push({
+        documentId: file._id,
+        documentName: file.name,
+        documentAbstract: file.abstract,
+        documentType: file.type,
+        documentSize: file.size,
+        sourceUrl: file.sourceUrl,
+        documentOrder: file.order,
+        createdAt: file.created_at,
+        documentAuthor: file.author,
+      })
+    }
+  })
+  return newFileList;
+}
 </script>
 
 <template>
@@ -668,9 +789,11 @@ watch(
           :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
+          :fileList="item.files ?? getFormatFileList(item, 'document')"
           @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
+          @openShowFileSource="openShowFileSource"
         />
         <template v-if="conversationList.length === 0">
           <InitalPanel
@@ -834,6 +957,43 @@ watch(
       <footer class="copilot-footer">
         <CommonFooter />
       </footer>
+    </div>
+    <div v-if="showFileSource" class="dialogue-rightContainer__file-source">
+      <div class="file-source__header">
+        <div class="file-source__title">
+          <span>引用来源</span>
+          <span>{{ curFileList.length || 0 }}</span>
+        </div>
+        <el-icon @click="closeShowFileSource">
+          <IconX />
+        </el-icon>
+      </div>
+      <div class="file-source__content-container">
+        <div class="file-source__content">
+          <div v-for="(file,index) in curFileList" :key="index" class="file-source__item">
+            <div class="file-source__item-header">
+              <div class="file-source__item-header-left">
+                <span class="file-source__order">{{ file?.documentorder ?? index+1 }}</span>
+                <div class="file-source__type-icon">
+                  <img :src="typeSvgMap[file?.documentType]" alt="">
+                </div>
+                <span class="file-source__name">{{ file?.documentName }}</span>
+              </div>
+              <el-tooltip
+                content="下载"
+                placement="top"
+              >
+                <span class="file-source__download" @click="downLoadSourceFile(file)"></span>
+              </el-tooltip>
+            </div>
+            <span class="file-source__desc">{{ file?.documentAbstract ?? '' }}</span>
+            <div class="file-source__footer">
+              <span>@{{ file?.documentAuthor }}</span>
+              <span>{{ formatDate(file?.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1103,6 +1263,132 @@ button[disabled]:hover {
         & img {
           position: relative;
           bottom: 5px;
+        }
+      }
+    }
+  }
+}
+
+.dialogue-rightContainer__file-source{
+  width: 342px;
+  background-color: var(--o-bg-color-base);
+  margin-top: 16px;
+  margin-bottom: 40px;
+  margin-right: 24px;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  .file-source__header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .file-source__title{
+      display: flex;
+      gap: 8px;
+      span{
+        font-size: 16px;
+        color: var(--o-text-color-primary);
+        font-weight: 700;
+        line-height: 24px;
+      }
+    }
+    .el-icon{
+      height: 16px;
+      cursor: pointer;
+    }
+  }
+  .file-source__content-container{
+    max-height: 100vh;
+    overflow-y: auto;
+    margin-right: -4px;
+    margin-top: 8px;
+    .file-source__content{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 2px;
+      .file-source__item{
+        background-color: var(--o-bg-color-light);
+        width: 310px;
+        border-radius: 8px;
+        padding: 16px;
+        &:hover {
+          outline: 2px solid #7aa5ff;
+        }
+        .file-source__item-header{
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 4px;
+          .file-source__item-header-left{
+            max-width: 258px;
+            .file-source__order{
+              display: inline-block;
+              font-size: 12px;
+              color: var(--o-text-color-primary);
+              line-height: 16px;
+              margin-right: 8px;
+              width: 16px;
+              height: 16px;
+              background-color: var(--o-border-color-lighter);
+              border-radius: 50%;
+              text-align: center;
+            }
+            .file-source__type-icon{
+              display: inline-flex;
+              align-items: center;
+              vertical-align: bottom;
+              margin-right: 2px;
+              height: 22px;
+              img{
+                width: 16px;
+                height: 16px;
+              }
+            }
+            .file-source__name{
+              font-size: 14px;
+              color: var(--o-text-color-primary);
+              font-weight: 700;
+              line-height: 22px;
+            }
+          }
+          .file-source__download{
+            cursor: pointer !important;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: bottom;
+            height: 22px;
+            width: 16px;
+            background: url('@/assets/svgs/file_download.svg') no-repeat center center;
+            &:hover{
+              background: url('@/assets/svgs/file_download_hover.svg') no-repeat center center;
+            }
+            &:active,&:focus{
+              background: url('@/assets/svgs/file_download_active.svg') no-repeat center center;
+            }
+          }
+        }
+        .file-source__desc{
+          font-size: 12px;
+          color: var(--o-text-color-secondary);
+          line-height: 16px;
+          margin-top: 4px;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 3; /* 控制显示行数 */
+          line-clamp: 3;
+          text-overflow: ellipsis;
+          word-break: break-all;
+        }
+        .file-source__footer{
+          font-size: 12px;
+          display: flex;
+          justify-content: space-between;
+          margin-top: 8px;
+          color: var(--o-text-color-tertiary);
+          line-height: 16px;
         }
       }
     }

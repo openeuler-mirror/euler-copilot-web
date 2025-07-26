@@ -85,7 +85,9 @@ export const useSessionStore = defineStore('conversation', () => {
       conversationItem: RobotConversationItem,
       message: Record<string, unknown>,
     ) => {
-      conversationItem.message[conversationItem.currentInd] += message.content;
+      if (!conversationItem.files) {
+        conversationItem.files = [];
+      }
       conversationItem.files = [...conversationItem.files, message.content];
     },
     suggestionFunc: (
@@ -243,7 +245,7 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         case 'document.add':
           // 遇到文档添加事件，先省略
-          // dataTransfers.documentAdd(conversationItem, message);
+          dataTransfers.documentAdd(conversationItem, message);
           break;
         case 'Suggestion':
           dataTransfers.suggestionFunc(conversationItem, message);
@@ -679,6 +681,21 @@ export const useSessionStore = defineStore('conversation', () => {
   // #endregion
 
   /**
+   * 处理历史对话数据中尾注位置
+   */
+  const handleMessage = (record: any): string => {
+    let message = record.content.answer;
+    record.metadata.footNoteMetadataList?.reverse().forEach((footNoteMetadata: any)=>{
+      const insertFile = record.document?.filter((file: any)=>file._id === footNoteMetadata.releatedId);
+      const insertNumber = insertFile[0]?.order;
+      if(!insertNumber)return;
+      const pos = footNoteMetadata.insertPosition;
+      message = message.slice(0, pos) + `[[${insertNumber}]]` + message.slice(pos)
+    });
+    return message;
+  }
+
+  /**
    * 获取历史对话数据
    * @param conversationId
    */
@@ -720,7 +737,7 @@ export const useSessionStore = defineStore('conversation', () => {
           {
             cid: conversationList.value.length + 2,
             belong: 'robot',
-            message: [record.content.answer],
+            message: [handleMessage(record)],
             messageList,
             currentInd: 0,
             isAgainst: false,
@@ -730,6 +747,7 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
+            document: record.document,
             flowdata: record?.flow
               ? (generateFlowData(record.flow) as FlowType)
               : undefined,

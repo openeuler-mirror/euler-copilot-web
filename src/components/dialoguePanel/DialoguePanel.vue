@@ -1,7 +1,8 @@
 <script lang="ts" setup>
+import './DialoguePanel.scss';
 import type { DialoguePanelType } from './type';
 import marked from 'src/utils/marked.js';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { writeText } from 'src/utils';
 import { useSessionStore, useChangeThemeStore, echartsObj } from '@/store';
 import { useHistorySessionStore } from 'src/store';
@@ -15,16 +16,30 @@ import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
 import i18n from 'src/i18n';
+import * as _ from 'lodash';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggestion } from 'src/apis/paths/type';
+import docSvg from '@/assets/svgs/doc.svg';
+import docxSvg from '@/assets/svgs/docx.svg';
+import mdSvg from '@/assets/svgs/md.svg';
+import pdfSvg from '@/assets/svgs/pdf.svg';
+import txtSvg from '@/assets/svgs/txt_green.svg';
+import xlsxSvg from '@/assets/svgs/xlsx.svg';
+import htmlSvg from '@/assets/svgs/html.svg';
+import jpegSvg from '@/assets/svgs/jpeg.svg';
+import pngSvg from '@/assets/svgs/png.svg';
+import jsonSvg from '@/assets/svgs/json.svg';
+import pptxSvg from '@/assets/svgs/pptx.svg';
+import yamlSvg from '@/assets/svgs/yaml.svg';
+import zipSvg from '@/assets/svgs/zip.svg';
 const { params } = storeToRefs(useHistorySessionStore());
 const { language } = storeToRefs(useLangStore());
 const echartsDraw = ref();
 const visible = ref(false);
 export interface DialoguePanelProps {
-  key: number;
+  keys: number;
   cid: number;
   groupId: string;
   type: DialoguePanelType;
@@ -53,32 +68,119 @@ export interface DialoguePanelProps {
   modeOptions: any;
   // 是否是工作流调试模式
   isWorkFlowDebug: boolean;
+  fileList: any;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
 import { api } from 'src/apis';
 import { MessageArray } from 'src/views/dialogue/types';
-var option = ref();
-var show = ref(false);
+import { IconCaretRight } from '@computing/opendesign-icons';
+let option = ref();
+let show = ref(false);
 const size = reactive({
   width: 328,
   height: 416,
 });
 const themeStore = useChangeThemeStore();
-var myChart;
-const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
+let myChart;
+const { prePage, nextPage } = useSessionStore();
 const props = withDefaults(defineProps<DialoguePanelProps>(), {
   isFinish: false,
   needRegernerate: false,
 });
-const messageArray = ref<MessageArray>(props.messageArray);
+const messageArray = ref<MessageArray[] | undefined>(props.messageArray);
 const thoughtContent = ref('');
 const contentAfterMark = ref('');
 const index = ref(0);
 const isComment = ref('none');
-
+const typeSvgMap = {
+  doc: docSvg,
+  docx: docxSvg,
+  md: mdSvg,
+  pdf: pdfSvg,
+  txt: txtSvg,
+  xlsx: xlsxSvg,
+  html: htmlSvg,
+  jpeg: jpegSvg,
+  png: pngSvg,
+  json: jsonSvg,
+  pptx: pptxSvg,
+  yaml: yamlSvg,
+  zip: zipSvg,
+};
 // 处理内容，分离 think 标签和主要内容
+const processMarkedContent = (content: string) => {
+  return content.replace(/\[\[(\d+)\]\]/g, (_match, value) => {
+    const randomId = 'marked_'+Math.floor(Math.random() * 10000000);
+    return `<span class="mark-number" id="${randomId}">${value} </span>`;
+  });
+};
+
+const tooltip = document.createElement("div");
+
+const generateContent = (content: string) => {
+  if (!content) return '';
+  let result = '';
+  props.fileList?.forEach((file)=>{
+    if (file.documentOrder === Number(content)) {
+      result += `<img src="${typeSvgMap[file?.documentType]}" alt="">`;
+      result += `<div class="tooltip-name">${file?.documentName || ''}</div>`;
+      result = `<div class="tooltip-title">${result}</div>`;
+      result += `<div class="tooltip-abstract">${file?.documentAbstract || ''}</div>`;
+    }
+  })
+  console.log('生成的内容:', result);
+  result = `<div class="tooltip-container">${result}</div>`;
+  return result;
+}
+const showTooltip = (content: string, event: MouseEvent) => {
+  const curId = (event.target as HTMLElement)?.id;
+  tooltip.className = "mark-number-tooltip";
+  tooltip.innerHTML = generateContent(content) || '';
+  const markedDiv = document.getElementById(curId);
+  const curRect = markedDiv?.getBoundingClientRect();
+  tooltip.style.borderRadius = '8px';
+  tooltip.style.padding = '16px';
+  tooltip.style.boxShadow = '0 4px 16px 0 rgba(0,0,0,0.2)';
+    setTimeout(() => {
+      document.body.appendChild(tooltip);
+      setTimeout(()=>{
+        // console.log('当前元素位置:', curRect);
+        // console.log('tooltip位置:', tooltip.getBoundingClientRect());
+        tooltip.style.left = `${curRect.left + curRect.width / 2 }px`;
+        tooltip.style.top = `${curRect.y - tooltip.getBoundingClientRect().height - 4 }px`;
+      },0)
+    }, 10);
+
+  tooltip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const downloadBtn = (e.target as HTMLElement).closest('.download-btn');
+    if (downloadBtn) {
+      const fileName = downloadBtn.getAttribute('data-file-name');
+      const fileUrl = downloadBtn.getAttribute('data-file-url');
+      if (fileName && fileUrl) {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  });
+
+}
+const handleMouseOver = _.debounce((event)=>{
+  if (event.target.className.includes('mark-number')) {
+    setTimeout(() =>  showTooltip( event.target.textContent,event), 100);
+  }
+},100)
+const handleMouseMove=(event)=>{
+  if (!event.target.className.includes('mark-number') && !event.target.className.includes('mark-number-tooltip')) {
+    if(tooltip) tooltip.remove();
+  }
+}
 const processContent = (content: string) => {
   if (!content) {
     thoughtContent.value = '';
@@ -198,7 +300,7 @@ watch(
   { immediate: true, deep: true },
 );
 const emits = defineEmits<{
-  (e: 'handleReport', qaRecordId: string, reason?: string): void;
+  (e: 'handleReport', qaRecordId: string, reason_type: string, reason?: string): void;
   (
     e: 'handleSendMessage',
     groupId: string | undefined,
@@ -206,6 +308,7 @@ const emits = defineEmits<{
     user_selected_flow?: any,
   ): void;
   (e: 'clearSuggestion', index: number): void;
+  (e: 'openShowFileSource', fileList: Array<any>): void;
 }>();
 
 // 复制功能
@@ -377,7 +480,6 @@ onMounted(() => {
   if (props.messageArray?.value) {
     isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
   }
-  popperSize();
   setTimeout(() => {
     handleIsLike();
   }, 200);
@@ -442,7 +544,7 @@ watch(
 watch(
   () => language.value,
   () => {
-      popperSize();
+    popperSize();
   },
 );
 
@@ -482,14 +584,12 @@ const selectQuestion = (item: Suggestion) => {
 };
 
 const popperSize = () => {
-  if (language.value == 'en') {
-    size.width = 420;
+  if (language.value == 'EN') {
+    size.width = 418;
     size.height = 496;
     return size;
   } else {
-    size.width = 330;
-    size.height = 416;
-    return size
+    return size;
   }
 };
 const { conversationList } = storeToRefs(useSessionStore());
@@ -509,6 +609,11 @@ const chatWithParams = async () => {
     params.value,
   );
 };
+
+const handleFileClick = () => {
+  emits('openShowFileSource',props.fileList);
+};
+
 </script>
 <template>
   <div
@@ -559,6 +664,15 @@ const chatWithParams = async () => {
             !thoughtContent,
         }"
       >
+      <div v-if="props.fileList?.length" class="dialogue-panel__robot-file" @click="handleFileClick">
+        <div class="file-title">
+          <img src="@/assets/svgs/files.svg" alt="">
+          <span>引用{{props.fileList?.length}}篇知识库资料</span>
+          <el-icon>
+            <IconCaretRight />
+          </el-icon>
+        </div>
+      </div>
         <!-- 这里是flowData -->
         <DialogueFlow
           v-if="flowdata"
@@ -567,7 +681,8 @@ const chatWithParams = async () => {
         />
         <DialogueThought :content="thoughtContent" v-if="thoughtContent" />
         <div v-if="contentAfterMark" id="markdown-preview">
-          <div v-html="contentAfterMark"></div>
+          <div v-html="processMarkedContent(contentAfterMark)" 
+          @mouseover="handleMouseOver" @mousemove="handleMouseMove"></div>
           <a v-if="props.paramsList" @click="visible = true">补充参数</a>
           <!-- <img class="answer_img" src="" alt="" @click="zoom_in($event)" /> -->
           <div class="loading-echarts">
@@ -695,7 +810,7 @@ const chatWithParams = async () => {
             >
               <el-popover
                 placement="bottom-end"
-                popper-class="disliked-button"
+                class="disliked-button"
                 :visible="isAgainstVisible"
                 width="328"
                 height="328"
@@ -787,5 +902,96 @@ const chatWithParams = async () => {
   </div>
 </template>
 <style lang="scss">
-@import './DialoguePanel.scss';
+.mark-number{
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  font-size: 12px;
+  text-align: center;
+  border-radius: 50%;
+  background-color: var(--o-border-color-lighter);
+  color: var(--o-text-color-primary);
+  cursor: pointer;
+  position: relative;
+  bottom: 2px;
+  margin: 0 2px;
+
+}
+.mark-number-tooltip {
+  position: fixed;
+  top: 0px;
+  background: white;
+  border: 1px solid #ddd;
+  padding: 16px;
+  max-width: 264px;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+  .tooltip-container{
+    .tooltip-title{
+      line-height: 22px;
+      .tooltip-name{
+        display: inline;
+        font-size: 14px;
+        color: var(--o-text-color-primary);
+        margin-bottom: 4px;
+        word-break: break-all;
+      }
+      img{
+        width: 16px;
+        height: 16px;
+        margin-right: 2px;
+        line-height: 22px;
+        vertical-align: middle;
+        position: relative;
+        bottom: 2px;
+      }
+    }
+    .tooltip-abstract{
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--o-text-color-secondary);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2; /* 控制显示行数 */
+      line-clamp: 2;
+      text-overflow: ellipsis;
+      word-break: break-all;
+    }
+  }
+}
+.mark-number:hover {
+  background-color: #7AA5FF;
+  color: white;
+  transition: 200ms;
+}
+.dialogue-panel__robot-file{
+  display: inline-block;
+  background-color: var(--o-bg-color-light);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--o-text-color-secondary);
+  .file-title{
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer !important;
+    &:hover{
+      color: #7AA5FF;
+    }
+    img{
+      margin-right: 2px;
+    }
+    .el-icon{
+      color: var(--o-text-color-tertiary);
+    }
+  }
+}
 </style>

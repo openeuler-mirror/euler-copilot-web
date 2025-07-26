@@ -87,6 +87,14 @@ export default ({ mode }): UserConfigExport => {
           rewrite: (path: string) => path,
           cookieDomainRewrite: '.euler-copilot-master.test.osinfra.cn',
         },
+        '/wtd': {
+          target: env.VITE_BASE_PROXY_URL,
+          changeOrigin: true,
+          secure: false,
+          ws: false,
+          rewrite: (path: string) => path.replace(/^\/wtd/, '/witchaind'),
+          cookieDomainRewrite: '.euler-copilot-master.test.osinfra.cn',
+        }
       },
     },
   });
