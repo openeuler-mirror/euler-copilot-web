@@ -12,9 +12,10 @@ const policy = ref<string>('');
  * 读取协议
  */
 const readAgreement = async () => {
-  const language = localStorage.getItem('localeLang');
+  const localLang = localStorage.getItem('copilot_language');
+  const locale = (localLang && JSON.parse(localLang).language) || 'zh_cn';
   const response =
-    language === 'en'
+    locale === 'en'
       ? await import('src/conf/agreement-en.md?raw')
       : await import('src/conf/agreement.md?raw');
   agreement.value = marked.parse(response.default) as string;
@@ -22,9 +23,10 @@ const readAgreement = async () => {
 };
 
 const readPolicy = async () => {
-  const language = localStorage.getItem('localeLang');
+  const localLang = localStorage.getItem('copilot_language');
+  const locale = (localLang && JSON.parse(localLang).language) || 'zh_cn';
   const response =
-    language === 'en'
+    locale === 'en'
       ? await import('src/conf/policy-en.md?raw')
       : await import('src/conf/policy.md?raw');
   policy.value = marked.parse(response.default) as string;
