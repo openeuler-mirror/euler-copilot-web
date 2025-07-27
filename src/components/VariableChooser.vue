@@ -1,7 +1,7 @@
 <template>
   <div class="variable-chooser">
     <div class="variable-row">
-      <div class="variable-name-section">
+      <div class="variable-name-section" v-if="showVariableName">
         <label class="field-label">变量名：</label>
         <el-input
           v-model="localVariableName"
@@ -12,7 +12,7 @@
       </div>
       
       <div class="variable-selector-section" :class="selectorClasses">
-        <label class="field-label">选择变量：</label>
+        <label class="field-label" v-if="showLabel">选择变量：</label>
         
         <!-- 已选变量标签显示 -->
         <div v-if="selectedVariable" class="selected-variable-display" :class="selectorClasses">
@@ -100,10 +100,9 @@
 /**
  * VariableChooser 组件
  * 
- * 提供变量选择功能，支持显示变量详细信息和操作按钮
- * 现在新增了样式控制属性，可以让外部组件灵活控制显示样式
+ * 统一的变量选择器组件，支持灵活的显示和输出格式控制
  * 
- * @since 1.0.0
+ * @since 2.0.0
  * @author Assistant
  */
 <script lang="ts" setup>
@@ -124,62 +123,79 @@ interface Variable {
 }
 
 interface Props {
-  variableName?: string              // 自定义变量名
-  variableReference?: string         // 变量引用
-  selectedVariable?: Variable        // 选中的变量对象
-  supportedScopes?: string[]         // 支持的作用域
-  flowId?: string                   // 流程ID
-  conversationId?: string           // 对话ID
-  currentStepId?: string            // 当前步骤ID
-  showVariableReference?: boolean   // 是否显示变量引用语法
-  showActions?: boolean             // 是否显示操作按钮
-  showVariableInfo?: boolean        // 是否显示变量详细信息
-  placeholder?: string              // 变量名输入框占位符
-  selectorPlaceholder?: string      // 变量选择器占位符
-  hideBorder?: boolean              // 是否隐藏边框，用于无边框样式
-  noBorderRadius?: boolean          // 是否取消圆角，用于连接其他组件时
-  transparentBackground?: boolean   // 是否使用透明背景，用于融入父容器
-  customClass?: string              // 自定义CSS类名，用于特殊样式定制
+  // 核心数据属性
+  modelValue?: string               // 当前选中的变量引用值
+  selectedVariable?: Variable       // 选中的变量对象
+  variableName?: string            // 自定义变量名（仅在需要输入变量名时使用）
+  
+  // 配置属性
+  supportedScopes?: string[]       // 支持的作用域
+  flowId?: string                 // 流程ID
+  conversationId?: string         // 对话ID
+  currentStepId?: string          // 当前步骤ID
+  
+  // 显示控制
+  showVariableName?: boolean      // 是否显示变量名输入
+  showLabel?: boolean            // 是否显示标签
+  showActions?: boolean          // 是否显示操作按钮
+  showVariableInfo?: boolean     // 是否显示变量详细信息
+  showVariableReference?: boolean // 是否显示变量引用语法
+  
+  // 格式控制
+  outputFormat?: 'raw' | 'wrapped'  // 输出格式：raw = "scope.name", wrapped = "{{scope.name}}"
+  
+  // 样式控制
+  hideBorder?: boolean           // 是否隐藏边框
+  noBorderRadius?: boolean       // 是否取消圆角
+  transparentBackground?: boolean // 是否使用透明背景
+  customClass?: string           // 自定义CSS类名
+  
+  // 占位符
+  placeholder?: string           // 变量名输入框占位符
+  selectorPlaceholder?: string   // 变量选择器占位符
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variableName: '',
-  variableReference: '',
+  modelValue: '',
   selectedVariable: undefined,
+  variableName: '',
   supportedScopes: () => ['conversation', 'system', 'env'],
   flowId: '',
   conversationId: '',
   currentStepId: '',
-  showVariableReference: true,
+  showVariableName: false,
+  showLabel: true,
   showActions: true,
   showVariableInfo: true,
-  placeholder: '输入变量名称',
-  selectorPlaceholder: '选择变量',
+  showVariableReference: true,
+  outputFormat: 'raw',
   hideBorder: false,
   noBorderRadius: false,
   transparentBackground: false,
-  customClass: ''
+  customClass: '',
+  placeholder: '输入变量名称',
+  selectorPlaceholder: '选择变量'
 })
 
 const emit = defineEmits<{
-  'update:variableName': [value: string]
-  'update:variableReference': [value: string]
+  'update:modelValue': [value: string]
   'update:selectedVariable': [value: Variable | undefined]
-  'variable-selected': [variable: Variable]
+  'update:variableName': [value: string]
+  'variable-selected': [variable: Variable, reference: string]
+  'variable-cleared': []
   'name-changed': [name: string]
   'remove': []
 }>()
 
 const localVariableName = ref(props.variableName)
-const localVariableReference = ref(props.variableReference)
 const selectedVariable = ref<Variable | undefined>(props.selectedVariable)
 
-// 解析 variableReference 字符串
+// 解析变量引用字符串
 const parseVariableReference = (reference: string) => {
   if (!reference) return null
   
   // 移除可能的 {{ }} 包装
-  const cleanRef = reference.replace(/^\{\{|\}\}$/g, '').trim()
+  const cleanRef = reference.replace(/^\{\{(.*)\}\}$/, '$1').trim()
   
   // 解析格式：conversation.step_id.variable_name 或 scope.variable_name
   const parts = cleanRef.split('.')
@@ -243,16 +259,28 @@ const findVariableByReference = async (parsedRef: { scope: string; step_id?: str
   }
 }
 
+// 生成变量引用字符串
+const generateVariableReference = (variable: Variable, format: 'raw' | 'wrapped' = 'raw'): string => {
+  let reference = ''
+  
+  if (variable.scope === 'conversation' && variable.step_id) {
+    reference = `conversation.${variable.step_id}.${variable.name}`
+  } else {
+    reference = `${variable.scope}.${variable.name}`
+  }
+  
+  return format === 'wrapped' ? `{{${reference}}}` : reference
+}
+
 // 初始化选中的变量
 const initializeSelectedVariable = async () => {
-  if (props.variableReference && !selectedVariable.value) {
-    const parsedRef = parseVariableReference(props.variableReference)
+  if (props.modelValue && !selectedVariable.value) {
+    const parsedRef = parseVariableReference(props.modelValue)
     if (parsedRef) {
       const foundVariable = await findVariableByReference(parsedRef)
       if (foundVariable) {
         selectedVariable.value = foundVariable
         emit('update:selectedVariable', foundVariable)
-        emit('variable-selected', foundVariable)
       }
     }
   }
@@ -268,11 +296,12 @@ watch(() => props.variableName, (newVal) => {
   localVariableName.value = newVal
 }, { immediate: true })
 
-watch(() => props.variableReference, async (newVal) => {
-  localVariableReference.value = newVal
-  // 当 variableReference 变化时，重新初始化 selectedVariable
+watch(() => props.modelValue, async (newVal) => {
+  // 当 modelValue 变化时，重新初始化 selectedVariable
   if (newVal && !selectedVariable.value) {
     await initializeSelectedVariable()
+  } else if (!newVal) {
+    selectedVariable.value = undefined
   }
 }, { immediate: true })
 
@@ -290,18 +319,13 @@ const handleNameChange = (value: string) => {
 const handleVariableSelected = (variable: Variable) => {
   selectedVariable.value = variable
   
-  // 构建完整的变量引用
-  let variableReference = ''
-  if (variable.scope === 'conversation' && variable.step_id) {
-    variableReference = `conversation.${variable.step_id}.${variable.name}`
-  } else {
-    variableReference = `${variable.scope}.${variable.name}`
-  }
+  // 生成变量引用字符串
+  const reference = generateVariableReference(variable, props.outputFormat)
   
-  localVariableReference.value = variableReference
+  // 发出事件
   emit('update:selectedVariable', variable)
-  emit('update:variableReference', variableReference)
-  emit('variable-selected', variable)
+  emit('update:modelValue', reference)
+  emit('variable-selected', variable, reference)
 }
 
 // 处理删除
@@ -312,9 +336,9 @@ const handleRemove = () => {
 // 清空变量选择
 const clearVariable = () => {
   selectedVariable.value = undefined
-  localVariableReference.value = ''
   emit('update:selectedVariable', undefined)
-  emit('update:variableReference', '')
+  emit('update:modelValue', '')
+  emit('variable-cleared')
 }
 
 // 获取变量显示名称（只显示后缀）
@@ -329,10 +353,7 @@ const getVariableDisplayName = (variable: Variable): string => {
 
 // 获取完整的变量引用
 const getFullVariableReference = (variable: Variable): string => {
-  if (variable.scope === 'conversation' && variable.step_id) {
-    return `{{conversation.${variable.step_id}.${variable.name}}}`
-  }
-  return `{{${variable.scope}.${variable.name}}}`
+  return generateVariableReference(variable, 'wrapped')
 }
 
 // 获取变量类型显示名称
@@ -376,11 +397,6 @@ const getScopeTagType = (scope: string): 'primary' | 'success' | 'info' | 'warni
   }
   return typeMap[scope] || 'primary'
 }
-
-// 监听变量引用变化
-watch(localVariableReference, (newVal) => {
-  emit('update:variableReference', newVal)
-})
 
 // 计算样式类
 const selectorClasses = computed(() => {

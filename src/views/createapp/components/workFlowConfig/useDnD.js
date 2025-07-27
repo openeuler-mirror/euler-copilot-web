@@ -43,7 +43,8 @@ export default function useDragAndDrop() {
       event.dataTransfer.setData('application/vueflow', type);
       event.dataTransfer.effectAllowed = 'move';
     }
-    draggedType.value = type === 'Choice' ? 'branch' : 'custom';
+    
+    draggedType.value = info?.callId === 'Choice' ? 'Choice' : 'custom';
     isDragging.value = true;
     nodeData.value = { ...info };
 
@@ -91,7 +92,7 @@ export default function useDragAndDrop() {
 
     const nodeId = getId();
 
-    // 清洗节点数据，确保Code节点有正确的parameters结构
+    // 清洗节点数据，确保不同节点类型有正确的parameters结构
     let cleanNodeData = { ...nodeData.value };
     
     // 如果是Code节点，确保parameters结构正确
@@ -118,6 +119,27 @@ export default function useDragAndDrop() {
         timeoutSeconds: cleanNodeData.timeoutSeconds || 30,
         memoryLimitMb: cleanNodeData.memoryLimitMb || 128,
         cpuLimit: cleanNodeData.cpuLimit || 0.5,
+      };
+    } else if (cleanNodeData.callId === 'Choice') {
+      // 如果是Choice节点，确保parameters结构正确
+      cleanNodeData.parameters = {
+        input_parameters: { 
+          choices: [
+            {
+              branch_id: `else_${nodeId}`,
+              name: 'ELSE',
+              is_default: true,
+              conditions: [],
+              logic: 'and'
+            }
+          ]
+        },
+        output_parameters: { 
+          branch_id: {
+            type: 'string',
+            description: '选中的分支ID'
+          }
+        }
       };
     }
 

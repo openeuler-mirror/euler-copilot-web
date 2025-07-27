@@ -350,9 +350,9 @@ const saveNode = () => {
   
   // 合并非默认分支和默认分支
   const allChoices = [...formData.value.choices];
-  // if (formData.value.defaultBranch) {
-  //   allChoices.push(formData.value.defaultBranch);
-  // }
+  if (formData.value.defaultBranch) {
+    allChoices.push(formData.value.defaultBranch);
+  }
   
   const nodeData = {
     name: formData.value.name,
@@ -363,7 +363,10 @@ const saveNode = () => {
         choices: allChoices,
       },
       output_parameters: {
-        branch_id: '',
+        branch_id: {
+          type: 'string',
+          description: '选中的分支ID'
+        }
       },
     },
   };

@@ -58,7 +58,6 @@ const inputAndOutput = ref({
 
 // 计算分支列表
 const branches = computed(() => {
-  console.log(props.data);
   const choices = props.data?.parameters?.input_parameters?.choices || [];
   return choices.map((choice, index) => {
     return {
@@ -205,14 +204,18 @@ const parseVariableReference = (variableRef) => {
     return '?';
   }
   
+  // 先清理可能的 {{ }} 包装
+  let cleanRef = variableRef.replace(/^\{\{(.*)\}\}$/, '$1').trim();
+  
   // 格式: conversation.step_id.variable_name 或 scope.variable_name
-  const parts = variableRef.split('.');
+  const parts = cleanRef.split('.');
   if (parts.length >= 2) {
-    // 返回最后一部分作为变量名
-    return parts[parts.length - 1];
+    // 返回最后一部分作为变量名，并清理可能残留的 }}
+    let variableName = parts[parts.length - 1];
+    return variableName.replace(/\}\}$/, '');
   }
   
-  return variableRef;
+  return cleanRef.replace(/\}\}$/, '');
 };
 
 // 根据数据类型格式化值
