@@ -353,10 +353,10 @@ const formData = ref({
 });
 
 // 输入变量
-const inputVariables = ref([]);
+const inputVariables = ref<Array<{name: string, type: string, description: string}>>([]);
 
 // 输出变量
-const outputVariables = ref([]);
+const outputVariables = ref<Array<{name: string, type: string, description: string}>>([]);
 
 // 监听visible变化
 watch(
@@ -393,14 +393,10 @@ watch(
         retry_delay: newData.retry_delay || 1,
       };
 
-      inputVariables.value = newData.input_variables || [
-        { name: 'depth', type: 'number', description: '递归深度' }
-      ];
+      // 对于新建节点，应该从空数组开始，让用户自己定义变量
+      inputVariables.value = newData.input_variables || [];
 
-      outputVariables.value = newData.output_variables || [
-        { name: 'array', type: 'array', description: '生成的数组' },
-        { name: 'depth', type: 'number', description: '实际深度值' }
-      ];
+      outputVariables.value = newData.output_variables || [];
     }
   },
   { immediate: true, deep: true }

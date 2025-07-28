@@ -88,7 +88,7 @@
                             :show-variable-reference="true"
                             :show-actions="true"
                             :show-variable-info="true"
-                            output-format="raw"
+                            output-format="wrapped"
                             placeholder="输入节点内的变量名"
                             @remove="removeInputVariable(index)"
                             @variable-selected="(selectedVar, reference) => handleInputVariableSelected(selectedVar, index)"

@@ -354,13 +354,29 @@ const saveNode = () => {
     allChoices.push(formData.value.defaultBranch);
   }
   
+  // 对所有条件值进行类型转换
+  const processedChoices = allChoices.map(choice => ({
+    ...choice,
+    conditions: choice.conditions.map(condition => ({
+      ...condition,
+      left: {
+        ...condition.left,
+        value: condition.left.type === 'reference' ? condition.left.value : parseValue(condition.left.value, condition.left.type)
+      },
+      right: {
+        ...condition.right,
+        value: condition.right.type === 'reference' ? condition.right.value : parseValue(condition.right.value, condition.right.type)
+      }
+    }))
+  }));
+  
   const nodeData = {
     name: formData.value.name,
     description: formData.value.description,
     callId: 'Choice',
     parameters: {
       input_parameters: {
-        choices: allChoices,
+        choices: processedChoices,
       },
       output_parameters: {
         branch_id: {
