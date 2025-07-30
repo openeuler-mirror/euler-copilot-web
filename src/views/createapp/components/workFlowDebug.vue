@@ -1,17 +1,36 @@
 <template>
-  <div class="workFlowDebug">
+  <div class="workFlowDebug" :class="{ 'minimized': isMinimized }">
     <div class="workFlowDebugClose">
       <div class="title">{{ $t('flow.debug') }}</div>
-      <div class="closeBtn" @click="handleCloseDebugDialog"><IconX /></div>
+      <div class="controlButtons">
+        <!-- 最小化按钮 -->
+        <div v-if="!isMinimized" class="minimizeBtn" @click="handleMinimize">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path d="M14,8v1H2V8H14z"/>
+          </svg>
+        </div>
+        <!-- 还原按钮 -->
+        <div v-if="isMinimized" class="restoreBtn" @click="handleRestore">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path d="M3,5v8h8V5H3z M10,11H4V6h6V11z"/>
+          </svg>
+        </div>
+        <!-- 关闭按钮 -->
+        <div class="closeBtn" @click="handleCloseDebugDialog">
+          <IconX />
+        </div>
+      </div>
     </div>
-    <div class="debugContent">
+    <div v-show="!isMinimized" class="debugContent">
       <!-- 变量配置面板 -->
       <DebugVariablePanel
+        ref="debugVariablePanelRef"
         v-if="shouldShowVariablePanel"
         :visible="variablePanelVisible"
         :conversation-variables="conversationVariables"
         :variables-loading="variablesLoading"
         :flow-id="props.flowId"
+        :conversation-id="tmpConversationId"
         @toggle-visibility="toggleVariablePanel"
         @variable-updated="handleVariableUpdated"
       />
@@ -35,6 +54,7 @@
           :user-selected-app="user_selected_app"
           :search_suggestions="getItem(item, 'search_suggestions')"
           :paramsList="getItem(item, 'paramsList')"
+          :modeOptions="{}"
           :isWorkFlowDebug="true"
           @report="handleReport"
           @handleSendMessage="handleSendMessage"
@@ -87,6 +107,15 @@ import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { onBeforeRouteLeave } from 'vue-router';
 import { listVariables } from '@/api/variable';
+
+interface ConversationVariable {
+  name: string;
+  var_type: string;
+  scope: string;
+  value?: any;
+  description?: string;
+}
+
 // 对话列表
 const { sendQuestion, stopDebug } = useSessionStore();
 const testFlag = ref(true);
@@ -112,14 +141,28 @@ const props = defineProps({
 // 对话输入内容
 const dialogueInput = ref<string>('');
 
+// 最小化状态
+const isMinimized = ref(false);
+
+// 最小化和还原方法
+const handleMinimize = () => {
+  isMinimized.value = true;
+};
+
+const handleRestore = () => {
+  isMinimized.value = false;
+};
+
 // 变量面板相关状态
+const debugVariablePanelRef = ref<InstanceType<typeof DebugVariablePanel> | null>(null);
 const variablePanelVisible = ref(true);
-const conversationVariables = ref<any[]>([]);
+const conversationVariables = ref<ConversationVariable[]>([]);
 const variablesLoading = ref(false);
 
 // 计算属性：是否应该显示变量面板
 const shouldShowVariablePanel = computed(() => {
-  return conversationVariables.value.length > 0;
+  // 总是显示变量面板，即使暂时没有变量数据
+  return true;
 });
 
 // 切换变量面板显示/隐藏
@@ -134,32 +177,47 @@ const handleVariableUpdated = () => {
 
 // 加载对话变量
 const loadConversationVariables = async () => {
-  if (!props.flowId) return;
-  
   variablesLoading.value = true;
   try {
-    const response = await listVariables({ 
-      scope: 'conversation', 
-      flow_id: props.flowId 
-    });
+    let queryParams: any = { scope: 'conversation' };
     
+    // 优先使用对话ID，如果没有则使用flowId
+    if (tmpConversationId.value) {
+      queryParams.conversation_id = tmpConversationId.value;
+    } else if (props.flowId) {
+      queryParams.flow_id = props.flowId;
+    } else {
+      return;
+    }
+    
+    const response = await listVariables(queryParams);
+        
     // 处理API响应
-    let variables = null;
+    let variables: ConversationVariable[] = [];
     if (response?.result?.variables) {
       variables = response.result.variables;
     } else if ((response as any)?.variables) {
       variables = (response as any).variables;
     } else if (Array.isArray(response)) {
-      variables = response;
+      variables = response as ConversationVariable[];
     }
     
     conversationVariables.value = variables || [];
+    
   } catch (error) {
-    console.error('加载对话变量失败:', error);
+    console.error('❌ 加载变量失败:', error);
     conversationVariables.value = [];
   } finally {
     variablesLoading.value = false;
   }
+};
+
+// 批量更新所有变量到后端
+const updateAllVariablesToBackend = async (conversationId: string) => {
+  if (debugVariablePanelRef.value && 'batchUpdateVariables' in debugVariablePanelRef.value) {
+    return await (debugVariablePanelRef.value as any).batchUpdateVariables(conversationId);
+  }
+  return true;
 };
 /**
  *
@@ -172,6 +230,12 @@ const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
   return undefined;
 };
 
+// 举报函数
+const handleReport = async (qaRecordId: string, reason?: string) => {
+  // 处理举报逻辑
+  console.log('举报记录:', qaRecordId, reason);
+};
+
 onMounted(() => {
   // 删除成功
   conversationList.value = [];
@@ -179,7 +243,7 @@ onMounted(() => {
   currentSelectedSession.value = '';
   historySession.value = [];
   
-  // 加载对话变量
+  // 尝试加载变量配置（基于flowId）
   loadConversationVariables();
 });
 
@@ -199,9 +263,22 @@ const handleSendMessage = async (
   )
     return;
   dialogueInput.value = '';
+  
+  // 生成对话ID（如果还没有）
   if (!tmpConversationId.value) {
     const res = await generateSessionDebug({ debug: true });
     tmpConversationId.value = res || 1;
+    console.log('✅ 新对话创建，conversationId:', tmpConversationId.value);
+  }
+
+  // 先更新所有变量到后端（使用用户在面板中输入的值），再发送消息
+  if (tmpConversationId.value) {
+    console.log('🔄 准备更新变量到后端...');
+    await updateAllVariablesToBackend(tmpConversationId.value);
+    
+    // 变量更新完成后，重新加载以确保状态同步
+    console.log('🔄 变量更新完成，重新加载变量状态...');
+    await loadConversationVariables();
   }
 
   props.handleDebugDialogOps!();
@@ -238,8 +315,20 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 const handleCloseDebugDialog = () => {
   testFlag.value = false;
-  stopDebug();
+  
+  // 只有在有对话时才调用 stopDebug，避免访问空数组
+  if (conversationList.value.length > 0) {
+    stopDebug();
+  } else {
+    // 如果没有对话，直接停止生成状态
+    isAnswerGenerating.value = false;
+  }
+  
   delChat();
+  // 清理变量状态
+  console.log('🗑️ 调试窗口关闭，清理变量状态');
+  conversationVariables.value = [];
+  tmpConversationId.value = '';
   props.handleDebugDialogOps!(false);
 };
 

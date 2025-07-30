@@ -1,5 +1,10 @@
 <template>
   <div class="json-monaco-editor">
+    <!-- 简化调试信息 -->
+    <div v-if="props.modelValue && props.modelValue.trim() !== '{}'" style="background: #e0f7fa; padding: 2px; font-size: 9px; color: #666;">
+      📝 {{ props.modelValue.length }}
+    </div>
+    
     <div 
       ref="editorContainer" 
       class="editor-container"
@@ -43,9 +48,11 @@ const editorStyle = computed(() => {
   const defaultStyle = {
     width: '100%',
     height: '100%',
+    minHeight: '120px', // 确保最小高度
     maxHeight: '200px',
     fontSize: '14px',
-    lineHeight: '16px'
+    lineHeight: '16px',
+    overflow: 'hidden' // 防止内容溢出
   }
   return { ...defaultStyle, ...props.style }
 })
@@ -54,8 +61,21 @@ const editorStyle = computed(() => {
 const initMonacoEditor = async () => {
   if (!editorContainer.value) return
 
-  // 配置Worker - 不设置worker，使用默认配置
-  // Monaco Editor会自动处理worker加载
+  try {
+    // 配置Worker - 禁用worker避免加载问题
+    if (typeof window !== 'undefined') {
+      (window as any).MonacoEnvironment = {
+        getWorker: () => {
+          // 返回一个空的worker来避免错误
+          return {
+            postMessage: () => {},
+            terminate: () => {},
+            addEventListener: () => {},
+            removeEventListener: () => {}
+          }
+        }
+      }
+    }
 
   // 定义深色主题
   monaco.editor.defineTheme('json-dark', {
@@ -94,9 +114,17 @@ const initMonacoEditor = async () => {
     minimap: {
       enabled: false
     },
-         // JSON特定设置
-     formatOnPaste: true,
-     formatOnType: true
+    // JSON特定设置
+    formatOnPaste: false, // 禁用可能需要worker的功能
+    formatOnType: false,  // 禁用可能需要worker的功能
+    // 禁用一些高级功能来避免worker问题
+    quickSuggestions: false,
+    suggestOnTriggerCharacters: false,
+    acceptSuggestionOnEnter: 'off',
+    tabCompletion: 'off',
+    wordBasedSuggestions: 'off',
+    // 禁用语言服务相关功能
+    foldingStrategy: 'indentation'
   })
 
   // 监听内容变化
@@ -112,9 +140,44 @@ const initMonacoEditor = async () => {
     editor: editor 
   })
 
+  // 强制布局刷新确保正确显示
+  setTimeout(() => {
+    if (editor) {
+      editor.layout();
+      console.log('🔧 Monaco Editor post-creation layout complete');
+    }
+  }, 100);
+
   // 自动聚焦
   if (props.autofocus) {
     editor.focus()
+  }
+  } catch (error) {
+    console.error('Monaco Editor 初始化失败:', error)
+    // 可以在这里添加降级方案，比如显示一个简单的 textarea
+    if (editorContainer.value) {
+      editorContainer.value.innerHTML = `
+        <textarea 
+          style="width: 100%; height: 100%; border: none; outline: none; resize: none; font-family: monospace; padding: 8px;"
+          placeholder="${props.placeholder}"
+          ${props.disabled ? 'readonly' : ''}
+        >${props.modelValue}</textarea>
+      `
+      
+      const textarea = editorContainer.value.querySelector('textarea')
+      if (textarea) {
+        textarea.addEventListener('input', (e) => {
+          const value = (e.target as HTMLTextAreaElement).value
+          emit('update:modelValue', value)
+          emit('change', value)
+        })
+        
+        emit('ready', { 
+          view: textarea, 
+          editor: textarea 
+        })
+      }
+    }
   }
 }
 
@@ -132,8 +195,23 @@ const setValue = (value: string) => {
 
 // 监听props变化
 watch(() => props.modelValue, (newVal) => {
-  if (editor && newVal !== editor.getValue()) {
-    editor.setValue(newVal || '')
+  if (editor) {
+    editor.setValue(newVal || '');
+    // 强制刷新编辑器布局
+    setTimeout(() => {
+      if (editor) {
+        editor.layout();
+        console.log('📐 Monaco refreshed');
+      }
+    }, 100);
+  } else if (!editor && editorContainer.value) {
+    // 处理降级方案（textarea）
+    const textarea = editorContainer.value.querySelector('textarea');
+    if (textarea) {
+      textarea.value = newVal || '';
+      // 触发输入事件确保显示更新
+      textarea.dispatchEvent(new Event('input'));
+    }
   }
 }, { immediate: true })
 
@@ -179,14 +257,28 @@ defineExpose({
     border: 1px solid var(--el-border-color);
     border-radius: 4px;
     overflow: hidden;
+    min-height: 120px; // 确保最小高度
     
     :deep(.monaco-editor) {
+      min-height: 120px !important; // 强制最小高度
+      
       .margin {
         background-color: var(--el-fill-color-extra-light);
       }
       
       .monaco-editor-background {
         background-color: var(--el-bg-color);
+      }
+      
+      // 确保文本内容可见
+      .view-lines {
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+      
+      .view-line {
+        opacity: 1 !important;
+        visibility: visible !important;
       }
     }
   }

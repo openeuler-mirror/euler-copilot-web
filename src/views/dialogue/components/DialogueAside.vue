@@ -28,7 +28,10 @@ import {
   IconChevronUp,
   IconChevronDown,
 } from '@computing/opendesign-icons';
-import router from 'src/router';
+import { useRouter, useRoute } from 'vue-router';
+
+const router = useRouter();
+const route = useRoute();
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 
 interface HistorySession {
@@ -273,11 +276,28 @@ const selectApp = (id) => {
     user_selected_app.value = '';
     app.value.selectedAppId = '';
     app.value.appId = '';
+    // 清除URL中的appId参数
+    router.replace({ 
+      path: '/',
+      query: {}
+    });
   } else {
     selectedAppId.value = id;
     user_selected_app.value = id;
     app.value.selectedAppId = id;
     app.value.appId = id;
+    
+    // 找到选中的应用信息
+    const selectedApp = apps.value.find(app => app.appId === id);
+    
+    // 更新URL参数
+    router.replace({
+      path: '/',
+      query: {
+        appId: id,
+        name: selectedApp?.name || ''
+      }
+    });
   }
   getHistorySession();
 };
@@ -336,6 +356,33 @@ watch(
       getAppsValue();
     }
   },
+);
+
+// 监听路由参数变化，同步应用选择状态
+watch(
+  () => route.query.appId,
+  (newAppId) => {
+    if (newAppId && typeof newAppId === 'string') {
+      // 从URL参数恢复应用选择
+      selectedAppId.value = newAppId;
+      user_selected_app.value = newAppId;
+      if (app.value) {
+        app.value.selectedAppId = newAppId;
+        app.value.appId = newAppId;
+        app.value.name = (route.query.name as string) || '';
+      }
+    } else if (!newAppId) {
+      // URL中没有appId，清除选择
+      selectedAppId.value = '';
+      user_selected_app.value = '';
+      if (app.value) {
+        app.value.selectedAppId = '';
+        app.value.appId = '';
+        app.value.name = '';
+      }
+    }
+  },
+  { immediate: true }
 );
 </script>
 

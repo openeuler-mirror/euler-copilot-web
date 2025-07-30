@@ -769,11 +769,16 @@ export const useSessionStore = defineStore('conversation', () => {
    */
   const stopDebug = async (): Promise<void> => {
     isPaused.value = true;
-    (
-      conversationList.value[
-        conversationList.value.length - 1
-      ] as RobotConversationItem
-    ).isFinish = true;
+    
+    // 安全检查：确保 conversationList 不为空
+    if (conversationList.value.length > 0) {
+      (
+        conversationList.value[
+          conversationList.value.length - 1
+        ] as RobotConversationItem
+      ).isFinish = true;
+    }
+    
     cancel();
     const resp = await api.stopGeneration();
     if (resp?.[1]?.code === 200) {

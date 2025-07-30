@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import CommonFooter from '@/components/commonFooter/CommonFooter.vue';
 import Bubble from '@/components/bubble/index.vue';
+import DialogueFlow from '@/components/dialoguePanel/DialogueFlow.vue';
 import {
   useHistorySessionStore,
   useLangStore,
@@ -21,6 +22,7 @@ import { useScrollBottom } from '@/hooks/useScrollBottom';
 import dayjs from 'dayjs';
 import { useRoute } from 'vue-router';
 
+
 let isDebugSuccess = false;
 
 interface DebugConfig {
@@ -38,6 +40,8 @@ interface DebugConfig {
   author?: string;
   model?: string;
 }
+
+
 
 const props = defineProps<{
   visible: boolean;
@@ -57,6 +61,8 @@ const { currentSelectedSession, historySession } = storeToRefs(
 );
 
 const { generateSession, getHistorySession } = useHistorySessionStore();
+
+
 
 async function initDebugSession() {
   const { conversationList } = useSessionStore();
@@ -211,9 +217,17 @@ function useConversations() {
     answerIndex: number;
     role: 'user' | 'assistant';
     createdAt?: Date | number;
+    flowdata?: {
+      id: string;
+      title: string;
+      status: string;
+      display: boolean;
+      data: any[][];
+      progress?: string;
+    };
   }
 
-  type StreamEvent = 'text.add' | 'init' | 'input';
+  type StreamEvent = 'text.add' | 'init' | 'input' | 'flow.start' | 'step.input' | 'step.output' | 'flow.stop';
   interface StreamMetadata {
     inputTokens: number;
 
@@ -223,15 +237,19 @@ function useConversations() {
   }
 
   interface StreamChunk {
-    content: {
-      text: string;
-    };
+    content: any;
     conversationId: string;
     event: StreamEvent;
     groupId: string;
     id: string;
     metadata: StreamMetadata;
     taskId: string;
+    flow?: {
+      stepId: string;
+      stepName: string;
+      stepStatus: string;
+      stepProgress: string;
+    };
   }
 
   const conversations = ref<Conversation[]>([]);
@@ -241,7 +259,21 @@ function useConversations() {
     question: string,
     conversation?: Conversation,
   ) => {
-    const { id, event, content, metadata } = JSON.parse(data) as StreamChunk;
+    // 记录原始数据
+    console.log('🔍 Raw message data:', data);
+    
+    const parsedData = JSON.parse(data) as StreamChunk;
+    const { id, event, content, metadata, flow } = parsedData;
+    
+    // 详细记录解析后的数据
+    console.log('📋 Parsed message:', {
+      id,
+      event,
+      content,
+      metadata,
+      flow,
+      fullObject: parsedData
+    });
 
     if (event === 'init') {
       if (conversation) {
@@ -263,6 +295,7 @@ function useConversations() {
         });
       }
     }
+    
     if (event === 'text.add') {
       if (!isDebugSuccess) {
         isDebugSuccess = true;
@@ -272,14 +305,134 @@ function useConversations() {
       c.answer[c.answerIndex].content += content.text;
       c.answer[c.answerIndex].metadata = metadata;
     }
+    
+    // 处理工作流事件
+    if (event === 'flow.start') {
+      console.log('🚀 Flow Start Event:', { event, flow, content });
+      const c = conversations.value[conversations.value.length - 1];
+      if (c && flow) {
+        c.flowdata = {
+          id: flow.stepId || '',
+          title: '工作流执行',
+          status: 'running',
+          display: true,
+          data: [[]],
+          progress: flow.stepProgress || '',
+        };
+        console.log('✅ Flow data initialized:', c.flowdata);
+      }
+    }
+    
+    if (event === 'step.input') {
+      console.log('📥 Step Input Event - Detailed Analysis:');
+      console.log('  ├─ Event:', event);
+      console.log('  ├─ Flow object:', flow);
+      console.log('  ├─ Content type:', typeof content);
+      console.log('  ├─ Content value:', content);
+      console.log('  ├─ Content JSON:', JSON.stringify(content, null, 2));
+      console.log('  └─ Metadata:', metadata);
+      
+      const c = conversations.value[conversations.value.length - 1];
+      console.log('📝 Current conversation:', c);
+      console.log('📊 Current flowdata:', c?.flowdata);
+      
+      if (c && c.flowdata && flow) {
+        const stepData = {
+          id: flow.stepId,
+          title: flow.stepName,
+          status: flow.stepStatus,
+          data: {
+            input: content,
+          },
+        };
+        
+        console.log('➕ Adding step data:', stepData);
+        c.flowdata.data[0].push(stepData);
+        c.flowdata.progress = flow.stepProgress;
+        c.flowdata.status = flow.stepStatus;
+        
+        console.log('✅ Updated flowdata after step.input:', JSON.stringify(c.flowdata, null, 2));
+      } else {
+        console.log('❌ Step input failed - missing data:', {
+          hasConversation: !!c,
+          hasFlowdata: !!c?.flowdata,
+          hasFlow: !!flow
+        });
+      }
+    }
+    
+    if (event === 'step.output') {
+      console.log('📤 Step Output Event - Detailed Analysis:');
+      console.log('  ├─ Event:', event);
+      console.log('  ├─ Flow object:', flow);
+      console.log('  ├─ Content type:', typeof content);
+      console.log('  ├─ Content value:', content);
+      console.log('  ├─ Content JSON:', JSON.stringify(content, null, 2));
+      console.log('  └─ Metadata:', metadata);
+      
+      const c = conversations.value[conversations.value.length - 1];
+      console.log('📝 Current conversation:', c);
+      console.log('📊 Current flowdata:', c?.flowdata);
+      
+      if (c && c.flowdata && flow) {
+        console.log('🔍 Looking for step with ID:', flow.stepId);
+        console.log('📋 Available steps:', c.flowdata.data[0].map(step => ({ id: step.id, title: step.title })));
+        
+        const target = c.flowdata.data[0].find((item) => item.id === flow.stepId);
+        
+        if (target) {
+          console.log('🎯 Found target step:', target);
+          
+          // 添加输出数据，与 conversation.ts 保持一致
+          target.data.output = content;
+          target.status = flow.stepStatus;
+          target.costTime = metadata?.timeCost;
+          
+          if (flow.stepStatus === 'error') {
+            c.flowdata.status = flow.stepStatus;
+          }
+          
+          console.log('✅ Updated target after step.output:', JSON.stringify(target, null, 2));
+          console.log('🏁 Final flowdata state:', JSON.stringify(c.flowdata, null, 2));
+        } else {
+          console.log('❌ Step output failed - target not found:');
+          console.log('  ├─ Looking for stepId:', flow.stepId);
+          console.log('  ├─ Available stepIds:', c.flowdata.data[0].map(item => item.id));
+          console.log('  └─ All steps:', c.flowdata.data[0]);
+        }
+      } else {
+        console.log('❌ Step output failed - missing data:', {
+          hasConversation: !!c,
+          hasFlowdata: !!c?.flowdata,
+          hasFlow: !!flow
+        });
+      }
+    }
+    
+    if (event === 'flow.stop') {
+      console.log('🏁 Flow Stop Event:', { event, flow, content });
+      const c = conversations.value[conversations.value.length - 1];
+      if (c && c.flowdata && flow) {
+        c.flowdata.status = flow.stepStatus || 'success';
+        c.flowdata.title = '工作流执行完成';
+        console.log('✅ Flow completed, final state:', c.flowdata);
+      }
+    }
+    
+    // 记录所有事件类型以便调试
+    if (!['init', 'text.add', 'flow.start', 'step.input', 'step.output', 'flow.stop', 'heartbeat'].includes(event)) {
+      console.log('🔔 Unhandled event type:', event, 'Full data:', parsedData);
+    }
+    
     scrollToBottom();
   };
 
   return { conversations, setConversations };
 }
 
-function onSend(q: string) {
+async function onSend(q: string) {
   if (isStreaming.value) return;
+  
   conversations.value.push({
     id: `user-${(conversations.value.length % 2) + 1}`,
     question: q,
@@ -288,7 +441,9 @@ function onSend(q: string) {
     role: 'user',
   });
   scrollToBottom(true);
-  queryStream(q, currentSelectedSession.value, language.value as 'zh' | 'en');
+  
+  const conversationId = currentSelectedSession.value;
+  queryStream(q, conversationId, language.value as 'zh' | 'en');
   dialogueInput.value = '';
 }
 
@@ -296,11 +451,11 @@ function onSend(q: string) {
  * 处理鼠标事件
  * @param event
  */
-const handleKeydown = (event: KeyboardEvent) => {
+const handleKeydown = async (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     if (dialogueInput.value !== '') {
-      onSend(dialogueInput.value);
+      await onSend(dialogueInput.value);
     }
   }
 };
@@ -333,12 +488,15 @@ const bubbleStyles = computed(() => (role: 'user' | 'assistant') => {
 
 watch(
   () => props.visible,
-  () => {
-    if (!props.visible) {
+  (newVisible, oldVisible) => {
+    if (!newVisible) {
       deleteSession(currentSelectedSession.value);
       return;
     }
-    initDebugSession();
+    
+    if (newVisible && !oldVisible) {
+      initDebugSession();
+    }
   },
 );
 </script>
@@ -371,6 +529,8 @@ watch(
               />
             </div>
           </div>
+          
+
         </div>
 
         <div class="chat-container" ref="chatContainerRef">
@@ -401,7 +561,7 @@ watch(
           <Bubble
             v-else
             v-for="(
-              { id, role, question, answer, answerIndex, createdAt }, idx
+              { id, role, question, answer, answerIndex, createdAt, flowdata }, idx
             ) in conversations"
             :key="id"
             :avatar="role === 'user' ? userAvatar : (config.icon?config.icon:robotAvatar)"
@@ -431,6 +591,13 @@ watch(
               "
               #footer
             >
+              <!-- 工作流显示 -->
+              <div v-if="flowdata" class="workflow-container">
+                <DialogueFlow 
+                  :flowdata="flowdata" 
+                  :isWorkFlowDebug="true"
+                />
+              </div>
               <div class="bubble-footer">
                 <div class="action-toolbar">
                   <div class="left">
@@ -526,7 +693,7 @@ watch(
                 v-else
                 :src="isStreaming ? SendDisabledIcon : SendEnableIcon"
                 alt=""
-                @click="onSend(dialogueInput)"
+                @click="async () => await onSend(dialogueInput)"
               />
             </div>
           </div>
@@ -615,6 +782,8 @@ watch(
           }
         }
       }
+
+
     }
 
     .chat-container {
@@ -800,6 +969,12 @@ watch(
     width: 64px;
     height: 24px;
     border-radius: 4px;
+  }
+
+  .workflow-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--o-border-color-light);
   }
 }
 </style>

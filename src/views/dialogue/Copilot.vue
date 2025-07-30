@@ -47,10 +47,18 @@ watch(
   () => {
     const currRoute = router.currentRoute;
     if (currRoute.value.query.appId && userinfo.user_sub) {
+      const appId = route.query?.appId as string;
+      const appName = route.query?.name as string;
+      
+      // 同步到store
+      app.value.appId = appId;
+      app.value.name = appName || '';
+      app.value.selectedAppId = appId;
+      
       // 判断是否编辑--是否需要查询回显数据
       api
         .querySingleAppData({
-          id: route.query?.appId as string,
+          id: appId,
         })
         .then((res) => {
           const appInfo = res?.[1]?.result;

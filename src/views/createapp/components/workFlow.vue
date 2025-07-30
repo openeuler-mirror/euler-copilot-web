@@ -7,6 +7,7 @@ import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import BranchNode from './workFlowConfig/BranchNode.vue';
+import ChoiceBranchNode from './workFlowConfig/ChoiceBranchNode.vue';
 import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
 import CustomControl from './CustomControl.vue';
@@ -23,10 +24,13 @@ import {
   IconCaretDown,
   IconPlusCircle,
 } from '@computing/opendesign-icons';
+
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import VariableBasedStartNodeDrawer from './workFlowConfig/VariableBasedStartNodeDrawer.vue';
 import CodeNodeDrawer from './workFlowConfig/CodeNodeDrawer.vue';
 import DirectReplyDrawer from './workFlowConfig/DirectReplyDrawer.vue';
+import ChoiceBranchDrawer from './workFlowConfig/ChoiceBranchDrawer.vue';
+import InsertNodeMenu from './workFlowConfig/insertNodeMenu.vue';
 import { api } from 'src/apis';
 // 导入变量API
 import { listVariables } from '@/api/variable';
@@ -36,13 +40,13 @@ import { getSrcIcon, DefaultViewPortZoom } from './types';
 import $bus from 'src/bus/index';
 import CustomLoading from '../../customLoading/index.vue';
 import EditFlowName from './workFlowConfig/editFlowName.vue';
+import NodeListPanel from './workFlowConfig/NodeListPanel.vue';
+import EnvironmentVariableDrawer from './workFlowConfig/EnvironmentVariableDrawer.vue';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
-const isCopilotAsideVisible = ref(true);
-const apiSearchValue = ref();
-const activeNames = ref([]);
-const activeName = ref();
+const isCopilotAsideVisible = ref(false);
+
 const workFlowItemName = ref();
 const isAddWorkFlow = ref(false);
 const isEditFlowName = ref(false);
@@ -53,10 +57,13 @@ const isEditYaml = ref(false);
 const isEditStartNode = ref(false);
 const isEditCodeNode = ref(false);
 const isEditDirectReplyNode = ref(false);
+const isEditChoiceBranchNode = ref(false);
+const isEditEnvironmentVariables = ref(false);
 const nodeName = ref('');
 const nodeDesc = ref('');
 const currentCodeNodeData = ref({});
 const currentDirectReplyNodeData = ref({});
+const currentChoiceBranchNodeData = ref({});
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const apiServiceList = ref([]);
@@ -65,10 +72,10 @@ const yamlContent = ref();
 const nodeYamlId = ref();
 const emits = defineEmits(['updateFlowsDebug']);
 const route = useRoute();
-const workFlowList = ref([]);
+const workFlowList = ref<any[]>([]);
 const props = defineProps(['flowList']);
-const flowObj = ref({});
-const nodes = ref([]);
+const flowObj = ref<{flowId?: string, debug?: boolean, name?: string, nodes?: any[], edges?: any[]}>({});
+const nodes = ref<any[]>([]);
 const debugStatus = ref('');
 const debugTime = ref('');
 const totalTime = ref(0);
@@ -82,10 +89,17 @@ const updateFlowsDebugStatus = ref(false);
 // 添加选中节点状态管理
 const selectedNodeId = ref('');
 
-// 变量相关状态管理
-const variablesCache = ref(new Map());
+// 对话变量缓存 - 仅用于开始节点展示
+const conversationVariablesForDisplay = ref<any[]>([]);
 const variablesLoading = ref(false);
-const conversationId = ref(''); // 从路由或props获取
+
+// 插入节点相关状态
+const insertMenuData = ref({
+  visible: false,
+  position: { x: 0, y: 0 },
+  edgeInfo: null,
+  direction: 'right' as 'left' | 'right'
+});
 
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
@@ -152,9 +166,7 @@ onConnect((e) => {
     type: 'normal',
   });
 });
-const handleChange = () => {
-  activeNames.value = activeName.value;
-};
+
 
 // 打开新增工作流弹窗
 const addWorkFlow = () => {
@@ -165,10 +177,13 @@ const addWorkFlow = () => {
 // 关闭工作流弹出
 const handleClose = (flowId?: string) => {
   if (isEditFlowName.value) {
-    api.querySingleAppData({ id: route.query.appId }).then((res) => {
+    api.querySingleAppData({ id: route.query.appId as string }).then((res) => {
       //workflowList 数据更新
       workFlowList.value = res[1]?.result.workflows;
-      choiceFlowId(workFlowList.value.find((item) => item.id === flowId));
+      const foundFlow = workFlowList.value.find((item: any) => item.id === flowId);
+      if (foundFlow) {
+        choiceFlowId(foundFlow);
+      }
     });
   }
   isEditFlowName.value = false;
@@ -182,35 +197,16 @@ const delNode = (id) => {
   }
 };
 
-// 注意：变量管理通过variable接口直接处理，不需要附加到工作流节点中
-
-// 获取对话变量用于显示 - 使用computed确保响应式更新
-const conversationVariablesForDisplay = computed(() => {
-  const conversationVars = variablesCache.value.get('conversation') || [];
-  console.log('🎯 获取对话变量用于显示 (computed) - 重新计算触发!');
-  console.log('🎯 当前变量数据:', conversationVars);
-  console.log('🎯 变量数量:', conversationVars.length);
-  console.log('🎯 变量名列表:', conversationVars.map(v => v?.name || 'unnamed'));
-  console.log('🎯 缓存Map引用:', variablesCache.value);
-  console.log('🎯 conversation键是否存在:', variablesCache.value.has('conversation'));
-  return conversationVars;
-});
-
-// 处理变量更新事件
-const handleVariablesUpdated = async () => {
-  console.log('🔄 收到变量更新通知，延迟300ms后重新加载变量数据...');
-  console.log('🔄 删除前缓存的对话变量:', variablesCache.value.get('conversation'));
-  
+// 处理变量更新事件 - 仅重新加载对话变量用于开始节点展示
+const handleVariablesUpdated = async () => {  
   // 延迟加载，确保后端数据已经同步
   setTimeout(async () => {
-    await loadWorkflowVariables();
-    console.log('✅ 父组件变量数据已重新加载');
-    console.log('📊 删除后缓存的对话变量:', variablesCache.value.get('conversation'));
+    await loadConversationVariablesForDisplay();
   }, 300);
 };
 
-// 加载工作流变量
-const loadWorkflowVariables = async () => {
+// 加载对话变量用于开始节点展示
+const loadConversationVariablesForDisplay = async () => {
   if (!flowObj.value?.flowId) {
     console.warn('没有flowId，跳过变量加载');
     return;
@@ -218,84 +214,35 @@ const loadWorkflowVariables = async () => {
   
   variablesLoading.value = true;
   
-  try {
-    console.log('🔄 开始加载工作流变量...');
-    
-    // 加载系统变量
-    const systemVars = await listVariables({ scope: 'system' });
-    const systemVariables = systemVars?.result?.variables || systemVars?.variables || (Array.isArray(systemVars) ? systemVars : []);
-    if (systemVariables.length > 0) {
-      variablesCache.value.set('system', systemVariables);
-      console.log('✅ 系统变量加载成功:', systemVariables.length, '个');
-    }
-    
-    // 加载用户变量  
-    const userVars = await listVariables({ scope: 'user' });
-    const userVariables = userVars?.result?.variables || userVars?.variables || (Array.isArray(userVars) ? userVars : []);
-    if (userVariables.length > 0) {
-      variablesCache.value.set('user', userVariables);
-      console.log('✅ 用户变量加载成功:', userVariables.length, '个');
-    }
-    
-    // 加载环境变量
-    const envVars = await listVariables({ scope: 'env' });
-    const envVariables = envVars?.result?.variables || envVars?.variables || (Array.isArray(envVars) ? envVars : []);
-    if (envVariables.length > 0) {
-      variablesCache.value.set('env', envVariables);
-      console.log('✅ 环境变量加载成功:', envVariables.length, '个');
-    }
-    
-    // 加载对话变量（使用flowId）
-    console.log('🔄 准备调用对话变量API, flowId:', flowObj.value.flowId);
-    console.log('🔍 父组件LIST API使用的flowId:', flowObj.value.flowId);
-    const convVars = await listVariables({ 
+  try {    
+    // 只加载对话变量（不带current_step_id，因为是给开始节点展示用的）
+    const convVars: any = await listVariables({ 
       scope: 'conversation', 
       flow_id: flowObj.value.flowId 
     });
-    console.log('📥 对话变量API响应:', convVars);
     
     // 修复：支持多种API响应结构
-    let variables = null;
+    let variables: any[] = [];
     if (convVars?.result?.variables) {
       // 结构1: { result: { variables: [...] } }
       variables = convVars.result.variables;
-      console.log('📋 使用result.variables结构');
     } else if (convVars?.variables) {
       // 结构2: { variables: [...], total: 1 }
       variables = convVars.variables;
-      console.log('📋 使用直接variables结构');
     } else if (Array.isArray(convVars)) {
       // 结构3: 直接返回数组
       variables = convVars;
-      console.log('📋 使用数组结构');
     }
     
     if (variables && Array.isArray(variables)) {
-      // 无论数组是否为空，都要更新缓存
-      variablesCache.value.set('conversation', variables);
-      if (variables.length > 0) {
-        console.log('✅ 对话变量加载成功:', variables.length, '个');
-        console.log('📋 变量详情:', variables);
-      } else {
-        console.log('✅ 对话变量已清空（空数组）');
-      }
+      conversationVariablesForDisplay.value = variables;
     } else {
-      // API返回的不是数组，设置为空数组
-      variablesCache.value.set('conversation', []);
-      console.log('⚠️ 对话变量API返回非数组，设置为空数组 - API响应结构:', {
-        convVars,
-        hasResult: !!convVars?.result,
-        hasResultVariables: !!convVars?.result?.variables,
-        hasDirectVariables: !!convVars?.variables,
-        isArray: Array.isArray(convVars),
-        variablesLength: variables?.length || 0
-      });
+      conversationVariablesForDisplay.value = [];
     }
     
-    console.log('🎉 所有变量加载完成');
   } catch (error) {
-    console.error('❌ 加载变量失败:', error);
-    ElMessage.error('加载变量失败');
+    console.error('❌ 加载对话变量失败:', error);
+    ElMessage.error('加载对话变量失败');
   } finally {
     variablesLoading.value = false;
   }
@@ -382,6 +329,20 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditDirectReplyNode.value = true;
+  } else if (currentNode && currentNode.data.callId === 'Choice') {
+    // 打开条件分支节点编辑器
+    currentChoiceBranchNodeData.value = {
+      name: currentNode.data.name,
+      description: currentNode.data.description,
+      callId: currentNode.data.callId,
+      parameters: currentNode.data.parameters || {
+        input_parameters: { choices: [] },
+        output_parameters: { branch_id: '' }
+      }
+    };
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+    isEditChoiceBranchNode.value = true;
   } else {
     // 打开YAML编辑器（其他节点类型）
     yamlContent.value = yamlCode;
@@ -450,6 +411,47 @@ const saveDirectReplyNode = (nodeData, nodeId) => {
   ElMessage.success('直接回复节点保存成功');
 };
 
+// 关闭条件分支节点抽屉
+const closeChoiceBranchDrawer = () => {
+  isEditChoiceBranchNode.value = false;
+  selectedNodeId.value = '';
+  currentChoiceBranchNodeData.value = {};
+};
+
+// 保存条件分支节点
+const saveChoiceBranchNode = (nodeData, nodeId) => {
+  // 更新节点数据
+  const updateNodeParameter = {
+    id: nodeId,
+    ...nodeData,
+  };
+  
+  // 调用保存接口
+  saveFlow(updateNodeParameter);
+  
+  // 关闭抽屉
+  closeChoiceBranchDrawer();
+  
+  ElMessage.success('条件分支节点保存成功');
+};
+
+// 打开环境变量配置
+const openEnvironmentVariables = () => {
+  if (debugDialogVisible.value) {
+    return; // 调试模式下不响应点击
+  }
+  if (!flowObj.value?.flowId) {
+    ElMessage.warning('请先选择工作流');
+    return;
+  }
+  isEditEnvironmentVariables.value = true;
+};
+
+// 关闭环境变量配置
+const closeEnvironmentVariables = () => {
+  isEditEnvironmentVariables.value = false;
+};
+
 // 编辑开始节点
 const editStartNodeDrawer = async (name, desc, yamlCode, nodeId) => {
   yamlContent.value = yamlCode;
@@ -458,9 +460,6 @@ const editStartNodeDrawer = async (name, desc, yamlCode, nodeId) => {
   nodeYamlId.value = nodeId;
   // 设置选中的节点
   selectedNodeId.value = nodeId;
-  
-  // 加载变量数据
-  await loadWorkflowVariables();
   
   isEditStartNode.value = true;
   // 编辑 yaml 时，需要debug 后才可发布
@@ -487,10 +486,8 @@ const saveStartNode = (nodeId, name, description) => {
 
 // 处理保存节点描述事件
 const handleSaveNodeDescription = (nodeInfo) => {
-  console.log('📝 收到保存节点描述事件:', nodeInfo);
   // 调用saveFlow方法保存到后端
   saveFlow(nodeInfo);
-  console.log('✅ 节点描述已通过saveFlow方法保存到后端');
 };
 
 const handleZommOnScroll = () => {
@@ -529,32 +526,9 @@ onMounted(() => {
     })
     .then((res) => {
       const services = res[1]?.result.services || [];
-      
-      // 添加"直接回复"节点到第一个服务组中
-      if (services.length > 0) {
-        const directReplyNode = {
-          name: '直接回复',
-          callId: 'DirectReply',
-          nodeId: 'DirectReply',
-          type: 'custom',
-          description: '直接回复用户输入的内容，支持变量插入'
-        };
-        
-        if (!services[0].nodeMetaDatas) {
-          services[0].nodeMetaDatas = [];
-        }
-        
-        // 检查是否已经存在DirectReply节点，避免重复添加
-        const existingDirectReply = services[0].nodeMetaDatas.find(node => node.callId === 'DirectReply');
-        if (!existingDirectReply) {
-          services[0].nodeMetaDatas.unshift(directReplyNode);
-        }
-      }
-      
+ 
       apiServiceList.value = services;
       allApiServiceList.value = services;
-      activeName.value = [services[0]?.serviceId];
-      activeNames.value = [services[0]?.serviceId];
       apiLoading.value = false;
     });
   handleChangeZoom(DefaultViewPortZoom);
@@ -566,16 +540,13 @@ onUnmounted(() => {
   sessionStorage.setItem('workflowViewPortY', '');
 });
 
-// 过滤工作流接口返回的可拖拽节点
-const searchApiList = () => {
-  apiServiceList.value = allApiServiceList.value.map((item) => {
-    const filterObj = { ...item, nodeMetaDatas: [] };
-    if (item?.nodeMetaDatas) {
-      filterObj.nodeMetaDatas = item.nodeMetaDatas.filter((item) =>
-        item?.name.includes(apiSearchValue.value),
-      );
-    }
-    return filterObj;
+
+
+// 处理节点拖拽开始事件
+const handleNodeDragStart = (event: DragEvent, node: any) => {
+  onDragStart(event, node.type, {
+    serviceId: node.serviceId,
+    ...node,
   });
 };
 
@@ -693,11 +664,10 @@ const editFlow = async (item) => {
     
     if (res[1]?.result?.flow) {
       flowObj.value = res[1].result.flow;
-      redrageFlow(flowObj.value.nodes, flowObj.value.edges);
+      redrageFlow(flowObj.value.nodes || [], flowObj.value.edges || []);
       
-      // 加载工作流变量
-      console.log('🔄 工作流加载完成，开始加载变量...');
-      await loadWorkflowVariables();
+      // 加载对话变量用于开始节点展示
+      await loadConversationVariablesForDisplay();
     }
   } catch (error) {
     console.error('加载工作流失败:', error);
@@ -715,7 +685,7 @@ const delFlow = (item) => {
   loading.value = true;
   api
     .delFlowTopology({
-      appId: route.query?.appId,
+      appId: route.query?.appId as string,
       flowId: item.id,
     })
     .then((res) => {
@@ -775,8 +745,35 @@ const redrageFlow = (nodesList, edgesList) => {
         nodePosition: node.callId === 'start' ? 'Right' : 'Left',
       };
       newNode.deletable = false;
-    } else if (node.callId === 'choice') {
-      newNode.type = 'branch';
+    } else if (node.callId === 'Choice') {
+      newNode.type = 'Choice';
+      
+      // 处理Choice节点的参数，确保包含ELSE分支
+      const choices = node.parameters?.input_parameters?.choices || [];
+      
+      // 检查是否已有默认分支
+      const hasDefaultBranch = choices.some(choice => choice.is_default === true);
+      
+      // 如果没有默认分支，添加一个ELSE分支
+      if (!hasDefaultBranch) {
+        choices.push({
+          branch_id: `else_${node.stepId || Date.now()}`,
+          name: 'ELSE',
+          is_default: true,
+          conditions: [],
+          logic: 'and'
+        });
+      }
+      
+      newNode.data = {
+        ...newNode.data,
+        parameters: {
+          input_parameters: { 
+            choices: choices 
+          },
+          output_parameters: node.parameters?.output_parameters || { branch_id: '' }
+        }
+      };
     } else if (node.callId === 'Code') {
       // Code节点特殊处理：从parameters中提取特有属性并添加到data中
       newNode.type = 'custom';
@@ -820,6 +817,151 @@ const redrageFlow = (nodesList, edgesList) => {
   setEdges(newEdgeList);
   // 回显节点和边后，判断各节点连接状态
   nodeAndLineConnection();
+};
+
+// 处理插入节点事件
+const handleInsertNode = (edgeInfo) => {
+  if (debugDialogVisible.value) {
+    return; // 调试模式下不允许插入节点
+  }
+  
+  // 获取Vue Flow画布的viewport信息
+  const viewport = getViewport();
+  
+  // 获取Vue Flow容器的位置信息
+  const vueFlowElement = document.querySelector('.vue-flow__viewport');
+  const containerRect = vueFlowElement?.getBoundingClientRect();
+  
+  if (!containerRect) {
+    console.error('无法获取Vue Flow容器位置');
+    return;
+  }
+  
+  // 将画布坐标转换为相对于Vue Flow容器的坐标
+  const containerX = edgeInfo.midX * viewport.zoom + viewport.x;
+  const containerY = edgeInfo.midY * viewport.zoom + viewport.y;
+  
+  // 计算建议的菜单方向（不做位置调整，只做方向建议）
+  const menuWidth = 400;
+  let direction: 'left' | 'right' = 'right';
+  
+  // 简单的方向建议：如果右侧空间不足，建议左侧显示
+  if (containerX + menuWidth + 20 > containerRect.width) {
+    direction = 'left';
+  } else {
+    direction = 'right';
+  }
+  
+  // 更新插入菜单数据（直接传递容器坐标，让子组件处理边界）
+  insertMenuData.value = {
+    visible: true,
+    position: {
+      x: containerX,
+      y: containerY
+    },
+    edgeInfo,
+    direction
+  };
+};
+
+// 关闭插入节点菜单
+const closeInsertNodeMenu = () => {
+  insertMenuData.value.visible = false;
+  insertMenuData.value.edgeInfo = null;
+  insertMenuData.value.position = { x: 0, y: 0 };
+};
+
+// 执行插入节点操作
+const executeInsertNode = (nodeMetaData) => {
+  try {
+    if (!insertMenuData.value.edgeInfo) {
+      console.error('没有边信息，无法插入节点');
+      return;
+    }
+    
+    const edgeInfo = insertMenuData.value.edgeInfo;
+    
+    // 生成新节点ID
+    const newNodeId = `node_${Date.now()}`;
+    
+    // 找到源边
+    const sourceEdge = getEdges.value.find(edge => edge.id === edgeInfo.edgeId);
+    if (!sourceEdge) {
+      console.error('找不到要插入的边');
+      return;
+    }
+    
+    // 创建新节点
+    const newNode = {
+      id: newNodeId,
+      type: nodeMetaData.callId === 'Choice' ? 'branch' : 'custom',
+      position: {
+        x: edgeInfo.midX - 100, // 节点宽度的一半
+        y: edgeInfo.midY - 40   // 节点高度的一半
+      },
+      data: {
+        name: nodeMetaData.name,
+        description: nodeMetaData.description,
+        nodeId: nodeMetaData.nodeId,
+        callId: nodeMetaData.callId,
+        serviceId: nodeMetaData.serviceId || 'default',
+        parameters: {
+          input_parameters: {},
+          output_parameters: {}
+        }
+      },
+      deletable: true
+    };
+    
+    // 添加新节点
+    const currentNodes = [...getNodes.value, newNode];
+    setNodes(currentNodes);
+    
+    // 删除原来的边
+    const currentEdges = getEdges.value.filter(edge => edge.id !== edgeInfo.edgeId);
+    
+    // 创建新的边：源节点 -> 新节点 -> 目标节点
+    const newEdge1 = {
+      id: `edge_${Date.now()}_1`,
+      source: sourceEdge.source,
+      target: newNodeId,
+      sourceHandle: sourceEdge.sourceHandle,
+      type: 'normal',
+      data: {
+        sourceStatus: 'default',
+        targetStatus: 'default'
+      }
+    };
+    
+    const newEdge2 = {
+      id: `edge_${Date.now()}_2`, 
+      source: newNodeId,
+      target: sourceEdge.target,
+      targetHandle: sourceEdge.targetHandle,
+      type: 'normal',
+      data: {
+        sourceStatus: 'default',
+        targetStatus: 'default'
+      }
+    };
+    
+    // 设置新的边
+    setEdges([...currentEdges, newEdge1, newEdge2]);
+    
+    // 触发工作流状态更新
+    emits('updateFlowsDebug', false);
+    updateFlowsDebugStatus.value = false;
+    nodeAndLineConnection();
+    
+    // 关闭菜单
+    closeInsertNodeMenu();
+    
+    ElMessage.success(`${nodeMetaData.name} 节点插入成功`);
+    
+  } catch (error) {
+    console.error('插入节点失败:', error);
+    ElMessage.error('插入节点失败');
+  }
 };
 
 // 接受工作流调试时获取的相应的数据
@@ -991,11 +1133,56 @@ const saveFlow = (updateNodeParameter?, debug?) => {
         type: 'startAndEnd',
       };
     } else if (item.type === 'branch') {
-      // 这里是需要将parameters
+      // 处理分支节点保存，确保包含ELSE分支
+      const choices = item.data.parameters?.input_parameters?.choices || [];
+      
+      // 检查是否已有默认分支
+      const hasDefaultBranch = choices.some(choice => choice.is_default === true);
+      
+      // 如果没有默认分支，添加一个ELSE分支
+      if (!hasDefaultBranch) {
+        choices.push({
+          branch_id: `else_${item.id || Date.now()}`,
+          name: 'ELSE',
+          is_default: true,
+          conditions: [],
+          logic: 'and'
+        });
+      }
+      
       newItem = {
         ...newItem,
-        callId: 'choice',
-        parameters: item.data.parameters,
+        callId: 'Choice',
+        parameters: {
+          input_parameters: { choices: choices },
+          output_parameters: item.data.parameters?.output_parameters || { branch_id: '' }
+        },
+      };
+    } else if (item.type === 'Choice') {
+      // 处理Choice节点保存，确保包含ELSE分支
+      const choices = item.data.parameters?.input_parameters?.choices || [];
+      
+      // 检查是否已有默认分支
+      const hasDefaultBranch = choices.some(choice => choice.is_default === true);
+      
+      // 如果没有默认分支，添加一个ELSE分支
+      if (!hasDefaultBranch) {
+        choices.push({
+          branch_id: `else_${item.id || Date.now()}`,
+          name: 'ELSE',
+          is_default: true,
+          conditions: [],
+          logic: 'and'
+        });
+      }
+      
+      newItem = {
+        ...newItem,
+        callId: 'Choice',
+        parameters: {
+          input_parameters: { choices: choices },
+          output_parameters: item.data.parameters?.output_parameters || { branch_id: '' }
+        },
       };
     }
     return newItem;
@@ -1015,17 +1202,7 @@ const saveFlow = (updateNodeParameter?, debug?) => {
   if (updateNodeParameter) {
     updateNodes.forEach((item) => {
       if (item.stepId === updateNodeParameter.id) {
-        if (item.type === 'choice') {
-          // 确保parameters对象存在
-          if (!item.parameters) {
-            item.parameters = {};
-          }
-          if (!item.parameters.input_parameters) {
-            item.parameters.input_parameters = {};
-          }
-          item.parameters.input_parameters.choices =
-            updateNodeParameter.inputStream;
-        } else if (item.type === 'Code') {
+        if (item.type === 'Code') {
           item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
           item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
           item.parameters.code = updateNodeParameter.parameters.code;
@@ -1036,6 +1213,13 @@ const saveFlow = (updateNodeParameter?, debug?) => {
           item.parameters.cpuLimit = updateNodeParameter.parameters.cpuLimit;
         } else if (item.callId === 'DirectReply') {
           // 确保parameters对象存在
+          if (!item.parameters) {
+            item.parameters = {};
+          }
+          item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+          item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+        } else if (item.callId === 'Choice') {
+          // 条件分支节点
           if (!item.parameters) {
             item.parameters = {};
           }
@@ -1120,83 +1304,47 @@ defineExpose({
       <el-tooltip
         placement="right"
         :content="
-          isCopilotAsideVisible ? t('history.collapse') : t('history.expand')
+          isCopilotAsideVisible ? '收起节点面板' : '展开节点面板 - 拖拽节点创建工作流'
         "
       >
         <div
-          class="trapezoid"
-          :class="{ isExpandIcon: isCopilotAsideVisible }"
+          class="node-panel-toggle"
+          :class="{ collapsed: !isCopilotAsideVisible, expanded: isCopilotAsideVisible }"
           @click="hanleAsideVisible"
-        />
-      </el-tooltip>
+        >
+          <!-- 折叠状态：显示节点图标 + 箭头 -->
+          <div v-if="!isCopilotAsideVisible" class="collapsed-content">
+            <div class="expand-arrow">›</div>
+            <div class="drag-hint">拖拉拽新建节点</div>
+          </div>
+          
+          <!-- 展开状态：显示收起箭头 -->
+          <div v-else class="expanded-content">
+            <div class="collapse-arrow">‹</div>
+          </div>
+        </div>
+      </ElTooltip>
 
       <transition name="transition-fade">
-        <div class="copilot-aside nodes" v-if="isCopilotAsideVisible">
+        <div class="copilot-aside-new" v-if="isCopilotAsideVisible">
           <CustomLoading :loading="apiLoading"></CustomLoading>
-          <div class="apiCenterBox">
-            <div class="apiCenterTitle">
-              {{ $t('semantic.semantic_interface_center') }}
+          <!-- Tab切换 -->
+          <div class="aside-tabs">
+            <div class="tab-item active">
+              节点
             </div>
-            <div class="apiCenterSearch">
-              <el-input
-                v-model="apiSearchValue"
-                class="o-style-search"
-                :placeholder="$t('semantic.interface_search')"
-                @input="searchApiList"
-                :prefix-icon="IconSearch"
-                clearable
-              ></el-input>
+            <div class="tab-item disabled">
+              应用
             </div>
-            <div class="apiContanter">
-              <el-collapse
-                v-model="activeName"
-                @change="handleChange"
-                class="o-hpc-collapse"
-              >
-                <el-collapse-item
-                  title="Consistency"
-                  :name="item.serviceId"
-                  v-for="item in apiServiceList"
-                  :key="item.serviceId"
-                >
-                  <template #title>
-                    <el-icon
-                      class="el-collapse-item__arrow"
-                      :class="{
-                        'is-active': activeNames.includes(item.serviceId),
-                      }"
-                    >
-                      <IconCaretRight />
-                    </el-icon>
-                    <span>{{ item.name }}</span>
-                  </template>
-                  <div
-                    class="stancesItem"
-                    v-for="(node, index) in item.nodeMetaDatas"
-                    :key="index"
-                    :draggable="true"
-                    @dragstart="
-                      onDragStart($event, node.type, {
-                        serviceId: item.serviceId,
-                        ...node,
-                      })
-                    "
-                  >
-                    <el-tooltip
-                    :disabled="true"
-                    class="popper-class"
-                    placement="top"
-                    :content="node.name">
-                        <div class="stancesName">
-                    <img class="nodeIcon" :src="getSrcIcon(node)" />
-
-                          {{ node.name }}
-                        </div>
-                    </el-tooltip>
-                  </div>
-                </el-collapse-item>
-              </el-collapse>
-            </div>
+          </div>
+          
+          <div class="aside-content">
+            <NodeListPanel
+              :api-service-list="apiServiceList"
+              :search-placeholder="$t('semantic.interface_search')"
+              :enable-drag="true"
+              :on-drag-start="handleNodeDragStart"
+            />
           </div>
         </div>
       </transition>
@@ -1259,6 +1407,18 @@ defineExpose({
           ></BranchNode>
         </template>
 
+        <!-- 条件分支节点 -->
+        <template #node-Choice="choiceBranchNodeProps">
+          <ChoiceBranchNode
+            v-bind="choiceBranchNodeProps"
+            :disabled="debugDialogVisible"
+            :selected="selectedNodeId === choiceBranchNodeProps.id"
+            @delNode="delNode"
+            @editYamlDrawer="editYamlDrawer"
+            @updateConnectHandle="updateConnectHandle"
+          ></ChoiceBranchNode>
+        </template>
+
         <!-- 开始结束节点 -->
         <template #node-start="nodeStartProps">
           <CustomSaENode
@@ -1293,6 +1453,8 @@ defineExpose({
             :sourcePosition="props.sourcePosition"
             :targetPosition="props.targetPosition"
             :data="JSON.parse(JSON.stringify(props.data))"
+            :disabled="debugDialogVisible"
+            @insertNode="handleInsertNode"
           />
         </template>
         <!-- 连接时边线 -->
@@ -1349,6 +1511,22 @@ defineExpose({
             </template>
           </el-select>
         </div>
+        <el-tooltip
+          v-if="workFlowItemName && flowObj?.flowId"
+          effect="dark"
+          content="配置环境变量"
+          placement="top"
+        >
+          <div
+            class="envBtn"
+            :class="{ isEnvDis: debugDialogVisible }"
+            @click="openEnvironmentVariables"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M20 18a1 1 0 0 1-1 1h-4a3 3 0 0 0-3 3a3 3 0 0 0-3-3H5a1 1 0 0 1-1-1H2a3 3 0 0 0 3 3h4a2 2 0 0 1 2 2h2a2 2 0 0 1 2-2h4a3 3 0 0 0 3-3Zm0-12a1 1 0 0 0-1-1h-4a3 3 0 0 1-3-3a3 3 0 0 1-3 3H5a1 1 0 0 0-1 1H2a3 3 0 0 1 3-3h4a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2h4a3 3 0 0 1 3 3Zm-8 6L9 8H7v8h2v-4l3 4h2V8h-2zm9-4l-2 5.27L17 8h-2l3 8h2l3-8zM1 8v8h5v-2H3v-1h2v-2H3v-1h3V8z" />
+            </svg>
+          </div>
+        </el-tooltip>
         <el-tooltip
           v-if="!isNodeAndLineConnect && !isNodeConnect"
           effect="dark"
@@ -1451,4 +1629,282 @@ defineExpose({
     @update:visible="closeDirectReplyDrawer"
     @saveNode="saveDirectReplyNode"
   />
+  
+  <!-- 条件分支节点编辑器 -->
+  <ChoiceBranchDrawer
+    :visible="isEditChoiceBranchNode"
+    :nodeData="currentChoiceBranchNodeData"
+    :nodeId="nodeYamlId"
+    :flowId="flowObj?.flowId"
+    @update:visible="closeChoiceBranchDrawer"
+    @saveNode="saveChoiceBranchNode"
+  />
+  
+  <!-- 插入节点选择菜单 -->
+  <InsertNodeMenu
+    :visible="insertMenuData.visible"
+    :position="insertMenuData.position"
+    :menu-direction="insertMenuData.direction"
+    :api-service-list="apiServiceList"
+    @close="closeInsertNodeMenu"
+    @select-node="executeInsertNode"
+  />
+  
+  <!-- 环境变量配置抽屉 -->
+  <EnvironmentVariableDrawer
+    v-if="isEditEnvironmentVariables"
+    :flowId="flowObj?.flowId"
+    @closeDrawer="closeEnvironmentVariables"
+  />
 </template>
+
+<style lang="scss" scoped>
+// 新的展开按钮样式
+.node-panel-toggle {
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: 2px solid white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  z-index: 1000;
+  
+  &.collapsed {
+    width: 30px;
+    height: 120px;
+    
+    &:hover {
+      transform: translateY(-50%) scale(1.05);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      
+      .collapsed-content {
+        .expand-arrow {
+          transform: translate(-50%, -50%) translateY(-40px);
+        }
+        
+        .drag-hint {
+          opacity: 1;
+          transform: translateX(-50%);
+        }
+      }
+    }
+  }
+  
+  &.expanded {
+    width: 40px;
+    height: 40px;
+    
+    &:hover {
+      transform: translateY(-50%) scale(1.1);
+      background: linear-gradient(135deg, #5b5fc7 0%, #7c3aed 100%);
+    }
+  }
+  
+  .collapsed-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 4px;
+    position: relative;
+    
+    .expand-arrow {
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .drag-hint {
+      color: white;
+      font-size: 8px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      line-height: 1.2;
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      letter-spacing: 2px;
+    }
+  }
+  
+  .expanded-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    
+    .collapse-arrow {
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  }
+}
+
+// 新的Aside样式，模仿insertNodeMenu.vue
+.copilot-aside-new {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e4e8;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
+  .aside-tabs {
+    display: flex;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e1e4e8;
+    background: #f8f9fa;
+    
+    .tab-item {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #586069;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      
+      &.active {
+        color: #6395fd;
+        border-bottom-color: #6395fd;
+      }
+      
+      &.disabled {
+        color: #c0c4cc;
+        cursor: not-allowed;
+      }
+      
+      &:hover:not(.disabled) {
+        color: #6395fd;
+      }
+    }
+  }
+  
+  .aside-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+// 环境变量按钮样式
+.envBtn {
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border: 1px solid #e0e7ff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+  color: #486bf7;
+  cursor: pointer;
+  
+  &:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #2563eb; 
+  }
+  &:active {
+    background: #bfdbfe;
+  }
+}
+.envBtn.isEnvDis {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+// 深色主题支持
+.dark {
+  .node-panel-toggle {
+    background: linear-gradient(135deg, #4c1d95 0%, #6b21a8 100%);
+    border-color: #374151;
+    box-shadow: 0 4px 12px rgba(76, 29, 149, 0.3);
+    
+    &.collapsed {
+      &:hover {
+        box-shadow: 0 6px 20px rgba(76, 29, 149, 0.4);
+      }
+    }
+    
+    &.expanded {
+      &:hover {
+        background: linear-gradient(135deg, #3c1361 0%, #581c87 100%);
+      }
+    }
+    
+
+  }
+  
+  .copilot-aside-new {
+    background: #2d3748;
+    border-color: #4a5568;
+    
+    .aside-tabs {
+      background: #374151;
+      border-bottom-color: #4a5568;
+      
+      .tab-item {
+        color: #a0aec0;
+        
+        &.active {
+          color: #6395fd;
+          border-bottom-color: #6395fd;
+        }
+        
+        &.disabled {
+          color: #718096;
+          cursor: not-allowed;
+        }
+        
+        &:hover:not(.disabled) {
+          color: #e2e8f0;
+        }
+      }
+    }
+  }
+  
+  .envBtn {
+    background: #1e3a8a;
+    border-color: #3730a3;
+    color: #60a5fa;
+    
+    &:hover {
+      background: #1e40af;
+      border-color: #4338ca;
+      color: #93c5fd;
+    }
+    &:active {
+      background: #1d4ed8;
+    }
+    
+    &.isEnvDis {
+      background: #374151;
+      border-color: #4b5563;
+      color: #6b7280;
+    }
+  }
+}
+</style>

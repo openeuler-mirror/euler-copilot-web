@@ -5,8 +5,8 @@
       <div class="header-left">
         <div class="variable-icon">⚙️</div>
         <span class="header-title">变量配置</span>
-        <span class="variable-count" v-if="conversationVariables.length > 0">
-          ({{ conversationVariables.length }})
+        <span class="variable-count" v-if="internalVariables.length > 0">
+          ({{ internalVariables.length }})
         </span>
       </div>
       <div class="header-right">
@@ -29,7 +29,7 @@
                  <div class="variable-list" v-loading="variablesLoading || false">
           <!-- 对话变量展示 -->
           <div 
-            v-for="variable in conversationVariables" 
+            v-for="variable in internalVariables" 
             :key="`conv_${variable.name}`"
             class="variable-item"
           >
@@ -49,8 +49,7 @@
                   :placeholder="getVariablePlaceholder(variable)"
                   :type="variable.var_type === 'number' ? 'number' : 'text'"
                   size="small"
-                  @blur="updateVariableValue(variable)"
-                  @keydown.enter="updateVariableValue(variable)"
+                  @input="handleVariableInput(variable)"
                   class="variable-input"
                 />
                 
@@ -73,7 +72,7 @@
                   :rows="3"
                   :placeholder="getVariablePlaceholder(variable)"
                   size="small"
-                  @blur="updateVariableValue(variable)"
+                  @input="handleVariableInput(variable)"
                   class="variable-textarea"
                 />
                 
@@ -141,7 +140,6 @@
                     placeholder="输入后按回车添加，或用逗号分隔多个值"
                     size="small"
                     @keydown.enter="addStringToArray(variable)"
-                    @blur="processStringArrayInput(variable)"
                     class="array-input"
                   />
                   <div v-if="variable.stringArray && variable.stringArray.length > 0" class="string-tags">
@@ -165,8 +163,7 @@
                   :placeholder="getVariablePlaceholder(variable)"
                   size="small"
                   show-password
-                  @blur="updateVariableValue(variable)"
-                  @keydown.enter="updateVariableValue(variable)"
+                  @input="handleVariableInput(variable)"
                   class="variable-input"
                 />
                 
@@ -176,8 +173,7 @@
                   v-model="variable.displayValue"
                   :placeholder="getVariablePlaceholder(variable)"
                   size="small"
-                  @blur="updateVariableValue(variable)"
-                  @keydown.enter="updateVariableValue(variable)"
+                  @input="handleVariableInput(variable)"
                   class="variable-input"
                 />
               </div>
@@ -185,10 +181,10 @@
           </div>
 
           <!-- 空状态 -->
-          <div v-if="conversationVariables.length === 0 && !variablesLoading" class="empty-state">
-            <div class="empty-icon">📝</div>
-            <div class="empty-text">暂无用户变量</div>
-            <div class="empty-hint">在开始节点中配置用户变量后，可在此设置变量值</div>
+          <div v-if="internalVariables.length === 0 && !variablesLoading" class="empty-state">
+            <div class="empty-icon">⚙️</div>
+            <div class="empty-text">变量配置面板</div>
+            <div class="empty-hint">当工作流包含变量时，可以在这里配置变量值</div>
           </div>
         </div>
       </div>
@@ -221,18 +217,68 @@ interface Props {
   conversationVariables: Variable[]
   variablesLoading?: boolean
   flowId: string
+  conversationId?: string
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits(['toggleVisibility', 'variableUpdated'])
 
-// 处理变量显示值
-const processedVariables = computed(() => {
-  return props.conversationVariables.map(variable => ({
+// 内部独立的变量状态（与外部props解耦）
+const internalVariables = ref<Variable[]>([])
+
+// 检查是否是用户可编辑的变量
+const isEditableVariable = (variable: Variable): boolean => {
+  // 必须是 conversation 类型
+  if (variable.scope !== 'conversation') {
+    return false
+  }
+  
+  // 排除 UUID.result 格式的变量名（这些是 node 执行结果）
+  const uuidResultPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.result$/i
+  if (uuidResultPattern.test(variable.name)) {
+    return false
+  }
+  
+  // 排除其他系统变量格式
+  const systemVariablePatterns = [
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\./i, // UUID.xxx 格式
+    /^node_\d+\./i, // node_xxx.xxx 格式
+    /^sys\./i, // sys.xxx 格式
+    /^_/i // 下划线开头的内部变量
+  ]
+  
+  for (const pattern of systemVariablePatterns) {
+    if (pattern.test(variable.name)) {
+      return false
+    }
+  }
+  
+  return true
+}
+
+// 初始化内部变量状态
+const initializeInternalVariables = () => {
+  // 只显示用户可编辑的 conversation 变量，过滤掉系统变量和 node 变量
+  const editableVariables = props.conversationVariables.filter(isEditableVariable)
+  
+  internalVariables.value = editableVariables.map(variable => ({
     ...variable,
-    displayValue: variable.displayValue || getVariableDisplayValue(variable.value)
+    displayValue: getVariableDisplayValue(variable.value),
+    // 初始化特殊类型的属性
+    booleanValue: variable.var_type === 'boolean' ? (variable.value === true || variable.value === 'true') : undefined,
+    fileName: variable.var_type === 'file' && variable.value?.name ? variable.value.name : undefined,
+    fileList: variable.var_type === 'array[file]' && Array.isArray(variable.value) 
+      ? variable.value.map(v => ({ name: v.name || v, file: v })) 
+      : [],
+    stringArray: variable.var_type === 'array[string]' && Array.isArray(variable.value) 
+      ? [...variable.value] 
+      : [],
+    stringArrayInput: ''
   }))
-})
+  
+  console.log('🔧 变量面板初始化，所有变量:', props.conversationVariables.map(v => `${v.name}(${v.scope})`))
+  console.log('🔧 变量面板初始化，可编辑变量:', internalVariables.value.map(v => `${v.name}(${v.scope})`))
+}
 
 // 获取变量显示值
 const getVariableDisplayValue = (value: any): string => {
@@ -278,10 +324,106 @@ const getFileAcceptTypes = (): string => {
   return '.pdf,.docx,.doc,.txt,.md,.xlsx'
 }
 
+// 批量更新所有变量到后端
+const batchUpdateVariables = async (conversationId: string) => {
+  if (!conversationId) {
+    console.log('❌ 缺少对话ID，无法批量更新变量');
+    return false;
+  }
+
+  // 只更新用户可编辑的变量
+  const editableVariables = internalVariables.value.filter(isEditableVariable)
+
+  if (editableVariables.length === 0) {
+    console.log('📋 没有可编辑变量需要更新');
+    return true;
+  }
+
+  try {
+    console.log('🔄 开始批量更新变量到后端...');
+    console.log('📋 对话ID:', conversationId);
+    console.log('📋 要更新的可编辑变量:', editableVariables.map(v => v.name));
+    
+    const updatePromises = editableVariables.map(async (variable) => {
+      const updateParams = {
+        name: variable.name,
+        scope: 'conversation',
+        conversation_id: conversationId,
+        flow_id: props.flowId
+      };
+      
+      // 根据变量类型处理值
+      let processedValue = variable.displayValue || variable.value;
+      
+      // 特殊类型的值处理
+      if (variable.var_type === 'boolean') {
+        processedValue = variable.booleanValue;
+      } else if (variable.var_type === 'number' && variable.displayValue) {
+        const numValue = Number(variable.displayValue);
+        processedValue = isNaN(numValue) ? variable.value : numValue;
+      } else if (variable.var_type === 'object' && variable.displayValue) {
+        try {
+          processedValue = JSON.parse(variable.displayValue);
+        } catch (error) {
+          console.warn(`⚠️ 变量 ${variable.name} JSON 解析失败，使用原始值`);
+          processedValue = variable.displayValue;
+        }
+      } else if (variable.var_type === 'array[string]') {
+        processedValue = variable.stringArray || [];
+      } else if (variable.var_type === 'file') {
+        processedValue = variable.fileName ? { name: variable.fileName } : null;
+      } else if (variable.var_type === 'array[file]') {
+        processedValue = variable.fileList ? variable.fileList.map(f => ({ name: f.name })) : [];
+      }
+      
+      const updateData = {
+        value: processedValue,
+        var_type: variable.var_type,
+        description: variable.description
+      };
+      
+      try {
+        const result = await updateVariable(updateParams, updateData);
+        console.log(`✅ 变量 ${variable.name} 更新成功:`, result);
+        return { success: true, variable: variable.name };
+      } catch (error) {
+        console.error(`❌ 变量 ${variable.name} 更新失败:`, error);
+        return { success: false, variable: variable.name, error };
+      }
+    });
+    
+    const results = await Promise.all(updatePromises);
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.length - successCount;
+    
+    console.log(`📊 变量更新结果: 成功 ${successCount}/${results.length}, 失败 ${failCount}`);
+    
+    if (successCount > 0) {
+      emit('variableUpdated');
+    }
+    
+    return successCount > 0; // 只要有一个成功就继续
+  } catch (error) {
+    console.error('❌ 批量更新变量失败:', error);
+    return false;
+  }
+};
+
+// 处理变量输入事件（不触发API调用）
+const handleVariableInput = (variable: Variable) => {
+  console.log('🔧 变量值更新:', variable.name, '=', variable.displayValue);
+  // 只做本地状态更新，不调用API
+};
+
+// 暴露方法给父组件调用
+defineExpose({
+  batchUpdateVariables
+});
+
 // 更新布尔变量
 const updateBooleanVariable = async (variable: Variable) => {
-  if (!props.flowId) {
-    ElMessage.error('缺少工作流ID，无法保存变量')
+  if (!props.conversationId) {
+    ElMessage.error('缺少对话ID，无法保存变量')
     return
   }
 
@@ -290,6 +432,7 @@ const updateBooleanVariable = async (variable: Variable) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -319,6 +462,7 @@ const handleFileChange = async (variable: Variable, file: any) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -345,6 +489,7 @@ const clearFileVariable = async (variable: Variable) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -379,6 +524,7 @@ const handleFileArrayChange = async (variable: Variable, fileList: any[]) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -408,6 +554,7 @@ const removeFileFromArray = async (variable: Variable, index: number) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -470,8 +617,8 @@ const removeStringFromArray = (variable: Variable, index: number) => {
 
 // 更新字符串数组变量
 const updateStringArrayVariable = async (variable: Variable) => {
-  if (!props.flowId) {
-    ElMessage.error('缺少工作流ID，无法保存变量')
+  if (!props.conversationId) {
+    ElMessage.error('缺少对话ID，无法保存变量')
     return
   }
 
@@ -480,6 +627,7 @@ const updateStringArrayVariable = async (variable: Variable) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -499,8 +647,8 @@ const updateStringArrayVariable = async (variable: Variable) => {
 
 // 更新变量值
 const updateVariableValue = async (variable: Variable) => {
-  if (!props.flowId) {
-    ElMessage.error('缺少工作流ID，无法保存变量')
+  if (!props.conversationId) {
+    ElMessage.error('缺少对话ID，无法保存变量')
     return
   }
 
@@ -539,6 +687,7 @@ const updateVariableValue = async (variable: Variable) => {
       { 
         name: variable.name, 
         scope: 'conversation',
+        conversation_id: props.conversationId,
         flow_id: props.flowId
       },
       { 
@@ -556,41 +705,16 @@ const updateVariableValue = async (variable: Variable) => {
   }
 }
 
-// 监听props变化，同步显示值
+// 监听props变化，重新初始化内部变量（只在外部数据源变化时）
 watch(
   () => props.conversationVariables,
   (newVariables) => {
-    newVariables.forEach(variable => {
-      if (!variable.displayValue) {
-        variable.displayValue = getVariableDisplayValue(variable.value)
-      }
-      
-      // 初始化不同类型的特殊属性
-      if (variable.var_type === 'boolean') {
-        if (variable.booleanValue === undefined) {
-          variable.booleanValue = variable.value === true || variable.value === 'true'
-        }
-      } else if (variable.var_type === 'file') {
-        if (variable.value && typeof variable.value === 'object' && variable.value.name) {
-          variable.fileName = variable.value.name
-        }
-      } else if (variable.var_type === 'array[file]') {
-        if (Array.isArray(variable.value)) {
-          variable.fileList = variable.value.map(v => ({ name: v.name || v, file: v }))
-        }
-      } else if (variable.var_type === 'array[string]') {
-        if (Array.isArray(variable.value)) {
-          variable.stringArray = [...variable.value]
-        } else if (!variable.stringArray) {
-          variable.stringArray = []
-        }
-        if (!variable.stringArrayInput) {
-          variable.stringArrayInput = ''
-        }
-      }
-    })
+    if (newVariables && newVariables.length >= 0) {
+      console.log('📡 外部变量数据变化，重新初始化内部状态');
+      initializeInternalVariables();
+    }
   },
-  { deep: true, immediate: true }
+  { immediate: true }
 )
 </script>
 

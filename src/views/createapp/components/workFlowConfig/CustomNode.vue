@@ -2,7 +2,7 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, watch } from 'vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
-import { CopyDocument, WarnTriangleFilled } from '@element-plus/icons-vue';
+import { CopyDocument, WarnTriangleFilled, Delete } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { IconSuccess } from '@computing/opendesign-icons';
 import { getSrcIcon, getNodeClass } from '../types';
@@ -53,6 +53,9 @@ const inputAndOutput = ref({
   input_parameters: {},
   output_parameters: {},
 });
+
+// 控制删除按钮文字显示
+const showDeleteText = ref(false);
 
 watch(
   () => props.data,
@@ -151,39 +154,6 @@ const handleCopyTextToclipboard = (text) => {
             </el-icon>
             <div class="label">{{ props.data.name }}</div>
           </div>
-
-          <div class="moreTip" :class="{ notAllow: props.disabled }">
-            <el-popover
-              :disabled="props.disabled"
-              placement="bottom-end"
-              trigger="hover"
-              popper-class="nodeDealPopper"
-            >
-              <template #reference>
-                <div class="moreDots">
-                  <div class="nodeDot"></div>
-                  <div class="nodeDot"></div>
-                  <div class="nodeDot"></div>
-                </div>
-              </template>
-              <el-button
-                text
-                class="dealItem"
-                @click="
-                  editYaml(
-                    props.data.name,
-                    props.data.description,
-                    props.data.parameters,
-                  )
-                "
-              >
-                {{ $t('semantic.edit') }}
-              </el-button>
-              <el-button text class="dealItem" @click="delNode(props.id)">
-                {{ $t('semantic.interface_delete') }}
-              </el-button>
-            </el-popover>
-          </div>
         </div>
         <!-- 移除description显示 -->
       </div>
@@ -200,6 +170,25 @@ const handleCopyTextToclipboard = (text) => {
         </el-icon>
       </div>
     </div>
+    
+    <!-- 右上角删除按钮小卡片 -->
+    <div class="deleteCardWrapper" v-if="!props.disabled">
+      <div class="deleteCard">
+        <button
+          class="deleteButton"
+          @click="delNode(props.id)"
+          :title="$t('semantic.interface_delete')"
+          @mouseenter="showDeleteText = true"
+          @mouseleave="showDeleteText = false"
+        >
+          <el-icon class="delete-icon">
+            <Delete />
+          </el-icon>
+          <span class="delete-text" v-show="showDeleteText">{{ $t('semantic.interface_delete') }}</span>
+        </button>
+      </div>
+    </div>
+    
     <Handle
       type="source"
       :position="Position.Right"
@@ -217,3 +206,130 @@ const handleCopyTextToclipboard = (text) => {
     ></NodeMirrorText>
   </div>
 </template>
+
+<style scoped>
+.customNodeStyle {
+  position: relative;
+}
+
+.deleteCardWrapper {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 10;
+}
+
+.deleteCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 自定义删除按钮样式 - 悬浮圆形到圆角矩形动画 */
+.deleteButton {
+  /* 基础样式 */
+  border: none;
+  background-color: #f56c6c;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  
+  /* 圆形按钮尺寸 */
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  
+  /* 布局样式 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  
+  /* 悬浮效果 */
+  box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4);
+  
+  /* 动画效果 - 分离不同属性的动画时间 */
+  transition: 
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+  
+  /* 初始变形状态 */
+  transform: scaleX(1) translateY(0);
+  transform-origin: center;
+  
+  /* 移除默认按钮样式 */
+  outline: none;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.deleteButton:hover {
+  background-color: #f56c6c;
+  color: #ffffff;
+  
+  /* 展开为圆角矩形 */
+  width: 88px;
+  height: 32px;
+  border-radius: 16px;
+  padding: 0 12px;
+  
+  /* 左右拉伸变形效果 */
+  transform: scaleX(1.05) translateY(-1px);
+  
+  /* 增强悬浮效果 */
+  box-shadow: 0 6px 20px rgba(245, 108, 108, 0.5);
+}
+
+.deleteButton:active {
+  background-color: #e6a23c;
+  box-shadow: 0 2px 8px rgba(245, 108, 108, 0.6);
+  transform: scaleX(1) translateY(0);
+}
+
+.deleteButton:focus {
+  outline: 2px solid #f56c6c40;
+  outline-offset: 2px;
+}
+
+.delete-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.deleteButton:hover .delete-icon {
+  transform: scale(0.9);
+}
+
+.delete-text {
+  font-size: 12px;
+  margin-left: 6px;
+  opacity: 0;
+  transform: translateX(-8px) scale(0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.deleteButton:hover .delete-text {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+/* 只在hover整个节点时显示删除卡片 */
+.customNodeStyle .deleteCardWrapper {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.customNodeStyle:hover .deleteCardWrapper {
+  opacity: 1;
+}
+</style>

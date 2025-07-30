@@ -25,7 +25,6 @@ import WitChainDIcon from '@/assets/svgs/witChainD.svg';
 import WitChainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
 import Setting from '@/assets/svgs/setting.svg';
 import SettingSelected from '@/assets/svgs/setting_active.svg';
-import tools from '../tools/index.vue';
 import TitleBar from './components/TitleBar.vue';
 
 const { userinfo } = storeToRefs(useAccountStore());
@@ -307,10 +306,7 @@ watch(
         </router-link>
       </div>
       <div class="dialogue-content">
-        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
-          <tools />
-        </KeepAlive>
-        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
+        <RouterView />
       </div>
     </div>
     <el-dialog

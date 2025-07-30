@@ -243,75 +243,14 @@ const emits = defineEmits(['closeDrawer', 'saveStartNode', 'variablesUpdated', '
 const loadAllVariables = async () => {
   variablesLoading.value = true
   
-  try {
-    console.log('🔄 开始加载变量...')
-    
-    // 加载系统变量 - 修复数据结构解析
-    try {
-      console.log('🔄 正在调用系统变量API...')
-      const systemResponse = await listVariables({ scope: 'system' })
-      console.log('📥 系统变量API响应:', systemResponse)
-      
-      // 修复：支持多种响应数据结构
-      let variables: any[] | null = null
-      const response = systemResponse as any // 类型断言避免TS错误
-      
-      if (response?.result?.variables) {
-        // 结构1: { result: { variables: [...] } }
-        variables = response.result.variables
-        console.log('📋 使用result.variables结构')
-      } else if (response?.variables) {
-        // 结构2: { variables: [...], total: 8 }  
-        variables = response.variables
-        console.log('📋 使用直接variables结构')
-      } else if (Array.isArray(response)) {
-        // 结构3: 直接返回数组
-        variables = response
-        console.log('📋 使用数组结构')
-      }
-      
-      if (variables && Array.isArray(variables)) {
-        systemVariables.value = variables
-        console.log('✅ 系统变量加载成功:', systemVariables.value.length, '个')
-        console.log('📋 系统变量详情:', systemVariables.value.map(v => ({
-          name: v.name,
-          type: v.var_type,
-          value: v.value,
-          description: v.description
-        })))
-      } else {
-        console.log('⚠️ 未找到系统变量数据')
-        console.log('📋 完整响应结构:', JSON.stringify(systemResponse, null, 2))
-        systemVariables.value = []
-      }
-    } catch (systemError: any) {
-      console.error('❌ 系统变量加载失败:', systemError)
-      console.error('❌ 错误详情:', {
-        message: systemError.message,
-        stack: systemError.stack,
-        response: systemError.response
-      })
-      
-      // 检查是否是Pydantic验证错误
-      if (systemError.message?.includes('validation error')) {
-        console.log('🔧 检测到Pydantic验证错误，可能是系统变量值为None')
-        ElMessage.warning('系统变量加载失败：后端数据验证错误，请检查系统变量初始化')
-      } else {
-        ElMessage.error('系统变量加载失败')
-      }
-      systemVariables.value = []
-    }
-    
-    // 加载对话变量（如果有flowId）
+  try {    
+    // 加载对话变量（配置阶段使用flowId）
     if (props.flowId) {
       try {
-        console.log('🔄 正在调用对话变量API...')
-        console.log('🔍 LIST API使用的flowId:', props.flowId)
         const convResponse = await listVariables({ 
           scope: 'conversation', 
           flow_id: props.flowId 
         })
-        console.log('📥 对话变量API响应:', convResponse)
         
         // 修复：支持多种响应数据结构
         let convVariables: any[] | null = null
@@ -319,34 +258,60 @@ const loadAllVariables = async () => {
         
         if (convResponseAny?.result?.variables) {
           convVariables = convResponseAny.result.variables
-          console.log('📋 对话变量使用result.variables结构')
         } else if (convResponseAny?.variables) {
           convVariables = convResponseAny.variables
-          console.log('📋 对话变量使用直接variables结构')
         } else if (Array.isArray(convResponseAny)) {
           convVariables = convResponseAny
-          console.log('📋 对话变量使用数组结构')
         }
         
         if (convVariables && Array.isArray(convVariables)) {
           conversationVariables.value = convVariables
-          console.log('✅ 对话变量加载成功:', conversationVariables.value.length, '个')
-          console.log('📋 具体变量列表:', conversationVariables.value.map(v => v.name))
         } else {
           conversationVariables.value = []
-          console.log('ℹ️ 对话变量为空，设置为空数组')
-          console.log('📋 convVariables:', convVariables)
         }
       } catch (convError: any) {
-        console.error('❌ 对话变量加载失败:', convError)
         conversationVariables.value = []
       }
     } else {
-      console.log('ℹ️ 无flowId，跳过对话变量加载')
       conversationVariables.value = []
     }
     
-    console.log('🎉 变量加载完成')
+    // 加载系统变量 - 配置阶段使用flow_id，对话阶段使用conversation_id
+    if (props.conversationId) {
+      // 对话/调试阶段：使用conversation_id查询系统变量实例
+      try {
+        const systemResponse = await listVariables({ 
+          scope: 'system',
+          conversation_id: props.conversationId 
+        })
+        
+        // 处理响应数据
+        const systemVars = (systemResponse as any)?.variables || (systemResponse as any)?.result?.variables || []
+        systemVariables.value = Array.isArray(systemVars) ? systemVars : []
+      } catch (error) {
+        console.error('❌ 系统变量加载失败（对话阶段）:', error)
+        systemVariables.value = []
+      }
+    } else if (props.flowId) {
+      // 配置阶段：使用flow_id查询系统变量模板
+      try {
+        const systemResponse = await listVariables({ 
+          scope: 'system',
+          flow_id: props.flowId 
+        })
+        
+        // 处理响应数据
+        const systemVars = (systemResponse as any)?.variables || (systemResponse as any)?.result?.variables || []
+        systemVariables.value = Array.isArray(systemVars) ? systemVars : []
+      } catch (error) {
+        console.error('❌ 系统变量加载失败（配置阶段）:', error)
+        systemVariables.value = []
+      }
+    } else {
+      // 既没有conversation_id也没有flow_id
+      systemVariables.value = []
+    }
+    
   } catch (error) {
     console.error('❌ 变量加载过程发生未知错误:', error)
     ElMessage.error('变量加载失败')
@@ -357,28 +322,7 @@ const loadAllVariables = async () => {
 
 // 强制重新加载变量
 const forceReloadVariables = async () => {
-  console.log('🔄 强制重新加载变量...')
   await loadAllVariables()
-}
-
-// 直接测试API调用
-const testApiDirectly = async () => {
-  console.log('🧪 开始直接测试API调用...')
-  try {
-    const response = await listVariables({ scope: 'system' })
-    console.log('🔬 直接API调用结果:')
-    console.log('- 原始响应:', response)
-    console.log('- 响应类型:', typeof response)
-    console.log('- 是否为数组:', Array.isArray(response))
-    console.log('- response.variables:', (response as any)?.variables)
-    console.log('- response.result:', (response as any)?.result)
-    console.log('- response.result.variables:', (response as any)?.result?.variables)
-    
-    ElMessage.info('API测试完成，请查看控制台输出')
-  } catch (error) {
-    console.error('🔬 API测试失败:', error)
-    ElMessage.error('API测试失败')
-  }
 }
 
 // 初始化数据 - 在函数定义后设置watch
@@ -397,7 +341,6 @@ watch(
 
 // 组件挂载时立即加载变量
 onMounted(() => {
-  console.log('🚀 组件已挂载，开始加载变量...')
   nextTick(() => {
     loadAllVariables()
   })
@@ -514,10 +457,6 @@ const editConversationVariable = (variable: Variable) => {
 
 // 保存对话变量
 const saveConversationVariable = async () => {
-  console.log('🔄 开始保存对话变量...')
-  console.log('📋 当前编辑变量:', editingVariable.value)
-  console.log('📋 工作流ID:', props.flowId)
-  
   // 详细的参数验证
   if (!editingVariable.value) {
     ElMessage.error('缺少变量数据')
@@ -561,11 +500,9 @@ const saveConversationVariable = async () => {
       flow_id: props.flowId
     }
     
-    console.log('📤 准备发送的变量数据:', variableData)
 
     if (isEditingVariable.value) {
-      // 更新变量
-      console.log('🔄 调用更新变量API...')
+      // 更新变量（配置阶段使用flow_id）
       const updateParams = { 
         name: editingVariable.value.name, 
         scope: 'conversation',
@@ -576,17 +513,12 @@ const saveConversationVariable = async () => {
         description: variableData.description,
         var_type: variableData.var_type  // 添加变量类型字段
       }
-      console.log('📤 更新参数:', updateParams)
-      console.log('📤 更新数据:', updateData)
       
       const updateResult = await updateVariable(updateParams, updateData)
-      console.log('📥 更新结果:', updateResult)
       ElMessage.success('变量更新成功')
     } else {
       // 创建变量
-      console.log('🔄 调用创建变量API...')
       const createResult = await createVariable(variableData)
-      console.log('📥 创建结果:', createResult)
       ElMessage.success('变量创建成功')
     }
 
@@ -628,19 +560,12 @@ const saveConversationVariable = async () => {
   }
 }
 
-// 删除对话变量
+// 删除对话变量（配置阶段使用flow_id）
 const deleteConversationVariable = async () => {
   if (!editingVariable.value || !props.flowId) {
     console.error('❌ 删除失败：缺少必要参数', { editingVariable: editingVariable.value, flowId: props.flowId })
     return
   }
-
-  console.log('🗑️ 开始删除变量:', {
-    name: editingVariable.value.name,
-    scope: 'conversation',
-    flow_id: props.flowId
-  })
-  console.log('🔍 DELETE API使用的flowId:', props.flowId)
 
   try {
     const deleteResult = await deleteVariable({
@@ -649,7 +574,6 @@ const deleteConversationVariable = async () => {
       flow_id: props.flowId
     })
     
-    console.log('✅ 删除变量API调用成功:', deleteResult)
     ElMessage.success('变量删除成功')
     
     // 在关闭对话框前先保存变量名（避免引用失效）
@@ -657,19 +581,15 @@ const deleteConversationVariable = async () => {
     
     handleVariableDialogClose()
     
-    // 方案1：直接从本地数组中移除（立即生效）
-    conversationVariables.value = conversationVariables.value.filter(v => v.name !== deletedVariableName)
-    console.log('🗑️ 本地移除变量后的列表:', conversationVariables.value.map(v => v.name))
+    // 直接从本地数组中移除（立即生效）
+    // conversationVariables.value = conversationVariables.value.filter(v => v.name !== deletedVariableName)
     
-    // 方案2：延迟后重新加载（确保数据一致性）
-    console.log('🔄 延迟200ms后重新加载变量数据...')
+    // 延迟后重新加载（确保数据一致性）
     setTimeout(async () => {
       await loadAllVariables()
-      console.log('📊 重新加载后的对话变量:', conversationVariables.value.map(v => v.name))
     }, 200)
     
     // 通知父组件变量已更新
-    console.log('📡 触发变量更新事件')
     emits('variablesUpdated')
   } catch (error) {
     console.error('❌ 删除变量失败:', error)
@@ -691,9 +611,7 @@ const closeDrawer = () => {
 }
 
 // 保存开始节点配置
-const saveStartNodeConfig = () => {
-  console.log('💾 保存开始节点配置（基于变量）')
-  
+const saveStartNodeConfig = () => {  
   // 构建对话变量对象用于节点显示
   const conversationVariablesObj: Record<string, any> = {}
   conversationVariables.value.forEach(variable => {
@@ -710,16 +628,13 @@ const saveStartNodeConfig = () => {
     conversation_variables: conversationVariablesObj,
     variables: conversationVariablesObj // 同时保存到variables字段以兼容不同的取值方式
   }
-  
-  console.log('📋 传递给节点的变量数据:', conversationVariablesObj)
-  
+    
   emits('saveStartNode', nodeParams, props.nodeYamlId, nodeName.value, nodeDescription.value)
   ElMessage.success('保存成功')
   closeDrawer()
 }
 
 onMounted(() => {
-  console.log('🚀 VariableBasedStartNodeDrawer 已挂载')
   // 确保组件挂载后初始化数据
   if (props.nodeName) {
     nodeName.value = props.nodeName
