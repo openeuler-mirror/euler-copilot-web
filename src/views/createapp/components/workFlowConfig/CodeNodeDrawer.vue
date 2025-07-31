@@ -79,17 +79,19 @@
                         >
                           <VariableChooser
                             v-model:variable-name="variable.variableName"
-                            v-model:variable-reference="variable.variableReference"
+                            v-model="variable.variableReference"
                             v-model:selected-variable="variable.selectedVariable"
                             :supported-scopes="['conversation', 'system', 'env']"
                             :flow-id="flowId"
                             :current-step-id="nodeId"
+                            :show-variable-name="true"
                             :show-variable-reference="true"
                             :show-actions="true"
                             :show-variable-info="true"
+                            output-format="raw"
                             placeholder="输入节点内的变量名"
                             @remove="removeInputVariable(index)"
-                            @variable-selected="(selectedVar) => handleInputVariableSelected(selectedVar, index)"
+                            @variable-selected="(selectedVar, reference) => handleInputVariableSelected(selectedVar, index)"
                           />
                         </div>
                         

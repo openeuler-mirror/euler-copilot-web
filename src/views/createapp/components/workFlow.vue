@@ -337,7 +337,12 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
       callId: currentNode.data.callId,
       parameters: currentNode.data.parameters || {
         input_parameters: { choices: [] },
-        output_parameters: { branch_id: '' }
+        output_parameters: { 
+  branch_id: {
+    type: 'string',
+    description: '选中的分支ID'
+  }
+}
       }
     };
     nodeYamlId.value = nodeId;
@@ -771,7 +776,12 @@ const redrageFlow = (nodesList, edgesList) => {
           input_parameters: { 
             choices: choices 
           },
-          output_parameters: node.parameters?.output_parameters || { branch_id: '' }
+          output_parameters: node.parameters?.output_parameters || { 
+            branch_id: {
+              type: 'string',
+              description: '选中的分支ID'
+            }
+          }
         }
       };
     } else if (node.callId === 'Code') {
@@ -894,7 +904,7 @@ const executeInsertNode = (nodeMetaData) => {
     // 创建新节点
     const newNode = {
       id: newNodeId,
-      type: nodeMetaData.callId === 'Choice' ? 'branch' : 'custom',
+      type: nodeMetaData.callId === 'Choice' ? 'Choice' : 'custom',
       position: {
         x: edgeInfo.midX - 100, // 节点宽度的一半
         y: edgeInfo.midY - 40   // 节点高度的一半
@@ -905,7 +915,25 @@ const executeInsertNode = (nodeMetaData) => {
         nodeId: nodeMetaData.nodeId,
         callId: nodeMetaData.callId,
         serviceId: nodeMetaData.serviceId || 'default',
-        parameters: {
+        parameters: nodeMetaData.callId === 'Choice' ? {
+          input_parameters: { 
+            choices: [
+              {
+                branch_id: `else_${newNodeId}`,
+                name: 'ELSE',
+                is_default: true,
+                conditions: [],
+                logic: 'and'
+              }
+            ]
+          },
+          output_parameters: { 
+            branch_id: {
+              type: 'string',
+              description: '选中的分支ID'
+            }
+          }
+        } : {
           input_parameters: {},
           output_parameters: {}
         }
@@ -1155,7 +1183,12 @@ const saveFlow = (updateNodeParameter?, debug?) => {
         callId: 'Choice',
         parameters: {
           input_parameters: { choices: choices },
-          output_parameters: item.data.parameters?.output_parameters || { branch_id: '' }
+          output_parameters: item.data.parameters?.output_parameters || { 
+            branch_id: {
+              type: 'string',
+              description: '选中的分支ID'
+            }
+          }
         },
       };
     } else if (item.type === 'Choice') {
@@ -1181,7 +1214,12 @@ const saveFlow = (updateNodeParameter?, debug?) => {
         callId: 'Choice',
         parameters: {
           input_parameters: { choices: choices },
-          output_parameters: item.data.parameters?.output_parameters || { branch_id: '' }
+          output_parameters: item.data.parameters?.output_parameters || { 
+            branch_id: {
+              type: 'string',
+              description: '选中的分支ID'
+            }
+          }
         },
       };
     }

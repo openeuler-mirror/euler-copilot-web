@@ -262,26 +262,18 @@ const handleRightReferenceToggle = (conditionIndex: number, isReference: boolean
 };
 
 // 处理左值变量选择
-const handleLeftVariableSelected = (conditionIndex: number, variable: any) => {
+const handleLeftVariableSelected = (conditionIndex: number, variable: any, reference: string) => {
   const condition = props.choice.conditions[conditionIndex];
-  // 保存完整的变量引用格式
-  if (variable.scope === 'conversation' && variable.step_id) {
-    condition.left.value = `conversation.${variable.step_id}.${variable.name}`;
-  } else {
-    condition.left.value = `${variable.scope}.${variable.name}`;
-  }
+  // 手动设置带大括号的引用格式，确保正确的格式
+  condition.left.value = reference; // reference 已经是 {{scope.name}} 格式
   emit('updateCondition', props.choiceIndex, conditionIndex, condition);
 };
 
 // 处理右值变量选择
-const handleRightVariableSelected = (conditionIndex: number, variable: any) => {
+const handleRightVariableSelected = (conditionIndex: number, variable: any, reference: string) => {
   const condition = props.choice.conditions[conditionIndex];
-  // 保存完整的变量引用格式
-  if (variable.scope === 'conversation' && variable.step_id) {
-    condition.right.value = `conversation.${variable.step_id}.${variable.name}`;
-  } else {
-    condition.right.value = `${variable.scope}.${variable.name}`;
-  }
+  // 手动设置带大括号的引用格式，确保正确的格式
+  condition.right.value = reference; // reference 已经是 {{scope.name}} 格式
   emit('updateCondition', props.choiceIndex, conditionIndex, condition);
 };
 
@@ -338,17 +330,19 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
               <div class="condition-row variable-row">
                 <div class="variable-section">
                   <VariableChooser
-                    :variable-reference="condition.left.value"
+                    v-model="condition.left.value"
                     :flow-id="flowId"
                     :conversation-id="conversationId"
                     :current-step-id="currentStepId"
                     :show-actions="false"
                     :show-variable-info="false"
+                    :show-label="false"
                     :hide-border="true"
                     :no-border-radius="true"
                     :transparent-background="true"
+                    output-format="wrapped"
                     selector-placeholder="选择左值变量"
-                    @variable-selected="handleLeftVariableSelected(conditionIndex, $event)"
+                    @variable-selected="(variable, reference) => handleLeftVariableSelected(conditionIndex, variable, reference)"
                   />
                 </div>
                 <!-- 数据类型选择 -->
@@ -390,17 +384,19 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                   <!-- 变量引用模式 -->
                   <div v-if="condition.isRightReference" class="reference-input">
                     <VariableChooser
-                      :variable-reference="condition.right.value"
+                      v-model="condition.right.value"
                       :flow-id="flowId"
                       :conversation-id="conversationId"
                       :current-step-id="currentStepId"
                       :show-actions="false"
                       :show-variable-info="false"
+                      :show-label="false"
                       :hide-border="true"
                       :no-border-radius="true"
                       :transparent-background="true"
+                      output-format="wrapped"
                       selector-placeholder="选择右值变量"
-                      @variable-selected="handleRightVariableSelected(conditionIndex, $event)"
+                      @variable-selected="(variable, reference) => handleRightVariableSelected(conditionIndex, variable, reference)"
                     />
                   </div>
                   
