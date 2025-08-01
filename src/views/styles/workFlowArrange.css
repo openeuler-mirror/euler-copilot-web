@@ -1,0 +1,596 @@
+.workFlowContainer {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+}
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+    overflow: hidden;
+    min-width: 0;
+    width: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    width: 312px;
+    min-width: 256px;
+  }
+}
+@keyframes slideOutToLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    width: 312px;
+    min-width: 256px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+    min-width: 0;
+    overflow: hidden;
+    width: 0;
+  }
+}
+.workFlowContainer .transition-fade-enter-active {
+  animation: slideInFromLeft 0.2s ease-out;
+}
+.workFlowContainer .transition-fade-leave-active {
+  animation: slideOutToLeft 0.2s ease-in;
+}
+.workFlowContainer .aside-wrapper {
+  position: relative;
+  height: 100%;
+}
+.workFlowContainer .aside-wrapper .trapezoid {
+  width: 16px;
+  height: 56px;
+  z-index: 100;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  background: var(--expand-fold-default);
+  background-repeat: no-repeat;
+  overflow: hidden;
+  cursor: pointer;
+}
+.workFlowContainer .aside-wrapper .trapezoid:hover {
+  background: var(--expand-fold-hover);
+}
+.workFlowContainer .aside-wrapper .trapezoid:active {
+  background: var(--expand-fold-active);
+}
+.workFlowContainer .aside-wrapper .trapezoid.isExpandIcon {
+  left: calc(100% - 8px);
+}
+.workFlowContainer .copilot-aside {
+  width: 312px;
+  min-width: 256px;
+  background-color: var(--o-bg-color-base);
+  padding: 24px 4px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  height: 100%;
+}
+.workFlowContainer .apiCenterBox {
+  height: 100%;
+  display: flex;
+  min-width: 264px;
+  flex-direction: column;
+}
+.workFlowContainer .apiCenterBox .apiCenterTitle {
+  color: var(--o-text-color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.workFlowContainer .apiCenterBox .apiCenterSearch {
+  margin: 8px 0;
+}
+.workFlowContainer .apiCenterBox .apiCenterSearch .o-style-search {
+  width: 264px;
+}
+.workFlowContainer .apiCenterBox .apiCenterSearch .o-style-search .el-input__wrapper {
+  border-color: var(--o-border-color-lighter);
+  border-radius: 4px;
+}
+.workFlowContainer .apiCenterBox .apiCenterSearch .o-style-search .el-input__suffix::after {
+  margin-top: 7px;
+}
+.workFlowContainer .apiCenterBox .apiContanter {
+  flex: 1;
+  overflow: auto;
+}
+.workFlowContainer .apiCenterBox .apiContanter .el-collapse .el-collapse-item__header {
+  padding: 0 !important;
+  height: 24px;
+  line-height: 24px;
+  font-size: 14px;
+  color: var(--o-text-color-primary);
+  display: flex;
+  gap: 8px;
+  text-align: left;
+  flex-wrap: nowrap;
+  margin-bottom: 8px;
+}
+.workFlowContainer .apiCenterBox .apiContanter .el-collapse .el-collapse-item__header .el-icon {
+  color: var(--o-text-color-tertiary);
+}
+.workFlowContainer .apiCenterBox .apiContanter .el-collapse .el-collapse-item__content {
+  margin-left: 0px;
+  margin-bottom: 0px;
+}
+.workFlowContainer .apiCenterBox .apiContanter .el-collapse .el-collapse-item__arrow.is-active {
+  transform: rotate(90deg);
+  padding: 0px;
+}
+.workFlowContainer .workFlowContainerRight {
+  flex: 1;
+  background-color: var(--flow-canvas-bg);
+  border-radius: 8px;
+}
+.workFlowContainer .stancesItem {
+  width: 264px;
+  height: 40px;
+  line-height: 40px;
+  background-color: var(--o-bash-bg);
+  color: var(--o-text-color-primary);
+  margin-bottom: 8px;
+  padding-left: 16px;
+  border-radius: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.workFlowContainer .stancesItem .stancesName {
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+.workFlowContainer .stancesItem .stancesName .nodeIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  line-height: 40px;
+  margin-right: 12px;
+}
+.workFlowContainer .stancesItem:hover {
+  background-color: var(--flow-bg-color);
+  box-shadow: var(--o-bash-box-shadow);
+  cursor: pointer;
+}
+.workFlowContainer .workFlowContainerRight {
+  position: relative;
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  display: flex;
+  gap: 8px;
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .workFlowSelect {
+  display: block;
+  width: 144px;
+  height: 32px;
+  border-radius: 4px;
+  background-color: var(--o-bg-color-base);
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .workFlowSelect .el-select {
+  width: 144px;
+  height: 32px;
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .workFlowSelect .el-select .el-select__wrapper {
+  background-color: var(--o-select-bg-color) !important;
+  border-radius: 4px;
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .workFlowSelect .el-select .el-select__wrapper .el-select__placeholder {
+  color: var(--o-select-color) !important;
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .debugBtn {
+  width: 32px;
+  height: 32px;
+  background: var(--flow-debug-default);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .debugBtn:hover {
+  background: var(--flow-debug-hover);
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .debugBtn:active {
+  background: var(--flow-debug-active);
+}
+.workFlowContainer .workFlowContainerRight .workFlowOps .debugBtn.isDebugDis {
+  background: var(--flow-debug-dis);
+}
+.workFlowContainer .workFlowContainerRight .noWorkFlow {
+  position: absolute;
+  width: 320px;
+  height: 202px;
+  top: calc(50% - 101px);
+  left: calc(50% - 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+}
+.workFlowContainer .workFlowContainerRight .noWorkFlow .noFlow {
+  height: 130px;
+  width: 100%;
+  background-image: var(--no-work-flow);
+  background-size: 100% 100%;
+  line-height: 130px;
+}
+.workFlowContainer .workFlowContainerRight .noWorkFlow .noFlowDesc {
+  width: 100%;
+  height: 16px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+  color: var(--o-text-color-secondary);
+}
+.workFlowContainer .vueFlowContainer {
+  width: 100%;
+  height: 100%;
+}
+.workFlowContainer .vueFlowContainer .my-diagram-class {
+  flex: 1 !important;
+}
+.workFlowContainer .vue-flow__minimap {
+  transform-origin: bottom right;
+  background-color: var(--o-bg-color-base);
+  bottom: 57px;
+  margin-left: 24px;
+  border-radius: 8px;
+  width: 144px;
+  height: 96px;
+}
+.workFlowContainer .vue-flow__minimap svg {
+  width: 144px;
+  height: 96px;
+  border-radius: 8px;
+}
+.workFlowContainer .vue-flow__minimap svg path {
+  padding: 10px;
+  height: 96px !important;
+}
+.workFlowContainer .vue-flow__panel.right {
+  right: unset;
+  left: 0;
+}
+
+.addWorkFlow {
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--o-text-color-secondary);
+}
+.addWorkFlow .el-icon {
+  color: var(--o-text-color-tertiary);
+}
+.addWorkFlow span {
+  min-width: auto !important;
+}
+
+.workFlowOption {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.workFlowOption .flowName {
+  flex: 1;
+}
+.workFlowOption .dealIcon {
+  display: inline-block;
+  width: 16px;
+  line-height: 20px;
+  height: 16px;
+  flex: right;
+}
+.workFlowOption .editIcon {
+  background: url("@/assets/svgs/light_editor.svg");
+}
+.workFlowOption .delIcon {
+  background: url("@/assets/svgs/light_delete.svg");
+}
+
+.workFlowOption.is-selected .editIcon,
+.workFlowOption.is-hovering .editIcon {
+  background: url("@/assets/svgs/dark_editor_active.svg");
+}
+.workFlowOption.is-selected .delIcon,
+.workFlowOption.is-hovering .delIcon {
+  background: url("@/assets/svgs/dark_delete_active.svg");
+}
+
+.vue-flow__node {
+  min-width: 200px;
+  padding: 0px;
+  margin-top: 0px;
+}
+.vue-flow__node .customNodeStyle {
+  width: 320px;
+  height: -moz-fit-content;
+  height: fit-content;
+  border-radius: 4px;
+  background: var(--el-bg-color);
+  border: 2px solid transparent;
+  position: relative;
+  border-radius: 10px;
+  background-clip: padding-box;
+}
+.vue-flow__node .customNodeStyle .nodeBox {
+  min-height: 80px;
+  padding: 16px;
+  display: flex;
+  background: var(--flow-system-bg);
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 8px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title {
+  display: flex;
+  height: 24px;
+  font-size: 16px;
+  color: var(--o-text-color-primary);
+  border: 2px solid transparent;
+  align-items: center;
+  gap: 8px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .iconStyle {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(120deg, rgba(109, 117, 250, 0.15), rgba(90, 179, 255, 0.15));
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .warnTiangleIcon {
+  font-size: 20px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .warnTiangleIcon svg path:first-child {
+  fill: red;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .iconLabel {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .label {
+  max-width: 64px !important;
+  flex: 1;
+  height: 24px;
+  line-height: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .moreTip {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .moreTip .moreDots {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .moreTip .moreDots .nodeDot {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: #8d98aa;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .moreTip:hover {
+  color: #6395fd;
+}
+.vue-flow__node .customNodeStyle .nodeBox .title .notAllow {
+  cursor: not-allowed;
+}
+.vue-flow__node .customNodeStyle .nodeBox .desc {
+  font-size: 12px;
+  color: var(--o-text-color-tertiary);
+}
+.vue-flow__node .customNodeStyle .nodeBox .descSign {
+  color: red !important;
+  font-weight: 600 !important;
+}
+.vue-flow__node .customNodeStyle .nodeBox .branchDesc {
+  font-size: 12px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .choiceNode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .choiceNode .choiceContent {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.vue-flow__node .customNodeStyle .nodeBox .choiceNode .choiceContent .choiceLabel {
+  font-size: 12px;
+  color: var(--o-text-color-secondary);
+  line-height: 16px;
+  width: 48px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .choiceNode .choiceContent .choice {
+  min-width: 232px;
+  border: 1px solid var(--o-border-color-base);
+  border-radius: 2px;
+  padding: 8px;
+  min-height: 24px;
+  gap: 4px;
+}
+.vue-flow__node .customNodeStyle .nodeBox .choiceNode .choiceContent .choice .choiceCondition {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.vue-flow__node .customNodeStyle .nodeBox .choiceNode .choiceContent .choice .choiceCondition div {
+  font-size: 12px;
+  width: 96px;
+  background-color: var(--o-bg-color-dark);
+  padding: 4px 8px;
+  border-radius: 2px;
+  color: var(--o-text-color-primary);
+}
+.vue-flow__node .customNodeStyle .nodeBox.otherNode {
+  background: var(--flow-other-node-bg);
+}
+.vue-flow__node .customNodeStyle .nodeBox.aposNode {
+  background: var(--flow-apos-apollo-bg);
+}
+.vue-flow__node .customNodeStyle .vue-flow__handle-right {
+  top: 50%;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--el-bg-color);
+  display: flex;
+  justify-content: center;
+  border: none;
+  z-index: 2;
+  align-items: center;
+}
+.vue-flow__node .customNodeStyle .vue-flow__handle-right::after {
+  display: block;
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c3cedf;
+}
+.vue-flow__node .customNodeStyle .vue-flow__handle-left {
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--el-bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  z-index: 2;
+}
+.vue-flow__node .customNodeStyle .vue-flow__handle-left::after {
+  display: block;
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c3cedf;
+}
+.vue-flow__node .customNodeStyle .select {
+  border: 2px solid #6395fd;
+}
+.vue-flow__node .customNodeStyle:hover {
+  border: 2px solid #6395fd;
+}
+.vue-flow__node .customNodeStyle:hover .vue-flow__handle {
+  width: 12px;
+  height: 12px;
+}
+.vue-flow__node .customNodeStyle:hover .vue-flow__handle::after {
+  width: 10px;
+  height: 10px;
+  background: #6395fd;
+}
+.vue-flow__node .customNodeStyle:hover .vue-flow__handle-left {
+  left: -1px;
+}
+.vue-flow__node .customNodeStyle:hover .vue-flow__handle-right {
+  right: -1px;
+}
+.vue-flow__node .customNodeStyle.success {
+  border: 2px solid #24ab36;
+}
+.vue-flow__node .customNodeStyle.success .vue-flow__handle-left::after {
+  background: #24ab36;
+}
+.vue-flow__node .customNodeStyle.success .vue-flow__handle-right::after {
+  background: #24ab36;
+}
+.vue-flow__node .customNodeStyle.error {
+  border: 2px solid #e32020;
+}
+.vue-flow__node .customNodeStyle.error .vue-flow__handle-left::after {
+  background: #e32020;
+}
+.vue-flow__node .customNodeStyle.error .vue-flow__handle-right::after {
+  background: #e32020;
+}
+.vue-flow__node .nodeIdShow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vue-flow__node .nodeIdShow .nodeIdText {
+  font-size: 12px;
+  flex: 1;
+  color: #575d6c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vue-flow__node .nodeIdShow .copydocument {
+  cursor: pointer;
+  transform: rotateZ(180deg);
+}
+.vue-flow__node .nodeIdShow .copydocument:hover {
+  color: #0077ff;
+}
+.vue-flow__node .vue-flow__handle.isConnecting {
+  width: 12px;
+  height: 12px;
+}
+.vue-flow__node .vue-flow__handle.isConnecting::after {
+  width: 10px;
+  height: 10px;
+  background: #6395fd;
+}
+.vue-flow__node .vue-flow__handle-left.isConnecting {
+  left: -1px;
+}
+.vue-flow__node .vue-flow__handle-right.isConnecting {
+  right: -1px;
+}
+
+.nodeDealPopper {
+  width: 64px !important;
+  min-width: 64px !important;
+  height: 72px;
+  padding: 4px 0px !important;
+  border-radius: 4px;
+}
+.nodeDealPopper .el-popper__arrow {
+  display: none;
+}
+.nodeDealPopper .dealItem {
+  display: block;
+  width: 100%;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  margin-left: 0px;
+  color: var(--o-text-color-secondary);
+}
+.nodeDealPopper .dealItem:hover {
+  background-color: var(--o-color-primary-secondary) !important;
+}
+.nodeDealPopper .dealItem:hover span {
+  color: var(--o-color-white) !important;
+}
+.nodeDealPopper:hover {
+  border: 1px solid var(--o-color-primary-secondary) !important;
+}/*# sourceMappingURL=workFlowArrange.css.map */

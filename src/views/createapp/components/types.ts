@@ -145,3 +145,50 @@ export interface ListItem {
   id: string;
   value: string | null;
 }
+
+const opertionList = [
+  // Number operations
+  {value: 'number_equal', label: '等于', str: '='},
+  {value: 'number_not_equal', label: '不等于', str: '≠'},
+  {value: 'number_greater_than', label: '大于', str: '>'},
+  {value: 'number_less_than', label: '小于', str: '<'},
+  {value: 'number_greater_than_or_equal', label: '大于等于', str: '≥'},
+  {value: 'number_less_than_or_equal', label: '小于等于', str: '≤'},
+
+  // String operations
+  {value: 'string_equal', label: '等于', str: '='},
+  {value: 'string_not_equal', label: '不等于', str: '≠'},
+  {value: 'string_contains', label: '包含', str: ''},
+  {value: 'string_not_contains', label: '不包含', str: ''},
+  {value: 'string_starts_with', label: '起始等于', str: '='},
+  {value: 'string_ends_with', label: '结束等于', str: '='},
+  {value: 'string_length_equal', label: '长度等于', str: '|...|='},
+  {value: 'string_length_greater_than', label: '长度大于', str: '|...|>'},
+  {value: 'string_length_greater_than_or_equal', label: '长度大于等于', str: '|...|≥'},
+  {value: 'string_length_less_than', label: '长度小于', str: '|...|<'},
+  {value: 'string_length_less_than_or_equal', label: '长度小于等于', str: '|...|≤'},
+  {value: 'string_regex_match', label: '正则匹配', str: '\\+'},
+
+  // List operations
+  {value: 'list_equal', label: '等于', str: '='},
+  {value: 'list_not_equal', label: '不等于', str: '≠'},
+  {value: 'list_contains', label: '包含', str: ''},
+  {value: 'list_not_contains', label: '不包含', str: ''},
+  {value: 'list_length_equal', label: '长度等于', str: '|...|='},
+  {value: 'list_length_greater_than', label: '长度大于', str: '|...|>'},
+  {value: 'list_length_greater_than_or_equal', label: '长度大于等于', str: '|...|≥'},
+  {value: 'list_length_less_than', label: '长度小于', str: '|...|<'},
+  {value: 'list_length_less_than_or_equal', label: '长度小于等于', str: '|...|≤'},
+
+  // Boolean operations
+  {value: 'bool_equal', label: '等于', str: '='},
+  {value: 'bool_not_equal', label: '不等于', str: '≠'},
+
+  // Dictionary operations
+  {value: 'dict_equal', label: '等于', str: '='},
+  {value: 'dict_not_equal', label: '不等于', str: '≠'},
+  {value: 'dict_contains_key', label: '包含键', str: ''},
+  {value: 'dict_not_contains_key', label: '不包含键', str: ''}
+]
+
+ export const opertionListMap = new Map(opertionList.map(item => [item.value, item]));

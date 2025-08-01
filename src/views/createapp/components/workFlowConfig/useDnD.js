@@ -43,7 +43,7 @@ export default function useDragAndDrop() {
       event.dataTransfer.setData('application/vueflow', type);
       event.dataTransfer.effectAllowed = 'move';
     }
-    draggedType.value = type === 'choice' ? 'branch' : 'custom';
+    draggedType.value = type === 'Choice' ? 'branch' : 'custom';
     isDragging.value = true;
     nodeData.value = { ...info };
 
@@ -90,7 +90,7 @@ export default function useDragAndDrop() {
     });
 
     const nodeId = getId();
-
+    console.log(event,nodeData.value,draggedType.value);
     const newNode = {
       id: nodeId,
       type: draggedType.value,

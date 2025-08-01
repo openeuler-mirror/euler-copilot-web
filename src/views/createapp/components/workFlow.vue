@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
 import { onMounted, ref, watch, onUnmounted } from 'vue';
-import { IconSuccess, IconError } from '@computing/opendesign-icons';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
-import { VueFlow, useVueFlow } from '@vue-flow/core';
+import { ConnectionMode, VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import BranchNode from './workFlowConfig/BranchNode.vue';
@@ -53,7 +52,8 @@ const debugDialogVisible = ref(false);
 const apiServiceList = ref([]);
 const allApiServiceList = ref([]);
 const yamlContent = ref();
-const nodeYamlId = ref();
+const nodeYamlIds = ref();
+const nodeIds = ref();
 const emits = defineEmits(['updateFlowsDebug']);
 const route = useRoute();
 const workFlowList = ref([]);
@@ -94,6 +94,7 @@ const {
   setEdges,
   removeSelectedNodes,
   getSelectedNodes,
+  removeEdges
 } = useVueFlow();
 const { layout } = useLayout();
 
@@ -137,6 +138,12 @@ onConnect((e) => {
   // 获取当前状态
   const sourceStatus = sourceItem?.data?.status || 'default';
   const targetStatus = targetItem?.data?.status || 'default';
+  
+  // 如果没有提供sourceHandle，但节点有activeSourceHandle，则使用它
+  if (!e.sourceHandle && sourceItem?.data?.activeSourceHandle) {
+    e.sourceHandle = sourceItem.data.activeSourceHandle;
+  }
+  
   addEdges({
     ...e,
     data: {
@@ -211,12 +218,14 @@ const nodeAndLineConnection = () => {
   isNodeAndLineConnect.value = isNodeConnect;
 };
 // 编辑yaml
-const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
+const editYamlDrawer = (name, desc, yamlCode, nodeYamlId, nodeId) => {
+  console.log('start', nodeId);
   yamlContent.value = yamlCode;
   nodeName.value = name;
   nodeDesc.value = desc;
   isEditYaml.value = true;
-  nodeYamlId.value = nodeId;
+  nodeIds.value = nodeId;
+  nodeYamlIds.value = nodeYamlId;
   // 编辑 yaml 时，需要debug 后才可发布
   emits('updateFlowsDebug', false);
 };
@@ -241,6 +250,7 @@ async function layoutGraph(direction) {
 
 // 拖拽添加
 const dropFunc = (e) => {
+  console.log('开始拖拽', e);
   if (!flowObj.value?.flowId) {
     ElMessage.warning(i18n.global.t('app.create_or_edit_workflow_first'));
     return;
@@ -378,9 +388,12 @@ const queryFlow = (deal: string) => {
             }
           }
           const flowDataList = res?.[1]?.result?.workflows || [];
+          console.log(nodes.value,'nodes')
           // 更新当前publish状态
           emits('updateFlowsDebug', '', flowDataList);
+          console.log('----------')
           updateFlowsDebugStatus.value = true;
+          console.log(nodes.value,'nodes')
         }
         loading.value = false;
       });
@@ -463,7 +476,7 @@ const redrageFlow = (nodesList, edgesList) => {
         nodePosition: node.callId === 'start' ? 'Right' : 'Left',
       };
       newNode.deletable = false;
-    } else if (node.callId === 'choice') {
+    } else if (node.callId === 'Choice') {
       newNode.type = 'branch';
     } else {
       newNode.type = 'custom';
@@ -482,6 +495,7 @@ const redrageFlow = (nodesList, edgesList) => {
     // 线分支条件需后续添加
     return newEdge;
   });
+  console.log(newNodeList)
   setNodes(newNodeList);
   setEdges(newEdgeList);
   // 回显节点和边后，判断各节点连接状态
@@ -581,9 +595,17 @@ const updateNodeFunc = (id, status, constTime, content?) => {
   });
 };
 
-// 保存当前handle拖拽的nodeid--以便于拖拽结束时，设置该节点handle恢复默认状态
-const updateConnectHandle = (nodeId) => {
+// 保存当前handle拖拽的nodeid和sourceHandle--以便于拖拽结束时，设置该节点handle恢复默认状态
+const updateConnectHandle = (nodeId, sourceHandleId?) => {
   connectHandleNodeId.value = nodeId;
+  // 如果提供了sourceHandleId，保存它以便在onConnect中使用
+  if (sourceHandleId) {
+    // 可以在这里保存sourceHandleId，例如添加到节点数据中
+    const node = findNode(nodeId);
+    if (node) {
+      updateNode(nodeId, { data: { ...node.data, activeSourceHandle: sourceHandleId } });
+    }
+  }
 };
 
 // 这里是松开鼠标时[拖拽结束]-恢复不再拖拽的handle节点默认状态【对应的是customNode里拖拽节点设置状态】
@@ -593,14 +615,20 @@ const cancelConnectStatus = () => {
     const node = findNode(connectHandleNodeId.value);
     // 这里获取node的data
     const data = node?.data;
+    // 创建一个新的数据对象，不包含activeSourceHandle属性
+    let updatedData = { ...data };
+    if (updatedData && updatedData.activeSourceHandle) {
+      delete updatedData.activeSourceHandle;
+    }
     // 根据当前id，更新下data重新赋值，初始化节点状态和handle状态
-    updateNode(connectHandleNodeId.value, { data: { ...data } });
+    updateNode(connectHandleNodeId.value, { data: updatedData });
     // 将其置空
     connectHandleNodeId.value = '';
   }
 };
 
 const saveFlow = (updateNodeParameter?, debug?) => {
+  console.log(getNodes.value)
   loading.value = true;
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
@@ -608,7 +636,10 @@ const saveFlow = (updateNodeParameter?, debug?) => {
   }
   // 将对应的节点和边存储格式改造
   let updateNodes = getNodes.value.map((item) => {
+    console.log('node：',item)
+
     const { ...otherItem } = item.data;
+    console.log(item)
     let newItem = {
       enable: true,
       editable: false,
@@ -633,7 +664,7 @@ const saveFlow = (updateNodeParameter?, debug?) => {
       // 这里是需要将parameters
       newItem = {
         ...newItem,
-        callId: 'choice',
+        callId: 'Choice',
         parameters: item.data.parameters,
       };
     }
@@ -654,7 +685,7 @@ const saveFlow = (updateNodeParameter?, debug?) => {
   if (updateNodeParameter) {
     updateNodes.forEach((item) => {
       if (item.stepId === updateNodeParameter.id) {
-        if (item.type === 'choice') {
+        if (item.type === 'Choice') {
           item.parameters.input_parameters.choices =
             updateNodeParameter.inputStream;
         } else {
@@ -775,7 +806,7 @@ defineExpose({
                     :key="index"
                     :draggable="true"
                     @dragstart="
-                      onDragStart($event, node.type, {
+                      onDragStart($event, node.nodeId, {
                         serviceId: item.serviceId,
                         ...node,
                       })
@@ -807,6 +838,7 @@ defineExpose({
         :nodes="nodes"
         :edges="edges"
         :default-viewport="{ zoom: DefaultViewPortZoom }"
+        :connection-mode="ConnectionMode.Strict"
         :min-zoom="0.5"
         :max-zoom="4"
         class="my-diagram-class"
@@ -1003,7 +1035,10 @@ defineExpose({
     :yamlContent="yamlContent"
     :nodeName="nodeName"
     :nodeDesc="nodeDesc"
-    :nodeYamlId="nodeYamlId"
+    :nodeYamlId="nodeYamlIds"
+    :nodeId="nodeIds"
+    :getEdges="getEdges"
+    :removeEdges="removeEdges"
   ></EditYamlDrawer>
 </template>
 <style lang="scss">

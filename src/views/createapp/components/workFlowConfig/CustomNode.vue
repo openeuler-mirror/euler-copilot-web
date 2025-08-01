@@ -86,8 +86,8 @@ const delNode = (id) => {
 };
 
 // 编辑yaml
-const editYaml = (nodeName, nodeDesc, yamlCode) => {
-  emits('editYamlDrawer', nodeName, nodeDesc, yamlCode, props.id);
+const editYaml = (nodeName, nodeDesc, yamlCode, nodeId) => {
+  emits('editYamlDrawer', nodeName, nodeDesc, yamlCode, props.id, nodeId);
 };
 
 // 设置当前正在连接[这里是使连接过程中，handle节点高亮]
@@ -162,6 +162,7 @@ const handleCopyTextToclipboard = (text) => {
                   props.data.name,
                   props.data.description,
                   props.data.parameters,
+                  props.data.nodeId
                 )
               "
             >
