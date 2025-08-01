@@ -113,7 +113,6 @@ const handleSubmit = (formEl: FormInstance | undefined) => {
       const appId = route.query?.appId;
       // 创建使用生成的flowId
       const flowId = uuidv4();
-      console.log('flowId', flowId, 'here');
       // 调用接口新建工作流
       api
         .createOrUpdateFlowTopology(
