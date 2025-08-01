@@ -481,24 +481,61 @@ const saveConversationVariable = async () => {
   try {
     let value = editingVariable.value.value
     
-    // 处理对象类型的值
-    if (editingVariable.value.var_type === 'object' && editingVariable.value.valueJson) {
-      try {
-        value = JSON.parse(editingVariable.value.valueJson)
-      } catch (error) {
-        ElMessage.error('JSON格式不正确，请检查对象值的语法')
-        return
-      }
+
+    
+    // 简单的前端验证（后端现在负责类型转换）
+    switch (editingVariable.value.var_type) {
+      case 'number':
+        // 基本数字格式验证
+        if (value && isNaN(Number(value))) {
+          ElMessage.error('请输入有效的数字')
+          return
+        }
+        break
+      case 'object':
+        // JSON格式验证
+        let jsonStr = value
+        if (editingVariable.value.valueJson) {
+          jsonStr = editingVariable.value.valueJson
+        }
+        if (jsonStr) {
+          try {
+            JSON.parse(jsonStr)
+            value = jsonStr
+          } catch (error) {
+            ElMessage.error('JSON格式不正确，请检查对象值的语法')
+            return
+          }
+        }
+        break
+      case 'array[number]':
+        // 数字数组格式验证
+        if (value && typeof value === 'string') {
+          try {
+            const arrayValue = JSON.parse(value)
+            if (!Array.isArray(arrayValue)) {
+              throw new Error('请输入数组格式')
+            }
+          } catch (error) {
+            ElMessage.error('请输入有效的JSON数组格式，如：[1,2,3]')
+            return
+          }
+        }
+        break
     }
+    
+    // 所有值都以字符串格式发送，让后端处理类型转换
 
     const variableData = {
       name: editingVariable.value.name.trim(),
       var_type: editingVariable.value.var_type,
       scope: 'conversation',
-      value: value || '',
+      value: value,
       description: editingVariable.value.description || '',
       flow_id: props.flowId
     }
+    
+
     
 
     if (isEditingVariable.value) {
@@ -535,6 +572,8 @@ const saveConversationVariable = async () => {
       response: error?.response
     })
     
+
+    
     // 更详细的错误信息
     let errorMessage = '保存变量失败'
     if (error?.response) {
@@ -542,7 +581,9 @@ const saveConversationVariable = async () => {
       const data = error.response.data
       
       if (status === 400) {
-        errorMessage = `参数错误: ${data?.message || '请检查变量数据格式'}`
+        errorMessage = `参数错误: ${data?.message || data?.detail || '请检查变量数据格式'}`
+      } else if (status === 422) {
+        errorMessage = `数据验证失败: ${data?.detail || data?.message || '请检查变量数据是否符合要求'}`
       } else if (status === 401) {
         errorMessage = '权限不足，请重新登录'
       } else if (status === 404) {

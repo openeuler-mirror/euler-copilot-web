@@ -93,6 +93,9 @@ const selectedNodeId = ref('');
 const conversationVariablesForDisplay = ref<any[]>([]);
 const variablesLoading = ref(false);
 
+// 添加 conversationId 变量（在工作流设计阶段，可以为空或生成临时ID）
+const conversationId = ref<string>('');
+
 // 插入节点相关状态
 const insertMenuData = ref({
   visible: false,
@@ -933,6 +936,11 @@ const executeInsertNode = (nodeMetaData) => {
               description: '选中的分支ID'
             }
           }
+        } : nodeMetaData.callId === 'DirectReply' ? {
+          input_parameters: {
+            answer: ''  // 确保新建的DirectReply节点内容为空
+          },
+          output_parameters: {}
         } : {
           input_parameters: {},
           output_parameters: {}
@@ -1674,6 +1682,8 @@ defineExpose({
     :nodeData="currentChoiceBranchNodeData"
     :nodeId="nodeYamlId"
     :flowId="flowObj?.flowId"
+    :conversationId="conversationId"
+    :currentStepId="nodeYamlId"
     @update:visible="closeChoiceBranchDrawer"
     @saveNode="saveChoiceBranchNode"
   />

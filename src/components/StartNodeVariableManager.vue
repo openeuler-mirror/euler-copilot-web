@@ -65,8 +65,9 @@ const typeLabels = computed(() => ({
   boolean: '布尔值',
   object: '对象',
   secret: '密钥',
+  group: '分组',
   file: '文件',
-  'array[any]': '数组',
+  'array[any]': '任意数组',
   'array[string]': '字符串数组',
   'array[number]': '数字数组',
   'array[object]': '对象数组',
@@ -111,7 +112,7 @@ const loadSystemVariables = async () => {
     }
     
     const response = await listVariables(params)
-    systemVariables.value = response.result?.variables || []
+    systemVariables.value = response?.result?.variables || []
     console.log('✅ 系统变量加载成功:', systemVariables.value.length, '个')
   } catch (error) {
     console.error('加载系统变量失败:', error)
@@ -130,7 +131,7 @@ const loadConversationVariables = async () => {
       scope: 'conversation',
       conversation_id: props.conversationId 
     })
-    conversationVariables.value = response.result?.variables || []
+    conversationVariables.value = response?.result?.variables || []
   } catch (error) {
     console.error('加载对话变量失败:', error)
     ElMessage.error('加载对话变量失败')
@@ -142,7 +143,7 @@ const loadConversationVariables = async () => {
 const loadVariableTypes = async () => {
   try {
     const response = await getVariableTypes()
-    variableTypes.value = response.result || {types: [], scopes: []}
+    variableTypes.value = response?.result || {types: [], scopes: []}
   } catch (error) {
     console.error('加载变量类型失败:', error)
   }
@@ -162,14 +163,93 @@ const handleSaveVariable = async () => {
   try {
     await addVariableForm.value.validate()
     
-    await createVariable({
+    // 根据变量类型转换值
+    let processedValue: any = newVariable.value.value
+    
+
+    
+    // 类型转换处理
+    switch (newVariable.value.var_type) {
+      case 'number':
+        processedValue = processedValue === '' ? 0 : Number(processedValue)
+        if (isNaN(processedValue)) {
+          ElMessage.error('请输入有效的数字')
+                    return
+        }
+        break
+      case 'boolean':
+        processedValue = processedValue === 'true' || processedValue === true
+        break
+      case 'object':
+        try {
+          processedValue = JSON.parse(processedValue)
+        } catch (error) {
+          ElMessage.error('请输入有效的JSON格式')
+          return
+        }
+        break
+      case 'array[string]':
+        if (typeof processedValue === 'string') {
+          processedValue = processedValue.split(',').map(item => item.trim()).filter(item => item)
+        }
+        break
+      case 'array[number]':
+        if (typeof processedValue === 'string') {
+          try {
+            processedValue = JSON.parse(processedValue)
+            if (!Array.isArray(processedValue) || !processedValue.every(item => typeof item === 'number')) {
+              throw new Error('Invalid array')
+            }
+          } catch (error) {
+            ElMessage.error('请输入有效的数字数组，如：[1,2,3]')
+            return
+          }
+        }
+        break
+      case 'array[boolean]':
+        if (typeof processedValue === 'string') {
+          try {
+            processedValue = JSON.parse(processedValue)
+            if (!Array.isArray(processedValue) || !processedValue.every(item => typeof item === 'boolean')) {
+              throw new Error('Invalid array')
+            }
+          } catch (error) {
+            ElMessage.error('请输入有效的布尔数组，如：[true,false]')
+            return
+          }
+        }
+        break
+      case 'array[object]':
+        if (typeof processedValue === 'string') {
+          try {
+            processedValue = JSON.parse(processedValue)
+            if (!Array.isArray(processedValue)) {
+              throw new Error('Invalid array')
+            }
+          } catch (error) {
+            ElMessage.error('请输入有效的对象数组')
+            return
+          }
+        }
+        break
+      default:
+        // 保持字符串类型
+        processedValue = String(processedValue)
+    }
+    
+    const requestData = {
       name: newVariable.value.name,
       var_type: newVariable.value.var_type,
       scope: 'conversation',
-      value: newVariable.value.value,
+      value: processedValue,
       description: newVariable.value.description,
+      flow_id: props.flowId,
       conversation_id: props.conversationId
-    })
+    }
+    
+
+    
+    await createVariable(requestData)
     
     ElMessage.success('变量创建成功')
     addVariableDialogVisible.value = false

@@ -141,6 +141,20 @@ export default function useDragAndDrop() {
           }
         }
       };
+    } else if (cleanNodeData.callId === 'DirectReply') {
+      // 如果是DirectReply节点，确保parameters结构正确且内容为空
+      cleanNodeData.parameters = {
+        input_parameters: {
+          answer: ''  // 确保新建的DirectReply节点内容为空
+        },
+        output_parameters: {}
+      };
+    } else {
+      // 对于所有其他节点类型（LLM、RAG、API、SQL等），确保parameters结构正确且内容为空
+      cleanNodeData.parameters = {
+        input_parameters: {},
+        output_parameters: {}
+      };
     }
 
     const newNode = {
