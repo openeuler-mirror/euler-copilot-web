@@ -72,6 +72,18 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  showConditionDelete: {
+    type: Boolean,
+    default: true,
+  },
+  showCaseTitle: {
+    type: Boolean,
+    default: true,
+  },
+  showBranchDelete: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emit = defineEmits(['removeBranch', 'addCondition', 'removeCondition', 'toggleLogic', 'updateCondition']);
@@ -189,8 +201,16 @@ const addCondition = () => {
 // 删除条件
 const removeCondition = (conditionIndex: number) => {
   if (props.choice.conditions.length <= 1) {
-    ElMessage.warning('每个分支至少需要一个条件');
-    return;
+    // 只有一个条件时，检查是否允许删除条件
+    if (!props.showConditionDelete) {
+      ElMessage.warning('条件不可删除');
+      return;
+    }
+    // 如果can-delete为false且showConditionDelete为true，仍然不允许删除最后一个条件
+    if (!props.canDelete) {
+      ElMessage.warning('每个分支至少需要一个条件');
+      return;
+    }
   }
   emit('removeCondition', props.choiceIndex, conditionIndex);
 };
@@ -290,12 +310,12 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
     <!-- 条件配置 -->
     <div class="conditions-section">
       <!-- 分支标题 -->
-      <div class="conditions-header">
+      <div v-if="showCaseTitle" class="conditions-header">
         <div class="conditions-title">{{ getBranchTitle }}</div>
         <div class="conditions-subtitle">{{ getCaseNumber(choiceIndex) }}</div>
       </div>
 
-      <div class="conditions-container" :class="{ 'single-condition': choice.conditions.length <= 1 }">
+      <div class="conditions-container" :class="{ 'single-condition': choice.conditions.length <= 1, 'no-title': !showCaseTitle }">
         <!-- 条件组连接线 -->
         <div 
           v-if="choice.conditions.length > 1" 
@@ -319,11 +339,12 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
 
         <!-- 条件列表 -->
         <div class="conditions-list">
-          <div
-            v-for="(condition, conditionIndex) in choice.conditions"
-            :key="condition.id"
-            class="condition-item"
-          >
+                      <div
+              v-for="(condition, conditionIndex) in choice.conditions"
+              :key="condition.id"
+              class="condition-item"
+              :class="{ 'no-delete-button': !showConditionDelete }"
+            >
             <!-- 第一列 -->
             <div class="condition-setting-col">
               <!-- 第一行：变量选择 + 数据类型 + 操作符 -->
@@ -340,7 +361,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                     :hide-border="true"
                     :no-border-radius="true"
                     :transparent-background="true"
-                    output-format="wrapped"
+                    output-format="raw"
                     selector-placeholder="选择左值变量"
                     @variable-selected="(variable, reference) => handleLeftVariableSelected(conditionIndex, variable, reference)"
                   />
@@ -440,7 +461,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
               </div>
             </div>
             <!-- 第二列 条件删除按钮列 -->
-            <div class="condition-delete-col">
+            <div v-if="showConditionDelete" class="condition-delete-col">
               <button
                 class="danger-button"
                 @click="removeCondition(conditionIndex)"
@@ -463,6 +484,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                   添加条件
               </el-button>
               <button
+                v-if="showBranchDelete"
                 type="button"
                 class="danger-button delete-branch"
                 @click="removeBranch"
@@ -632,6 +654,15 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
             padding-top: 8px;
           }
           
+          // 当没有删除按钮时，移除右边的gap
+          &.no-delete-button {
+            gap: 0;
+            
+            .condition-setting-col {
+              width: 100%;
+            }
+          }
+          
           .condition-header {
             display: flex;
             align-items: center;
@@ -785,7 +816,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
       }
     }
     
-    .conditions-container {
+    .conditions-container { 
       .conditions-bracket {
         .bracket-line {
           background: #3b82f6;

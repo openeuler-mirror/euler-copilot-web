@@ -2,7 +2,7 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, watch } from 'vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
-import { CopyDocument, WarnTriangleFilled, Delete } from '@element-plus/icons-vue';
+import { CopyDocument, WarnTriangleFilled, Delete, Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { IconSuccess } from '@computing/opendesign-icons';
 import { getSrcIcon, getNodeClass } from '../types';
@@ -33,7 +33,7 @@ const props = defineProps({
     default: false,
   },
 });
-const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle']);
+const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle', 'insertNodeFromHandle']);
 const { t } = useI18n();
 
 const statusList = ref(['running', 'success', 'error']);
@@ -47,6 +47,9 @@ const costTime = ref('');
 // 当前handle是否连接中[分别是target和source]
 const handleTargetConnecting = ref(false);
 const handleSourceConnecting = ref(false);
+
+// Handle位置插入按钮的悬停状态
+const sourceHandleHovered = ref(false);
 
 // 定义传给mirror展示输入输出的存储量
 const inputAndOutput = ref({
@@ -130,6 +133,32 @@ const handleCopyTextToclipboard = (text) => {
   });
   document.body.removeChild(input);
 };
+
+// 处理source handle插入节点事件
+const handleSourceInsertNode = (event) => {
+  event.stopPropagation();
+  if (props.disabled) {
+    return;
+  }
+  
+  // 发射插入节点事件，传递节点信息和handle类型
+  emits('insertNodeFromHandle', {
+    nodeId: props.id,
+    handleType: 'source',
+    nodePosition: props.position
+  });
+};
+
+// Handle悬停事件处理
+const handleSourceHandleEnter = () => {
+  if (!props.disabled) {
+    sourceHandleHovered.value = true;
+  }
+};
+
+const handleSourceHandleLeave = () => {
+  sourceHandleHovered.value = false;
+};
 </script>
 
 <template>
@@ -139,7 +168,9 @@ const handleCopyTextToclipboard = (text) => {
       @mousedown="setConnectStatus('target')"
       type="target"
       :position="Position.Left"
-    ></Handle>
+    />
+    
+
     <div class="nodeContainer">
       <div class="nodeBox" :class="getNodeClass(props.data)" @click="handleNodeClick">
         <div class="title" v-if="props.data.name">
@@ -195,7 +226,20 @@ const handleCopyTextToclipboard = (text) => {
       @mousedown="setConnectStatus('source')"
       :class="{ isConnecting: handleSourceConnecting }"
       :connectable="props.data?.isConnectSource"
-    ></Handle>
+    />
+    
+    <!-- Source +按钮 - 独立定位，远离Handle -->
+    <div 
+      v-if="!props.disabled"
+      class="handle-plus-button source-plus"
+      @mouseenter="handleSourceHandleEnter"
+      @mouseleave="handleSourceHandleLeave"
+      @click="handleSourceInsertNode"
+    >
+      <el-icon v-if="sourceHandleHovered" class="plus-icon">
+        <Plus />
+      </el-icon>
+    </div>
     <!-- 调试时出现-暂时隐藏 -->
     <NodeMirrorText
       v-if="curStatus !== 'default'"
@@ -210,6 +254,7 @@ const handleCopyTextToclipboard = (text) => {
 <style scoped>
 .customNodeStyle {
   position: relative;
+  /* 确保Handle容器能正确定位 */
 }
 
 .deleteCardWrapper {
@@ -331,5 +376,69 @@ const handleCopyTextToclipboard = (text) => {
 
 .customNodeStyle:hover .deleteCardWrapper {
   opacity: 1;
+}
+
+/* +按钮容器 - 独立定位，远离Handle */
+.handle-plus-button {
+  position: absolute;
+  width: 40px; /* 扩大触发区域 */
+  height: 40px; /* 扩大触发区域 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 15;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  /* 调试时可以启用这个边框来查看触发区域 */
+  /* border: 1px dashed rgba(99, 149, 253, 0.3); */
+}
+
+
+
+/* Source handle的+按钮位置 - 在节点右侧，触发区域延伸到节点边缘 */
+.source-plus {
+  right: -25px; /* 稍微靠近节点，扩大的触发区域会延伸到节点 */
+  top: 50%;
+  transform: translate(50%, -50%); /* 居中对齐，让触发区域更合理 */
+}
+
+/* +图标样式 */
+.handle-plus-button .plus-icon {
+  font-size: 11px;
+  color: #6395fd;
+  background: #ffffff;
+  border: 1px solid #6395fd;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(99, 149, 253, 0.4);
+  transition: all 0.2s ease;
+  opacity: 0.9;
+}
+
+.handle-plus-button .plus-icon:hover {
+  background: #6395fd;
+  color: #ffffff;
+  transform: scale(1.15);
+  box-shadow: 0 5px 15px rgba(99, 149, 253, 0.6);
+  opacity: 1;
+}
+
+/* 仅在节点悬停时显示+按钮 */
+.customNodeStyle .handle-plus-button {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease 0s, visibility 0s ease 0.5s; /* 延迟隐藏 */
+}
+
+.customNodeStyle:hover .handle-plus-button,
+.customNodeStyle .handle-plus-button:hover {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease 0s, visibility 0s ease 0s; /* 立即显示 */
 }
 </style>

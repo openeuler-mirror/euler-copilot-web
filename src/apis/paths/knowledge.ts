@@ -21,7 +21,7 @@ export const updateKnowledgeList = ({
   kb_ids: string[];
   conversationId: string;
 }): Promise<[any, FcResponse<{}> | undefined]> => {
-  let kbIds = kb_ids;
+  const kbIds = kb_ids;
   return put('/api/knowledge', { kbIds }, { conversationId });
 };
 

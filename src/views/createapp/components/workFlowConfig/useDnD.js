@@ -44,7 +44,7 @@ export default function useDragAndDrop() {
       event.dataTransfer.effectAllowed = 'move';
     }
     
-    draggedType.value = info?.callId === 'Choice' ? 'Choice' : 'custom';
+    draggedType.value = info?.callId === 'Choice' ? 'Choice' : info?.callId === 'Loop' ? 'Loop' : 'custom';
     isDragging.value = true;
     nodeData.value = { ...info };
 
@@ -121,10 +121,32 @@ export default function useDragAndDrop() {
         cpuLimit: cleanNodeData.cpuLimit || 0.5,
       };
     } else if (cleanNodeData.callId === 'Choice') {
-      // 如果是Choice节点，确保parameters结构正确
+      // 如果是Choice节点，确保parameters结构正确，包含一个默认的IF分支和ELSE分支
       cleanNodeData.parameters = {
         input_parameters: { 
           choices: [
+            {
+              branch_id: `if_${nodeId}`,
+              name: 'IF',
+              is_default: false,
+              conditions: [
+                {
+                  id: `condition_${nodeId}`,
+                  left: {
+                    type: 'reference',
+                    value: '',
+                  },
+                  right: {
+                    type: 'string',
+                    value: '',
+                  },
+                  operate: 'string_equal',
+                  dataType: 'string',
+                  isRightReference: false,
+                }
+              ],
+              logic: 'and'
+            },
             {
               branch_id: `else_${nodeId}`,
               name: 'ELSE',
@@ -146,6 +168,20 @@ export default function useDragAndDrop() {
       cleanNodeData.parameters = {
         input_parameters: {
           answer: ''  // 确保新建的DirectReply节点内容为空
+        },
+        output_parameters: {}
+      };
+    } else if (cleanNodeData.callId === 'Loop') {
+      // 如果是Loop节点，确保parameters结构正确
+      cleanNodeData.parameters = cleanNodeData.parameters || {
+        input_parameters: {
+          variables: {},
+          stop_condition: {
+            logic: 'and',
+            conditions: []
+          },
+          max_iteration: 10,
+          sub_flow_id: '' // 初始为空，保存时会被填充
         },
         output_parameters: {}
       };

@@ -92,8 +92,21 @@ const handleVisibleChange = (visible) => {
 
 watch(
   () => props.flowZoom,
-  () => {
+  (newZoom, oldZoom) => {
+    // 添加调试信息
+    console.log('[CustomControl] flowZoom变化:', {
+      oldZoom: oldZoom,
+      newZoom: newZoom,
+      oldDisplayValue: zommChangeValue.value,
+      timestamp: Date.now()
+    });
+    
     zommChangeValue.value = props.flowZoom;
+    
+    console.log('[CustomControl] 显示值更新后:', {
+      displayValue: zommChangeValue.value,
+      displayPercent: `${Number((zommChangeValue.value * 100).toFixed(0))}%`
+    });
   },
 );
 </script>

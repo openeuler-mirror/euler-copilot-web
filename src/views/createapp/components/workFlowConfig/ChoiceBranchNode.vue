@@ -2,7 +2,7 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, computed, watch } from 'vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
-import { CopyDocument, Delete } from '@element-plus/icons-vue';
+import { CopyDocument, Delete, Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { IconSuccess } from '@computing/opendesign-icons';
 import { useI18n } from 'vue-i18n';
@@ -35,7 +35,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle']);
+const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle', 'insertNodeFromHandle']);
 
 const { t } = useI18n();
 
@@ -49,6 +49,9 @@ const showDeleteText = ref(false);
 // 当前handle是否连接中[分别是target和source]
 const handleTargetConnecting = ref(false);
 const handleSourceConnecting = ref(false);
+
+// Handle位置插入按钮的悬停状态
+const sourceHandleHovered = ref(false);
 
 // 定义传给mirror展示输入输出的存储量
 const inputAndOutput = ref({
@@ -70,9 +73,13 @@ const branches = computed(() => {
   });
 });
 
-// 计算条件分支（非默认分支）
+// 计算条件分支（非默认分支），保留所有非默认分支
 const conditionalBranches = computed(() => {
-  return branches.value.filter(branch => !branch.isDefault);
+  return branches.value.filter(branch => {
+    // 保留非默认分支，不过滤空条件
+    // 这样后端传来的is_default=false且条件为空的分支也能正确显示
+    return !branch.isDefault;
+  });
 });
 
 // 计算默认分支
@@ -81,7 +88,7 @@ const defaultBranch = computed(() => {
 });
 
 // 处理节点点击事件
-const handleNodeClick = () => {
+const handleNodeClick = (event) => {
   if (!props.disabled) {
     editYaml(props.data.name, props.data.description, props.data.parameters);
   }
@@ -250,7 +257,19 @@ const formatConditions = (conditions, logic) => {
     return '条件未设置';
   }
   
-  const conditionTexts = conditions.map(condition => {
+  // 过滤掉无效条件（left.value为null的条件）
+  const validConditions = conditions.filter(condition => {
+    return condition.left?.value && 
+           condition.left.value !== '' && 
+           condition.left.value !== null && 
+           condition.left.value !== undefined;
+  });
+  
+  if (validConditions.length === 0) {
+    return '条件未设置';
+  }
+  
+  const conditionTexts = validConditions.map(condition => {
     // 解析左值（变量）
     const leftValue = parseVariableReference(condition.left?.value);
     
@@ -278,7 +297,19 @@ const formatConditionsHtml = (conditions, logic) => {
     return '<span class="no-condition">条件未设置</span>';
   }
   
-  const conditionTexts = conditions.map(condition => {
+  // 过滤掉无效条件（left.value为null的条件）
+  const validConditions = conditions.filter(condition => {
+    return condition.left?.value && 
+           condition.left.value !== '' && 
+           condition.left.value !== null && 
+           condition.left.value !== undefined;
+  });
+  
+  if (validConditions.length === 0) {
+    return '<span class="no-condition">条件未设置</span>';
+  }
+  
+  const conditionTexts = validConditions.map(condition => {
     // 解析左值（变量）- 添加标签样式
     const leftValue = parseVariableReference(condition.left?.value);
     const leftHtml = `<span class="variable-tag">${leftValue}</span>`;
@@ -308,6 +339,50 @@ const formatConditionsHtml = (conditions, logic) => {
   const logicText = logic === 'and' ? ' <span class="logic-text">且</span> ' : ' <span class="logic-text">或</span> ';
   return conditionTexts.join(logicText);
 };
+
+// 处理source handle插入节点事件
+const handleSourceInsertNode = (event) => {
+  event.stopPropagation();
+  if (props.disabled) {
+    return;
+  }
+  
+  // 发射插入节点事件，传递节点信息和handle类型
+  emits('insertNodeFromHandle', {
+    nodeId: props.id,
+    handleType: 'source',
+    nodePosition: props.position
+  });
+};
+
+// Handle悬停事件处理
+const handleSourceHandleEnter = () => {
+  if (!props.disabled) {
+    sourceHandleHovered.value = true;
+  }
+};
+
+const handleSourceHandleLeave = () => {
+  sourceHandleHovered.value = false;
+};
+
+// 分支+按钮处理 - 悬停状态现在通过CSS控制
+
+// 处理分支特定的插入节点事件
+const handleBranchInsertNode = (event: Event, branchId: string) => {
+  event.stopPropagation();
+  if (props.disabled) {
+    return;
+  }
+  
+  // 发射插入节点事件，传递节点信息、handle类型和特定分支ID
+  emits('insertNodeFromHandle', {
+    nodeId: props.id,
+    handleType: 'source',
+    nodePosition: props.position,
+    branchId: branchId // 传递特定的分支ID
+  });
+};
 </script>
 
 <template>
@@ -319,10 +394,12 @@ const formatConditionsHtml = (conditions, logic) => {
       type="target"
       :position="Position.Left"
     ></Handle>
+    
+
 
     <div class="nodeContainer">
       <!-- 节点主体 -->
-      <div class="nodeBox" @click="handleNodeClick">
+      <div class="nodeBox" @click="handleNodeClick($event)">
         <!-- 节点标题 -->
         <div class="title" v-if="props.data.name">
           <div class="iconLabel">
@@ -368,6 +445,17 @@ const formatConditionsHtml = (conditions, logic) => {
               @mousedown="setConnectStatus('source')"
               :class="{ isConnecting: handleSourceConnecting }"
             ></Handle>
+
+            <!-- 分支特定的+按钮 -->
+            <div 
+              v-if="!props.disabled"
+              class="branch-plus-button"
+              @click="handleBranchInsertNode($event, branch.id)"
+            >
+              <el-icon class="plus-icon">
+                <Plus />
+              </el-icon>
+            </div>
           </div>
           
           <!-- 默认分支 ELSE -->
@@ -395,6 +483,17 @@ const formatConditionsHtml = (conditions, logic) => {
               @mousedown="setConnectStatus('source')"
               :class="{ isConnecting: handleSourceConnecting }"
             ></Handle>
+
+            <!-- ELSE分支特定的+按钮 -->
+            <div 
+              v-if="!props.disabled"
+              class="branch-plus-button"
+              @click="handleBranchInsertNode($event, defaultBranch.id)"
+            >
+              <el-icon class="plus-icon">
+                <Plus />
+              </el-icon>
+            </div>
           </div>
         </div>
 
@@ -403,7 +502,7 @@ const formatConditionsHtml = (conditions, logic) => {
           <div class="emptyText">点击编辑添加分支条件</div>
         </div>
       </div>
-
+      
       <!-- 节点底部信息 -->
       <div class="nodeFooter" v-if="props.id">
         <div class="nodeIdText">
@@ -553,6 +652,13 @@ const formatConditionsHtml = (conditions, logic) => {
       &:hover {
         border-color: #6395fd;
         box-shadow: 0 1px 4px rgba(99, 149, 253, 0.1);
+
+        // 重要：分支项悬停时显示+按钮
+        .branch-plus-button {
+          opacity: 1;
+          visibility: visible;
+          transition: opacity 0.2s ease 0s, visibility 0s ease 0s;
+        }
       }
 
       .branchHeader {
@@ -699,6 +805,57 @@ const formatConditionsHtml = (conditions, logic) => {
           width: 14px;
           height: 14px;
           box-shadow: 0 2px 8px rgba(99, 149, 253, 0.3);
+        }
+      }
+
+      /* 每个分支的+按钮 */
+      .branch-plus-button {
+        position: absolute;
+        top: 50%;
+        right: -25px;
+        transform: translate(50%, -50%);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 15;
+        pointer-events: auto;
+        transition: all 0.2s ease;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease 0s, visibility 0s ease 0.5s;
+
+        .plus-icon {
+          font-size: 11px;
+          color: #6395fd;
+          background: #ffffff;
+          border: 1px solid #6395fd;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 3px 8px rgba(99, 149, 253, 0.4);
+          transition: all 0.2s ease;
+          opacity: 0.9;
+
+          &:hover {
+            background: #6395fd;
+            color: #ffffff;
+            transform: scale(1.15);
+            box-shadow: 0 5px 15px rgba(99, 149, 253, 0.6);
+            opacity: 1;
+          }
+        }
+
+        // +按钮自身悬停时也显示
+        &:hover {
+          opacity: 1;
+          visibility: visible;
+          transition: opacity 0.2s ease 0s, visibility 0s ease 0s;
         }
       }
     }

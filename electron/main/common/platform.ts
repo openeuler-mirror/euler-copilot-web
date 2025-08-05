@@ -42,7 +42,7 @@ export interface INodeProcess {
   cwd: () => string;
 }
 
-let nodeProcess: INodeProcess | undefined = process;
+const nodeProcess: INodeProcess | undefined = process;
 
 const isElectronProcess = typeof nodeProcess?.versions?.electron === 'string';
 

@@ -138,12 +138,37 @@ const initFormData = () => {
   if (props.nodeData) {
     const allChoices = JSON.parse(JSON.stringify(props.nodeData.parameters?.input_parameters?.choices || []));
     
+    console.log('[ChoiceBranchDrawer] 初始化表单数据 - 原始choices:', {
+      allChoices,
+      choicesCount: allChoices.length,
+      nodeData: props.nodeData
+    });
+    
     // 分离默认分支和非默认分支
     let defaultBranches = allChoices.filter(choice => choice.is_default);
     let nonDefaultChoices = allChoices.filter(choice => !choice.is_default);
     
+    console.log('[ChoiceBranchDrawer] 分支分离结果:', {
+      defaultBranches,
+      nonDefaultChoices,
+      defaultCount: defaultBranches.length,
+      nonDefaultCount: nonDefaultChoices.length
+    });
+    
+    // 详细打印每个非默认分支的条件信息
+    nonDefaultChoices.forEach((choice, index) => {
+      console.log(`[ChoiceBranchDrawer] 非默认分支 ${index}:`, {
+        branch_id: choice.branch_id,
+        name: choice.name,
+        is_default: choice.is_default,
+        conditions: choice.conditions,
+        conditionCount: choice.conditions?.length || 0
+      });
+    });
+    
     // 验证默认分支数量
     if (defaultBranches.length > 1) {
+      console.warn('[ChoiceBranchDrawer] 发现多个默认分支，只保留第一个:', defaultBranches);
       ElMessage.error('数据错误：不能有多个默认分支');
       defaultBranches = [defaultBranches[0]]; // 只保留第一个默认分支
     }
@@ -155,27 +180,44 @@ const initFormData = () => {
       defaultBranch: defaultBranches.length > 0 ? defaultBranches[0] : null,
     };
 
-    // 确保每个非默认choice都有必要的字段
-    formData.value.choices = formData.value.choices.map((choice, index) => ({
-      branch_id: choice.branch_id || uuidv4(),
-      name: choice.name || `分支 ${index + 1}`,
-      logic: choice.logic || 'and',
-      conditions: (choice.conditions || []).map(condition => ({
-        id: condition.id || uuidv4(),
-        left: {
-          type: condition.left?.type || 'reference',
-          value: condition.left?.value || '',
-        },
-        right: {
-          type: condition.right?.type || 'string',
-          value: condition.right?.value || '',
-        },
-        operate: condition.operate || 'string_equal',
-        dataType: condition.dataType || 'string',
-        isRightReference: condition.isRightReference !== undefined ? condition.isRightReference : false,
-      })),
-      is_default: false, // 确保非默认分支的is_default为false
-    }));
+    // 过滤和清理非默认分支，移除包含空条件的分支
+    formData.value.choices = formData.value.choices
+      .filter(choice => {
+        // 对于非默认分支，不过滤掉空条件的分支，保留所有非默认分支供用户编辑
+        // 这样后端传来的is_default=false且条件为空的分支也能正确显示
+        return true;
+      })
+      .map((choice, index) => ({
+        branch_id: choice.branch_id || uuidv4(),
+        name: choice.name || `分支 ${index + 1}`,
+        logic: choice.logic || 'and',
+        conditions: (() => {
+          // 处理条件数组
+          let conditions = (choice.conditions || [])
+            .map(condition => ({
+              id: condition.id || uuidv4(),
+              left: {
+                type: condition.left?.type || 'reference',
+                value: condition.left?.value || '',
+              },
+              right: {
+                type: condition.right?.type || 'string',
+                value: condition.right?.value || '',
+              },
+              operate: condition.operate || 'string_equal',
+              dataType: condition.dataType || 'string',
+              isRightReference: condition.isRightReference !== undefined ? condition.isRightReference : false,
+            }));
+          
+          // 确保每个非默认分支至少有一个条件（即使是空的），这样用户就能看到并编辑
+          if (conditions.length === 0) {
+            conditions = [createEmptyCondition()];
+          }
+          
+          return conditions;
+        })(),
+        is_default: false, // 确保非默认分支的is_default为false
+      }));
     
     // 确保默认分支有必要的字段
     if (formData.value.defaultBranch) {
@@ -188,16 +230,27 @@ const initFormData = () => {
       };
     }
     
-    // 如果没有非默认分支，初始化一个IF分支
-    if (formData.value.choices.length === 0) {
-      initDefaultBranches();
-    } else {
-      // 更新非默认分支名称为 IF/ELIF
+    // 更新非默认分支名称为 IF/ELIF（如果有有效分支）
+    if (formData.value.choices.length > 0) {
+      console.log('[ChoiceBranchDrawer] 有非默认分支，更新名称');
       updateBranchNames();
+    } else {
+      console.log('[ChoiceBranchDrawer] 没有非默认分支，创建一个空的IF分支');
+      // 如果没有非默认分支，创建一个空的IF分支，这样用户就不需要手动点击+ELIF按钮
+      formData.value.choices = [
+        {
+          branch_id: uuidv4(),
+          name: 'IF',
+          logic: 'and',
+          conditions: [createEmptyCondition()],
+          is_default: false,
+        }
+      ];
     }
     
     // 如果没有默认分支，创建一个
     if (!formData.value.defaultBranch) {
+      console.log('[ChoiceBranchDrawer] 没有默认分支，创建ELSE分支');
       formData.value.defaultBranch = {
         branch_id: uuidv4(),
         name: 'ELSE',
@@ -205,7 +258,29 @@ const initFormData = () => {
         conditions: [],
         is_default: true,
       };
+    } else {
+      console.log('[ChoiceBranchDrawer] 已有默认分支:', formData.value.defaultBranch);
     }
+    
+    console.log('[ChoiceBranchDrawer] 最终formData:', {
+      choices: formData.value.choices,
+      defaultBranch: formData.value.defaultBranch,
+      choicesCount: formData.value.choices.length
+    });
+  } else {
+    // 如果没有nodeData，创建空的表单数据，不自动创建IF分支
+    formData.value = {
+      name: '条件分支',
+      description: '',
+      choices: [], // 不自动创建IF分支
+      defaultBranch: {
+        branch_id: uuidv4(),
+        name: 'ELSE',
+        logic: 'and',
+        conditions: [],
+        is_default: true,
+      },
+    };
   }
 };
 
@@ -299,31 +374,35 @@ const updateCondition = (choiceIndex, conditionIndex, condition) => {
 
 
 
-// 验证表单
+// 表单验证
 const validateForm = () => {
-  if (!formData.value.name.trim()) {
-    ElMessage.error('请输入节点名称');
+  // 验证基本信息
+  if (!formData.value.name || formData.value.name.trim() === '') {
+    ElMessage.error('请填写节点名称');
     return false;
   }
   
-  if (formData.value.choices.length === 0) {
-    ElMessage.error('至少需要一个条件分支');
+  // 验证是否至少有一个分支（默认分支）
+  if (!formData.value.defaultBranch && formData.value.choices.length === 0) {
+    ElMessage.error('至少需要一个分支');
     return false;
   }
   
-  if (!formData.value.defaultBranch) {
-    ElMessage.error('必须设置默认分支');
-    return false;
-  }
-  
-  // 验证所有条件分支（非默认分支）
+  // 验证所有非默认条件分支
   for (const choice of formData.value.choices) {
-    if (choice.conditions.length === 0) {
-      ElMessage.error(`${choice.name} 分支需要至少一个条件`);
-      return false;
+    // 过滤有效条件
+    const validConditions = choice.conditions.filter(condition => {
+      return condition.left?.value && condition.left.value !== '' && 
+             condition.left.value !== null && condition.left.value !== undefined;
+    });
+    
+    // 如果分支没有有效条件，跳过（在保存时会被过滤掉）
+    if (validConditions.length === 0) {
+      continue;
     }
     
-    for (const condition of choice.conditions) {
+    // 对于有条件的分支，验证条件完整性
+    for (const condition of validConditions) {
       if (!condition.left.value || condition.left.value === '') {
         ElMessage.error(`${choice.name} 分支存在未填写的左值变量`);
         return false;
@@ -348,26 +427,54 @@ const saveNode = () => {
     return;
   }
   
-  // 合并非默认分支和默认分支
-  const allChoices = [...formData.value.choices];
+  // 过滤掉包含空条件的分支，只保留有效的非默认分支
+  const validChoices = formData.value.choices.filter(choice => {
+    // 过滤有效条件
+    const validConditions = choice.conditions.filter(condition => {
+      return condition.left?.value && condition.left.value !== '' && 
+             condition.left.value !== null && condition.left.value !== undefined &&
+             condition.right?.value && condition.right.value !== '' && 
+             condition.right.value !== null && condition.right.value !== undefined;
+    });
+    // 只保留有有效条件的分支
+    return validConditions.length > 0;
+  });
+  
+  // 合并有效的非默认分支和默认分支
+  const allChoices = [...validChoices];
   if (formData.value.defaultBranch) {
     allChoices.push(formData.value.defaultBranch);
   }
   
-  // 对所有条件值进行类型转换
+  // 如果没有任何有效的非默认分支，确保至少有默认分支
+  if (allChoices.length === 0) {
+    ElMessage.error('至少需要一个有效的分支');
+    return;
+  }
+  
+  // 对所有条件值进行类型转换，再次过滤确保数据有效性
   const processedChoices = allChoices.map(choice => ({
     ...choice,
-    conditions: choice.conditions.map(condition => ({
-      ...condition,
-      left: {
-        ...condition.left,
-        value: condition.left.type === 'reference' ? condition.left.value : parseValue(condition.left.value, condition.left.type)
-      },
-      right: {
-        ...condition.right,
-        value: condition.right.type === 'reference' ? condition.right.value : parseValue(condition.right.value, condition.right.type)
-      }
-    }))
+    conditions: choice.conditions
+      .filter(condition => {
+        // 再次过滤，确保条件有效
+        if (choice.is_default) {
+          return true; // 默认分支可以没有条件
+        }
+        return condition.left?.value && condition.left.value !== '' && 
+               condition.left.value !== null && condition.left.value !== undefined;
+      })
+      .map(condition => ({
+        ...condition,
+        left: {
+          ...condition.left,
+          value: condition.left.type === 'reference' ? condition.left.value : parseValue(condition.left.value, condition.left.type)
+        },
+        right: {
+          ...condition.right,
+          value: condition.right.type === 'reference' ? condition.right.value : parseValue(condition.right.value, condition.right.type)
+        }
+      }))
   }));
   
   const nodeData = {
@@ -386,6 +493,12 @@ const saveNode = () => {
       },
     },
   };
+  
+  console.log('[ChoiceBranchDrawer] 保存的最终数据:', {
+    processedChoices,
+    validChoicesCount: validChoices.length,
+    totalChoicesCount: allChoices.length
+  });
   
   emit('saveNode', nodeData, props.nodeId);
   handleClose();
