@@ -150,8 +150,8 @@ export default function useDragAndDrop() {
         output_parameters: {}
       };
     } else {
-      // 对于所有其他节点类型（LLM、RAG、API、SQL等），确保parameters结构正确且内容为空
-      cleanNodeData.parameters = {
+      // 对于所有其他节点类型（LLM、RAG、API、SQL等），保留API返回的原始parameters或使用空结构
+      cleanNodeData.parameters = cleanNodeData.parameters || {
         input_parameters: {},
         output_parameters: {}
       };

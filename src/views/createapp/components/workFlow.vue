@@ -615,12 +615,15 @@ const nodesChange = (nodes) => {
 };
 
 // 子组件获取的flow
-const getCreatedFlow = (createdFlowObj) => {
+const getCreatedFlow = async (createdFlowObj) => {
   if (flowObj.value) {
     flowObj.value = { ...createdFlowObj };
     workFlowItemName.value = createdFlowObj.name;
     // 回显工作流节点和边
     redrageFlow(createdFlowObj?.nodes, createdFlowObj?.edges);
+    
+    // 重新加载对话变量，确保显示当前flow的正确变量状态
+    await loadConversationVariablesForDisplay();
   }
   // 更新当前应用下的工作流列表下拉框
   queryFlow('create');
