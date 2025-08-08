@@ -700,7 +700,7 @@ function downloadFun(url: string) {
 }
 const downLoadSourceFile = (file: any) => {
   if (!file) return;
-  const url = `${window.origin}/wtd/api/doc/download?docId=${file.documentId}`;
+  const url = `${window.origin}/witchaind/api/doc/download?docId=${file.documentId}`;
   downloadFun(url);
 };
 
