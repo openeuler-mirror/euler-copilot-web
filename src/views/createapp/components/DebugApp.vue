@@ -97,7 +97,7 @@ const { scrollToBottom } = useScrollBottom(chatContainerRef, {
   threshold: 15,
 });
 
-const { conversations, setConversations } = useConversations();
+const { conversations, setConversations, stopMemoryMonitoring } = useConversations();
 
 const { isStreaming, queryStream, stopStream } = useStream();
 
@@ -227,7 +227,7 @@ function useConversations() {
     };
   }
 
-  type StreamEvent = 'text.add' | 'init' | 'input' | 'flow.start' | 'step.input' | 'step.output' | 'flow.stop';
+  type StreamEvent = 'text.add' | 'init' | 'input' | 'flow.start' | 'step.input' | 'step.output' | 'flow.stop' | 'progress';
   interface StreamMetadata {
     inputTokens: number;
 
@@ -253,29 +253,101 @@ function useConversations() {
   }
 
   const conversations = ref<Conversation[]>([]);
+  
+  // 添加消息防抖机制
+  let messageQueue: StreamChunk[] = [];
+  let processingTimer: NodeJS.Timeout | null = null;
+  let lastScrollTime = 0;
+  let memoryCheckTimer: NodeJS.Timeout | null = null;
+  const SCROLL_THROTTLE_INTERVAL = 100; // 滚动节流间隔(ms)
+  const MESSAGE_BATCH_SIZE = 5; // 批处理消息数量
+  const MESSAGE_BATCH_INTERVAL = 50; // 批处理间隔(ms)
+  const MEMORY_CHECK_INTERVAL = 10000; // 内存检查间隔(ms)
+  const MAX_CONVERSATIONS = 50; // 最大对话数量
+  const MAX_FLOW_DATA_SIZE = 100; // 最大工作流数据量
 
-  const setConversations = (
-    data: string,
-    question: string,
-    conversation?: Conversation,
-  ) => {
-    // 记录原始数据
-    console.log('🔍 Raw message data:', data);
+  // 内存监控和清理
+  const startMemoryMonitoring = () => {
+    memoryCheckTimer = setInterval(() => {
+      // 检查对话数量
+      if (conversations.value.length > MAX_CONVERSATIONS) {
+        conversations.value = conversations.value.slice(-MAX_CONVERSATIONS / 2);
+      }
+      
+      // 检查工作流数据大小
+      conversations.value.forEach(conv => {
+        if (conv.flowdata && conv.flowdata.data[0]?.length > MAX_FLOW_DATA_SIZE) {
+          conv.flowdata.data[0] = conv.flowdata.data[0].slice(-MAX_FLOW_DATA_SIZE / 2);
+        }
+      });
+      
+      // 清理消息队列
+      if (messageQueue.length > 200) {
+        messageQueue = messageQueue.slice(-50);
+      }
+      
+      // 检查内存使用情况（如果浏览器支持）
+      if ('memory' in performance && process.env.NODE_ENV === 'development') {
+        const memInfo = (performance as any).memory;
+        const usedMemory = memInfo.usedJSHeapSize / 1024 / 1024; // MB
+        if (usedMemory > 200) { // 超过200MB时警告
+          console.warn(`内存使用过高: ${usedMemory.toFixed(2)}MB`);
+        }
+      }
+    }, MEMORY_CHECK_INTERVAL);
+  };
+
+  const stopMemoryMonitoring = () => {
+    if (memoryCheckTimer) {
+      clearInterval(memoryCheckTimer);
+      memoryCheckTimer = null;
+    }
+  };
+
+  // 启动内存监控
+  startMemoryMonitoring();
+
+  // 节流版本的scrollToBottom
+  const throttledScrollToBottom = () => {
+    const now = Date.now();
+    if (now - lastScrollTime > SCROLL_THROTTLE_INTERVAL) {
+      scrollToBottom();
+      lastScrollTime = now;
+    }
+  };
+
+  // 批处理消息处理函数
+  const processBatchedMessages = () => {
+    if (messageQueue.length === 0) return;
     
-    const parsedData = JSON.parse(data) as StreamChunk;
-    const { id, event, content, metadata, flow } = parsedData;
+    const batch = messageQueue.splice(0, MESSAGE_BATCH_SIZE);
+    let shouldScroll = false;
     
-    // 详细记录解析后的数据
-    console.log('📋 Parsed message:', {
-      id,
-      event,
-      content,
-      metadata,
-      flow,
-      fullObject: parsedData
+    batch.forEach(parsedData => {
+      const result = processMessage(parsedData);
+      if (result.shouldScroll) shouldScroll = true;
     });
+    
+    // 批量处理后只滚动一次
+    if (shouldScroll) {
+      throttledScrollToBottom();
+    }
+    
+    // 如果还有待处理消息，继续处理
+    if (messageQueue.length > 0) {
+      processingTimer = setTimeout(processBatchedMessages, MESSAGE_BATCH_INTERVAL);
+    } else {
+      processingTimer = null;
+    }
+  };
+
+  // 单个消息处理逻辑
+  const processMessage = (parsedData: StreamChunk): { shouldScroll: boolean } => {
+    const { id, event, content, metadata, flow } = parsedData;
+    let shouldScroll = false;
 
     if (event === 'init') {
+      const conversation = conversations.value.find(c => c.id === id);
       if (conversation) {
         conversation.answer.push({
           content: '',
@@ -284,7 +356,7 @@ function useConversations() {
       } else {
         conversations.value.push({
           id: id,
-          question,
+          question: '',
           answer: [
             {
               content: '',
@@ -294,6 +366,7 @@ function useConversations() {
           role: 'assistant',
         });
       }
+      shouldScroll = true;
     }
     
     if (event === 'text.add') {
@@ -302,13 +375,29 @@ function useConversations() {
         emits('success', true);
       }
       const c = conversations.value[conversations.value.length - 1];
-      c.answer[c.answerIndex].content += content.text;
-      c.answer[c.answerIndex].metadata = metadata;
+      if (c) {
+        c.answer[c.answerIndex].content += content.text;
+        c.answer[c.answerIndex].metadata = metadata;
+        shouldScroll = true;
+      }
+    }
+    
+    // 处理工作流进度事件（新增）
+    if (event === 'progress') {
+      const c = conversations.value[conversations.value.length - 1];
+      if (c && c.flowdata) {
+        // 更新进度信息，但不频繁滚动
+        c.flowdata.progress = `${content.iteration}/${content.total}`;
+        c.flowdata.status = content.status;
+        // 只在重要进度节点滚动
+        if (content.iteration % 3 === 0 || content.status === 'completed') {
+          shouldScroll = true;
+        }
+      }
     }
     
     // 处理工作流事件
     if (event === 'flow.start') {
-      console.log('🚀 Flow Start Event:', { event, flow, content });
       const c = conversations.value[conversations.value.length - 1];
       if (c && flow) {
         c.flowdata = {
@@ -319,22 +408,12 @@ function useConversations() {
           data: [[]],
           progress: flow.stepProgress || '',
         };
-        console.log('✅ Flow data initialized:', c.flowdata);
+        shouldScroll = true;
       }
     }
     
     if (event === 'step.input') {
-      console.log('📥 Step Input Event - Detailed Analysis:');
-      console.log('  ├─ Event:', event);
-      console.log('  ├─ Flow object:', flow);
-      console.log('  ├─ Content type:', typeof content);
-      console.log('  ├─ Content value:', content);
-      console.log('  ├─ Content JSON:', JSON.stringify(content, null, 2));
-      console.log('  └─ Metadata:', metadata);
-      
       const c = conversations.value[conversations.value.length - 1];
-      console.log('📝 Current conversation:', c);
-      console.log('📊 Current flowdata:', c?.flowdata);
       
       if (c && c.flowdata && flow) {
         const stepData = {
@@ -346,88 +425,140 @@ function useConversations() {
           },
         };
         
-        console.log('➕ Adding step data:', stepData);
         c.flowdata.data[0].push(stepData);
         c.flowdata.progress = flow.stepProgress;
         c.flowdata.status = flow.stepStatus;
-        
-        console.log('✅ Updated flowdata after step.input:', JSON.stringify(c.flowdata, null, 2));
-      } else {
-        console.log('❌ Step input failed - missing data:', {
-          hasConversation: !!c,
-          hasFlowdata: !!c?.flowdata,
-          hasFlow: !!flow
-        });
+        // 步骤输入不频繁滚动
       }
     }
     
     if (event === 'step.output') {
-      console.log('📤 Step Output Event - Detailed Analysis:');
-      console.log('  ├─ Event:', event);
-      console.log('  ├─ Flow object:', flow);
-      console.log('  ├─ Content type:', typeof content);
-      console.log('  ├─ Content value:', content);
-      console.log('  ├─ Content JSON:', JSON.stringify(content, null, 2));
-      console.log('  └─ Metadata:', metadata);
-      
       const c = conversations.value[conversations.value.length - 1];
-      console.log('📝 Current conversation:', c);
-      console.log('📊 Current flowdata:', c?.flowdata);
+      
+      // 🔑 循环节点step.output特殊处理：只有当真正的循环节点完成时才处理
+      if (flow?.stepName?.includes('循环')) {
+      
+        // 如果是子步骤的step.output（stepName包含"[循环N]"），跳过处理
+        if (flow?.stepName?.includes('[循环')) {
+          return { shouldScroll: false };
+        }
+      }
       
       if (c && c.flowdata && flow) {
-        console.log('🔍 Looking for step with ID:', flow.stepId);
-        console.log('📋 Available steps:', c.flowdata.data[0].map(step => ({ id: step.id, title: step.title })));
-        
         const target = c.flowdata.data[0].find((item) => item.id === flow.stepId);
         
         if (target) {
-          console.log('🎯 Found target step:', target);
-          
-          // 添加输出数据，与 conversation.ts 保持一致
           target.data.output = content;
           target.status = flow.stepStatus;
           target.costTime = metadata?.timeCost;
           
+          // 更新单个步骤状态后，检查整体工作流状态
           if (flow.stepStatus === 'error') {
             c.flowdata.status = flow.stepStatus;
+            shouldScroll = true; // 错误时滚动
+          } else if (flow.stepStatus === 'success') {
+            // 检查是否所有步骤都已完成
+            const allSteps = c.flowdata.data[0];
+            const allCompleted = allSteps.every(step => 
+              step.status === 'success' || step.status === 'error'
+            );
+            
+            // 如果所有步骤都完成了，更新整体状态
+            if (allCompleted) {
+              const hasError = allSteps.some(step => step.status === 'error');
+              c.flowdata.status = hasError ? 'error' : 'success';
+                        
+              // 如果是循环节点或最后一个步骤完成，触发滚动
+              if (flow.stepName?.includes('循环') || target === allSteps[allSteps.length - 1]) {
+                shouldScroll = true;
+              }
+            }
           }
-          
-          console.log('✅ Updated target after step.output:', JSON.stringify(target, null, 2));
-          console.log('🏁 Final flowdata state:', JSON.stringify(c.flowdata, null, 2));
-        } else {
-          console.log('❌ Step output failed - target not found:');
-          console.log('  ├─ Looking for stepId:', flow.stepId);
-          console.log('  ├─ Available stepIds:', c.flowdata.data[0].map(item => item.id));
-          console.log('  └─ All steps:', c.flowdata.data[0]);
         }
-      } else {
-        console.log('❌ Step output failed - missing data:', {
-          hasConversation: !!c,
-          hasFlowdata: !!c?.flowdata,
-          hasFlow: !!flow
-        });
       }
     }
     
     if (event === 'flow.stop') {
-      console.log('🏁 Flow Stop Event:', { event, flow, content });
       const c = conversations.value[conversations.value.length - 1];
       if (c && c.flowdata && flow) {
         c.flowdata.status = flow.stepStatus || 'success';
         c.flowdata.title = '工作流执行完成';
-        console.log('✅ Flow completed, final state:', c.flowdata);
+        shouldScroll = true;
       }
     }
     
-    // 记录所有事件类型以便调试
-    if (!['init', 'text.add', 'flow.start', 'step.input', 'step.output', 'flow.stop', 'heartbeat'].includes(event)) {
-      console.log('🔔 Unhandled event type:', event, 'Full data:', parsedData);
-    }
-    
-    scrollToBottom();
+    return { shouldScroll };
   };
 
-  return { conversations, setConversations };
+  const setConversations = (
+    data: string,
+    question: string,
+    conversation?: Conversation,
+  ) => {
+    
+    try {
+      // 检查数据大小，避免处理过大的消息
+      if (data.length > 100000) { // 100KB限制
+        console.warn('消息过大，跳过处理');
+        return;
+      }
+      
+      // 🔑 处理特殊的控制字符串
+      if (data.trim() === '[DONE]') {
+        // 这里可以添加特殊的完成处理逻辑
+        return;
+      }
+      
+      if (data.trim() === '[ERROR]') {
+        console.error('❌ [DebugApp.vue] 收到[ERROR]事件');
+        // 这里可以添加特殊的错误处理逻辑
+        return;
+      }
+      
+      let parsedData: StreamChunk;
+      try {
+        parsedData = JSON.parse(data) as StreamChunk;        
+      } catch (parseError) {
+        console.error('📨 [DebugApp.vue] JSON解析失败:', {
+          rawData: data.substring(0, 200),
+          error: parseError,
+          dataLength: data.length
+        });
+        
+        // 尝试修复可能的JSON格式问题
+        const cleanData = data.trim().replace(/\n/g, '').replace(/\r/g, '');
+        try {
+          parsedData = JSON.parse(cleanData) as StreamChunk;
+        } catch (retryError) {
+          console.error('📨 [DebugApp.vue] JSON修复也失败，跳过此消息');
+          return;
+        }
+      }
+      
+      // 检查消息队列大小，避免内存溢出
+      if (messageQueue.length > 100) {
+        messageQueue = messageQueue.slice(-50); // 只保留最新50条
+      }
+      
+      // 添加到消息队列进行批处理
+      messageQueue.push(parsedData);
+      
+      // 如果没有正在处理的定时器，启动批处理
+      if (!processingTimer) {
+        processingTimer = setTimeout(processBatchedMessages, MESSAGE_BATCH_INTERVAL);
+      }
+      
+    } catch (error) {
+      console.error('消息处理失败');
+      
+      // 紧急情况下清理内存
+      if (messageQueue.length > 50) {
+        messageQueue = [];
+      }
+    }
+  };
+
+  return { conversations, setConversations, stopMemoryMonitoring };
 }
 
 async function onSend(q: string) {
@@ -490,6 +621,53 @@ watch(
   () => props.visible,
   (newVisible, oldVisible) => {
     if (!newVisible) {
+      // 关闭时清理资源
+      stopMemoryMonitoring();
+      
+      // 强制清理所有Monaco Editor实例
+      try {
+        // 清理所有Monaco Editor实例
+        const monacoContainers = document.querySelectorAll('.monaco-editor');
+        console.log(`清理Monaco Editor实例: ${monacoContainers.length}个`);
+        
+        monacoContainers.forEach((container, index) => {
+          // 避免多次清理同一个容器
+          if (container.getAttribute('data-cleaned') !== 'true') {
+            container.setAttribute('data-cleaned', 'true');
+            
+            // 强制移除Monaco Editor容器
+            try {
+              const parentElement = container.parentElement;
+              if (parentElement) {
+                parentElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Monaco Editor已清理</div>';
+              }
+            } catch (e) {
+              console.error(`清理Monaco容器${index}失败:`, e);
+            }
+          }
+        });
+        
+        // 清理Monaco相关的全局状态
+        if (typeof window !== 'undefined') {
+          // 清理Monaco worker
+          try {
+            const workers = (window as any).MonacoEnvironment?.getWorkers?.() || [];
+            workers.forEach((worker: Worker) => {
+              worker.terminate?.();
+            });
+          } catch (e) {
+            console.error('清理Monaco worker失败:', e);
+          }
+        }
+        
+        // 强制垃圾回收（如果支持）
+        if ((window as any).gc && process.env.NODE_ENV === 'development') {
+          setTimeout(() => (window as any).gc(), 1000);
+        }
+      } catch (error) {
+        console.error('Monaco清理失败:', error);
+      }
+      
       deleteSession(currentSelectedSession.value);
       return;
     }

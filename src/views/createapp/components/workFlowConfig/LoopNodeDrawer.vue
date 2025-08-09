@@ -117,6 +117,8 @@
                                   :flow-id="flowId"
                                   :current-step-id="currentStepId"
                                   :supported-scopes="['conversation', 'system', 'env']"
+                                  :self-variables="variables"
+                                  self-scope-label="循环变量"
                                   :show-variable-name="false"
                                   :show-label="false"
                                   :show-actions="false"
@@ -224,6 +226,8 @@
                   :flow-id="flowId"
                   :conversation-id="''"
                   :current-step-id="currentStepId"
+                  :self-variables="variables"
+                  self-scope-label="循环变量"
                   @remove-branch="handleRemoveBranch"
                   @add-condition="handleAddConditionFromCard"
                   @remove-condition="handleRemoveCondition"
@@ -232,7 +236,7 @@
                 />
               </div>
               
-                            <div v-else class="empty-state">
+              <div v-else class="empty-state">
                 <button 
                   @click="handleAddCondition"
                   class="add-first-condition-btn"
@@ -415,7 +419,15 @@ const initializeData = () => {
             type: 'reference',
             reference: value.reference || ''
           };
+        } else if (typeof value === 'object' && value.type) {
+          // 新的复杂格式：{type: "number", value: 2, description: "..."}
+          return {
+            name: key,
+            type: value.type,
+            value: value.value
+          };
         } else {
+          // 兼容旧的简单格式
           return {
             name: key,
             type: getVariableType(value),
@@ -430,20 +442,47 @@ const initializeData = () => {
       stopConditionBranch.value.logic = params.stop_condition.logic || 'and';
       // 转换旧格式到新格式
       if (params.stop_condition.conditions) {
-        stopConditionBranch.value.conditions = params.stop_condition.conditions.map((condition: any, index: number) => ({
-          id: condition.id || `condition_${index}`,
-          left: {
-            type: 'reference',
-            value: condition.left || ''
-          },
-          right: {
-            type: typeof condition.right === 'object' ? condition.right.type : 'string',
-            value: typeof condition.right === 'object' ? condition.right.value : condition.right
-          },
-          operate: condition.operator || condition.operate || 'string_equal',
-          dataType: condition.dataType || 'string',
-          isRightReference: (typeof condition.right === 'object' && condition.right.type === 'reference') || false
-        }));
+        stopConditionBranch.value.conditions = params.stop_condition.conditions.map((condition: any, index: number) => {
+          // 处理左值
+          const leftValue = typeof condition.left === 'object' ? condition.left.value : condition.left || '';
+          
+          // 处理右值
+          const rightValue = typeof condition.right === 'object' ? condition.right.value : condition.right;
+          const rightType = typeof condition.right === 'object' ? condition.right.type : (typeof condition.right === 'number' ? 'number' : 'string');
+          
+          // 推断数据类型
+          let dataType = condition.dataType;
+          if (!dataType) {
+            // 根据操作符推断数据类型
+            const operator = condition.operator || condition.operate || 'string_equal';
+            if (operator.startsWith('number_')) {
+              dataType = 'number';
+            } else if (operator.startsWith('bool_')) {
+              dataType = 'bool';
+            } else if (operator.startsWith('list_')) {
+              dataType = 'list';
+            } else if (operator.startsWith('dict_')) {
+              dataType = 'dict';
+            } else {
+              dataType = 'string';
+            }
+          }
+          
+          return {
+            id: condition.id || `condition_${index}`,
+            left: {
+              type: 'reference',
+              value: leftValue
+            },
+            right: {
+              type: rightType,
+              value: rightValue
+            },
+            operate: condition.operator || condition.operate || 'string_equal',
+            dataType: dataType,
+            isRightReference: (typeof condition.right === 'object' && condition.right.type === 'reference') || false
+          };
+        });
       }
     }
     
@@ -583,7 +622,12 @@ const handleSave = () => {
           reference: variable.reference
         };
       } else {
-        variablesObj[variable.name] = variable.value;
+        // 使用复杂格式，包含类型信息
+        variablesObj[variable.name] = {
+          type: variable.type,
+          value: variable.value,
+          description: `循环变量: ${variable.name}`
+        };
       }
     }
   });
@@ -600,15 +644,28 @@ const handleSave = () => {
           conditions: stopConditionBranch.value.conditions
             .filter(c => c.left.value && c.operate && c.right.value)
             .map(c => ({
-              left: c.left.value,
+              left: c.left,
               operator: c.operate,
-              right: c.isRightReference ? c.right.value : c.right.value
+              right: c.right
             }))
         },
         max_iteration: maxIteration.value,
         sub_flow_id: props.nodeData.parameters?.input_parameters?.sub_flow_id || ''
       },
-      output_parameters: props.nodeData.parameters?.output_parameters || {}
+      output_parameters: props.nodeData.parameters?.output_parameters || {
+        iteration_count: {
+          type: 'number',
+          description: '实际执行的循环次数'
+        },
+        stop_reason: {
+          type: 'string',
+          description: '停止原因'
+        },
+        variables: {
+          type: 'object',
+          description: '循环后的变量状态'
+        }
+      }
     }
   };
   

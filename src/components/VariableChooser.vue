@@ -51,6 +51,8 @@
             :flow-id="flowId"
             :conversation-id="conversationId"
             :current-step-id="currentStepId"
+            :self-variables="selfVariables"
+            :self-scope-label="selfScopeLabel"
             :show-variable-reference="showVariableReference"
             @variable-selected="handleVariableSelected"
           />
@@ -133,6 +135,8 @@ interface Props {
   flowId?: string                 // 流程ID
   conversationId?: string         // 对话ID
   currentStepId?: string          // 当前步骤ID
+  selfVariables?: any[]           // 当前节点定义的变量列表
+  selfScopeLabel?: string         // 当前节点变量分组的标签
   
   // 显示控制
   showVariableName?: boolean      // 是否显示变量名输入
@@ -163,6 +167,8 @@ const props = withDefaults(defineProps<Props>(), {
   flowId: '',
   conversationId: '',
   currentStepId: '',
+  selfVariables: () => [],
+  selfScopeLabel: '',
   showVariableName: false,
   showLabel: true,
   showActions: true,
@@ -197,7 +203,7 @@ const parseVariableReference = (reference: string) => {
   // 移除可能的 {{ }} 包装
   const cleanRef = reference.replace(/^\{\{(.*)\}\}$/, '$1').trim()
   
-  // 解析格式：conversation.step_id.variable_name 或 scope.variable_name
+  // 解析格式：conversation.step_id.variable_name、scope.variable_name 或 self.variable_name
   const parts = cleanRef.split('.')
   
   if (parts.length === 3 && parts[0] === 'conversation') {
@@ -219,6 +225,21 @@ const parseVariableReference = (reference: string) => {
 // 根据解析的引用信息查找对应的变量
 const findVariableByReference = async (parsedRef: { scope: string; step_id?: string; name: string }) => {
   try {
+    // 如果是当前节点变量，直接从 props.selfVariables 中查找
+    if (parsedRef.scope === 'self') {
+      const selfVar = props.selfVariables?.find(v => v.name === parsedRef.name)
+      if (selfVar) {
+        return {
+          name: selfVar.name,
+          var_type: selfVar.type || 'string',
+          scope: 'self',
+          value: `{{self.${selfVar.name}}}`,
+          description: `当前节点变量: ${selfVar.name}`
+        }
+      }
+      return undefined
+    }
+    
     const params: any = {
       scope: parsedRef.scope,
       flow_id: props.flowId,
@@ -263,6 +284,17 @@ const findVariableByReference = async (parsedRef: { scope: string; step_id?: str
 const generateVariableReference = (variable: Variable, format: 'raw' | 'wrapped' = 'raw'): string => {
   let reference = ''
   
+  // 当前节点变量已经包含完整的引用格式
+  if (variable.scope === 'self') {
+    if (format === 'raw') {
+      // 从 {{self.name}} 中提取 self.name
+      return variable.value.replace(/^\{\{(.*)\}\}$/, '$1')
+    } else {
+      // 直接返回 {{self.name}}
+      return variable.value
+    }
+  }
+  
   if (variable.scope === 'conversation' && variable.step_id) {
     reference = `conversation.${variable.step_id}.${variable.name}`
   } else {
@@ -272,15 +304,51 @@ const generateVariableReference = (variable: Variable, format: 'raw' | 'wrapped'
   return format === 'wrapped' ? `{{${reference}}}` : reference
 }
 
+// 创建变量对象从解析的引用（无需API查询）
+const createVariableFromReference = (parsedRef: { scope: string; step_id?: string; name: string }): Variable => {
+  if (parsedRef.scope === 'conversation' && parsedRef.step_id) {
+    return {
+      name: parsedRef.name,
+      var_type: 'string', // 默认类型，实际类型在运行时确定
+      scope: parsedRef.scope,
+      value: `{{${parsedRef.scope}.${parsedRef.step_id}.${parsedRef.name}}}`,
+      description: `对话变量: ${parsedRef.name}`,
+      step_id: parsedRef.step_id,
+      step: parsedRef.step_id // 使用step_id作为step的默认值
+    }
+  } else {
+    return {
+      name: parsedRef.name,
+      var_type: 'string', // 默认类型
+      scope: parsedRef.scope,
+      value: `{{${parsedRef.scope}.${parsedRef.name}}}`,
+      description: `${parsedRef.scope}变量: ${parsedRef.name}`
+    }
+  }
+}
+
 // 初始化选中的变量
 const initializeSelectedVariable = async () => {
   if (props.modelValue && !selectedVariable.value) {
     const parsedRef = parseVariableReference(props.modelValue)
     if (parsedRef) {
-      const foundVariable = await findVariableByReference(parsedRef)
-      if (foundVariable) {
-        selectedVariable.value = foundVariable
-        emit('update:selectedVariable', foundVariable)
+      // 首先尝试快速创建变量对象（无需API查询）
+      const quickVariable = createVariableFromReference(parsedRef)
+      selectedVariable.value = quickVariable
+      emit('update:selectedVariable', quickVariable)
+      
+      // 可选：在后台异步获取完整的变量信息（用于显示更准确的类型和描述）
+      // 这样用户看不到延迟，但仍能获得准确信息
+      try {
+        const foundVariable = await findVariableByReference(parsedRef)
+        if (foundVariable) {
+          // 只有在找到更详细信息时才更新
+          selectedVariable.value = foundVariable
+          emit('update:selectedVariable', foundVariable)
+        }
+      } catch (error) {
+        // 如果API查询失败，保持使用快速创建的变量对象
+        console.debug('变量详细信息查询失败，使用默认信息:', error)
       }
     }
   }
@@ -299,7 +367,24 @@ watch(() => props.variableName, (newVal) => {
 watch(() => props.modelValue, async (newVal) => {
   // 当 modelValue 变化时，重新初始化 selectedVariable
   if (newVal && !selectedVariable.value) {
-    await initializeSelectedVariable()
+    const parsedRef = parseVariableReference(newVal)
+    if (parsedRef) {
+      // 快速创建并显示变量对象
+      const quickVariable = createVariableFromReference(parsedRef)
+      selectedVariable.value = quickVariable
+      emit('update:selectedVariable', quickVariable)
+      
+      // 后台获取详细信息
+      try {
+        const foundVariable = await findVariableByReference(parsedRef)
+        if (foundVariable) {
+          selectedVariable.value = foundVariable
+          emit('update:selectedVariable', foundVariable)
+        }
+      } catch (error) {
+        console.debug('变量详细信息查询失败，使用默认信息:', error)
+      }
+    }
   } else if (!newVal) {
     selectedVariable.value = undefined
   }
@@ -308,6 +393,30 @@ watch(() => props.modelValue, async (newVal) => {
 watch(() => props.selectedVariable, (newVal) => {
   selectedVariable.value = newVal
 }, { immediate: true })
+
+// 监听 selfVariables 变化，重新初始化选中的变量
+watch(() => props.selfVariables, async () => {
+  if (props.modelValue && !selectedVariable.value) {
+    const parsedRef = parseVariableReference(props.modelValue)
+    if (parsedRef) {
+      // 快速创建并显示变量对象
+      const quickVariable = createVariableFromReference(parsedRef)
+      selectedVariable.value = quickVariable
+      emit('update:selectedVariable', quickVariable)
+      
+      // 后台获取详细信息
+      try {
+        const foundVariable = await findVariableByReference(parsedRef)
+        if (foundVariable) {
+          selectedVariable.value = foundVariable
+          emit('update:selectedVariable', foundVariable)
+        }
+      } catch (error) {
+        console.debug('变量详细信息查询失败，使用默认信息:', error)
+      }
+    }
+  }
+}, { deep: true })
 
 // 处理变量名变化
 const handleNameChange = (value: string) => {
@@ -345,6 +454,9 @@ const clearVariable = () => {
 const getVariableDisplayName = (variable: Variable): string => {
   if (variable.scope === 'conversation' && variable.step) {
     return `${variable.step}.${variable.name}`
+  } else if (variable.scope === 'self') {
+    // 对于当前节点变量，只显示变量名
+    return variable.name
   } else if (variable.scope !== 'conversation' && variable.scope !== 'env'){
     return `${variable.scope}.${variable.name}`
   }

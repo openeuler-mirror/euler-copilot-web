@@ -146,8 +146,26 @@ export const useSessionStore = defineStore('conversation', () => {
         target.status = flow.stepStatus;
         // 工作流添加每阶段的时间耗时
         target['costTime'] = metadata.timeCost;
-        if (flow.step_status === 'error' && conversationItem.flowdata) {
-          conversationItem.flowdata.status = flow.stepStatus;
+        
+        // 修复：更新整体flowdata状态逻辑
+        if (conversationItem.flowdata) {
+          if (flow.stepStatus === 'error') {
+            // 如果有错误，立即设置为错误状态
+            conversationItem.flowdata.status = 'error';
+          } else if (flow.stepStatus === 'success') {
+            // 如果步骤成功，检查是否所有步骤都完成了
+            const allSteps = conversationItem.flowdata.data[0];
+            const allCompleted = allSteps.every(step => 
+              step.status === 'success' || step.status === 'error'
+            );
+            
+            if (allCompleted) {
+              // 所有步骤都完成了，检查是否有错误
+              const hasError = allSteps.some(step => step.status === 'error');
+              conversationItem.flowdata.status = hasError ? 'error' : 'success';
+            }
+            // 如果还有步骤未完成，保持running状态
+          }
         }
       }
     },
@@ -156,9 +174,15 @@ export const useSessionStore = defineStore('conversation', () => {
       message: Record<string, unknown>,
       isFlowDebug: boolean,
     ) => {
+      
       const content = (message.content || {}) as Record<string, unknown>;
       const contentFlow = (content.flow || {}) as Record<string, string>;
       const messageFlow = (message.flow || {}) as Record<string, string>;
+      
+      // 🔑 关键修复：在 flow.stop 时就停止生成状态
+      conversationItem.isFinish = true;
+      isAnswerGenerating.value = false;
+      
       if (isFlowDebug) {
         // 如果是工作流的调试功能-添加status/data
         conversationItem.flowdata = {
@@ -169,6 +193,8 @@ export const useSessionStore = defineStore('conversation', () => {
           display: true,
           data: conversationItem?.flowdata?.data,
         };
+        
+        $bus.emit('debugChatEnd');
       } else if (content.type !== 'schema' && conversationItem.flowdata) {
         // 删除 end 逻辑
         conversationItem.flowdata = {
@@ -189,20 +215,61 @@ export const useSessionStore = defineStore('conversation', () => {
           conversationItem.paramsList = content.data;
         }
       }
+      
+      },
+      loopProgress: (
+        conversationItem: RobotConversationItem,
+        message: Record<string, unknown>,
+      ) => {
+        const content = (message.content || {}) as Record<string, unknown>;
+        
+        // 更新循环进度显示，但不停止生成状态
+        if (conversationItem.flowdata) {
+          conversationItem.flowdata.progress = `${content.iteration}/${content.total}`;
+          conversationItem.flowdata.status = 'running'; // 确保状态保持为运行中
+        }
+      },
+      loopCompleted: (
+        conversationItem: RobotConversationItem,
+        message: Record<string, unknown>,
+        isFlowDebug: boolean,
+      ) => {
+        const content = (message.content || {}) as Record<string, unknown>;
+        
+        // 🔑 关键修改：循环完成时立即停止生成状态
+        conversationItem.isFinish = true;
+        isAnswerGenerating.value = false;
+        
+        // 更新flowdata状态
+        if (conversationItem.flowdata) {
+          conversationItem.flowdata.status = 'success';
+          conversationItem.flowdata.progress = `${content.iteration_count}/${content.iteration_count}`;
+        }
+        
+        // 如果是工作流调试，发送完成事件
+        if (isFlowDebug) {
+          $bus.emit('debugChatEnd');
+        }
     },
     dataDone: (
       conversationItem: RobotConversationItem,
       isFlowDebug: boolean,
     ) => {
+      
       if (excelPath.value.length > 0) {
         conversationItem.message[conversationItem.currentInd] +=
           `</p><p>下载地址：${excelPath.value}`;
       }
-      conversationItem.isFinish = true;
-      isAnswerGenerating.value = false;
-      // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
-      if (isFlowDebug) {
-        $bus.emit('debugChatEnd');
+      
+      // 🔑 只有在还没完成时才设置完成状态
+      if (!conversationItem.isFinish) {
+        conversationItem.isFinish = true;
+        isAnswerGenerating.value = false;
+        
+        // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
+        if (isFlowDebug) {
+          $bus.emit('debugChatEnd');
+        }
       }
     },
   };
@@ -219,14 +286,52 @@ export const useSessionStore = defineStore('conversation', () => {
       return;
     }
     const rawMsgData = msgData.data as string;
+    
     if (rawMsgData === '[DONE]') {
       dataTransfers.dataDone(conversationItem, !!params.type);
       return;
     }
 
+    // 🔑 处理特殊的错误标识
+    if (rawMsgData === '[ERROR]') {
+      console.error('❌ 收到[ERROR]事件，停止对话生成');
+      conversationItem.isFinish = true;
+      isAnswerGenerating.value = false;
+      
+      // 🔑 改进：不在工作流调试中显示错误消息，因为可能是正常的逻辑节点完成
+      const isFlowDebug = !!params.type;
+      if (!isFlowDebug) {
+        // 只在非工作流调试模式下显示错误消息
+        if (conversationItem.message && conversationItem.message.length > 0) {
+          const currentIndex = conversationItem.currentInd || 0;
+          if (conversationItem.message[currentIndex]) {
+            conversationItem.message[currentIndex] += '\n\n❌ 系统错误，请稍后再试';
+          }
+        }
+      }
+      return;
+    }
+
     // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
-    // 这里json解析
-    const message = JSON.parse(rawMsgData || '{}');
+    // 这里json解析，添加错误处理
+    let message: any;
+    try {
+      message = JSON.parse(rawMsgData || '{}');
+    } catch (parseError) {
+      console.error('📨 JSON解析失败:', {
+        rawData: rawMsgData,
+        error: parseError,
+        length: rawMsgData?.length
+      });
+      // 如果解析失败，尝试处理为文本消息
+      if (rawMsgData && rawMsgData.trim()) {
+        dataTransfers.textAdd(conversationItem, {
+          event: 'text.add',
+          content: { text: rawMsgData }
+        });
+      }
+      return;
+    }
     const eventType = message['event'];
     if ('metadata' in message) {
       conversationItem.metadata = message.metadata;
@@ -267,6 +372,14 @@ export const useSessionStore = defineStore('conversation', () => {
         case 'flow.stop':
           //时间流结束
           dataTransfers.flowStop(conversationItem, message, !!params.type);
+          break;
+        case 'loop.progress':
+          //循环进度更新
+          dataTransfers.loopProgress(conversationItem, message);
+          break;
+        case 'loop.completed':
+          //循环完成
+          dataTransfers.loopCompleted(conversationItem, message, !!params.type);
           break;
         default:
           break;
@@ -419,7 +532,15 @@ export const useSessionStore = defineStore('conversation', () => {
       if (params.params && typeof params.params === 'object') {
         pp = params.params;
       } else if (params.params && typeof params.params === 'string') {
-        pp = Object(JSON.parse(params.params));
+        try {
+          pp = Object(JSON.parse(params.params));
+        } catch (parseError) {
+          console.error('📨 参数解析失败:', {
+            params: params.params,
+            error: parseError
+          });
+          pp = {}; // 使用空对象作为默认值
+        }
       }
       isPaused.value = false;
       excelPath.value = '';

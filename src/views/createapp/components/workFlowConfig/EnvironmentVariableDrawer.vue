@@ -315,11 +315,8 @@ const loadEnvironmentVariables = async () => {
   
   variablesLoading.value = true
   
-  try {
-    console.log('🔄 开始加载环境变量...')
-    
+  try {    
     const response = await listEnvironmentVariables(props.flowId)
-    console.log('📥 环境变量API响应:', response)
     
     // 处理API响应结构
     let variables: Variable[] = []
@@ -332,7 +329,6 @@ const loadEnvironmentVariables = async () => {
     }
     
     environmentVariables.value = variables || []
-    console.log('✅ 环境变量加载成功:', environmentVariables.value.length, '个')
     
   } catch (error) {
     console.error('❌ 加载环境变量失败:', error)
@@ -440,6 +436,7 @@ const deleteEnvironmentVariable = async (variable: Variable) => {
     })
     
     ElMessage.success('环境变量删除成功')
+    showVariableDialog.value = false
     await loadEnvironmentVariables()
     
   } catch (error) {

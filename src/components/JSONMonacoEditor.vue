@@ -144,7 +144,7 @@ const initMonacoEditor = async () => {
   setTimeout(() => {
     if (editor) {
       editor.layout();
-      console.log('🔧 Monaco Editor post-creation layout complete');
+      // 移除详细日志
     }
   }, 100);
 
@@ -196,18 +196,22 @@ const setValue = (value: string) => {
 // 监听props变化
 watch(() => props.modelValue, (newVal) => {
   if (editor) {
-    editor.setValue(newVal || '');
-    // 强制刷新编辑器布局
-    setTimeout(() => {
-      if (editor) {
-        editor.layout();
-        console.log('📐 Monaco refreshed');
-      }
-    }, 100);
+    const currentValue = editor.getValue();
+    // 只有在值真正不同时才更新
+    if (currentValue !== (newVal || '')) {
+      editor.setValue(newVal || '');
+      // 减少频繁的layout调用
+      setTimeout(() => {
+        if (editor) {
+          editor.layout();
+          // 移除详细日志
+        }
+      }, 150); // 增加延迟，减少频率
+    }
   } else if (!editor && editorContainer.value) {
     // 处理降级方案（textarea）
     const textarea = editorContainer.value.querySelector('textarea');
-    if (textarea) {
+    if (textarea && textarea.value !== (newVal || '')) {
       textarea.value = newVal || '';
       // 触发输入事件确保显示更新
       textarea.dispatchEvent(new Event('input'));

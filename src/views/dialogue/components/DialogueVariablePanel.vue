@@ -191,11 +191,16 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['expand', 'startConversation', 'variableUpdated'])
+const emit = defineEmits(['expand', 'startConversation', 'variableUpdated', 'minimize'])
 
 // 内部独立的变量状态
 const internalVariables = ref<Variable[]>([])
 const isStarting = ref(false)
+
+// 计算属性：检查是否应该默认最小化
+const shouldDefaultMinimize = computed(() => {
+  return internalVariables.value.length === 0
+})
 
 // 检查是否是用户可编辑的变量
 const isEditableVariable = (variable: Variable): boolean => {
@@ -481,6 +486,20 @@ watch(
     }
   },
   { immediate: true }
+)
+
+// 监听内部变量变化，在数据加载完成后判断是否需要最小化
+watch(
+  () => internalVariables.value,
+  (newInternalVariables) => {
+    // 只有在数据不为空（即已经完成初始化）且没有可编辑变量时才最小化
+    // 避免在组件刚挂载时就最小化
+    if (newInternalVariables !== null && shouldDefaultMinimize.value && !props.isMinimized && !props.variablesLoading) {
+      console.log('📋 没有可编辑变量，自动最小化面板')
+      emit('minimize')
+    }
+  },
+  { deep: true }
 )
 
 // 暴露方法给父组件调用

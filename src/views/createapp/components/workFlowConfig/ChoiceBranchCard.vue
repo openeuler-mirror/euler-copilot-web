@@ -84,6 +84,14 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  selfVariables: {
+    type: Array as () => any[],
+    default: () => [],
+  },
+  selfScopeLabel: {
+    type: String,
+    default: '',
+  },
 });
 
 const emit = defineEmits(['removeBranch', 'addCondition', 'removeCondition', 'toggleLogic', 'updateCondition']);
@@ -361,6 +369,8 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                     :hide-border="true"
                     :no-border-radius="true"
                     :transparent-background="true"
+                    :self-variables="selfVariables"
+                    :self-scope-label="selfScopeLabel"
                     output-format="raw"
                     selector-placeholder="选择左值变量"
                     @variable-selected="(variable, reference) => handleLeftVariableSelected(conditionIndex, variable, reference)"
@@ -415,7 +425,9 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                       :hide-border="true"
                       :no-border-radius="true"
                       :transparent-background="true"
-                      output-format="wrapped"
+                      :self-variables="selfVariables"
+                      :self-scope-label="selfScopeLabel"
+                      output-format="raw"
                       selector-placeholder="选择右值变量"
                       @variable-selected="(variable, reference) => handleRightVariableSelected(conditionIndex, variable, reference)"
                     />

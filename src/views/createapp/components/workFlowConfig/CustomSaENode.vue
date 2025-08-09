@@ -85,11 +85,16 @@ const getInputParamKeys = () => {
 const conversationVariables = computed(() => {
   // 优先使用外部传入的conversationVariables props
   if (props.conversationVariables && props.conversationVariables.length > 0) {
-    return props.conversationVariables.map((variable: any) => ({
-      name: variable.name,
-      type: getVariableTypeDisplay(variable.var_type || variable.type || 'string'),
-      value: variable.value
-    }));
+    return props.conversationVariables
+      .filter((variable: any) => {
+        // 🔑 重要修改：开始节点只显示全局对话变量（不包含step_id的变量）
+        return !variable.name.includes('.')
+      })
+      .map((variable: any) => ({
+        name: variable.name,
+        type: getVariableTypeDisplay(variable.var_type || variable.type || 'string'),
+        value: variable.value
+      }));
   }
   
   const variables = props.data.variables || props.data.parameters?.conversation_variables || {};
@@ -98,11 +103,16 @@ const conversationVariables = computed(() => {
     return [];
   }
   
-  const result = Object.entries(variables).map(([key, value]: [string, any]) => ({
-    name: key,
-    type: getVariableTypeDisplay(value?.type || value?.var_type || (typeof value === 'object' && value !== null ? 'object' : typeof value)),
-    value: value?.value !== undefined ? value.value : value
-  }));
+  const result = Object.entries(variables)
+    .filter(([key, value]: [string, any]) => {
+      // 🔑 重要修改：开始节点只显示全局对话变量（不包含step_id的变量）
+      return !key.includes('.')
+    })
+    .map(([key, value]: [string, any]) => ({
+      name: key,
+      type: getVariableTypeDisplay(value?.type || value?.var_type || (typeof value === 'object' && value !== null ? 'object' : typeof value)),
+      value: value?.value !== undefined ? value.value : value
+    }));
   
   return result;
 });

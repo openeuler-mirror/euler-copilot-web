@@ -204,7 +204,7 @@ const initFormData = () => {
                 type: condition.right?.type || 'string',
                 value: condition.right?.value || '',
               },
-              operate: condition.operate || 'string_equal',
+              operate: condition.operator || condition.operate || 'string_equal',
               dataType: condition.dataType || 'string',
               isRightReference: condition.isRightReference !== undefined ? condition.isRightReference : false,
             }));
@@ -219,13 +219,26 @@ const initFormData = () => {
         is_default: false, // 确保非默认分支的is_default为false
       }));
     
-    // 确保默认分支有必要的字段
+    // 如果没有条件分支，创建一个默认的
+    if (formData.value.choices.length === 0) {
+      formData.value.choices = [createEmptyChoice()];
+    }
+    
+    // 处理默认分支
     if (formData.value.defaultBranch) {
       formData.value.defaultBranch = {
-        branch_id: formData.value.defaultBranch.branch_id || uuidv4(),
+        branch_id: 'else_' + uuidv4(),
         name: 'ELSE',
         logic: 'and',
-        conditions: [],
+        conditions: [createEmptyCondition()],
+        is_default: true,
+      };
+    } else {
+      formData.value.defaultBranch = {
+        branch_id: 'else_' + uuidv4(),
+        name: 'ELSE',
+        logic: 'and',
+        conditions: [createEmptyCondition()],
         is_default: true,
       };
     }
@@ -252,10 +265,10 @@ const initFormData = () => {
     if (!formData.value.defaultBranch) {
       console.log('[ChoiceBranchDrawer] 没有默认分支，创建ELSE分支');
       formData.value.defaultBranch = {
-        branch_id: uuidv4(),
+        branch_id: 'else_' + uuidv4(),
         name: 'ELSE',
         logic: 'and',
-        conditions: [],
+        conditions: [createEmptyCondition()],
         is_default: true,
       };
     } else {
@@ -274,10 +287,10 @@ const initFormData = () => {
       description: '',
       choices: [], // 不自动创建IF分支
       defaultBranch: {
-        branch_id: uuidv4(),
+        branch_id: 'else_' + uuidv4(),
         name: 'ELSE',
         logic: 'and',
-        conditions: [],
+        conditions: [createEmptyCondition()],
         is_default: true,
       },
     };
@@ -311,6 +324,24 @@ const createEmptyCondition = () => ({
   operate: 'string_equal',
   dataType: 'string',
   isRightReference: false,
+});
+
+// 创建空分支
+const createEmptyChoice = () => ({
+  branch_id: uuidv4(),
+  name: 'IF',
+  logic: 'and',
+  conditions: [createEmptyCondition()],
+  is_default: false,
+});
+
+// 创建默认分支
+const createDefaultChoice = () => ({
+  branch_id: 'else_' + uuidv4(),
+  name: 'ELSE',
+  logic: 'and',
+  conditions: [createEmptyCondition()],
+  is_default: true,
 });
 
 // 初始化默认分支（只初始化一个IF分支）
@@ -473,7 +504,11 @@ const saveNode = () => {
         right: {
           ...condition.right,
           value: condition.right.type === 'reference' ? condition.right.value : parseValue(condition.right.value, condition.right.type)
-        }
+        },
+        // 转换operate为operator，保持与后端一致
+        operator: condition.operate,
+        // 移除operate字段
+        operate: undefined
       }))
   }));
   

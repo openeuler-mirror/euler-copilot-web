@@ -7,9 +7,11 @@ import { useI18n } from 'vue-i18n';
 import { getSrcIcon, getNodeClass, nodeTypeToIcon } from '../types';
 import StopFilled from '@/assets/svgs/StopFilled.svg';
 import Refresh from '@/assets/svgs/Refresh.svg';
-import { querySingleFlowTopology } from 'src/apis/workFlow/workFlowService';
-import { createOrUpdateFlowTopology } from 'src/apis/workFlow/workFlowService';
+import { querySingleSubFlowTopology, createOrUpdateSubFlowTopology } from 'src/apis/workFlow/workFlowService';
 import CustomEdge from './CustomEdge.vue';
+import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
+import { v4 as uuidv4 } from 'uuid';
+import { getId, sanitizeNodeData, createNewNode } from './useDnD';
 
 const props = defineProps({
   id: {
@@ -40,13 +42,17 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  flowId: {
+    type: String,
+    required: true,
+  },
   apiServiceList: {
     type: Array,
     default: () => [],
   },
 });
 
-const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle', 'editLoopNode', 'editSubFlowNode', 'showInsertNodeMenu', 'insertNodeFromHandle']);
+const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle', 'editLoopNode', 'editSubFlowNode', 'showInsertNodeMenu', 'insertNodeFromHandle', 'updateSubFlowId']);
 
 const { t } = useI18n();
 
@@ -76,6 +82,12 @@ const extraLoopNodeTypes = ref([
 const statusList = ref(['running', 'success', 'error']);
 const curStatus = ref('default');
 const costTime = ref('');
+
+// 定义传给mirror展示输入输出的存储量
+const inputAndOutput = ref({
+  input_parameters: {},
+  output_parameters: {},
+});
 
 // Handle连接状态
 const handleTargetConnecting = ref(false);
@@ -138,6 +150,49 @@ const operatorLabels = {
   'dict_not_equal': '不等于',
   'dict_contains_key': '包含键',
   'dict_not_contains_key': '不包含键',
+};
+
+// VariableAssign 操作类型中文映射
+const variableOperationLabels = {
+  'overwrite': '覆盖',
+  'clear': '清空',
+  'add': '加法',
+  'subtract': '减法',
+  'multiply': '乘法',
+  'divide': '除法',
+  'modulo': '求余',
+  'power': '乘幂',
+  'sqrt': '开方',
+  'append': '追加',
+  'extend': '扩展',
+  'pop_first': '移除首项',
+  'pop_last': '移除尾项'
+};
+
+// 获取VariableAssign节点的变量操作列表
+const getVariableOperations = (nodeData: any) => {
+  const operations = nodeData?.parameters?.input_parameters?.operations || [];
+  return operations.filter(op => op.variable_name && op.operation);
+};
+
+// 获取操作类型的显示名称
+const getOperationDisplayName = (operation: string): string => {
+  return variableOperationLabels[operation] || operation;
+};
+
+// 提取变量名的最后一部分（后缀）
+const getVariableDisplayName = (variableName: string): string => {
+  if (!variableName || typeof variableName !== 'string') {
+    return '?';
+  }
+  
+  // 按点分割变量名，返回最后一部分
+  const parts = variableName.split('.');
+  if (parts.length > 1) {
+    return parts[parts.length - 1];
+  }
+  
+  return variableName;
 };
 
 // 解析变量引用，提取变量名
@@ -210,7 +265,32 @@ const formatConditionsHtml = (conditions: any[], logic: string) => {
     const leftHtml = `<span class="variable-tag">${leftValue}</span>`;
     
     // 获取操作符中文 - 添加操作符样式
-    const operatorLabel = operatorLabels[condition.operate] || condition.operate || '==';
+    const operatorKey = condition.operator || condition.operate;
+    let operatorLabel = operatorLabels[operatorKey];
+    
+    // 如果没有找到映射，提供简单的后备显示
+    if (!operatorLabel) {
+      console.warn(`[Loop显示] 未找到操作符映射: ${operatorKey}`);
+      switch(operatorKey) {
+        case 'number_less_than_or_equal':
+          operatorLabel = '<=';
+          break;
+        case 'number_greater_than_or_equal':
+          operatorLabel = '>=';
+          break;
+        case 'number_less_than':
+          operatorLabel = '<';
+          break;
+        case 'number_greater_than':
+          operatorLabel = '>';
+          break;
+        case 'number_equal':
+          operatorLabel = '==';
+          break;
+        default:
+          operatorLabel = operatorKey || '==';
+      }
+    }
     const operatorHtml = `<span class="operator-text">${operatorLabel}</span>`;
     
     // 解析右值 - 根据类型添加不同样式
@@ -250,14 +330,7 @@ const handleChoiceSourceInsertNode = (event: MouseEvent, nodeId: string, branchI
   const choices = node?.data?.parameters?.input_parameters?.choices || [];
   const branch = choices.find(choice => choice.branch_id === branchId);
   const branchName = branch ? (branch.is_default ? 'ELSE' : `Case${choices.filter(c => !c.is_default).indexOf(branch) + 1}`) : 'Unknown';
-  
-  console.log('[LoopNode Choice+按钮] 插入节点:', {
-    nodeId: nodeId,
-    branchId: branchId,
-    branchName: branchName,
-    event: 'handleChoiceSourceInsertNode'
-  });
-  
+
   // 发射插入节点事件，传递节点信息和handle类型，并携带branchId
   handleSubNodeSourceInsertNode(event, nodeId, branchId);
 };
@@ -482,13 +555,11 @@ const processedEdges = computed(() => {
         if (edge.sourceHandle && edge.sourceHandle !== 'default') {
           // 如果有特定的sourceHandle ID，查找对应的handle
           sourceHandle = sourceElement.querySelector(`#${CSS.escape(edge.sourceHandle)}.vue-flow__handle-right`);
-          console.log('[processedEdges] 查找特定handle:', edge.sourceHandle, '找到:', !!sourceHandle);
         }
         
         // 如果没找到特定handle，回退到查找第一个右侧handle
         if (!sourceHandle) {
           sourceHandle = sourceElement.querySelector('.vue-flow__handle-right');
-          console.log('[processedEdges] 使用默认handle:', !!sourceHandle);
         }
         
         if (sourceHandle) {
@@ -512,13 +583,11 @@ const processedEdges = computed(() => {
         if (edge.targetHandle && edge.targetHandle !== 'default') {
           // 如果有特定的targetHandle ID，查找对应的handle
           targetHandle = targetElement.querySelector(`#${CSS.escape(edge.targetHandle)}.vue-flow__handle-left`);
-          console.log('[processedEdges] 查找特定target handle:', edge.targetHandle, '找到:', !!targetHandle);
         }
         
         // 如果没找到特定handle，回退到查找第一个左侧handle
         if (!targetHandle) {
           targetHandle = targetElement.querySelector('.vue-flow__handle-left');
-          console.log('[processedEdges] 使用默认target handle:', !!targetHandle);
         }
         
         if (targetHandle) {
@@ -590,9 +659,10 @@ const loadSubFlowData = async () => {
   try {
     const appId = props.appId;
     
-    const [error, response] = await querySingleFlowTopology({
+    const [error, response] = await querySingleSubFlowTopology({
       appId: appId,
-      flowId: subFlowId.value,
+      flowId: props.flowId, // 父工作流ID
+      subFlowId: subFlowId.value,
     });
 
     if (response && response.result && (response.result as any).flow) {
@@ -649,6 +719,8 @@ const loadSubFlowData = async () => {
           newNode.type = 'Choice';
         } else if (node.callId === 'Loop') {
           newNode.type = 'Loop';
+        } else if (node.callId === 'VariableAssign') {
+          newNode.type = 'VariableAssign';
         } else if (node.callId === 'Code') {
           newNode.type = 'custom';
           // Code节点需要将配置属性直接添加到 data 中，以便编辑器读取
@@ -777,38 +849,62 @@ const saveSubFlow = async (): Promise<string> => {
   try {
     subFlowLoading.value = true;
     
-    // 如果没有flowId，生成一个新的
-    if (!loopSubFlow.value.flowId) {
-      loopSubFlow.value.flowId = `loop_${props.id}_${Date.now()}`;
+    const currentSubFlowId = loopSubFlow.value.flowId;
+    const isNewFlow = !currentSubFlowId;
+
+    let finalSubFlowId: string;
+
+    if (isNewFlow) {
+      // 创建新的子工作流 - 使用UUID生成flowId，与主工作流保持一致
+      finalSubFlowId = uuidv4();
+    } else {
+      // 更新已有的子工作流
+      finalSubFlowId = currentSubFlowId;
     }
 
-    const saveData = {
-      createdAt: new Date().toISOString(),
-      name: loopSubFlow.value.name,
-      description: loopSubFlow.value.description,
-      enable: true,
-      editable: 'true',
-      nodes: loopSubFlow.value.nodes,
-      edges: loopSubFlow.value.edges,
-      focusPoint: { x: 400, y: 300 }
+    // 构造与主工作流保存相同的数据结构
+    // 由于类型定义与实际使用不匹配，使用any类型绕过检查
+    const saveData: any = {
+      flow: {
+        ...loopSubFlow.value,
+        flowId: finalSubFlowId,
+        name: loopSubFlow.value.name || '循环子工作流',
+        description: loopSubFlow.value.description || '',
+        enable: true,
+        editable: true,
+        nodes: loopSubFlow.value.nodes,
+        edges: loopSubFlow.value.edges,
+        focusPoint: { x: 400, y: 300 },
+        connectivity: false,
+        debug: false,
+        createdAt: Date.now()
+      }
     };
 
-    const [error, response] = await createOrUpdateFlowTopology(
+    // 使用子工作流专用的PUT接口
+    const [error, response] = await (createOrUpdateSubFlowTopology as any)(
       {
         appId: props.appId,
-        flowId: loopSubFlow.value.flowId,
+        flowId: props.flowId, // 父工作流ID
+        subFlowId: finalSubFlowId,
       },
       saveData
     );
 
     if (response && response.result) {
+      // 更新本地状态
+      loopSubFlow.value.flowId = finalSubFlowId;
       loopSubFlow.value.hasUnsavedChanges = false;
-      return loopSubFlow.value.flowId;
+      
+      // 通过emit通知父组件更新节点的parameters中的sub_flow_id
+      emits('updateSubFlowId', props.id, finalSubFlowId);
+      
+      return finalSubFlowId;
     } else {
-      throw new Error('保存响应无效');
+      throw new Error(`保存响应无效: ${error ? error.message : '未知错误'}`);
     }
   } catch (error) {
-    console.error('保存子工作流失败:', error);
+    console.error('[LoopNode] 保存子工作流失败:', error);
     ElMessage.error('保存循环子工作流失败');
     throw error;
   } finally {
@@ -824,33 +920,54 @@ const addNodeToSubFlow = (nodeData: any, position: { x: number, y: number }) => 
     return;
   }
 
+  // 使用公共函数创建节点
+  const newNodeId = nodeData.id || getId();
+  const standardizedNodeData = sanitizeNodeData(nodeData, newNodeId);
+  
   const newNode = {
-    stepId: nodeData.id || `node_${Date.now()}`,
-    name: nodeData.name || nodeData.callId,
-    description: nodeData.description || '',
-    callId: nodeData.callId,
-    nodeId: nodeData.nodeId,
-    serviceId: nodeData.serviceId,
+    stepId: newNodeId,
+    name: standardizedNodeData.name || standardizedNodeData.callId,
+    description: standardizedNodeData.description || '',
+    callId: standardizedNodeData.callId,
+    nodeId: standardizedNodeData.nodeId,
+    serviceId: standardizedNodeData.serviceId,
     position: {
       x: position.x, // 1:1比例，无需转换
       y: position.y,
     },
     enable: true,
     editable: true,
-    parameters: createNodeParameters(nodeData),
+    parameters: standardizedNodeData.parameters,
   };
 
   loopSubFlow.value.nodes.push(newNode);
   loopSubFlow.value.hasUnsavedChanges = true;
   
-  // 直接更新显示，避免重新加载导致位置重置
+  // 直接更新显示，避免重新加载导致位置重置 - 使用标准化数据
   const displayNode = {
     id: newNode.stepId,
     type: newNode.callId === 'Choice' ? 'Choice' : 
           newNode.callId === 'Loop' ? 'Loop' :
           newNode.callId === 'break' ? 'break' :
-          newNode.callId === 'continue' ? 'continue' : 'custom',
-    data: createDisplayNodeData(newNode),
+          newNode.callId === 'continue' ? 'continue' :
+          newNode.callId === 'VariableAssign' ? 'VariableAssign' : 'custom',
+    data: {
+      name: standardizedNodeData.name,
+      description: standardizedNodeData.description,
+      parameters: standardizedNodeData.parameters,
+      nodeId: standardizedNodeData.nodeId,
+      callId: standardizedNodeData.callId,
+      serviceId: standardizedNodeData.serviceId,
+      // 对于Code节点，需要额外的字段
+      ...(standardizedNodeData.callId === 'Code' && {
+        code: standardizedNodeData.code,
+        codeType: standardizedNodeData.codeType,
+        securityLevel: standardizedNodeData.securityLevel,
+        timeoutSeconds: standardizedNodeData.timeoutSeconds,
+        memoryLimitMb: standardizedNodeData.memoryLimitMb,
+        cpuLimit: standardizedNodeData.cpuLimit
+      })
+    },
     position: {
       x: newNode.position.x,
       y: newNode.position.y,
@@ -886,6 +1003,110 @@ const hasUnsavedSubFlowChanges = (): boolean => {
   return loopSubFlow.value.hasUnsavedChanges;
 };
 
+// 更新子工作流中的节点
+const updateSubFlowNode = (nodeId: string, nodeData: any) => {
+  const nodeIndex = loopSubFlow.value.nodes.findIndex(node => node.stepId === nodeId);
+  if (nodeIndex === -1) {
+    console.error('[LoopNode] 未找到要更新的节点:', nodeId);
+    return;
+  }
+  
+  // 更新节点数据
+  const existingNode = loopSubFlow.value.nodes[nodeIndex];
+  const updatedNode = {
+    ...existingNode,
+    name: nodeData.name || existingNode.name,
+    description: nodeData.description || existingNode.description,
+  };
+  
+  // 根据节点类型更新特定的参数
+  if (nodeData.callId === 'Code' || existingNode.callId === 'Code') {
+    // Code节点：更新代码相关参数
+    updatedNode.parameters = {
+      ...existingNode.parameters,
+      input_parameters: nodeData.input_parameters || nodeData.parameters?.input_parameters || {},
+      output_parameters: nodeData.output_parameters || nodeData.parameters?.output_parameters || {},
+      code: nodeData.code || nodeData.parameters?.code || '',
+      codeType: nodeData.codeType || nodeData.parameters?.codeType || 'python',
+      securityLevel: nodeData.securityLevel || nodeData.parameters?.securityLevel || 'low',
+      timeoutSeconds: nodeData.timeoutSeconds || nodeData.parameters?.timeoutSeconds || 30,
+      memoryLimitMb: nodeData.memoryLimitMb || nodeData.parameters?.memoryLimitMb || 128,
+      cpuLimit: nodeData.cpuLimit || nodeData.parameters?.cpuLimit || 0.5,
+    };
+  } else if (nodeData.callId === 'DirectReply' || existingNode.callId === 'DirectReply') {
+    // DirectReply节点：更新回复内容
+    updatedNode.parameters = {
+      ...existingNode.parameters,
+      input_parameters: nodeData.parameters?.input_parameters || {},
+      output_parameters: nodeData.parameters?.output_parameters || {},
+    };
+  } else if (nodeData.callId === 'Choice' || existingNode.callId === 'Choice') {
+    // Choice节点：更新分支条件
+    updatedNode.parameters = {
+      ...existingNode.parameters,
+      input_parameters: nodeData.parameters?.input_parameters || {},
+      output_parameters: nodeData.parameters?.output_parameters || {},
+    };
+  } else if (nodeData.callId === 'VariableAssign' || existingNode.callId === 'VariableAssign') {
+    // VariableAssign节点：更新变量操作
+    updatedNode.parameters = {
+      ...existingNode.parameters,
+      input_parameters: nodeData.parameters?.input_parameters || {},
+      output_parameters: nodeData.parameters?.output_parameters || {},
+    };
+  } else if (nodeData.inputStream) {
+    // YAML编辑器：更新inputStream数据
+    updatedNode.parameters = {
+      ...existingNode.parameters,
+      ...(nodeData.inputStream.input_parameters !== undefined && 
+          nodeData.inputStream.output_parameters !== undefined ? {
+        input_parameters: nodeData.inputStream.input_parameters,
+        output_parameters: nodeData.inputStream.output_parameters,
+      } : {
+        input_parameters: nodeData.inputStream,
+      }),
+    };
+  } else {
+    // 其他节点类型
+    updatedNode.parameters = {
+      ...existingNode.parameters,
+      input_parameters: nodeData.parameters?.input_parameters || {},
+      output_parameters: nodeData.parameters?.output_parameters || {},
+    };
+  }
+  
+  // 更新节点数组
+  loopSubFlow.value.nodes[nodeIndex] = updatedNode;
+  loopSubFlow.value.hasUnsavedChanges = true;
+  
+  // 更新显示节点
+  const displayNodeIndex = subFlowNodes.value.findIndex(node => node.id === nodeId);
+  if (displayNodeIndex !== -1) {
+    const displayNode = { ...subFlowNodes.value[displayNodeIndex] };
+    displayNode.data = {
+      ...displayNode.data,
+      name: updatedNode.name,
+      description: updatedNode.description,
+      parameters: updatedNode.parameters,
+    };
+    
+    // 对于Code节点，也需要更新显示节点的特有属性
+    if (updatedNode.callId === 'Code') {
+      displayNode.data = {
+        ...displayNode.data,
+        code: updatedNode.parameters?.code || '',
+        codeType: updatedNode.parameters?.codeType || 'python',
+        securityLevel: updatedNode.parameters?.securityLevel || 'low',
+        timeoutSeconds: updatedNode.parameters?.timeoutSeconds || 30,
+        memoryLimitMb: updatedNode.parameters?.memoryLimitMb || 128,
+        cpuLimit: updatedNode.parameters?.cpuLimit || 0.5,
+      };
+    }
+    
+    subFlowNodes.value[displayNodeIndex] = displayNode;
+  }
+};
+
 // 监听数据变化
 watch(
   () => props.data,
@@ -894,6 +1115,18 @@ watch(
       const isInclude = statusList.value.includes(newData?.status);
       curStatus.value = isInclude ? newData?.status : 'default';
       costTime.value = newData?.constTime || '';
+      
+      // 判断是否有调试的输入输出，有调试的输入输出，需要将其显示/否则显示默认的输出
+      if (newData.content?.type === 'input') {
+        inputAndOutput.value.input_parameters = newData.content.params;
+      } else if (newData.content?.type === 'output') {
+        inputAndOutput.value.output_parameters = newData.content.params;
+      } else {
+        inputAndOutput.value.input_parameters =
+          newData?.parameters?.input_parameters || {};
+        inputAndOutput.value.output_parameters =
+          newData?.parameters?.output_parameters || {};
+      }
       
       // 重置Handle连接状态
       handleTargetConnecting.value = false;
@@ -1474,12 +1707,6 @@ const handleSubNodeSourceInsertNode = (event: MouseEvent, nodeId: string, branch
   // 将内嵌画布坐标转换为视口绝对坐标
   const absoluteX = canvasRect.left + nodeRightX * vueFlowZoom;
   const absoluteY = canvasRect.top + nodeCenterY * vueFlowZoom;
-  
-  console.log('[LoopNode handleSubNodeSourceInsertNode] 准备发射事件:', {
-    nodeId: nodeId,
-    branchId: branchId,
-    sourceHandle: branchId || 'default'
-  });
 
   // 构造传递给父组件的事件数据
   const insertMenuData = {
@@ -1530,74 +1757,8 @@ const handleSubNodeSourceHandleLeave = (nodeId: string) => {
   subNodeSourceHandleHovered.value.set(nodeId, false);
 };
 
-/**
- * 为新创建的节点创建正确的参数结构
- * @param nodeData 原始节点数据
- */
-const createNodeParameters = (nodeData: any) => {
-  if (nodeData.callId === 'Code') {
-    // Code节点需要特殊的参数结构
-    // 从 nodeData.parameters.input_parameters 中过滤掉重复的嵌套字段
-    const existingInputParams = nodeData.parameters?.input_parameters || {};
-    const filteredInputParams = Object.fromEntries(
-      Object.entries(existingInputParams).filter(([key]) => 
-        !['code', 'code_type', 'security_level', 'timeout_seconds', 'memory_limit_mb', 'cpu_limit', 'enable_variable_resolution', 'to_user', 'input_parameters', 'output_parameters'].includes(key)
-      )
-    );
-    
-    return {
-      input_parameters: {
-        // 代码节点的配置属性应该在 input_parameters 中
-        code: nodeData.parameters?.code || '',
-        code_type: nodeData.parameters?.codeType || 'python',
-        security_level: nodeData.parameters?.securityLevel || 'low',
-        timeout_seconds: nodeData.parameters?.timeoutSeconds || 30,
-        memory_limit_mb: nodeData.parameters?.memoryLimitMb || 128,
-        cpu_limit: nodeData.parameters?.cpuLimit || 0.5,
-        enable_variable_resolution: true,
-        to_user: true,
-        // 只合并用户自定义的参数，排除重复字段
-        ...filteredInputParams
-      },
-      // 对于新创建的Code节点，使用简单的默认output_parameters
-      output_parameters: { result: '' }
-    };
-  } else {
-    // 其他节点使用默认结构
-    return nodeData.parameters || { input_parameters: {}, output_parameters: {} };
-  }
-};
-
-/**
- * 为显示节点创建正确的 data 结构
- * @param node 节点数据
- */
-const createDisplayNodeData = (node: any) => {
-  const baseData = {
-    name: node.name,
-    description: node.description,
-    parameters: node.parameters,
-    nodeId: node.nodeId,
-    callId: node.callId,
-    serviceId: node.serviceId,
-  };
-
-  if (node.callId === 'Code') {
-    // Code节点需要将配置属性直接添加到 data 中，以便编辑器读取
-    const codeParams = node.parameters?.input_parameters || {};
-    return {
-      ...baseData,
-      code: codeParams.code || '',
-      codeType: codeParams.code_type || 'python',
-      securityLevel: codeParams.security_level || 'low',
-      timeoutSeconds: codeParams.timeout_seconds || 30,
-      memoryLimitMb: codeParams.memory_limit_mb || 128,
-      cpuLimit: codeParams.cpu_limit || 0.5,
-    };
-  } else {
-    return baseData;
-  }
-};
+// 注意：createNodeParameters 和 createDisplayNodeData 函数已被移除
+// 现在使用 useDnD.js 中的公共函数 sanitizeNodeData 来处理节点数据标准化
 
 /**
  * 处理从节点Handle插入节点的逻辑
@@ -1605,16 +1766,10 @@ const createDisplayNodeData = (node: any) => {
  * @param handleInfo Handle信息
  */
 const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
-  console.log('[LoopNode Handle插入] 开始插入节点:', {
-    nodeData: nodeData,
-    handleInfo: handleInfo,
-    callId: nodeData.callId
-  });
-  
   try {
 
     // 创建新节点ID
-    const newNodeId = `node_${Date.now()}`;
+    const newNodeId = getId();
     const sourceNodeId = handleInfo.sourceNodeId;
     
     // 检查源节点是否已有输出连接来决定新节点位置
@@ -1644,32 +1799,51 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
       };
     }
 
-    // 创建新节点
+    // 创建新节点 - 使用标准化数据
+    const standardizedNodeData = sanitizeNodeData(nodeData, newNodeId);
+    
     const newNode = {
       stepId: newNodeId,
-      name: nodeData.name || nodeData.callId,
-      description: nodeData.description || '',
-      callId: nodeData.callId,
-      nodeId: nodeData.nodeId,
-      serviceId: nodeData.serviceId,
+      name: standardizedNodeData.name || standardizedNodeData.callId,
+      description: standardizedNodeData.description || '',
+      callId: standardizedNodeData.callId,
+      nodeId: standardizedNodeData.nodeId,
+      serviceId: standardizedNodeData.serviceId,
       position: newNodePosition,
       enable: true,
       editable: true,
-      parameters: createNodeParameters(nodeData),
+      parameters: standardizedNodeData.parameters,
     };
 
     // 添加到loopSubFlow
     loopSubFlow.value.nodes.push(newNode);
     loopSubFlow.value.hasUnsavedChanges = true;
 
-    // 添加到显示列表
+    // 添加到显示列表 - Handle插入使用标准化数据
     const displayNode = {
       id: newNode.stepId,
       type: newNode.callId === 'Choice' ? 'Choice' : 
             newNode.callId === 'Loop' ? 'Loop' :
             newNode.callId === 'break' ? 'break' :
-            newNode.callId === 'continue' ? 'continue' : 'custom',
-      data: createDisplayNodeData(newNode),
+            newNode.callId === 'continue' ? 'continue' :
+            newNode.callId === 'VariableAssign' ? 'VariableAssign' : 'custom',
+      data: {
+        name: standardizedNodeData.name,
+        description: standardizedNodeData.description,
+        parameters: standardizedNodeData.parameters,
+        nodeId: standardizedNodeData.nodeId,
+        callId: standardizedNodeData.callId,
+        serviceId: standardizedNodeData.serviceId,
+        // 对于Code节点，需要额外的字段
+        ...(standardizedNodeData.callId === 'Code' && {
+          code: standardizedNodeData.code,
+          codeType: standardizedNodeData.codeType,
+          securityLevel: standardizedNodeData.securityLevel,
+          timeoutSeconds: standardizedNodeData.timeoutSeconds,
+          memoryLimitMb: standardizedNodeData.memoryLimitMb,
+          cpuLimit: standardizedNodeData.cpuLimit
+        })
+      },
       position: {
         x: newNode.position.x,
         y: newNode.position.y,
@@ -1689,7 +1863,7 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
       // 检查源节点是否是Choice节点，确定正确的sourceHandle和branchId  
       const sourceNode = subFlowNodes.value.find(node => node.id === sourceNodeId);
       let sourceHandle = handleInfo.sourceHandle || 'default';
-      let sourceBranchId = 'default';
+      let sourceBranchId = '';
       
       if (sourceNode && sourceNode.type === 'Choice') {
         // 使用传入的branchId作为sourceHandle和branchId
@@ -1697,7 +1871,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
           // 使用指定的分支ID
           sourceHandle = handleInfo.sourceHandle;
           sourceBranchId = handleInfo.sourceHandle;
-          console.log('[LoopNode Handle插入] Choice节点使用指定分支handle:', sourceHandle, 'branchId:', sourceBranchId, 'handleInfo:', handleInfo);
         } else {
           // 只有当没有指定分支时才使用默认分支
           const choices = sourceNode.data?.parameters?.input_parameters?.choices || [];
@@ -1705,7 +1878,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
           if (defaultBranch) {
             sourceHandle = defaultBranch.branch_id;
             sourceBranchId = defaultBranch.branch_id;
-            console.log('[LoopNode Handle插入] Choice节点使用默认分支handle:', sourceHandle, 'branchId:', sourceBranchId, 'handleInfo:', handleInfo);
           }
         }
       }
@@ -1725,14 +1897,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
         },
       };
 
-      console.log('[LoopNode Handle插入] 创建新边:', {
-        edgeId: edgeId,
-        source: sourceNodeId,
-        target: newNodeId,
-        sourceHandle: sourceHandle,
-        branchId: sourceBranchId
-      });
-
       // 添加到显示列表
       subFlowEdges.value.push(newEdge);
 
@@ -1749,7 +1913,7 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
       // 检查源节点是否是Choice节点，确定正确的sourceHandle和branchId
       const sourceNode = subFlowNodes.value.find(node => node.id === sourceNodeId);
       let sourceHandle = handleInfo.sourceHandle || 'default';
-      let sourceBranchId = 'default';
+      let sourceBranchId = '';
       
       if (sourceNode && sourceNode.type === 'Choice') {
         // 使用传入的branchId作为sourceHandle和branchId
@@ -1757,7 +1921,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
           // 使用指定的分支ID
           sourceHandle = handleInfo.sourceHandle;
           sourceBranchId = handleInfo.sourceHandle;
-          console.log('[LoopNode Handle线性插入] Choice节点使用指定分支handle:', sourceHandle, 'branchId:', sourceBranchId, 'handleInfo:', handleInfo);
         } else {
           // 只有当没有指定分支时才使用默认分支
           const choices = sourceNode.data?.parameters?.input_parameters?.choices || [];
@@ -1765,7 +1928,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
           if (defaultBranch) {
             sourceHandle = defaultBranch.branch_id;
             sourceBranchId = defaultBranch.branch_id;
-            console.log('[LoopNode Handle线性插入] Choice节点使用默认分支handle:', sourceHandle, 'branchId:', sourceBranchId, 'handleInfo:', handleInfo);
           }
         }
       }
@@ -1784,14 +1946,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
           targetStatus: undefined,
         },
       };
-
-      console.log('[LoopNode Handle线性插入] 创建新边:', {
-        edgeId: edgeId,
-        source: sourceNodeId,
-        target: newNodeId,
-        sourceHandle: sourceHandle,
-        branchId: sourceBranchId
-      });
 
       // 添加到显示列表
       subFlowEdges.value.push(newEdge);
@@ -1826,7 +1980,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
       }, 300);
     });
 
-    console.log('[LoopNode插入节点] 插入成功，更新后的边列表:', subFlowEdges.value);
     ElMessage.success(`节点 "${nodeData.name || nodeData.callId}" 插入成功`);
 
   } catch (error) {
@@ -1846,12 +1999,6 @@ const handleInsertNodeFromHandle = (nodeData: any, handleInfo: any) => {
  */
 const handleStartConnection = (event: MouseEvent, nodeId: string, handleType: 'source' | 'target', branchId?: string) => {
   if (props.disabled || isDragging.value) return;
-  
-  console.log('[LoopNode] 开始连接:', {
-    nodeId: nodeId,
-    handleType: handleType,
-    branchId: branchId || 'default'
-  });
   
   // 阻止事件冒泡，避免触发节点拖拽
   event.stopPropagation();
@@ -1880,7 +2027,7 @@ const handleStartConnection = (event: MouseEvent, nodeId: string, handleType: 's
     nodeId,
     handleType,
     handlePosition,
-    branchId: branchId || 'default' // 保存分支ID
+    branchId: branchId || '' // 保存分支ID
   };
   
   isConnecting.value = true;
@@ -2001,14 +2148,13 @@ const createSubFlowEdge = (sourceNodeId: string, targetNodeId: string, originHan
   // 检查源节点是否是Choice节点，确定正确的sourceHandle和branchId
   const sourceNode = subFlowNodes.value.find(node => node.id === actualSourceId);
   let sourceHandle = 'default';
-  let sourceBranchId = 'default';
+  let sourceBranchId = '';
   
   if (sourceNode && sourceNode.type === 'Choice') {
     // 如果传入了特定的branchId，优先使用
     if (branchId && branchId !== 'default') {
       sourceHandle = branchId;
       sourceBranchId = branchId;
-      console.log('[LoopNode手动连接] Choice节点使用指定分支handle:', sourceHandle, 'branchId:', sourceBranchId);
     } else {
       // 否则使用默认分支(ELSE分支)的handle
       const choices = sourceNode.data?.parameters?.input_parameters?.choices || [];
@@ -2016,9 +2162,7 @@ const createSubFlowEdge = (sourceNodeId: string, targetNodeId: string, originHan
       if (defaultBranch) {
         sourceHandle = defaultBranch.branch_id;
         sourceBranchId = defaultBranch.branch_id;
-        console.log('[LoopNode手动连接] Choice节点使用默认分支handle:', sourceHandle, 'branchId:', sourceBranchId);
       } else {
-        console.log('[LoopNode手动连接] Choice节点未找到默认分支，使用default');
       }
     }
   }
@@ -2089,15 +2233,8 @@ const handleInsertNodeSelect = (nodeData: any) => {
   }
 
   if (!insertEdgeInfo.value) {
-    console.log('[LoopNode插入节点] insertEdgeInfo为空，取消插入');
     return;
   }
-
-  console.log('[LoopNode插入节点] 开始插入节点:', {
-    nodeData: nodeData,
-    insertEdgeInfo: insertEdgeInfo.value,
-    callId: nodeData.callId
-  });
 
   try {
     // 1. 删除原来的边
@@ -2113,21 +2250,25 @@ const handleInsertNodeSelect = (nodeData: any) => {
     loopSubFlow.value.edges = loopSubFlow.value.edges.filter(edge => edge.edgeId !== originalEdgeId);
 
     // 2. 在边的中点位置插入新节点
-    const newNodeId = `node_${Date.now()}`;
+    const newNodeId = getId();
+    
+    // 使用公共函数创建标准化的节点数据
+    const standardizedNodeData = sanitizeNodeData(nodeData, newNodeId);
+    
     const newNode = {
       stepId: newNodeId,
-      name: nodeData.name || nodeData.callId,
-      description: nodeData.description || '',
-      callId: nodeData.callId,
-      nodeId: nodeData.nodeId,
-      serviceId: nodeData.serviceId,
+      name: standardizedNodeData.name || standardizedNodeData.callId,
+      description: standardizedNodeData.description || '',
+      callId: standardizedNodeData.callId,
+      nodeId: standardizedNodeData.nodeId,
+      serviceId: standardizedNodeData.serviceId,
       position: {
         x: insertPosition.x,
         y: insertPosition.y,
       },
       enable: true,
       editable: true,
-      parameters: createNodeParameters(nodeData),
+      parameters: standardizedNodeData.parameters,
     };
 
 
@@ -2136,14 +2277,31 @@ const handleInsertNodeSelect = (nodeData: any) => {
     loopSubFlow.value.nodes.push(newNode);
     loopSubFlow.value.hasUnsavedChanges = true;
 
-    // 添加到显示列表
+    // 添加到显示列表 - 边中点插入使用标准化数据
     const displayNode = {
       id: newNode.stepId,
       type: newNode.callId === 'Choice' ? 'Choice' : 
             newNode.callId === 'Loop' ? 'Loop' :
             newNode.callId === 'break' ? 'break' :
-            newNode.callId === 'continue' ? 'continue' : 'custom',
-      data: createDisplayNodeData(newNode),
+            newNode.callId === 'continue' ? 'continue' :
+            newNode.callId === 'VariableAssign' ? 'VariableAssign' : 'custom',
+      data: {
+        name: standardizedNodeData.name,
+        description: standardizedNodeData.description,
+        parameters: standardizedNodeData.parameters,
+        nodeId: standardizedNodeData.nodeId,
+        callId: standardizedNodeData.callId,
+        serviceId: standardizedNodeData.serviceId,
+        // 对于Code节点，需要额外的字段
+        ...(standardizedNodeData.callId === 'Code' && {
+          code: standardizedNodeData.code,
+          codeType: standardizedNodeData.codeType,
+          securityLevel: standardizedNodeData.securityLevel,
+          timeoutSeconds: standardizedNodeData.timeoutSeconds,
+          memoryLimitMb: standardizedNodeData.memoryLimitMb,
+          cpuLimit: standardizedNodeData.cpuLimit
+        })
+      },
       position: {
         x: newNode.position.x,
         y: newNode.position.y,
@@ -2160,7 +2318,7 @@ const handleInsertNodeSelect = (nodeData: any) => {
         // 检查源节点是否是Choice节点，确定正确的sourceHandle和branchId
     const sourceNode = subFlowNodes.value.find(node => node.id === sourceNodeId);
     let sourceHandle = 'default';
-    let sourceBranchId = 'default';
+    let sourceBranchId = '';
     
     if (sourceNode && sourceNode.type === 'Choice') {
       // 对于Choice节点，找到默认分支(ELSE分支)的handle
@@ -2169,15 +2327,13 @@ const handleInsertNodeSelect = (nodeData: any) => {
       if (defaultBranch) {
         sourceHandle = defaultBranch.branch_id;
         sourceBranchId = defaultBranch.branch_id;
-        console.log('[LoopNode插入节点] Choice节点使用默认分支handle:', sourceHandle, 'branchId:', sourceBranchId, '原始edgeInfo:', insertEdgeInfo.value);
       } else {
         // 如果没有找到默认分支，尝试从原始边的sourceHandle中获取
         const originalEdgeId = insertEdgeInfo.value?.edgeId;
         const originalEdge = subFlowEdges.value.find(edge => edge.id === originalEdgeId);
         if (originalEdge && originalEdge.sourceHandle && originalEdge.sourceHandle !== 'default') {
           sourceHandle = originalEdge.sourceHandle;
-          sourceBranchId = originalEdge.branchId || 'default';
-          console.log('[LoopNode插入节点] Choice节点使用原始边的handle:', sourceHandle, 'branchId:', sourceBranchId);
+          sourceBranchId = originalEdge.branchId || '';
         }
       }
     }
@@ -2212,7 +2368,7 @@ const handleInsertNodeSelect = (nodeData: any) => {
     if (nodeData.callId !== 'break' && nodeData.callId !== 'continue') {
       // 检查新插入的节点是否是Choice节点，确定其输出连接的sourceHandle和branchId
       let newNodeSourceHandle = 'default';
-      let newNodeBranchId = 'default';
+      let newNodeBranchId = '';
       if (nodeData.callId === 'Choice') {
         // 对于新创建的Choice节点，找到默认分支作为输出handle
         const choices = nodeData.parameters?.input_parameters?.choices || [];
@@ -2220,12 +2376,10 @@ const handleInsertNodeSelect = (nodeData: any) => {
         if (defaultBranch) {
           newNodeSourceHandle = defaultBranch.branch_id;
           newNodeBranchId = defaultBranch.branch_id;
-          console.log('[LoopNode插入节点] 新Choice节点使用默认分支handle:', newNodeSourceHandle, 'branchId:', newNodeBranchId);
         } else {
           // 如果没有默认分支，使用第一个分支或生成默认ID
           newNodeSourceHandle = `else_${newNodeId}`;
           newNodeBranchId = `else_${newNodeId}`;
-          console.log('[LoopNode插入节点] 新Choice节点使用生成的默认分支handle:', newNodeSourceHandle, 'branchId:', newNodeBranchId);
         }
       }
       
@@ -2263,7 +2417,6 @@ const handleInsertNodeSelect = (nodeData: any) => {
 
     // 5. 菜单关闭由workFlow组件处理
 
-    console.log('[LoopNode Handle插入] 插入成功，更新后的边列表:', subFlowEdges.value);
     ElMessage.success(`节点 "${nodeData.name || nodeData.callId}" 插入成功`);
 
   } catch (error) {
@@ -2361,6 +2514,7 @@ onMounted(async () => {
         addNodeToSubFlow,
         removeNodeFromSubFlow,
         insertNodeIntoSubFlow,
+        updateSubFlowNode,
         loopSubFlow: readonly(loopSubFlow),
       };
     }
@@ -2498,7 +2652,8 @@ const handleSubCanvasWheel = (event: WheelEvent) => {
 <script lang="ts">
 export default {
   components: {
-    CustomEdge
+    CustomEdge,
+    NodeMirrorText
   }
 };
 </script>
@@ -2792,6 +2947,28 @@ export default {
                           <div class="label" :title="node.data.name">{{ node.data.name }}</div>
                         </div>
                       </div>
+                      
+                      <!-- VariableAssign 节点的特殊内容 -->
+                      <div v-if="node.data.callId === 'VariableAssign'">
+                        <!-- 变量操作列表 -->
+                        <div v-if="getVariableOperations(node.data).length > 0" class="operations-list">
+                          <div 
+                            v-for="(operation, index) in getVariableOperations(node.data)" 
+                            :key="index" 
+                            class="operation-item"
+                          >
+                            <div class="operation-content">
+                              <span class="variable-name">{x} {{ getVariableDisplayName(operation.variable_name) }}</span>
+                              <span class="operation-type">{{ getOperationDisplayName(operation.operation) }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- 无操作时的提示 -->
+                        <div v-else class="no-operations">
+                          <span class="placeholder-text">点击配置变量操作</span>
+                        </div>
+                      </div>
                       <!-- 移除description显示，与外部节点保持一致 -->
                     </div>
                     
@@ -2979,6 +3156,15 @@ export default {
         <Plus />
       </el-icon>
     </div>
+    
+    <!-- 调试时出现 - 显示输入输出数据 -->
+    <NodeMirrorText
+      v-if="curStatus !== 'default'"
+      :status="curStatus"
+      :costTime="costTime"
+      :inputAndOutput="inputAndOutput"
+      style="display: block"
+    />
   </div>
 
 </template>
@@ -4503,5 +4689,75 @@ export default {
     top: 50%;
     transform: translateY(-50%);
   }
+}
+
+/* VariableAssign 节点样式 - 与外部 VariableAssignNode 保持一致 */
+.embeddedCustomNodeStyle .nodeBox .operations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  
+  .operation-item {
+    background: rgba(64, 158, 255, 0.1);
+    border: 1px solid rgba(64, 158, 255, 0.2);
+    border-radius: 4px;
+    padding: 6px 8px;
+    
+    .operation-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      
+      .variable-name {
+        font-size: 11px;
+        font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        color: #409eff;
+        font-weight: 500;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .operation-type {
+        font-size: 10px;
+        color: #606266;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-weight: 500;
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.embeddedCustomNodeStyle .nodeBox .no-operations {
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 12px;
+  
+  .placeholder-text {
+    font-size: 12px;
+    color: #909399;
+    font-style: italic;
+  }
+}
+
+/* VariableAssign 节点的特殊容器样式 */
+.embeddedCustomNodeStyle.vue-flow__node-VariableAssign {
+  /* 继承基本的嵌入式节点样式，确保与其他节点保持一致 */
+  width: 320px;
+  height: fit-content;
+  border-radius: 4px;
+  background: white;
+  border: 2px solid transparent;
+  position: relative;
+  border-radius: 10px;
+  background-clip: padding-box;
+  transition: border-color 0.2s ease;
+  cursor: pointer;
 }
 </style>

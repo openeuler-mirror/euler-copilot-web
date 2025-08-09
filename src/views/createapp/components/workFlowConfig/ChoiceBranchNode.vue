@@ -274,7 +274,32 @@ const formatConditions = (conditions, logic) => {
     const leftValue = parseVariableReference(condition.left?.value);
     
     // 获取操作符中文
-    const operatorLabel = operatorLabels[condition.operate] || condition.operate || '==';
+    const operatorKey = condition.operator || condition.operate;
+    let operatorLabel = operatorLabels[operatorKey];
+    
+    // 如果没有找到映射，提供简单的后备显示
+    if (!operatorLabel) {
+      console.warn(`[Choice显示] 未找到操作符映射: ${operatorKey}`);
+      switch(operatorKey) {
+        case 'number_less_than_or_equal':
+          operatorLabel = '<=';
+          break;
+        case 'number_greater_than_or_equal':
+          operatorLabel = '>=';
+          break;
+        case 'number_less_than':
+          operatorLabel = '<';
+          break;
+        case 'number_greater_than':
+          operatorLabel = '>';
+          break;
+        case 'number_equal':
+          operatorLabel = '==';
+          break;
+        default:
+          operatorLabel = operatorKey || '==';
+      }
+    }
     
     // 解析右值
     const isRightReference = condition.right?.type === 'reference';
@@ -315,7 +340,32 @@ const formatConditionsHtml = (conditions, logic) => {
     const leftHtml = `<span class="variable-tag">${leftValue}</span>`;
     
     // 获取操作符中文 - 添加操作符样式
-    const operatorLabel = operatorLabels[condition.operate] || condition.operate || '==';
+    const operatorKey = condition.operator || condition.operate;
+    let operatorLabel = operatorLabels[operatorKey];
+    
+    // 如果没有找到映射，提供简单的后备显示
+    if (!operatorLabel) {
+      console.warn(`[Choice显示] 未找到操作符映射: ${operatorKey}`);
+      switch(operatorKey) {
+        case 'number_less_than_or_equal':
+          operatorLabel = '<=';
+          break;
+        case 'number_greater_than_or_equal':
+          operatorLabel = '>=';
+          break;
+        case 'number_less_than':
+          operatorLabel = '<';
+          break;
+        case 'number_greater_than':
+          operatorLabel = '>';
+          break;
+        case 'number_equal':
+          operatorLabel = '==';
+          break;
+        default:
+          operatorLabel = operatorKey || '==';
+      }
+    }
     const operatorHtml = `<span class="operator-text">${operatorLabel}</span>`;
     
     // 解析右值 - 根据类型添加不同样式

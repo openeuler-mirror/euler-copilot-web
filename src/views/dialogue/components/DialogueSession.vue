@@ -99,7 +99,8 @@ const loadConversationVariables = async () => {
     // 使用 flow_id 查询变量列表
     const queryParams: any = { 
       scope: 'conversation',
-      flow_id: flowId
+      flow_id: flowId,
+      exclude_pattern: 'step_id' // 过滤掉包含step和step_id的变量
     };
     
     console.log('📤 查询变量参数:', queryParams);

@@ -114,6 +114,12 @@ export const iconTypeList = [
     icon: STOP_FILLED,
     class: 'systemNode',
   },
+  {
+    name: '变量赋值',
+    value: 'VariableAssign',
+    icon: CODE, // 暂时使用CODE图标，与菜单保持一致
+    class: 'systemNode',
+  },
 ];
 
 // 根据类型获取类名
