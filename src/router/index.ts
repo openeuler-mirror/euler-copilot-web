@@ -48,6 +48,11 @@ const staticRoutes: Array<RouteRecordRaw> = [
         children: [], // 这里不要添加component内容，否则会导致iframe重复渲染
       },
       {
+        path: '/deepinsight',
+        name: 'deepinsight',
+        children: [], // 这里不要添加component内容，否则会导致iframe重复渲染
+      },
+      {
         path: '/settings',
         name: 'settings',
         component: () => import('src/views/settings/index.vue'),

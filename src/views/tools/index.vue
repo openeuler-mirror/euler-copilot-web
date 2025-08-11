@@ -32,8 +32,16 @@ async function getIframeTarget() {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
   // Electron 环境的判断
-  const isElectron = window.navigator.userAgent.includes('Electron');
-  const target = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`;
+  const isElectron = window.navigator.userAgent.includes('Electron');  
+  let pathname = router.currentRoute.value.name?.toLowerCase();
+  console.log(pathname)
+  let target = '';
+  if (pathname === 'witchaind') { 
+      target = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`; 
+  } else if (pathname === 'deepinsight') { 
+      target = isElectron ? `${baseUrl}/deepinsight` : `${origin}/deepinsight`; 
+  }
+  console.log(target); 
   return target;
 }
 
@@ -87,7 +95,7 @@ const sendTokenToIframe = async (token: string) => {
 watch(
   () => router.currentRoute.value.path,
   async (newPath) => {
-    const isWitchaindRoute = newPath === '/witchainD';
+    const isWitchaindRoute = newPath === '/witchainD' || newPath === '/deepinsight';
     isActive.value = isWitchaindRoute;
 
     // 等待DOM更新完成

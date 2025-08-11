@@ -69,7 +69,6 @@ http {
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; always";
         add_header Cache-Control "no-cache";
         add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: base64;";
-       
         limit_conn limitperip 50;
         resolver 8.8.8.8 8.8.4.4 valid=60s;
         resolver_timeout 5s;
@@ -145,6 +144,19 @@ http {
             proxy_connect_timeout 500s;
 
             proxy_pass ${RAG_WEB_URL}/witchaind/;
+        }
+
+        location /deepinsight/ {
+            proxy_set_header X-Forwarded-For $http_x_real_ip;
+            add_header X-Accel-Buffering no;
+            proxy_buffering off;
+            proxy_intercept_errors on;
+            
+            error_page 404 /404.html;
+            proxy_read_timeout 500s;
+            proxy_connect_timeout 500s;
+
+            proxy_pass ${DEEPINSIGHT_WEB_URL}/deepinsight/;
         }
 
         error_page 401 402 403 405 406 407 413 414 /error.html;

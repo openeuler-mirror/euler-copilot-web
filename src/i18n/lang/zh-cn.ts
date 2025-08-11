@@ -48,6 +48,7 @@ export default {
     plugin_center: '插件中心',
     app_center: '应用中心',
     sql: '知识库',
+    deepinsight:'深度研究',
     settings: '设置',
   },
   semantic: {

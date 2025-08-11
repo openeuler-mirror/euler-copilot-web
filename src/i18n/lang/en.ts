@@ -48,6 +48,7 @@ export default {
     plugin_center: 'Plugin Center',
     app_center: 'App Center',
     sql: 'witchainD',
+    deepinsight: 'deepinsight',
     settings: 'Settings',
   },
   semantic: {

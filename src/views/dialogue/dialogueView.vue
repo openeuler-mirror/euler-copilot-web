@@ -23,6 +23,8 @@ import AppIcon from '@/assets/svgs/routerApp.svg';
 import AppIconSelected from '@/assets/svgs/routerAppSelected.svg';
 import WitChainDIcon from '@/assets/svgs/witChainD.svg';
 import WitChainDIconSelected from '@/assets/svgs/witChainDSelected.svg';
+import DeepinsightSelected from '@/assets/svgs/deepinsightSelected.svg';
+import DeepinsightIcon from '@/assets/svgs/deepinsight.svg';
 import Setting from '@/assets/svgs/setting.svg';
 import SettingSelected from '@/assets/svgs/setting_active.svg';
 import tools from '../tools/index.vue';
@@ -86,6 +88,13 @@ let routerList: ComputedRef<
       src: WitChainDIcon,
       selectedSrc: WitChainDIconSelected,
       routerName: 'witchainD',
+    },
+     {
+      name: i18n.global.t('menu.deepinsight'),
+      path: '/deepinsight',
+      src: DeepinsightIcon,
+      selectedSrc: DeepinsightSelected,
+      routerName: 'deepinsight',
     },
   ];
 });
@@ -170,9 +179,14 @@ onMounted(async () => {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
   const isElectron = window.navigator.userAgent.includes('Electron');
-  const iframeTarget = isElectron
-    ? `${baseUrl}/witchaind`
-    : `${origin}/witchaind`;
+  let pathname = router.currentRoute.value.name?.toLowerCase();
+  console.log(pathname)
+  let iframeTarget = '';
+  if (pathname === 'witchaind') { 
+    iframeTarget = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`; 
+  } else if (pathname === 'deepinsight') { 
+    iframeTarget = isElectron ? `${baseUrl}/deepinsight` : `${origin}/deepinsight`; 
+  }  
 
   if (localStorage.getItem('theme')) {
     // document.body.setAttribute(
@@ -306,11 +320,11 @@ watch(
           </span>
         </router-link>
       </div>
-      <div class="dialogue-content">
-        <KeepAlive v-show="router.currentRoute.value.name === 'witchainD'">
-          <tools />
-        </KeepAlive>
-        <RouterView v-show="router.currentRoute.value.name !== 'witchainD'" />
+      <div class="dialogue-content"> 
+          <KeepAlive v-show="['witchainD','deepinsight'].includes(router.currentRoute.value.name)"> 
+              <tools :key="router.currentRoute.value.name" /> 
+          </KeepAlive> 
+          <RouterView v-show="!['witchainD','deepinsight'].includes(router.currentRoute.value.name)" />  
       </div>
     </div>
     <el-dialog
