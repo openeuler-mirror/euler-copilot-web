@@ -117,7 +117,7 @@ const processMarkedContent = (content: string) => {
   });
 };
 
-const tooltip = document.createElement("div");
+const tooltipRef = ref(null);
 
 const generateContent = (content: string) => {
   if (!content) return '';
@@ -136,24 +136,24 @@ const generateContent = (content: string) => {
 }
 const showTooltip = (content: string, event: MouseEvent) => {
   const curId = (event.target as HTMLElement)?.id;
-  tooltip.className = "mark-number-tooltip";
-  tooltip.innerHTML = generateContent(content) || '';
+  tooltipRef.value.className = "mark-number-tooltip";
+  tooltipRef.value.innerHTML = generateContent(content) || '';
   const markedDiv = document.getElementById(curId);
   const curRect = markedDiv?.getBoundingClientRect();
-  tooltip.style.borderRadius = '8px';
-  tooltip.style.padding = '16px';
-  tooltip.style.boxShadow = '0 4px 16px 0 rgba(0,0,0,0.2)';
+  tooltipRef.value.style.borderRadius = '8px';
+  tooltipRef.value.style.padding = '16px';
+  tooltipRef.value.style.boxShadow = '0 4px 16px 0 rgba(0,0,0,0.2)';
     setTimeout(() => {
-      document.body.appendChild(tooltip);
+      document.body.appendChild(tooltipRef.value);
       setTimeout(()=>{
         // console.log('当前元素位置:', curRect);
-        // console.log('tooltip位置:', tooltip.getBoundingClientRect());
-        tooltip.style.left = `${curRect.left + curRect.width / 2 }px`;
-        tooltip.style.top = `${curRect.y - tooltip.getBoundingClientRect().height - 4 }px`;
+        // console.log('tooltip位置:', tooltipRef.value.getBoundingClientRect());
+        tooltipRef.value.style.left = `${curRect.left + curRect.width / 2 }px`;
+        tooltipRef.value.style.top = `${curRect.y - tooltipRef.value.getBoundingClientRect().height - 4 }px`;
       },0)
     }, 10);
 
-  tooltip.addEventListener('click', (e) => {
+  tooltipRef.value.addEventListener('click', (e) => {
     e.stopPropagation();
     const downloadBtn = (e.target as HTMLElement).closest('.download-btn');
     if (downloadBtn) {
@@ -178,7 +178,7 @@ const handleMouseOver = _.debounce((event)=>{
 },100)
 const handleMouseMove=(event)=>{
   if (!event.target.className.includes('mark-number') && !event.target.className.includes('mark-number-tooltip')) {
-    if(tooltip) tooltip.remove();
+    if(tooltipRef) tooltipRef.value.remove();
   }
 }
 const processContent = (content: string) => {
@@ -679,6 +679,9 @@ const handleFileClick = () => {
           :isWorkFlowDebug="props.isWorkFlowDebug"
           :flowdata="props.flowdata"
         />
+        <Teleport to="body">
+          <div ref="tooltipRef"></div>
+        </Teleport>
         <DialogueThought :content="thoughtContent" v-if="thoughtContent" />
         <div v-if="contentAfterMark" id="markdown-preview">
           <div v-html="processMarkedContent(contentAfterMark)" 
