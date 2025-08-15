@@ -22,7 +22,7 @@ export function useMarkdownParser(
       },
     );
     //将table提取出来中加一个<div>父节点控制溢出
-    let tableStart = str.indexOf('<table>');
+    const tableStart = str.indexOf('<table>');
     if (tableStart !== -1) {
       str =
         str.slice(0, tableStart) +

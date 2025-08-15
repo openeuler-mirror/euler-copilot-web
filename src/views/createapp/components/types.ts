@@ -31,6 +31,9 @@ import CODE from '@/assets/svgs/userCode.svg';
 import USER_CODE from '@/assets/svgs/userCode.svg';
 import USER_DATABASE_CLASS from '@/assets/svgs/userDatabaseClass.svg';
 import USER_DOCUMENT_CLASS from '@/assets/svgs/userDatabaseClass.svg';
+// 引入图片--循环控制相关图标
+import REFRESH from '@/assets/svgs/Refresh.svg';
+import STOP_FILLED from '@/assets/svgs/StopFilled.svg';
 // 工具类型
 export type LinkType = 'redirect' | 'action';
 
@@ -75,6 +78,12 @@ export const nodeTypeToIcon = {
   USER_CODE,
   USER_DATABASE_CLASS,
   USER_DOCUMENT_CLASS,
+
+  // 循环控制相关图标
+  REFRESH,
+  STOP_FILLED,
+  continue: REFRESH,
+  break: STOP_FILLED,
 };
 
 // 这里是对应的图标
@@ -91,6 +100,25 @@ export const iconTypeList = [
     value: 'Suggestion',
     icon: get_CVE_DETAIL,
     class: 'aposNode',
+  },
+  // 循环控制节点
+  {
+    name: '跳过本轮',
+    value: 'continue',
+    icon: REFRESH,
+    class: 'systemNode',
+  },
+  {
+    name: '退出循环',
+    value: 'break',
+    icon: STOP_FILLED,
+    class: 'systemNode',
+  },
+  {
+    name: '变量赋值',
+    value: 'VariableAssign',
+    icon: CODE, // 暂时使用CODE图标，与菜单保持一致
+    class: 'systemNode',
   },
 ];
 

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch, nextTick, computed } from 'vue';
+import { Plus } from '@element-plus/icons-vue';
 const props = defineProps({
   id: {
     type: String,
@@ -32,7 +33,7 @@ const props = defineProps({
     default: () => [],
   },
 });
-const emits = defineEmits(['updateConnectHandle', 'editYamlDrawer', 'editStartNodeDrawer']);
+const emits = defineEmits(['updateConnectHandle', 'editYamlDrawer', 'editStartNodeDrawer', 'insertNodeFromHandle']);
 
 const statusList = ref(['running', 'success', 'error']);
 
@@ -41,6 +42,9 @@ const curStatus = ref('');
 // 当前handle是否连接中[分别是target和source]
 const handleTargetConnecting = ref(false);
 const handleSourceConnecting = ref(false);
+
+// Handle位置插入按钮的悬停状态
+const sourceHandleHovered = ref(false);
 
 // 设置当前正在连接
 const setConnectStatus = (type) => {
@@ -81,11 +85,16 @@ const getInputParamKeys = () => {
 const conversationVariables = computed(() => {
   // 优先使用外部传入的conversationVariables props
   if (props.conversationVariables && props.conversationVariables.length > 0) {
-    return props.conversationVariables.map((variable: any) => ({
-      name: variable.name,
-      type: getVariableTypeDisplay(variable.var_type || variable.type || 'string'),
-      value: variable.value
-    }));
+    return props.conversationVariables
+      .filter((variable: any) => {
+        // 🔑 重要修改：开始节点只显示全局对话变量（不包含step_id的变量）
+        return !variable.name.includes('.')
+      })
+      .map((variable: any) => ({
+        name: variable.name,
+        type: getVariableTypeDisplay(variable.var_type || variable.type || 'string'),
+        value: variable.value
+      }));
   }
   
   const variables = props.data.variables || props.data.parameters?.conversation_variables || {};
@@ -94,13 +103,28 @@ const conversationVariables = computed(() => {
     return [];
   }
   
-  const result = Object.entries(variables).map(([key, value]: [string, any]) => ({
-    name: key,
-    type: getVariableTypeDisplay(value?.type || value?.var_type || (typeof value === 'object' && value !== null ? 'object' : typeof value)),
-    value: value?.value !== undefined ? value.value : value
-  }));
+  const result = Object.entries(variables)
+    .filter(([key, value]: [string, any]) => {
+      // 🔑 重要修改：开始节点只显示全局对话变量（不包含step_id的变量）
+      return !key.includes('.')
+    })
+    .map(([key, value]: [string, any]) => ({
+      name: key,
+      type: getVariableTypeDisplay(value?.type || value?.var_type || (typeof value === 'object' && value !== null ? 'object' : typeof value)),
+      value: value?.value !== undefined ? value.value : value
+    }));
   
   return result;
+});
+
+// 判断是否为开始节点
+const isStartNode = computed(() => {
+  return props.data.name === '开始' || props.data.name === 'start';
+});
+
+// 判断是否为结束节点 
+const isEndNode = computed(() => {
+  return props.data.name === '结束' || props.data.name === 'end';
 });
 
 // 获取变量类型的显示名称
@@ -116,6 +140,27 @@ const getVariableTypeDisplay = (type: string): string => {
     'secret': 'Secret'
   }
   return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
+};
+
+// 处理source handle插入节点事件
+const handleSourceInsertNode = (event) => {
+  event.stopPropagation();
+  
+  // 发射插入节点事件，传递节点信息和handle类型
+  emits('insertNodeFromHandle', {
+    nodeId: props.id,
+    handleType: 'source',
+    nodePosition: props.position
+  });
+};
+
+// Handle悬停事件处理
+const handleSourceHandleEnter = () => {
+  sourceHandleHovered.value = true;
+};
+
+const handleSourceHandleLeave = () => {
+  sourceHandleHovered.value = false;
 };
 
 watch(
@@ -144,6 +189,19 @@ watch(
         :position="Position[props.data.nodePosition]"
         :connectable-end="true"
       ></Handle>
+      
+      <!-- +按钮 - 只为开始节点显示source +按钮 -->
+      <div 
+        v-if="isStartNode"
+        class="handle-plus-button source-plus"
+        @mouseenter="handleSourceHandleEnter"
+        @mouseleave="handleSourceHandleLeave"
+        @click="handleSourceInsertNode"
+      >
+        <el-icon v-if="sourceHandleHovered" class="plus-icon">
+          <Plus />
+        </el-icon>
+      </div>
       <div class="nodeSaEBorderBox" @click="handleStartNodeClick">
         <div class="saEContent">
           <div class="saEHeader">
@@ -331,5 +389,69 @@ watch(
   .vue-flow__handle {
     margin-top: 0px;
   }
+}
+
+/* +按钮容器 - 独立定位，远离Handle */
+.handle-plus-button {
+  position: absolute;
+  width: 40px; /* 扩大触发区域 */
+  height: 40px; /* 扩大触发区域 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 15;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  /* 调试时可以启用这个边框来查看触发区域 */
+  /* border: 1px dashed rgba(99, 149, 253, 0.3); */
+}
+
+
+
+/* Source handle的+按钮位置 - 在节点右侧，触发区域延伸到节点边缘 */
+.source-plus {
+  right: -25px; /* 稍微靠近节点，扩大的触发区域会延伸到节点 */
+  top: 50%;
+  transform: translate(50%, -50%); /* 居中对齐，让触发区域更合理 */
+}
+
+/* +图标样式 */
+.handle-plus-button .plus-icon {
+  font-size: 11px;
+  color: #6395fd;
+  background: #ffffff;
+  border: 1px solid #6395fd;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(99, 149, 253, 0.4);
+  transition: all 0.2s ease;
+  opacity: 0.9;
+}
+
+.handle-plus-button .plus-icon:hover {
+  background: #6395fd;
+  color: #ffffff;
+  transform: scale(1.15);
+  box-shadow: 0 5px 15px rgba(99, 149, 253, 0.6);
+  opacity: 1;
+}
+
+/* 仅在节点悬停时显示+按钮 */
+.nodeSaEBorder .handle-plus-button {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease 0s, visibility 0s ease 0.5s; /* 延迟隐藏 */
+}
+
+.nodeSaEBorder:hover .handle-plus-button,
+.nodeSaEBorder .handle-plus-button:hover {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease 0s, visibility 0s ease 0s; /* 立即显示 */
 }
 </style>

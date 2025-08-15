@@ -8,11 +8,15 @@ import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
 import BranchNode from './workFlowConfig/BranchNode.vue';
 import ChoiceBranchNode from './workFlowConfig/ChoiceBranchNode.vue';
+import VariableAssignNode from './workFlowConfig/VariableAssignNode.vue';
+import LoopNode from './workFlowConfig/LoopNode.vue';
+import LoopNodeDrawer from './workFlowConfig/LoopNodeDrawer.vue';
 import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
 import CustomControl from './CustomControl.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
+import { getId, createNewNode, sanitizeNodeData } from './workFlowConfig/useDnD';
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
@@ -30,6 +34,7 @@ import VariableBasedStartNodeDrawer from './workFlowConfig/VariableBasedStartNod
 import CodeNodeDrawer from './workFlowConfig/CodeNodeDrawer.vue';
 import DirectReplyDrawer from './workFlowConfig/DirectReplyDrawer.vue';
 import ChoiceBranchDrawer from './workFlowConfig/ChoiceBranchDrawer.vue';
+import VariableAssignNodeDrawer from './workFlowConfig/VariableAssignNodeDrawer.vue';
 import InsertNodeMenu from './workFlowConfig/insertNodeMenu.vue';
 import { api } from 'src/apis';
 // 导入变量API
@@ -58,17 +63,31 @@ const isEditStartNode = ref(false);
 const isEditCodeNode = ref(false);
 const isEditDirectReplyNode = ref(false);
 const isEditChoiceBranchNode = ref(false);
+const isEditVariableAssignNode = ref(false);
+const isEditLoopNode = ref(false);
 const isEditEnvironmentVariables = ref(false);
 const nodeName = ref('');
 const nodeDesc = ref('');
 const currentCodeNodeData = ref({});
 const currentDirectReplyNodeData = ref({});
 const currentChoiceBranchNodeData = ref({});
+const currentVariableAssignNodeData = ref({});
+const currentLoopNodeData = ref({});
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const apiServiceList = ref([]);
 const allApiServiceList = ref([]);
 const yamlContent = ref();
+
+// LoopNode InsertNodeMenu相关状态
+const isLoopInsertNodeMenuVisible = ref(false);
+const loopInsertMenuData = ref<{
+  position: { x: number; y: number };
+  direction: 'left' | 'right';
+  loopNodeId: string;
+  edgeInfo: any;
+  extraNodeTypes?: any[];
+} | null>(null);
 const nodeYamlId = ref();
 const emits = defineEmits(['updateFlowsDebug']);
 const route = useRoute();
@@ -97,11 +116,18 @@ const variablesLoading = ref(false);
 const conversationId = ref<string>('');
 
 // 插入节点相关状态
-const insertMenuData = ref({
+const insertMenuData = ref<{
+  visible: boolean;
+  position: { x: number; y: number };
+  edgeInfo: any;
+  handleInfo?: any;
+  direction: 'left' | 'right';
+}>({
   visible: false,
   position: { x: 0, y: 0 },
   edgeInfo: null,
-  direction: 'right' as 'left' | 'right'
+  handleInfo: null,
+  direction: 'right'
 });
 
 const hanleAsideVisible = () => {
@@ -211,17 +237,17 @@ const handleVariablesUpdated = async () => {
 // 加载对话变量用于开始节点展示
 const loadConversationVariablesForDisplay = async () => {
   if (!flowObj.value?.flowId) {
-    console.warn('没有flowId，跳过变量加载');
     return;
   }
   
   variablesLoading.value = true;
   
   try {    
-    // 只加载对话变量（不带current_step_id，因为是给开始节点展示用的）
+    // 🔑 重要修改：添加exclude_pattern参数，过滤掉包含step_id的变量（只显示全局对话变量）
     const convVars: any = await listVariables({ 
       scope: 'conversation', 
-      flow_id: flowObj.value.flowId 
+      flow_id: flowObj.value.flowId,
+      exclude_pattern: 'step_id'  // 过滤掉包含step_id的变量
     });
     
     // 修复：支持多种API响应结构
@@ -238,13 +264,14 @@ const loadConversationVariablesForDisplay = async () => {
     }
     
     if (variables && Array.isArray(variables)) {
+      // 后端已经过滤了包含step_id的变量，直接使用
       conversationVariablesForDisplay.value = variables;
+      console.log('✅ 开始节点加载的全局对话变量:', conversationVariablesForDisplay.value.length, '个');
     } else {
       conversationVariablesForDisplay.value = [];
     }
     
   } catch (error) {
-    console.error('❌ 加载对话变量失败:', error);
     ElMessage.error('加载对话变量失败');
   } finally {
     variablesLoading.value = false;
@@ -290,6 +317,14 @@ const nodeAndLineConnection = () => {
 };
 // 编辑yaml
 const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
+  // 先重置所有抽屉状态，确保不会同时显示多个抽屉
+  isEditYaml.value = false;
+  isEditCodeNode.value = false;
+  isEditDirectReplyNode.value = false;
+  isEditChoiceBranchNode.value = false;
+  isEditVariableAssignNode.value = false;
+  isEditLoopNode.value = false;
+  
   // 查找当前节点
   const currentNode = findNode(nodeId);
   
@@ -316,6 +351,10 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditCodeNode.value = true;
+    
+    // 编辑时，需要debug 后才可发布
+    emits('updateFlowsDebug', false);
+    return;
   } else if (currentNode && currentNode.data.callId === 'DirectReply') {
     // 打开直接回复节点编辑器
     currentDirectReplyNodeData.value = {
@@ -332,6 +371,10 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditDirectReplyNode.value = true;
+    
+    // 编辑时，需要debug 后才可发布
+    emits('updateFlowsDebug', false);
+    return;
   } else if (currentNode && currentNode.data.callId === 'Choice') {
     // 打开条件分支节点编辑器
     currentChoiceBranchNodeData.value = {
@@ -351,6 +394,32 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditChoiceBranchNode.value = true;
+    
+    // 编辑时，需要debug 后才可发布
+    emits('updateFlowsDebug', false);
+    return; // 重要：直接返回，避免继续执行else分支
+  } else if (currentNode && currentNode.data.callId === 'VariableAssign') {
+    // 打开变量赋值节点编辑器
+    currentVariableAssignNodeData.value = {
+      name: currentNode.data.name,
+      description: currentNode.data.description,
+      callId: currentNode.data.callId,
+      parameters: {
+        input_parameters: currentNode.data.parameters?.input_parameters || { operations: [] },
+        output_parameters: currentNode.data.parameters?.output_parameters || {}
+      }
+    };
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+    isEditVariableAssignNode.value = true;
+    
+    // 编辑时，需要debug 后才可发布
+    emits('updateFlowsDebug', false);
+    return;
+  } else if (currentNode && currentNode.data.callId === 'Loop') {
+    // 打开Loop节点编辑器 - 直接调用editLoopNode方法
+    editLoopNode(name, desc, currentNode.data.parameters, nodeId);
+    return; // 直接返回，不需要继续执行
   } else {
     // 打开YAML编辑器（其他节点类型）
     yamlContent.value = yamlCode;
@@ -369,6 +438,9 @@ const closeDrawer = () => {
   isEditYaml.value = false;
   // 清除选中状态
   selectedNodeId.value = '';
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
 };
 
 // 关闭代码节点抽屉
@@ -376,23 +448,31 @@ const closeCodeNodeDrawer = () => {
   isEditCodeNode.value = false;
   selectedNodeId.value = '';
   currentCodeNodeData.value = {};
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
 };
 
 // 保存代码节点
 const saveCodeNode = (nodeData, nodeId) => {
-  // 更新节点数据
-  const updateNodeParameter = {
-    id: nodeId,
-    ...nodeData,
-  };
-  
-  // 调用保存接口
-  saveFlow(updateNodeParameter);
-  
-  // 关闭抽屉
-  closeCodeNodeDrawer();
-  
-  ElMessage.success('代码节点保存成功');
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    saveSubFlowNode(nodeData, nodeId);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeId,
+      ...nodeData,
+    };
+    
+    // 调用保存接口
+    saveFlow(updateNodeParameter);
+    
+    // 关闭抽屉
+    closeCodeNodeDrawer();
+    
+    ElMessage.success('代码节点保存成功');
+  }
 };
 
 // 关闭直接回复节点抽屉
@@ -400,23 +480,31 @@ const closeDirectReplyDrawer = () => {
   isEditDirectReplyNode.value = false;
   selectedNodeId.value = '';
   currentDirectReplyNodeData.value = {};
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
 };
 
 // 保存直接回复节点
 const saveDirectReplyNode = (nodeData, nodeId) => {
-  // 更新节点数据
-  const updateNodeParameter = {
-    id: nodeId,
-    ...nodeData,
-  };
-  
-  // 调用保存接口
-  saveFlow(updateNodeParameter);
-  
-  // 关闭抽屉
-  closeDirectReplyDrawer();
-  
-  ElMessage.success('直接回复节点保存成功');
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    saveSubFlowNode(nodeData, nodeId);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeId,
+      ...nodeData,
+    };
+    
+    // 调用保存接口
+    saveFlow(updateNodeParameter);
+    
+    // 关闭抽屉
+    closeDirectReplyDrawer();
+    
+    ElMessage.success('直接回复节点保存成功');
+  }
 };
 
 // 关闭条件分支节点抽屉
@@ -424,23 +512,374 @@ const closeChoiceBranchDrawer = () => {
   isEditChoiceBranchNode.value = false;
   selectedNodeId.value = '';
   currentChoiceBranchNodeData.value = {};
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
+};
+
+// 关闭变量赋值节点抽屉
+const closeVariableAssignDrawer = () => {
+  isEditVariableAssignNode.value = false;
+  selectedNodeId.value = '';
+  currentVariableAssignNodeData.value = {};
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
 };
 
 // 保存条件分支节点
 const saveChoiceBranchNode = (nodeData, nodeId) => {
-  // 更新节点数据
-  const updateNodeParameter = {
-    id: nodeId,
-    ...nodeData,
-  };
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    saveSubFlowNode(nodeData, nodeId);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeId,
+      ...nodeData,
+    };
+    
+    // 调用保存接口
+    saveFlow(updateNodeParameter);
+    
+    // 关闭抽屉
+    closeChoiceBranchDrawer();
+    
+    ElMessage.success('条件分支节点保存成功');
+  }
+};
+
+// 保存变量赋值节点
+const saveVariableAssignNode = (nodeData, nodeId) => {
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    saveSubFlowNode(nodeData, nodeId);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeId,
+      ...nodeData,
+    };
+    
+    // 调用保存接口
+    saveFlow(updateNodeParameter);
+    
+    // 关闭抽屉
+    closeVariableAssignDrawer();
+    
+    ElMessage.success('变量赋值节点保存成功');
+  }
+};
+
+// 编辑Loop节点
+const editLoopNode = (name, desc, parameters, nodeId) => {
+  // 查找当前节点
+  const currentNode = findNode(nodeId);
   
-  // 调用保存接口
-  saveFlow(updateNodeParameter);
+  if (currentNode && currentNode.data.callId === 'Loop') {
+    // 打开Loop节点编辑器
+    currentLoopNodeData.value = {
+      name: currentNode.data.name,
+      description: currentNode.data.description,
+      callId: currentNode.data.callId,
+      parameters: currentNode.data.parameters || {
+        input_parameters: {
+          variables: {},
+          stop_condition: {
+            logic: 'and',
+            conditions: []
+          },
+          max_iteration: 10,
+          sub_flow_id: ''
+        },
+        output_parameters: {
+          iteration_count: {
+            type: 'number',
+            description: '实际执行的循环次数'
+          },
+          stop_reason: {
+            type: 'string',
+            description: '停止原因'
+          },
+          variables: {
+            type: 'object',
+            description: '循环后的变量状态'
+          }
+        }
+      }
+    };
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+    isEditLoopNode.value = true;
+  }
   
-  // 关闭抽屉
-  closeChoiceBranchDrawer();
+  // 编辑时，需要debug 后才可发布
+  emits('updateFlowsDebug', false);
+};
+
+// 关闭Loop节点抽屉
+const closeLoopNodeDrawer = () => {
+  isEditLoopNode.value = false;
+  selectedNodeId.value = '';
+  currentLoopNodeData.value = {};
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
+};
+
+// 保存Loop节点
+const saveLoopNode = (nodeData) => {
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    saveSubFlowNode(nodeData, nodeYamlId.value);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeYamlId.value,
+      ...nodeData,
+    };
+    
+    // 调用保存接口
+    saveFlow(updateNodeParameter);
+    
+    // 关闭抽屉
+    closeLoopNodeDrawer();
+    
+    ElMessage.success('循环节点保存成功');
+  }
+};
+
+// 用于标识当前编辑的是否为LoopNode内部的子节点
+const isEditingSubFlowNode = ref(false);
+const currentLoopNodeId = ref('');
+
+// 保存子工作流节点（LoopNode内部节点）
+const saveSubFlowNode = async (nodeData, nodeId) => {
+  try {
+    // 通过LoopNode组件引用调用保存方法
+    const loopComponentKey = `loopNode_${currentLoopNodeId.value}`;
+    const loopRef = (window as any).loopNodeRefs?.[loopComponentKey];
+    
+    if (loopRef && typeof loopRef.updateSubFlowNode === 'function') {
+      await loopRef.updateSubFlowNode(nodeId, nodeData);
+      ElMessage.success('子工作流节点保存成功');
+      
+      // 关闭对应的抽屉
+      if (isEditCodeNode.value) {
+        closeCodeNodeDrawer();
+      } else if (isEditDirectReplyNode.value) {
+        closeDirectReplyDrawer();
+      } else if (isEditChoiceBranchNode.value) {
+        closeChoiceBranchDrawer();
+      } else if (isEditVariableAssignNode.value) {
+        closeVariableAssignDrawer();
+      } else if (isEditLoopNode.value) {
+        closeLoopNodeDrawer();
+      } else if (isEditYaml.value) {
+        closeDrawer();
+      }
+    } else {
+      throw new Error('未找到LoopNode组件引用或updateSubFlowNode方法');
+    }
+  } catch (error) {
+    console.error('保存子工作流节点失败:', error);
+    ElMessage.error('保存子工作流节点失败');
+  }
+};
+
+// 编辑子工作流节点 - 处理来自LoopNode的子节点编辑事件
+const editSubFlowNode = (nodeName, nodeDesc, nodeParameters, nodeId, loopNodeId) => {
+  // 根据nodeParameters中的callId来确定节点类型并打开对应的drawer
+  const callId = nodeParameters?.callId;
   
-  ElMessage.success('条件分支节点保存成功');
+  // 设置子工作流节点编辑标识
+  isEditingSubFlowNode.value = true;
+  currentLoopNodeId.value = loopNodeId;
+  
+  // 先重置所有抽屉状态
+  isEditYaml.value = false;
+  isEditCodeNode.value = false;
+  isEditDirectReplyNode.value = false;
+  isEditChoiceBranchNode.value = false;
+  isEditLoopNode.value = false;
+  
+  switch (callId) {
+    case 'Code':
+      // 打开代码节点编辑器
+      currentCodeNodeData.value = {
+        name: nodeName,
+        description: nodeDesc,
+        callId: callId,
+        
+        // 代码节点特有属性
+        code: nodeParameters?.code || '',
+        codeType: nodeParameters?.codeType || 'python',
+        securityLevel: nodeParameters?.securityLevel || 'low',
+        timeoutSeconds: nodeParameters?.timeoutSeconds || 30,
+        memoryLimitMb: nodeParameters?.memoryLimitMb || 128,
+        cpuLimit: nodeParameters?.cpuLimit || 0.5,
+        
+        // 用户定义的输入输出参数
+        input_parameters: nodeParameters?.input_parameters || {},
+        output_parameters: nodeParameters?.output_parameters || {},
+      };
+      nodeYamlId.value = nodeId;
+      selectedNodeId.value = nodeId;
+      isEditCodeNode.value = true;
+      break;
+      
+    case 'DirectReply':
+      // 打开直接回复节点编辑器
+      currentDirectReplyNodeData.value = {
+        name: nodeName,
+        description: nodeDesc,
+        callId: callId,
+        parameters: {
+          input_parameters: {
+            answer: nodeParameters?.input_parameters?.answer || ''
+          },
+          output_parameters: nodeParameters?.output_parameters || {}
+        }
+      };
+      nodeYamlId.value = nodeId;
+      selectedNodeId.value = nodeId;
+      isEditDirectReplyNode.value = true;
+      break;
+      
+          case 'Choice':
+        // 打开条件分支节点编辑器
+        currentChoiceBranchNodeData.value = {
+          name: nodeName,
+          description: nodeDesc,
+          callId: callId,
+          parameters: nodeParameters || {
+            input_parameters: { choices: [] },
+            output_parameters: { 
+              branch_id: {
+                type: 'string',
+                description: '选中的分支ID'
+              }
+            }
+          }
+        };
+        nodeYamlId.value = nodeId;
+        selectedNodeId.value = nodeId;
+        isEditChoiceBranchNode.value = true;
+        break;
+        
+      case 'VariableAssign':
+        // 打开变量赋值节点编辑器
+        currentVariableAssignNodeData.value = {
+          name: nodeName,
+          description: nodeDesc,
+          callId: callId,
+          parameters: {
+            input_parameters: nodeParameters?.input_parameters || { operations: [] },
+            output_parameters: nodeParameters?.output_parameters || {}
+          }
+        };
+        nodeYamlId.value = nodeId;
+        selectedNodeId.value = nodeId;
+        isEditVariableAssignNode.value = true;
+        break;
+      
+    case 'Loop':
+      // 打开循环节点编辑器
+      currentLoopNodeData.value = {
+        name: nodeName,
+        description: nodeDesc,
+        callId: callId,
+        parameters: nodeParameters || {
+          input_parameters: {
+            variables: {},
+            stop_condition: {
+              logic: 'and',
+              conditions: []
+            },
+            max_iteration: 10,
+            sub_flow_id: ''
+          },
+          output_parameters: {
+            iteration_count: {
+              type: 'number',
+              description: '实际执行的循环次数'
+            },
+            stop_reason: {
+              type: 'string',
+              description: '停止原因'
+            },
+            variables: {
+              type: 'object',
+              description: '循环后的变量状态'
+            }
+          }
+        }
+      };
+      nodeYamlId.value = nodeId;
+      selectedNodeId.value = nodeId;
+      isEditLoopNode.value = true;
+      break;
+      
+    default:
+      // 其他节点类型使用YAML编辑器
+      editYamlDrawer(nodeName, nodeDesc, nodeParameters, nodeId);
+      return;
+  }
+  
+  // 编辑时，需要debug 后才可发布
+  emits('updateFlowsDebug', false);
+};
+
+// 处理来自LoopNode的InsertNodeMenu显示请求
+const handleShowLoopInsertNodeMenu = (insertMenuData) => {
+  // 保存菜单数据
+  loopInsertMenuData.value = insertMenuData;
+  
+  // 显示菜单
+  isLoopInsertNodeMenuVisible.value = true;
+};
+
+// 关闭LoopNode InsertNodeMenu
+const closeLoopInsertNodeMenu = () => {
+  isLoopInsertNodeMenuVisible.value = false;
+  loopInsertMenuData.value = null;
+};
+
+// 处理LoopNode的subFlowId更新
+const handleUpdateSubFlowId = (nodeId: string, subFlowId: string) => {
+  // 查找并更新对应的Loop节点
+  const loopNode = nodes.value.find(node => node.id === nodeId);
+  if (loopNode && loopNode.data) {
+    if (!loopNode.data.parameters) {
+      loopNode.data.parameters = {};
+    }
+    if (!loopNode.data.parameters.input_parameters) {
+      loopNode.data.parameters.input_parameters = {};
+    }
+    loopNode.data.parameters.input_parameters.sub_flow_id = subFlowId;
+    
+  }
+};
+
+// 处理LoopNode InsertNodeMenu选择节点
+const handleLoopInsertNodeSelect = (nodeData) => {
+  
+  if (!loopInsertMenuData.value) {
+    return;
+  }
+  
+  // 通过LoopNode组件引用调用节点插入方法
+  const loopComponentKey = `loopNode_${loopInsertMenuData.value.loopNodeId}`;
+  const loopRef = (window as any).loopNodeRefs?.[loopComponentKey];
+  
+  if (loopRef && loopRef.insertNodeIntoSubFlow) {
+    loopRef.insertNodeIntoSubFlow(nodeData, loopInsertMenuData.value.edgeInfo);
+  } else {
+    console.error('[workFlow] 未找到LoopNode引用或insertNodeIntoSubFlow方法');
+  }
+  
+  // 关闭菜单
+  closeLoopInsertNodeMenu();
 };
 
 // 打开环境变量配置
@@ -479,6 +918,9 @@ const closeStartNodeDrawer = () => {
   isEditStartNode.value = false;
   // 清除选中状态
   selectedNodeId.value = '';
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
 };
 
 // 保存开始节点 - 注意：变量管理通过variable接口，这里只保存节点基础信息
@@ -500,7 +942,9 @@ const handleSaveNodeDescription = (nodeInfo) => {
 
 const handleZommOnScroll = () => {
   const zoomObj = getViewport();
-  flowZoom.value = Number(zoomObj.zoom.toFixed(2));
+  const newZoom = Number(zoomObj.zoom.toFixed(2));
+  
+  flowZoom.value = newZoom;
 };
 
 async function layoutGraph(direction) {
@@ -525,6 +969,12 @@ const dropFunc = (e) => {
   onDrop(e);
 };
 
+// LoopNode滚轮事件处理函数
+const handleLoopNodeZoomUpdate = (event: CustomEvent) => {
+  // 手动调用handleZommOnScroll来更新zoom值
+  handleZommOnScroll();
+};
+
 onMounted(() => {
   apiLoading.value = true;
   api
@@ -534,18 +984,24 @@ onMounted(() => {
     })
     .then((res) => {
       const services = res[1]?.result.services || [];
- 
+
       apiServiceList.value = services;
       allApiServiceList.value = services;
       apiLoading.value = false;
     });
   handleChangeZoom(DefaultViewPortZoom);
+  
+  // 添加LoopNode事件监听器作为备用方案
+  document.addEventListener('loopNodeZoomUpdate', handleLoopNodeZoomUpdate);
 });
 
 onUnmounted(() => {
   // 组件销毁时，清空sessionStorage的veiwport位置
   sessionStorage.setItem('workflowViewPortX', '');
   sessionStorage.setItem('workflowViewPortY', '');
+  
+  // 清理LoopNode事件监听器
+  document.removeEventListener('loopNodeZoomUpdate', handleLoopNodeZoomUpdate);
 });
 
 
@@ -681,7 +1137,7 @@ const editFlow = async (item) => {
       await loadConversationVariablesForDisplay();
     }
   } catch (error) {
-    console.error('加载工作流失败:', error);
+    // 处理加载错误
   } finally {
     loading.value = false;
   }
@@ -759,37 +1215,35 @@ const redrageFlow = (nodesList, edgesList) => {
     } else if (node.callId === 'Choice') {
       newNode.type = 'Choice';
       
-      // 处理Choice节点的参数，确保包含ELSE分支
-      const choices = node.parameters?.input_parameters?.choices || [];
+      // 使用统一的sanitizeNodeData处理Choice节点，确保branch_id生成逻辑一致
+      const choiceNodeData = {
+        callId: 'Choice',
+        parameters: node.parameters
+      };
       
-      // 检查是否已有默认分支
-      const hasDefaultBranch = choices.some(choice => choice.is_default === true);
-      
-      // 如果没有默认分支，添加一个ELSE分支
-      if (!hasDefaultBranch) {
-        choices.push({
-          branch_id: `else_${node.stepId || Date.now()}`,
-          name: 'ELSE',
-          is_default: true,
-          conditions: [],
-          logic: 'and'
-        });
-      }
+      // 调用sanitizeNodeData进行标准化处理
+      const sanitizedChoice = sanitizeNodeData(choiceNodeData, node.stepId);
       
       newNode.data = {
         ...newNode.data,
-        parameters: {
-          input_parameters: { 
-            choices: choices 
-          },
-          output_parameters: node.parameters?.output_parameters || { 
-            branch_id: {
-              type: 'string',
-              description: '选中的分支ID'
-            }
-          }
-        }
-      };
+        parameters: sanitizedChoice.parameters
+              };
+      } else if (node.callId === 'VariableAssign') {
+        // VariableAssign节点特殊处理
+        newNode.type = 'VariableAssign';
+        newNode.data = {
+          ...newNode.data,
+          nodeId: 'VariableAssign',
+          callId: 'VariableAssign',
+        };
+      } else if (node.callId === 'Loop') {
+        // Loop节点特殊处理
+        newNode.type = 'Loop';
+        newNode.data = {
+          ...newNode.data,
+          nodeId: 'Loop',
+          callId: 'Loop',
+        };
     } else if (node.callId === 'Code') {
       // Code节点特殊处理：从parameters中提取特有属性并添加到data中
       newNode.type = 'custom';
@@ -811,6 +1265,14 @@ const redrageFlow = (nodesList, edgesList) => {
         ...newNode.data,
         nodeId: 'DirectReply',
         callId: 'DirectReply',
+      };
+    } else if (node.callId === 'VariableAssign') {
+      // VariableAssign节点特殊处理
+      newNode.type = 'VariableAssign';
+      newNode.data = {
+        ...newNode.data,
+        nodeId: 'VariableAssign',
+        callId: 'VariableAssign',
       };
     } else {
       newNode.type = 'custom';
@@ -884,108 +1346,238 @@ const handleInsertNode = (edgeInfo) => {
 const closeInsertNodeMenu = () => {
   insertMenuData.value.visible = false;
   insertMenuData.value.edgeInfo = null;
+  insertMenuData.value.handleInfo = null;
   insertMenuData.value.position = { x: 0, y: 0 };
+};
+
+// 处理来自Handle位置的插入节点事件
+const handleInsertNodeFromHandle = (handleInfo) => {
+  if (debugDialogVisible.value) {
+    return; // 调试模式下不允许插入节点
+  }
+  
+  // 获取Vue Flow画布的viewport信息
+  const viewport = getViewport();
+  
+  // 获取Vue Flow容器的位置信息
+  const vueFlowElement = document.querySelector('.vue-flow__viewport');
+  const containerRect = vueFlowElement?.getBoundingClientRect();
+  
+  if (!containerRect) {
+    console.error('无法获取Vue Flow容器位置');
+    return;
+  }
+  
+  // 根据Handle类型计算插入位置
+  let insertX, insertY;
+  const baseX = handleInfo.nodePosition.x;
+  const baseY = handleInfo.nodePosition.y;
+  
+  if (handleInfo.handleType === 'source') {
+    // Source handle: 在节点右侧插入新节点（线性连接）
+    insertX = baseX + 250; // 节点间距
+    insertY = baseY;
+  } else {
+    // Target handle: 在节点上方插入新节点（并行分支）
+    insertX = baseX;
+    insertY = baseY - 150; // 节点间距
+  }
+  
+  // 将画布坐标转换为相对于Vue Flow容器的坐标
+  const containerX = insertX * viewport.zoom + viewport.x;
+  const containerY = insertY * viewport.zoom + viewport.y;
+  
+  // 计算建议的菜单方向
+  const menuWidth = 400;
+  let direction: 'left' | 'right' = 'right';
+  
+  if (containerX + menuWidth + 20 > containerRect.width) {
+    direction = 'left';
+  } else {
+    direction = 'right';
+  }
+  
+  // 更新插入菜单数据，使用handleInfo而不是edgeInfo
+  insertMenuData.value = {
+    visible: true,
+    position: {
+      x: containerX,
+      y: containerY
+    },
+    handleInfo, // 使用handleInfo代替edgeInfo
+    direction
+  };
 };
 
 // 执行插入节点操作
 const executeInsertNode = (nodeMetaData) => {
+  
   try {
-    if (!insertMenuData.value.edgeInfo) {
-      console.error('没有边信息，无法插入节点');
+    // 支持从边插入或从Handle插入两种模式
+    if (!insertMenuData.value.edgeInfo && !insertMenuData.value.handleInfo) {
       return;
     }
-    
-    const edgeInfo = insertMenuData.value.edgeInfo;
     
     // 生成新节点ID
-    const newNodeId = `node_${Date.now()}`;
+    const newNodeId = getId();
     
-    // 找到源边
-    const sourceEdge = getEdges.value.find(edge => edge.id === edgeInfo.edgeId);
-    if (!sourceEdge) {
-      console.error('找不到要插入的边');
-      return;
-    }
+    let newNodePosition;
+    let newEdges = [];
+    const currentNodes = getNodes.value;
+    const currentEdges = getEdges.value;
     
-    // 创建新节点
-    const newNode = {
-      id: newNodeId,
-      type: nodeMetaData.callId === 'Choice' ? 'Choice' : 'custom',
-      position: {
+    // 根据插入模式确定节点位置和连接逻辑
+    if (insertMenuData.value.edgeInfo) {
+      // 从边插入模式（原有逻辑）
+      const edgeInfo = insertMenuData.value.edgeInfo;
+      const sourceEdge = currentEdges.find(edge => edge.id === edgeInfo.edgeId);
+      if (!sourceEdge) {
+        return;
+      }
+      
+      newNodePosition = {
         x: edgeInfo.midX - 100, // 节点宽度的一半
         y: edgeInfo.midY - 40   // 节点高度的一半
-      },
-      data: {
-        name: nodeMetaData.name,
-        description: nodeMetaData.description,
-        nodeId: nodeMetaData.nodeId,
-        callId: nodeMetaData.callId,
-        serviceId: nodeMetaData.serviceId || 'default',
-        parameters: nodeMetaData.callId === 'Choice' ? {
-          input_parameters: { 
-            choices: [
-              {
-                branch_id: `else_${newNodeId}`,
-                name: 'ELSE',
-                is_default: true,
-                conditions: [],
-                logic: 'and'
-              }
-            ]
-          },
-          output_parameters: { 
-            branch_id: {
-              type: 'string',
-              description: '选中的分支ID'
+      };
+      
+      // 删除原边，创建新的边：源节点 -> 新节点 -> 目标节点
+      const filteredEdges = currentEdges.filter(edge => edge.id !== edgeInfo.edgeId);
+      
+      // 检查源节点是否是Choice节点，如果是则需要使用默认分支的handle
+      const sourceNode = currentNodes.find(node => node.id === sourceEdge.source);
+      let newSourceHandle = sourceEdge.sourceHandle;
+      
+      if (sourceNode && sourceNode.type === 'Choice') {
+        // 对于Choice节点，找到默认分支(ELSE分支)的handle
+        const choices = sourceNode.data?.parameters?.input_parameters?.choices || [];
+        const defaultBranch = choices.find(choice => choice.is_default === true);
+        if (defaultBranch) {
+          newSourceHandle = defaultBranch.branch_id;
+        }
+      }
+      
+      // 检查新插入的节点是否是Choice节点，如果是则确定其输出连接的sourceHandle
+      let newNodeSourceHandle = undefined;
+      if (nodeMetaData.callId === 'Choice') {
+        // 对于新创建的Choice节点，使用ELSE分支的ID
+        newNodeSourceHandle = `else_${newNodeId}`;
+      }
+      
+      newEdges = [
+        ...filteredEdges,
+        {
+          id: `edge_${Date.now()}_1`,
+          source: sourceEdge.source,
+          target: newNodeId,
+          sourceHandle: newSourceHandle, // 使用修正后的sourceHandle
+          type: 'normal',
+          data: { sourceStatus: 'default', targetStatus: 'default' }
+        },
+        {
+          id: `edge_${Date.now()}_2`, 
+          source: newNodeId,
+          target: sourceEdge.target,
+          targetHandle: sourceEdge.targetHandle,
+          sourceHandle: newNodeSourceHandle, // 使用新节点的默认分支handle
+          type: 'normal',
+          data: { sourceStatus: 'default', targetStatus: 'default' }
+        }
+      ];
+    } else {
+      // 从Handle插入模式
+      const handleInfo = insertMenuData.value.handleInfo;
+      
+      if (handleInfo.handleType === 'source') {
+        // Source handle: 创建新分支，保留原有连接并添加新的连接
+        const sourceNodeEdges = currentEdges.filter(edge => edge.source === handleInfo.nodeId);
+        
+        // 检查源节点是否是Choice节点，如果是则需要使用指定分支的handle
+        const sourceNode = currentNodes.find(node => node.id === handleInfo.nodeId);
+        let sourceHandle = undefined; // 默认不指定sourceHandle
+        
+        if (sourceNode && sourceNode.type === 'Choice') {
+          // 优先使用传递过来的特定分支ID
+          if (handleInfo.branchId && handleInfo.branchId !== 'default') {
+            sourceHandle = handleInfo.branchId;
+          } else {
+            // 如果没有指定分支ID，才使用默认分支(ELSE分支)的handle
+            const choices = sourceNode.data?.parameters?.input_parameters?.choices || [];
+            const defaultBranch = choices.find(choice => choice.is_default === true);
+            if (defaultBranch) {
+              sourceHandle = defaultBranch.branch_id;
             }
           }
-        } : nodeMetaData.callId === 'DirectReply' ? {
-          input_parameters: {
-            answer: ''  // 确保新建的DirectReply节点内容为空
-          },
-          output_parameters: {}
-        } : {
-          input_parameters: {},
-          output_parameters: {}
         }
-      },
-      deletable: true
-    };
-    
-    // 添加新节点
-    const currentNodes = [...getNodes.value, newNode];
-    setNodes(currentNodes);
-    
-    // 删除原来的边
-    const currentEdges = getEdges.value.filter(edge => edge.id !== edgeInfo.edgeId);
-    
-    // 创建新的边：源节点 -> 新节点 -> 目标节点
-    const newEdge1 = {
-      id: `edge_${Date.now()}_1`,
-      source: sourceEdge.source,
-      target: newNodeId,
-      sourceHandle: sourceEdge.sourceHandle,
-      type: 'normal',
-      data: {
-        sourceStatus: 'default',
-        targetStatus: 'default'
+        
+        if (sourceNodeEdges.length > 0) {
+          // 如果已有输出连接，创建并行分支：保留原连接，添加新分支
+          const firstTargetNode = getNodes.value.find(node => node.id === sourceNodeEdges[0].target);
+          
+          // 计算新节点位置：在第一个目标节点下方
+          newNodePosition = {
+            x: firstTargetNode ? firstTargetNode.position.x : handleInfo.nodePosition.x + 350,
+            y: firstTargetNode ? firstTargetNode.position.y + 120 : handleInfo.nodePosition.y + 120
+          };
+          
+          // 保留所有原有边，只添加新的分支边
+          newEdges = [
+            ...currentEdges, // 保留所有现有连接
+            {
+              id: `edge_${Date.now()}`,
+              source: handleInfo.nodeId,
+              target: newNodeId,
+              sourceHandle: sourceHandle, // 使用默认分支handle（如果是Choice节点）
+              type: 'normal',
+              data: { sourceStatus: 'default', targetStatus: 'default' }
+            }
+          ];
+        } else {
+          // 如果没有输出连接，创建线性连接
+          newNodePosition = {
+            x: handleInfo.nodePosition.x + 350, // 增加偏移距离，避免重叠
+            y: handleInfo.nodePosition.y
+          };
+          
+          // 创建从原节点到新节点的边
+          newEdges = [
+            ...currentEdges,
+            {
+              id: `edge_${Date.now()}`,
+              source: handleInfo.nodeId,
+              target: newNodeId,
+              sourceHandle: sourceHandle, // 使用默认分支handle（如果是Choice节点）
+              type: 'normal',
+              data: { sourceStatus: 'default', targetStatus: 'default' }
+            }
+          ];
+        }
+      } else {
+        // Target handle: 并行分支，在当前节点前创建新的分支
+        newNodePosition = {
+          x: handleInfo.nodePosition.x,
+          y: handleInfo.nodePosition.y - 150
+        };
+        
+        // 查找指向当前节点的边的源节点，为新节点创建分支连接
+        const targetNodeEdges = currentEdges.filter(edge => edge.target === handleInfo.nodeId);
+        const newBranchEdges = targetNodeEdges.map(edge => ({
+          id: `edge_${Date.now()}_branch_${edge.id}`,
+          source: edge.source,
+          target: newNodeId,
+          type: 'normal',
+          data: { sourceStatus: 'default', targetStatus: 'default' }
+        }));
+        
+        newEdges = [...currentEdges, ...newBranchEdges];
       }
-    };
+    }
     
-    const newEdge2 = {
-      id: `edge_${Date.now()}_2`, 
-      source: newNodeId,
-      target: sourceEdge.target,
-      targetHandle: sourceEdge.targetHandle,
-      type: 'normal',
-      data: {
-        sourceStatus: 'default',
-        targetStatus: 'default'
-      }
-    };
+    // 使用公共函数创建新节点
+    const newNode = createNewNode(nodeMetaData, newNodePosition, newNodeId);
     
-    // 设置新的边
-    setEdges([...currentEdges, newEdge1, newEdge2]);
+    // 添加新节点和更新边
+    setNodes([...currentNodes, newNode]);
+    setEdges(newEdges);
     
     // 触发工作流状态更新
     emits('updateFlowsDebug', false);
@@ -998,7 +1590,6 @@ const executeInsertNode = (nodeMetaData) => {
     ElMessage.success(`${nodeMetaData.name} 节点插入成功`);
     
   } catch (error) {
-    console.error('插入节点失败:', error);
     ElMessage.error('插入节点失败');
   }
 };
@@ -1115,195 +1706,296 @@ const cancelConnectStatus = () => {
   }
 };
 
-const saveFlow = (updateNodeParameter?, debug?) => {
+const saveFlow = async (updateNodeParameter?, debug?) => {
   loading.value = true;
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
     return;
   }
-  // 将对应的节点和边存储格式改造
-  let updateNodes = getNodes.value.map((item) => {
-    const { ...otherItem } = item.data;
-    let newItem = {
-      enable: true,
-      editable: false,
-      position: item.position,
-      apiId: item.data.nodeId,
-      serviceId: item.data.serviceId,
-      stepId: item.id,
-      nodeId: item.data.nodeId,  // 添加nodeId字段
-      type: item.data.nodeId,
-    };
+
+  try {
+    // 第一步：保存所有Loop节点的子工作流
+    const loopNodes = getNodes.value.filter(node => node.data.callId === 'Loop');
     
-    // 对于Code节点，需要特殊处理parameters结构
-    if (item.data.callId === 'Code') {
-      // Code节点：将所有配置放在parameters中
-      newItem = {
-        ...newItem,
-        callId: item.data.callId,
-        name: item.data.name,
-        description: item.data.description,
-        parameters: {
-          input_parameters: item.data.parameters?.input_parameters || {},
-          output_parameters: item.data.parameters?.output_parameters || {},
-          code: item.data.code || '',
-          codeType: item.data.codeType || 'python',
-          securityLevel: item.data.securityLevel || 'low',
-          timeoutSeconds: item.data.timeoutSeconds || 30,
-          memoryLimitMb: item.data.memoryLimitMb || 128,
-          cpuLimit: item.data.cpuLimit || 0.5,
-        }
-      };
-    } else {
-      // 其他节点：使用原有逻辑
-      newItem = {
-        ...newItem,
-        ...otherItem,
-      };
-    }
-    if (item.type === 'end' || item.type === 'start') {
-      // 更新开始结束节点结构
-      newItem = {
-        ...newItem,
-        apiId: item.type, // 这两个id个应该没有-暂时随意复制
-        serviceId: item.type,
-        nodeId: 'Empty',
-        callId: item.type,
-        type: 'startAndEnd',
-      };
-    } else if (item.type === 'branch') {
-      // 处理分支节点保存，确保包含ELSE分支
-      const choices = item.data.parameters?.input_parameters?.choices || [];
+    for (const loopNode of loopNodes) {
+      // 通过全局变量访问LoopNode组件实例（需要在LoopNode中设置）
+      const loopComponentKey = `loopNode_${loopNode.id}`;
+      const loopRef = (window as any).loopNodeRefs?.[loopComponentKey];
       
-      // 检查是否已有默认分支
-      const hasDefaultBranch = choices.some(choice => choice.is_default === true);
-      
-      // 如果没有默认分支，添加一个ELSE分支
-      if (!hasDefaultBranch) {
-        choices.push({
-          branch_id: `else_${item.id || Date.now()}`,
-          name: 'ELSE',
-          is_default: true,
-          conditions: [],
-          logic: 'and'
-        });
-      }
-      
-      newItem = {
-        ...newItem,
-        callId: 'Choice',
-        parameters: {
-          input_parameters: { choices: choices },
-          output_parameters: item.data.parameters?.output_parameters || { 
-            branch_id: {
-              type: 'string',
-              description: '选中的分支ID'
-            }
-          }
-        },
-      };
-    } else if (item.type === 'Choice') {
-      // 处理Choice节点保存，确保包含ELSE分支
-      const choices = item.data.parameters?.input_parameters?.choices || [];
-      
-      // 检查是否已有默认分支
-      const hasDefaultBranch = choices.some(choice => choice.is_default === true);
-      
-      // 如果没有默认分支，添加一个ELSE分支
-      if (!hasDefaultBranch) {
-        choices.push({
-          branch_id: `else_${item.id || Date.now()}`,
-          name: 'ELSE',
-          is_default: true,
-          conditions: [],
-          logic: 'and'
-        });
-      }
-      
-      newItem = {
-        ...newItem,
-        callId: 'Choice',
-        parameters: {
-          input_parameters: { choices: choices },
-          output_parameters: item.data.parameters?.output_parameters || { 
-            branch_id: {
-              type: 'string',
-              description: '选中的分支ID'
-            }
-          }
-        },
-      };
-    }
-    return newItem;
-  });
-  // 更新对应的边的结构
-  const updateEdges = getEdges.value.map((item) => {
-    let newEdge = {
-      edgeId: item.id,
-      sourceNode: item.sourceNode.id,
-      targetNode: item.targetNode.id,
-      type: item.type,
-      branchId: item.sourceHandle || '',
-    };
-    return newEdge;
-  });
-  // 判断是否调用修改yaml文件，以确定是否修改对应的input_paramteters
-  if (updateNodeParameter) {
-    updateNodes.forEach((item) => {
-      if (item.stepId === updateNodeParameter.id) {
-        if (item.type === 'Code') {
-          item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
-          item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
-          item.parameters.code = updateNodeParameter.parameters.code;
-          item.parameters.codeType = updateNodeParameter.parameters.codeType;
-          item.parameters.securityLevel = updateNodeParameter.parameters.securityLevel;
-          item.parameters.timeoutSeconds = updateNodeParameter.parameters.timeoutSeconds;
-          item.parameters.memoryLimitMb = updateNodeParameter.parameters.memoryLimitMb;
-          item.parameters.cpuLimit = updateNodeParameter.parameters.cpuLimit;
-        } else if (item.callId === 'DirectReply') {
-          // 确保parameters对象存在
-          if (!item.parameters) {
-            item.parameters = {};
-          }
-          item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
-          item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
-        } else if (item.callId === 'Choice') {
-          // 条件分支节点
-          if (!item.parameters) {
-            item.parameters = {};
-          }
-          item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
-          item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
-        } else if (item.type === 'start') {
-          item.variables == updateNodeParameter.variables;
-        } else if (item.inputStream !== undefined) {
-          // 确保parameters对象存在
-          if (!item.parameters) {
-            item.parameters = {};
-          }
-          // 当Node以yaml编辑器形式修改了参数
-          // 检查updateNodeParameter.inputStream是否包含新的数据结构
-          if (updateNodeParameter.inputStream.input_parameters !== undefined && 
-              updateNodeParameter.inputStream.output_parameters !== undefined) {
+      if (loopRef && typeof loopRef.hasUnsavedSubFlowChanges === 'function') {
+        const hasChanges = loopRef.hasUnsavedSubFlowChanges();
+        const currentSubFlowId = loopRef.getSubFlowId();
+        
+        // 如果有未保存的变更，或者还没有subFlowId，则需要保存
+        if (hasChanges || !currentSubFlowId) {
+          try {
+            const savedSubFlowId = await loopRef.saveSubFlow();
             
-            item.parameters.input_parameters = updateNodeParameter.inputStream.input_parameters;
-            item.parameters.output_parameters = updateNodeParameter.inputStream.output_parameters;
-          } else {
-            // 旧格式：兼容处理
-            item.parameters.input_parameters = updateNodeParameter.inputStream;
+            // 确保Loop节点的参数中的sub_flow_id被正确更新
+            if (savedSubFlowId) {
+              loopNode.data.parameters = loopNode.data.parameters || {};
+              loopNode.data.parameters.input_parameters = loopNode.data.parameters.input_parameters || {};
+              loopNode.data.parameters.input_parameters.sub_flow_id = savedSubFlowId;
+            }
+          } catch (error) {
+            console.error('[workFlow] 保存Loop子工作流失败:', error);
+            ElMessage.error(`保存Loop节点 ${loopNode.data.name} 的子工作流失败`);
+            throw error; // 阻止主工作流保存
+          }
+        } else {
+          // 即使没有变更，也要确保sub_flow_id正确设置
+          if (currentSubFlowId) {
+            loopNode.data.parameters = loopNode.data.parameters || {};
+            loopNode.data.parameters.input_parameters = loopNode.data.parameters.input_parameters || {};
+            loopNode.data.parameters.input_parameters.sub_flow_id = currentSubFlowId;
           }
         }
-        item.name = updateNodeParameter.name;
-        item.description = updateNodeParameter.description;
       }
+    }
+
+    // 第二步：保存主工作流（原有逻辑）
+    // 将对应的节点和边存储格式改造
+    let updateNodes = getNodes.value.map((item) => {
+      const { ...otherItem } = item.data;
+      let newItem = {
+        enable: true,
+        editable: false,
+        position: item.position,
+        apiId: item.data.nodeId,
+        serviceId: item.data.serviceId,
+        stepId: item.id,
+        nodeId: item.data.nodeId,  // 添加nodeId字段
+        type: item.data.nodeId,
+      };
+      
+      // 对于Code节点，需要特殊处理parameters结构
+      if (item.data.callId === 'Code') {
+        // Code节点：将所有配置放在parameters中
+        newItem = {
+          ...newItem,
+          callId: item.data.callId,
+          name: item.data.name,
+          description: item.data.description,
+          parameters: {
+            input_parameters: item.data.parameters?.input_parameters || {},
+            output_parameters: item.data.parameters?.output_parameters || {},
+            code: item.data.code || '',
+            codeType: item.data.codeType || 'python',
+            securityLevel: item.data.securityLevel || 'low',
+            timeoutSeconds: item.data.timeoutSeconds || 30,
+            memoryLimitMb: item.data.memoryLimitMb || 128,
+            cpuLimit: item.data.cpuLimit || 0.5,
+          }
+        };
+      } else {
+        // 其他节点：使用原有逻辑
+        newItem = {
+          ...newItem,
+          ...otherItem,
+        };
+      }
+      
+      // 其余逻辑保持不变...
+      if (item.type === 'end' || item.type === 'start') {
+        newItem = {
+          ...newItem,
+          serviceId: item.type,
+          nodeId: 'Empty',
+          callId: item.type,
+          type: 'startAndEnd',
+        };
+      } else if (item.type === 'branch') {
+        // 对于branch节点，处理choice数据
+        let choices = [];
+        // 根据该节点在edge中作为source时的edge
+        const branchEdges = getEdges.value.filter((edge) => edge.source === item.id);
+        
+        // 如果有边连接，根据边的branchId创建choice
+        if (branchEdges.length > 0) {
+          choices = branchEdges.map((edge, index) => ({
+            branch_id: edge.branchId,
+            name: edge.branchId || `choice_${index + 1}`,
+            is_default: edge.branchId === 'else',
+            conditions: [], 
+            logic: 'and'
+          }));
+        } else {
+          // 如果没有边连接，使用现有的choices数据或创建默认的
+          choices = item.data.parameters?.input_parameters?.choices || [
+            {
+              branch_id: `else_${item.id}`,
+              name: 'ELSE',
+              is_default: true,
+              conditions: [],
+              logic: 'and'
+            }
+          ];
+        }
+        
+        newItem = {
+          ...newItem,
+          callId: 'Choice',
+          parameters: {
+            input_parameters: { choices: choices },
+            output_parameters: item.data.parameters?.output_parameters || { 
+              branch_id: {
+                type: 'string',
+                description: '选中的分支ID'
+              }
+            }
+          },
+        };
+      } else if (item.type === 'Choice') {
+        // 处理条件分支节点 - 使用统一的sanitizeNodeData逻辑
+        // 先获取现有的choices数据
+        const originalChoices = item.data.parameters?.input_parameters?.choices || [];
+        
+        // 使用sanitizeNodeData生成标准化的Choice数据
+        const choiceNodeData = {
+          callId: 'Choice',
+          parameters: {
+            input_parameters: { choices: originalChoices },
+            output_parameters: item.data.parameters?.output_parameters
+          }
+        };
+        
+        // 调用sanitizeNodeData进行标准化处理，确保branch_id正确生成
+        const sanitizedChoice = sanitizeNodeData(choiceNodeData, item.id);
+        
+        newItem = {
+          ...newItem,
+          callId: 'Choice',
+          parameters: sanitizedChoice.parameters,
+        };
+      } else if (item.type === 'Loop') {
+        // 处理循环节点
+        newItem = {
+          ...newItem,
+          callId: 'Loop',
+          parameters: {
+            input_parameters: item.data.parameters?.input_parameters || {},
+            output_parameters: item.data.parameters?.output_parameters || {
+              iteration_count: {
+                type: 'number',
+                description: '实际执行的循环次数'
+              },
+              stop_reason: {
+                type: 'string',
+                description: '停止原因'
+              },
+              variables: {
+                type: 'object',
+                description: '循环后的变量状态'
+              }
+            }
+          },
+        };
+      }
+      
+      return newItem;
     });
-  }
-  if (debug) {
-    flowObj.value.debug = true;
-  }
-  // 更新最新的节点与边的数据
-  api
-    .createOrUpdateFlowTopology(
+
+    // 处理边
+    const updateEdges = getEdges.value.map((item) => {
+      let branchId = item.sourceHandle;
+      
+      // 如果没有sourceHandle，根据源节点类型生成默认的branchId
+      if (!branchId) {
+        const sourceNode = getNodes.value.find(node => node.id === item.source);
+        if (sourceNode) {
+          if (sourceNode.type === 'Choice') {
+            // Choice节点应该有默认分支
+            const choices = sourceNode.data?.parameters?.input_parameters?.choices || [];
+            const defaultBranch = choices.find(choice => choice.is_default === true);
+            branchId = defaultBranch ? defaultBranch.branch_id : `else_${item.source}`;
+          } else {
+            // 所有非Choice节点都使用空字符串作为branchId
+            branchId = '';
+          }
+        } else {
+          branchId = '';
+        }
+      }
+      
+      return {
+        edgeId: item.id,
+        sourceNode: item.source,
+        targetNode: item.target,
+        branchId: branchId,
+      };
+    });
+
+    // 处理节点参数更新
+    if (updateNodeParameter) {
+      updateNodes.forEach((item) => {
+        if (item.stepId === updateNodeParameter.id) {
+          if (item.type === 'Code') {
+            item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+            item.parameters.code = updateNodeParameter.parameters.code;
+            item.parameters.codeType = updateNodeParameter.parameters.codeType;
+            item.parameters.securityLevel = updateNodeParameter.parameters.securityLevel;
+            item.parameters.timeoutSeconds = updateNodeParameter.parameters.timeoutSeconds;
+            item.parameters.memoryLimitMb = updateNodeParameter.parameters.memoryLimitMb;
+            item.parameters.cpuLimit = updateNodeParameter.parameters.cpuLimit;
+          } else if (item.callId === 'DirectReply') {
+            // 确保parameters对象存在
+            if (!item.parameters) {
+              item.parameters = {};
+            }
+            item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+          } else if (item.callId === 'Choice') {
+            // 条件分支节点
+            if (!item.parameters) {
+              item.parameters = {};
+            }
+            item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+          } else if (item.callId === 'VariableAssign') {
+            // 变量赋值节点
+            if (!item.parameters) {
+              item.parameters = {};
+            }
+            item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters || {};
+          } else if (item.type === 'start') {
+            item.variables == updateNodeParameter.variables;
+          } else if (item.type === 'Loop') {
+            if (!item.parameters) {
+              item.parameters = {};
+            }
+            item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
+          } else if (item.inputStream !== undefined) {
+            // 确保parameters对象存在
+            if (!item.parameters) {
+              item.parameters = {};
+            }
+            // 当Node以yaml编辑器形式修改了参数
+            // 检查updateNodeParameter.inputStream是否包含新的数据结构
+            if (updateNodeParameter.inputStream.input_parameters !== undefined && 
+                updateNodeParameter.inputStream.output_parameters !== undefined) {
+              
+              item.parameters.input_parameters = updateNodeParameter.inputStream.input_parameters;
+              item.parameters.output_parameters = updateNodeParameter.inputStream.output_parameters;
+            } else {
+              // 旧格式：兼容处理
+              item.parameters.input_parameters = updateNodeParameter.inputStream;
+            }
+          }
+          item.name = updateNodeParameter.name;
+          item.description = updateNodeParameter.description;
+        }
+      });
+    }
+
+    if (debug) {
+      flowObj.value.debug = true;
+    }
+
+    // 更新最新的节点与边的数据
+    const response = await api.createOrUpdateFlowTopology(
       {
         appId: appId,
         flowId: flowObj.value.flowId,
@@ -1319,28 +2011,42 @@ const saveFlow = (updateNodeParameter?, debug?) => {
           },
         },
       },
-    )
-    .then((res) => {
-      if (res[1]?.result) {
-        queryFlow('update');
-        const updatedCurFlow = res[1].result.flow;
-        isNodeConnect.value = res[1].result.connectivity;
-        redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
-      }
-      loading.value = false;
-    });
+    );
+
+    if (response[1]?.result) {
+      queryFlow('update');
+      const updatedCurFlow = response[1].result.flow;
+      isNodeConnect.value = response[1].result.connectivity;
+      redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
+    }
+
+  } catch (error) {
+    ElMessage.error('保存工作流失败');
+  } finally {
+    loading.value = false;
+  }
 };
 
 // TODO saveNode -> saveNodeYaml，仅当以yaml形式保存时才调用
 const saveNode = (yamlCode, nodeId, name, description) => {
-  // 调用更新接口更新当前节点数据
-  const updateNodeParameter = {
-    id: nodeId,
-    inputStream: yamlCode,
-    name,
-    description,
-  };
-  saveFlow(updateNodeParameter);
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    const nodeData = {
+      name,
+      description,
+      inputStream: yamlCode,
+    };
+    saveSubFlowNode(nodeData, nodeId);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeId,
+      inputStream: yamlCode,
+      name,
+      description,
+    };
+    saveFlow(updateNodeParameter);
+  }
 };
 
 defineExpose({
@@ -1442,6 +2148,7 @@ defineExpose({
             @delNode="delNode"
             @editYamlDrawer="editYamlDrawer"
             @updateConnectHandle="updateConnectHandle"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
           ></CustomNode>
         </template>
 
@@ -1465,7 +2172,41 @@ defineExpose({
             @delNode="delNode"
             @editYamlDrawer="editYamlDrawer"
             @updateConnectHandle="updateConnectHandle"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
           ></ChoiceBranchNode>
+        </template>
+
+        <!-- 循环节点 -->
+        <template #node-Loop="loopNodeProps">
+          <LoopNode
+            v-bind="loopNodeProps"
+            :appId="route.query.appId"
+            :flowId="flowObj?.flowId"
+            :disabled="debugDialogVisible"
+            :selected="selectedNodeId === loopNodeProps.id"
+            :api-service-list="apiServiceList"
+            @delNode="delNode"
+            @editYamlDrawer="editYamlDrawer"
+            @editLoopNode="editLoopNode"
+            @editSubFlowNode="editSubFlowNode"
+            @showInsertNodeMenu="handleShowLoopInsertNodeMenu"
+            @updateConnectHandle="updateConnectHandle"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
+            @updateSubFlowId="handleUpdateSubFlowId"
+          ></LoopNode>
+        </template>
+
+        <!-- 变量赋值节点 -->
+        <template #node-VariableAssign="variableAssignNodeProps">
+          <VariableAssignNode
+            v-bind="variableAssignNodeProps"
+            :disabled="debugDialogVisible"
+            :selected="selectedNodeId === variableAssignNodeProps.id"
+            @delNode="delNode"
+            @editYamlDrawer="editYamlDrawer"
+            @updateConnectHandle="updateConnectHandle"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
+          ></VariableAssignNode>
         </template>
 
         <!-- 开始结束节点 -->
@@ -1474,6 +2215,7 @@ defineExpose({
             @updateConnectHandle="updateConnectHandle"
             @editYamlDrawer="editYamlDrawer"
             @editStartNodeDrawer="editStartNodeDrawer"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
             :selected="selectedNodeId === nodeStartProps.id"
             :conversationVariables="conversationVariablesForDisplay"
             v-bind="nodeStartProps"
@@ -1485,6 +2227,7 @@ defineExpose({
             @updateConnectHandle="updateConnectHandle"
             @editYamlDrawer="editYamlDrawer"
             @editStartNodeDrawer="editStartNodeDrawer"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
             :selected="selectedNodeId === nodeEndProps.id"
             v-bind="nodeEndProps"
           ></CustomSaENode>
@@ -1502,6 +2245,7 @@ defineExpose({
             :sourcePosition="props.sourcePosition"
             :targetPosition="props.targetPosition"
             :data="JSON.parse(JSON.stringify(props.data))"
+            :isConnection="false"
             :disabled="debugDialogVisible"
             @insertNode="handleInsertNode"
           />
@@ -1572,7 +2316,7 @@ defineExpose({
             @click="openEnvironmentVariables"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M20 18a1 1 0 0 1-1 1h-4a3 3 0 0 0-3 3a3 3 0 0 0-3-3H5a1 1 0 0 1-1-1H2a3 3 0 0 0 3 3h4a2 2 0 0 1 2 2h2a2 2 0 0 1 2-2h4a3 3 0 0 0 3-3Zm0-12a1 1 0 0 0-1-1h-4a3 3 0 0 1-3-3a3 3 0 0 1-3 3H5a1 1 0 0 0-1 1H2a3 3 0 0 1 3-3h4a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2h4a3 3 0 0 1 3 3Zm-8 6L9 8H7v8h2v-4l3 4h2V8h-2zm9-4l-2 5.27L17 8h-2l3 8h2l3-8zM1 8v8h5v-2H3v-1h2v-2H3v-1h3V8z" />
+              <path fill="currentColor" d="M20 18a1 1 0 0 1-1 1h-4a3 3 0 0 0-3 3a3 3 0 0 0-3-3H5a1 1 0 0 0-1-1H2a3 3 0 0 0 3 3h4a2 2 0 0 1 2 2h2a2 2 0 0 1 2-2h4a3 3 0 0 0 3-3Zm0-12a1 1 0 0 0-1-1h-4a3 3 0 0 1-3-3a3 3 0 0 1-3 3H5a1 1 0 0 0-1 1H2a3 3 0 0 1 3-3h4a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2h4a3 3 0 0 1 3 3Zm-8 6L9 8H7v8h2v-4l3 4h2V8h-2zm9-4l-2 5.27L17 8h-2l3 8h2l3-8zM1 8v8h5v-2H3v-1h2v-2H3v-1h3V8z" />
             </svg>
           </div>
         </el-tooltip>
@@ -1641,6 +2385,8 @@ defineExpose({
     :nodeName="nodeName"
     :nodeDesc="nodeDesc"
     :nodeYamlId="nodeYamlId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
   ></EditYamlDrawer>
   
   <!-- 开始节点表单编辑器 - 基于变量接口 -->
@@ -1665,6 +2411,8 @@ defineExpose({
     :nodeData="currentCodeNodeData"
     :nodeId="nodeYamlId"
     :flowId="flowObj?.flowId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
     @update:visible="closeCodeNodeDrawer"
     @saveNode="saveCodeNode"
   />
@@ -1675,6 +2423,8 @@ defineExpose({
     :nodeData="currentDirectReplyNodeData"
     :nodeId="nodeYamlId"
     :flowId="flowObj?.flowId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
     @update:visible="closeDirectReplyDrawer"
     @saveNode="saveDirectReplyNode"
   />
@@ -1687,8 +2437,35 @@ defineExpose({
     :flowId="flowObj?.flowId"
     :conversationId="conversationId"
     :currentStepId="nodeYamlId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
     @update:visible="closeChoiceBranchDrawer"
     @saveNode="saveChoiceBranchNode"
+  />
+  
+  <!-- 变量赋值节点编辑器 -->
+  <VariableAssignNodeDrawer
+    :visible="isEditVariableAssignNode"
+    :nodeData="currentVariableAssignNodeData"
+    :nodeId="nodeYamlId"
+    :flowId="flowObj?.flowId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
+    @update:visible="closeVariableAssignDrawer"
+    @saveNode="saveVariableAssignNode"
+  />
+  
+  <!-- 循环节点编辑器 -->
+  <LoopNodeDrawer
+    :visible="isEditLoopNode"
+    :nodeData="currentLoopNodeData"
+    :nodeId="nodeYamlId"
+    :flowId="flowObj?.flowId"
+    :currentStepId="nodeYamlId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
+    @update:visible="closeLoopNodeDrawer"
+    @save="saveLoopNode"
   />
   
   <!-- 插入节点选择菜单 -->
@@ -1699,6 +2476,19 @@ defineExpose({
     :api-service-list="apiServiceList"
     @close="closeInsertNodeMenu"
     @select-node="executeInsertNode"
+  />
+  
+  <!-- LoopNode子工作流插入节点菜单 -->
+  <InsertNodeMenu
+    v-if="loopInsertMenuData"
+    :visible="isLoopInsertNodeMenuVisible"
+    :position="loopInsertMenuData.position"
+    :menu-direction="loopInsertMenuData.direction"
+    :api-service-list="apiServiceList"
+    :exclude-node-types="['Loop']"
+    :extra-node-types="loopInsertMenuData.extraNodeTypes || []"
+    @close="closeLoopInsertNodeMenu"
+    @selectNode="handleLoopInsertNodeSelect"
   />
   
   <!-- 环境变量配置抽屉 -->

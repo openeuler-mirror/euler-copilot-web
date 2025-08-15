@@ -226,6 +226,11 @@ const emit = defineEmits(['toggleVisibility', 'variableUpdated'])
 // 内部独立的变量状态（与外部props解耦）
 const internalVariables = ref<Variable[]>([])
 
+// 计算属性：检查是否应该默认折叠
+const shouldDefaultCollapse = computed(() => {
+  return internalVariables.value.length === 0
+})
+
 // 检查是否是用户可编辑的变量
 const isEditableVariable = (variable: Variable): boolean => {
   // 必须是 conversation 类型
@@ -275,9 +280,6 @@ const initializeInternalVariables = () => {
       : [],
     stringArrayInput: ''
   }))
-  
-  console.log('🔧 变量面板初始化，所有变量:', props.conversationVariables.map(v => `${v.name}(${v.scope})`))
-  console.log('🔧 变量面板初始化，可编辑变量:', internalVariables.value.map(v => `${v.name}(${v.scope})`))
 }
 
 // 获取变量显示值
@@ -327,7 +329,6 @@ const getFileAcceptTypes = (): string => {
 // 批量更新所有变量到后端
 const batchUpdateVariables = async (conversationId: string) => {
   if (!conversationId) {
-    console.log('❌ 缺少对话ID，无法批量更新变量');
     return false;
   }
 
@@ -335,15 +336,10 @@ const batchUpdateVariables = async (conversationId: string) => {
   const editableVariables = internalVariables.value.filter(isEditableVariable)
 
   if (editableVariables.length === 0) {
-    console.log('📋 没有可编辑变量需要更新');
     return true;
   }
 
   try {
-    console.log('🔄 开始批量更新变量到后端...');
-    console.log('📋 对话ID:', conversationId);
-    console.log('📋 要更新的可编辑变量:', editableVariables.map(v => v.name));
-    
     const updatePromises = editableVariables.map(async (variable) => {
       const updateParams = {
         name: variable.name,
@@ -384,7 +380,6 @@ const batchUpdateVariables = async (conversationId: string) => {
       
       try {
         const result = await updateVariable(updateParams, updateData);
-        console.log(`✅ 变量 ${variable.name} 更新成功:`, result);
         return { success: true, variable: variable.name };
       } catch (error) {
         console.error(`❌ 变量 ${variable.name} 更新失败:`, error);
@@ -395,9 +390,7 @@ const batchUpdateVariables = async (conversationId: string) => {
     const results = await Promise.all(updatePromises);
     const successCount = results.filter(r => r.success).length;
     const failCount = results.length - successCount;
-    
-    console.log(`📊 变量更新结果: 成功 ${successCount}/${results.length}, 失败 ${failCount}`);
-    
+        
     if (successCount > 0) {
       emit('variableUpdated');
     }
@@ -411,7 +404,6 @@ const batchUpdateVariables = async (conversationId: string) => {
 
 // 处理变量输入事件（不触发API调用）
 const handleVariableInput = (variable: Variable) => {
-  console.log('🔧 变量值更新:', variable.name, '=', variable.displayValue);
   // 只做本地状态更新，不调用API
 };
 
@@ -710,11 +702,23 @@ watch(
   () => props.conversationVariables,
   (newVariables) => {
     if (newVariables && newVariables.length >= 0) {
-      console.log('📡 外部变量数据变化，重新初始化内部状态');
       initializeInternalVariables();
     }
   },
   { immediate: true }
+)
+
+// 监听内部变量变化，在数据加载完成后判断是否需要折叠
+watch(
+  () => internalVariables.value,
+  (newInternalVariables) => {
+    // 只有在数据不为空（即已经完成初始化）且没有可编辑变量时才折叠
+    // 避免在组件刚挂载时就折叠
+    if (newInternalVariables !== null && shouldDefaultCollapse.value && props.visible && !props.variablesLoading) {
+      emit('toggleVisibility');
+    }
+  },
+  { deep: true }
 )
 </script>
 

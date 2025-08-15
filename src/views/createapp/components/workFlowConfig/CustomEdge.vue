@@ -12,7 +12,7 @@
     <!-- 主路径 -->
     <path
       v-if="status === 'success_error' || status === 'error_success'"
-      :d="`M ${targetX - 10} ${targetY - 60}` + path"
+      :d="path"
       fill="none"
       :stroke="`url(#${status})`"
       stroke-width="2"
@@ -21,7 +21,7 @@
     />
     <path
       v-else
-      :d="`M ${targetX - 10} ${targetY - 60}` + path"
+      :d="path"
       fill="none"
       :stroke="strokeColor[status]"
       stroke-width="2"
@@ -31,18 +31,18 @@
     
     <!-- 不可见的更宽路径，用于更好的悬停检测 -->
     <path
-      :d="`M ${targetX - 10} ${targetY - 60}` + path"
+      :d="path"
       fill="none"
       stroke="transparent"
       stroke-width="20"
       class="edge-interaction"
     />
 
-    <!-- 箭头 -->
+    <!-- 箭头 - 仅在连接过程中显示 -->
     <path
+      v-if="isConnection"
       class="markEnd"
-      :transform="transform"
-      :d="`M ${targetX} ${targetY - 2} L ${targetX - 5} ${targetY - 10} L ${targetX + 5} ${targetY - 10} Z`"
+      :d="arrowPath"
       :fill="strokeColor[status] || '#c3cedf'"
       stroke="none"
     />
@@ -253,6 +253,33 @@ watch(
 );
 const path = computed(() => getBezierPath(props)[0]);
 const transform = computed(() => getArrowTransform(props));
+
+// 计算箭头路径，考虑不同的目标位置
+const arrowPath = computed(() => {
+  const { targetX, targetY, targetPosition } = props;
+  
+  // 根据目标位置调整箭头的形状和方向
+  // 箭头应该指向目标节点，所以：
+  // - 如果目标handle在左侧，箭头尖端指向右侧（进入节点）
+  // - 如果目标handle在右侧，箭头尖端指向左侧（进入节点）
+  switch (targetPosition) {
+    case 'top':
+      // 箭头指向下方（进入节点顶部）
+      return `M ${targetX} ${targetY - 2} L ${targetX - 5} ${targetY - 10} L ${targetX + 5} ${targetY - 10} Z`;
+    case 'bottom':
+      // 箭头指向上方（进入节点底部）
+      return `M ${targetX} ${targetY + 2} L ${targetX - 5} ${targetY + 10} L ${targetX + 5} ${targetY + 10} Z`;
+    case 'left':
+      // 箭头指向右侧（进入节点左侧）
+      return `M ${targetX - 2} ${targetY} L ${targetX - 10} ${targetY - 5} L ${targetX - 10} ${targetY + 5} Z`;
+    case 'right':
+      // 箭头指向左侧（进入节点右侧）
+      return `M ${targetX + 2} ${targetY} L ${targetX + 10} ${targetY - 5} L ${targetX + 10} ${targetY + 5} Z`;
+    default:
+      // 默认指向右侧（最常见的情况）
+      return `M ${targetX - 2} ${targetY} L ${targetX - 10} ${targetY - 5} L ${targetX - 10} ${targetY + 5} Z`;
+  }
+});
 function getArrowTransform(props) {
   const { targetPosition } = props;
   if (targetPosition === 'top') {

@@ -15,7 +15,6 @@ const props = withDefaults(
 
 // 调试方法
 const debugCode = (desc: any, title: string) => {
-  console.log(`🎯 DialogueFlow passing to FlowCode - title: "${title}", code:`, desc);
   return desc;
 };
 

@@ -249,7 +249,8 @@ const loadAllVariables = async () => {
       try {
         const convResponse = await listVariables({ 
           scope: 'conversation', 
-          flow_id: props.flowId 
+          flow_id: props.flowId,
+          exclude_pattern: 'step_id'  // 🔑 使用后端过滤，排除包含step_id的变量
         })
         
         // 修复：支持多种响应数据结构
@@ -265,7 +266,9 @@ const loadAllVariables = async () => {
         }
         
         if (convVariables && Array.isArray(convVariables)) {
+          // 后端已经过滤了包含step_id的变量，直接使用
           conversationVariables.value = convVariables
+          console.log('✅ 开始节点加载的全局对话变量:', conversationVariables.value.length, '个')
         } else {
           conversationVariables.value = []
         }

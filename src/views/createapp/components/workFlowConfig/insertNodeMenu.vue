@@ -38,6 +38,8 @@
         <div v-if="activeTab === 'nodes'" class="tab-panel">
           <NodeListPanel
             :api-service-list="apiServiceList"
+            :exclude-node-types="excludeNodeTypes"
+            :extra-node-types="extraNodeTypes"
             search-placeholder="搜索节点..."
             :enable-drag="false"
             @node-click="handleSelectNode"
@@ -56,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import NodeListPanel from './NodeListPanel.vue';
 
 // Props
@@ -65,13 +67,17 @@ interface Props {
   position: { x: number; y: number };
   menuDirection: 'left' | 'right';
   apiServiceList: any[];
+  excludeNodeTypes?: string[]; // 新增：排除的节点类型列表
+  extraNodeTypes?: any[]; // 新增：额外的节点类型列表
 }
 
 const props = withDefaults(defineProps<Props>(), {
   visible: false,
   position: () => ({ x: 0, y: 0 }),
   menuDirection: 'right',
-  apiServiceList: () => []
+  apiServiceList: () => [],
+  excludeNodeTypes: () => [], // 默认不排除任何节点类型
+  extraNodeTypes: () => [] // 默认没有额外节点类型
 });
 
 // Emits

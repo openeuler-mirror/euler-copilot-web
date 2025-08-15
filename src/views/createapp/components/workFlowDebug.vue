@@ -93,7 +93,7 @@
 </template>
 <script setup lang="ts">
 import '../../styles/workFlowDebug.scss';
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, onBeforeUnmount } from 'vue';
 import { IconX } from '@computing/opendesign-icons';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import DebugVariablePanel from './workFlowConfig/DebugVariablePanel.vue';
@@ -179,7 +179,10 @@ const handleVariableUpdated = () => {
 const loadConversationVariables = async () => {
   variablesLoading.value = true;
   try {
-    let queryParams: any = { scope: 'conversation' };
+    let queryParams: any = { 
+      scope: 'conversation',
+      exclude_pattern: 'step_id' // 过滤掉包含step和step_id的变量
+    };
     
     // 优先使用对话ID，如果没有则使用flowId
     if (tmpConversationId.value) {
@@ -250,6 +253,9 @@ onMounted(() => {
 /**
  * 发送消息
  */
+// 防止循环卡住的定时器
+let debugTimeoutId: NodeJS.Timeout | null = null;
+
 const handleSendMessage = async (
   groupId: string | undefined,
   question: string,
@@ -268,18 +274,31 @@ const handleSendMessage = async (
   if (!tmpConversationId.value) {
     const res = await generateSessionDebug({ debug: true });
     tmpConversationId.value = res || 1;
-    console.log('✅ 新对话创建，conversationId:', tmpConversationId.value);
   }
 
   // 先更新所有变量到后端（使用用户在面板中输入的值），再发送消息
   if (tmpConversationId.value) {
-    console.log('🔄 准备更新变量到后端...');
     await updateAllVariablesToBackend(tmpConversationId.value);
     
     // 变量更新完成后，重新加载以确保状态同步
-    console.log('🔄 变量更新完成，重新加载变量状态...');
     await loadConversationVariables();
   }
+
+  // 设置安全超时：如果30秒后还在生成状态，强制停止
+  if (debugTimeoutId) {
+    clearTimeout(debugTimeoutId);
+  }
+  debugTimeoutId = setTimeout(() => {
+    if (isAnswerGenerating.value) {
+      console.warn('⚠️ 检测到调试超时，强制停止生成状态');
+      isAnswerGenerating.value = false;
+      // 尝试停止正在进行的对话
+      if (conversationList.value.length > 0) {
+        const lastConversation = conversationList.value[conversationList.value.length - 1] as RobotConversationItem;
+        lastConversation.isFinish = true;
+      }
+    }
+  }, 30000); // 30秒超时
 
   props.handleDebugDialogOps!();
   await sendQuestion(
@@ -316,19 +335,19 @@ const handleKeydown = (event: KeyboardEvent) => {
 const handleCloseDebugDialog = () => {
   testFlag.value = false;
   
+  // 强制停止生成状态，确保循环停止
+  isAnswerGenerating.value = false;
+  
   // 只有在有对话时才调用 stopDebug，避免访问空数组
   if (conversationList.value.length > 0) {
     stopDebug();
-  } else {
-    // 如果没有对话，直接停止生成状态
-    isAnswerGenerating.value = false;
   }
   
   delChat();
   // 清理变量状态
-  console.log('🗑️ 调试窗口关闭，清理变量状态');
   conversationVariables.value = [];
   tmpConversationId.value = '';
+  
   props.handleDebugDialogOps!(false);
 };
 
@@ -354,7 +373,20 @@ const delChat = async () => {
 };
 
 onBeforeRouteLeave((to, from, next) => {
+  // 清理定时器
+  if (debugTimeoutId) {
+    clearTimeout(debugTimeoutId);
+    debugTimeoutId = null;
+  }
   handleCloseDebugDialog();
   next();
+});
+
+// 组件卸载时清理定时器
+onBeforeUnmount(() => {
+  if (debugTimeoutId) {
+    clearTimeout(debugTimeoutId);
+    debugTimeoutId = null;
+  }
 });
 </script>

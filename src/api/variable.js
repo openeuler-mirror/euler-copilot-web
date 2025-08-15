@@ -64,6 +64,7 @@ export async function getVariable(params) {
  * @param {string} [params.flow_id] 流程ID（环境级和对话级变量必需）
  * @param {string} [params.conversation_id] 对话ID（系统级和对话级变量必需）
  * @param {string} [params.current_step_id] 当前步骤ID（用于获取前置节点变量，仅对话变量有效）
+ * @param {string} [params.exclude_pattern] 排除模式（'step_id'排除包含.的变量名）
  */
 export async function listVariables(params = {}) {
   const [error, response] = await get(`${BASE_URL}/list`, params)

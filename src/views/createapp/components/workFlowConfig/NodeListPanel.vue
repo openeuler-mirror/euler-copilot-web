@@ -39,7 +39,10 @@
           @click="handleNodeClick(node)"
           @dragstart="handleDragStart($event, node)"
         >
-          <img class="node-icon" :src="getSrcIcon(node)" />
+          <div v-if="node.callId === 'continue' || node.callId === 'break'" class="special-icon-wrapper">
+            <img class="node-icon special-icon" :src="getSrcIcon(node)" />
+          </div>
+          <img v-else class="node-icon" :src="getSrcIcon(node)" />
           <div class="node-info">
             <div class="node-name">{{ node.name }}</div>
             <div class="node-desc">{{ node.description }}</div>
@@ -51,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { getSrcIcon } from '../types';
 
 // Props
@@ -60,13 +63,17 @@ interface Props {
   searchPlaceholder?: string;
   enableDrag?: boolean;
   onDragStart?: (event: DragEvent, node: any) => void;
+  excludeNodeTypes?: string[]; // 新增：需要排除的节点类型列表
+  extraNodeTypes?: any[]; // 新增：额外的节点类型列表
 }
 
 const props = withDefaults(defineProps<Props>(), {
   apiServiceList: () => [],
   searchPlaceholder: '搜索节点...',
   enableDrag: false,
-  onDragStart: undefined
+  onDragStart: undefined,
+  excludeNodeTypes: () => [], // 默认不排除任何节点类型
+  extraNodeTypes: () => [] // 默认没有额外节点类型
 });
 
 // Emits
@@ -108,12 +115,28 @@ const serviceNodes = computed(() => {
 
 // 计算属性：搜索过滤后的节点
 const filteredNodes = computed(() => {
+  let nodes = [...serviceNodes.value];
+  
+  // 添加额外的节点类型
+  if (props.extraNodeTypes && props.extraNodeTypes.length > 0) {
+    nodes = [...nodes, ...props.extraNodeTypes];
+  }
+  
+  // 首先过滤掉排除的节点类型
+  if (props.excludeNodeTypes && props.excludeNodeTypes.length > 0) {
+    nodes = nodes.filter(node => {
+      // 检查 callId 是否在排除列表中
+      return !props.excludeNodeTypes.includes(node.callId);
+    });
+  }
+  
+  // 然后应用搜索过滤
   if (!searchKeyword.value.trim()) {
-    return serviceNodes.value;
+    return nodes;
   }
   
   const keyword = searchKeyword.value.toLowerCase().trim();
-  return serviceNodes.value.filter(node => 
+  return nodes.filter(node => 
     node.name?.toLowerCase().includes(keyword) ||
     node.description?.toLowerCase().includes(keyword)
   );
@@ -276,6 +299,27 @@ defineExpose({
           background: #f8f9fa;
           padding: 4px;
         }
+
+        .special-icon-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          margin-right: 12px;
+          background-color: #f59e0b;
+          border-radius: 50%;
+          
+          .special-icon {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            filter: brightness(0) invert(1); /* 将图标变为白色 */
+          }
+        }
         
         .node-info {
           flex: 1;
@@ -348,6 +392,10 @@ defineExpose({
         
         .node-icon {
           background: #374151;
+        }
+
+        .special-icon-wrapper {
+          background-color: #f59e0b; /* 保持橙色，在深色主题下也是橙色 */
         }
         
         .node-info {

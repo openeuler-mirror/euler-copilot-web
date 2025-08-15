@@ -23,6 +23,8 @@ interface Props {
   conversationId?: string
   showVariableReference?: boolean
   currentStepId?: string
+  selfVariables?: any[]
+  selfScopeLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -30,7 +32,9 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: '选择变量',
   allowMultiple: false,
   supportedScopes: () => ['conversation', 'system', 'env', 'user'],
-  showVariableReference: true
+  showVariableReference: true,
+  selfVariables: () => [],
+  selfScopeLabel: ''
 })
 
 const emit = defineEmits<{
@@ -72,6 +76,32 @@ const groupedVariables = computed(() => {
     variables: Variable[]
     hasVariables: boolean
   }> = []
+  
+  // 首先添加当前节点变量分组（如果存在且有变量和标签）
+  if (props.selfVariables && props.selfVariables.length > 0 && props.selfScopeLabel) {
+    const selfVars = props.selfVariables
+      .filter(v => v.name) // 只显示有名称的变量
+      .map(v => ({
+        name: v.name,
+        var_type: v.type || 'string',
+        scope: 'self',
+        value: `{{self.${v.name}}}`,
+        description: `${props.selfScopeLabel}: ${v.name}`
+      }))
+      .filter(variable => 
+        !searchText.value || 
+        variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
+        variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
+      )
+    
+    if (selfVars.length > 0) {
+      result.push({
+        scope: 'self',
+        variables: selfVars,
+        hasVariables: true
+      })
+    }
+  }
   
   // 按照supportedScopes的顺序返回分组，确保渲染顺序正确
   for (const scope of props.supportedScopes) {
@@ -120,6 +150,7 @@ const groupedVariables = computed(() => {
 })
 
 const scopeLabels: Record<string, string> = {
+  self: '当前节点变量',
   system: '系统变量',
   user: '用户变量', 
   env: '环境变量',
@@ -127,6 +158,9 @@ const scopeLabels: Record<string, string> = {
 }
 
 const getScopeLabel = (scope: string, nodeId?: string | null, nodeName?: string | null): string => {
+  if (scope === 'self' && props.selfScopeLabel) {
+    return props.selfScopeLabel
+  }
   if (scope.startsWith('conversation_node_') && nodeName) {
     return `节点 ${nodeName} 输出`
   }
@@ -300,10 +334,16 @@ const loadVariableTypes = async () => {
 
 const formatVariableReference = (variable: Variable): string => {
   const scopeMap = {
+    self: 'self',
     system: 'system',
     user: 'user', 
     env: 'env',
     conversation: 'conversation'
+  }
+  
+  // 当前节点变量已经包含完整的引用格式
+  if (variable.scope === 'self') {
+    return variable.value // 已经是 {{self.name}} 格式
   }
   
   // 前置节点变量需要使用step_id.name的格式
