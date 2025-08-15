@@ -22,7 +22,7 @@ import {
   FlowType,
 } from 'src/views/dialogue/types';
 import { api } from 'src/apis';
-import { successMsg } from 'src/components/Message';
+import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import { Application } from 'src/apis/paths/type';
 import { handleAuthorize } from 'src/apis/tools';
@@ -65,6 +65,8 @@ export const useSessionStore = defineStore('conversation', () => {
   const appList = ref<Application[]>();
   // ai回复是否还在生成中
   const isAnswerGenerating = ref(false);
+
+  // 🔑 移除全局收集器，改为在每个conversationItem中存储文件
 
   // 方法集合 - 用于处理不同类型的event message
   const dataTransfers = {
@@ -142,7 +144,77 @@ export const useSessionStore = defineStore('conversation', () => {
         (item) => item.id === flow.stepId,
       );
       if (target) {
+        
+        // 统一的文件收集逻辑，存储到当前conversationItem.files中
+        const addFileToConversationItem = (fileData: any) => {
+          // 确保conversationItem.files是数组
+          if (!conversationItem.files) {
+            conversationItem.files = [];
+          }
+          
+          // 严格的去重检查：基于file_id和filename
+          const existingFile = conversationItem.files.find((item: any) => 
+            item.file_id === fileData.file_id && item.filename === fileData.filename
+          );
+          
+          if (!existingFile) {
+            const fileItem = {
+              file_id: fileData.file_id,
+              filename: fileData.filename,
+              file_type: fileData.file_type,
+              file_size: fileData.file_size,
+              variable_name: fileData.variable_name,
+              content: fileData.content,
+              step_name: target.title // 记录来源步骤
+            };
+            
+            conversationItem.files.push(fileItem);
+            return true;
+          } else {
+            return false;
+          }
+        };
+        
+        // 🔑 检查不同的文件格式并收集
+        let hasFileData = false;
+        
+        // 格式1：单个文件对象
+        if (typeof message.content === 'object' && message.content && 
+            (message.content as any).file_id && (message.content as any).filename && (message.content as any).content) {
+          addFileToConversationItem(message.content);
+          hasFileData = true;
+        }
+        // 格式2：多文件格式 {type: 'files', files: [...]}
+        else if (typeof message.content === 'object' && message.content && 
+                 (message.content as any).type === 'files' && (message.content as any).files && 
+                 Array.isArray((message.content as any).files)) {
+          (message.content as any).files.forEach((fileData: any) => {
+            if (fileData.file_id && fileData.filename && fileData.content) {
+              addFileToConversationItem(fileData);
+              hasFileData = true;
+            }
+          });
+        }
+        // 格式3：旧格式文件 {files: [...]}
+        else if (typeof message.content === 'object' && message.content && 
+                 (message.content as any).files && Array.isArray((message.content as any).files)) {
+          (message.content as any).files.forEach((fileData: any) => {
+            if (fileData.file_id && fileData.filename && fileData.content) {
+              addFileToConversationItem(fileData);
+              hasFileData = true;
+            }
+          });
+        }
+        
+        // 设置步骤输出显示
+        if (hasFileData) {
+          // 保持原始文件格式，让FlowCode能够检测和显示
         target.data.output = message.content;
+        } else {
+          // 普通数据输出
+          target.data.output = message.content;
+        }
+        
         target.status = flow.stepStatus;
         // 工作流添加每阶段的时间耗时
         target['costTime'] = metadata.timeCost;
@@ -275,7 +347,7 @@ export const useSessionStore = defineStore('conversation', () => {
   };
 
   // chat message回调
-  const handleMsgDataShow = (
+  const handleMsgDataShow = async (
     params: Record<string, unknown>,
     msgData: Record<string, unknown>,
     conversationItem: RobotConversationItem,
@@ -292,23 +364,51 @@ export const useSessionStore = defineStore('conversation', () => {
       return;
     }
 
-    // 🔑 处理特殊的错误标识
-    if (rawMsgData === '[ERROR]') {
-      console.error('❌ 收到[ERROR]事件，停止对话生成');
+
+
+    // 🔑 重要修复：处理带详细信息的ERROR消息
+    if (rawMsgData.startsWith('[ERROR]')) {
+      console.error('❌ 收到ERROR事件，停止对话生成:', rawMsgData);
       conversationItem.isFinish = true;
       isAnswerGenerating.value = false;
       
-      // 🔑 改进：不在工作流调试中显示错误消息，因为可能是正常的逻辑节点完成
-      const isFlowDebug = !!params.type;
-      if (!isFlowDebug) {
-        // 只在非工作流调试模式下显示错误消息
-        if (conversationItem.message && conversationItem.message.length > 0) {
-          const currentIndex = conversationItem.currentInd || 0;
-          if (conversationItem.message[currentIndex]) {
-            conversationItem.message[currentIndex] += '\n\n❌ 系统错误，请稍后再试';
-          }
+      // 🔑 重要：按正确顺序停止对话
+      // 1. 首先中断前端fetchEventSource连接
+      controller.abort();
+      
+      // 2. 然后调用后端停止接口，清理后端WebSocket连接
+      try {
+        const resp = await api.stopGeneration();
+        if (resp?.[1]?.code === 200) {
+          // 后端停止成功
         }
+      } catch (stopError) {
+        console.error('调用停止接口失败:', stopError);
+        // 即使停止接口失败，也继续处理错误显示
       }
+      
+      // 提取错误信息
+      const errorMessage = rawMsgData.replace('[ERROR]', '').trim();
+      
+      // 🔑 修复：确保错误信息正确显示在对话内容中
+      // 初始化message数组和currentInd，如果不存在的话
+      if (!conversationItem.message || conversationItem.message.length === 0) {
+        conversationItem.message = [''];
+        conversationItem.currentInd = 0;
+      }
+      
+      const currentIndex = conversationItem.currentInd || 0;
+      
+      // 确保currentIndex对应的message元素存在
+      if (!conversationItem.message[currentIndex]) {
+        conversationItem.message[currentIndex] = '';
+      }
+      
+      // 设置错误信息到对话内容中
+      conversationItem.message[currentIndex] = errorMessage || '系统错误，请稍后再试';
+      
+      // 🔑 重要：显示错误提示给用户
+      errorMsg(errorMessage || '系统错误，请稍后再试');
       return;
     }
 
@@ -567,7 +667,7 @@ export const useSessionStore = defineStore('conversation', () => {
           resp = response;
         },
         onmessage: async (ev) => {
-          handleMsgDataShow(params, ev, conversationItem);
+          await handleMsgDataShow(params, ev, conversationItem);
         },
       };
 

@@ -17,3 +17,4 @@ export * from './api';
 export * from './model';
 export * from './mcp';
 export * from './llm';
+export * from './document';

@@ -122,69 +122,313 @@
     <el-dialog
       v-model="showVariableDialog"
       :title="isEditingVariable ? '编辑变量' : '添加变量'"
-      width="500px"
+      width="600px"
       :close-on-click-modal="false"
       @close="handleVariableDialogClose"
+      class="variable-dialog"
     >
-      <el-form v-if="editingVariable" :model="editingVariable" label-width="80px">
-        <el-form-item label="变量名" required>
-          <el-input 
-            v-model="editingVariable.name" 
-            placeholder="请输入变量名" 
-            :disabled="isEditingVariable"
-          />
-        </el-form-item>
+      <el-form v-if="editingVariable" :model="editingVariable" label-width="100px" :rules="variableFormRules" ref="variableFormRef">
+          <el-form-item label="变量名称" prop="name" required>
+            <el-input 
+              v-model="editingVariable.name" 
+              placeholder="请输入变量名称" 
+              :disabled="isEditingVariable"
+            />
+          </el-form-item>
+          
+          <el-form-item label="变量类型" prop="var_type">
+            <el-select v-model="editingVariable.var_type" placeholder="选择变量类型" @change="onVariableTypeChange">
+              <el-option-group label="基础类型">
+                <el-option label="字符串" value="string" />
+                <el-option label="数字" value="number" />
+                <el-option label="布尔值" value="boolean" />
+                <el-option label="对象" value="object" />
+                <el-option label="密钥" value="secret" />
+                <el-option label="文件" value="file" />
+              </el-option-group>
+              <el-option-group label="数组类型">
+                <el-option label="数组[任意]" value="array[any]" />
+                <el-option label="数组[字符串]" value="array[string]" />
+                <el-option label="数组[数字]" value="array[number]" />
+                <el-option label="数组[对象]" value="array[object]" />
+                <el-option label="数组[文件]" value="array[file]" />
+                <el-option label="数组[布尔值]" value="array[boolean]" />
+                <el-option label="数组[密钥]" value="array[secret]" />
+              </el-option-group>
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="支持的文件类型" v-if="isFileType(editingVariable.var_type)">
+            <div class="file-config-container">
+              <div class="supported-file-types">
+                <div class="file-category">
+                  <div class="category-header" @click="toggleFileTypeSupport('document')">
+                    <div class="category-icon">
+                      <img :src="DocumentIcon" alt="文档" />
+                    </div>
+                    <div class="category-info">
+                      <div class="category-title">文档</div>
+                      <div class="category-types">TXT, MD, MDX, MARKDOWN, PDF, HTML, XLSX, XLS, DOC, DOCX, CSV, EML, MSG, PPTX, PPT, XML, EPUB</div>
+                    </div>
+                    <el-checkbox v-model="editingVariable.supportedTypes!.document" @click.stop />
+                  </div>
+                </div>
+                
+                <div class="file-category">
+                  <div class="category-header" @click="toggleFileTypeSupport('image')">
+                    <div class="category-icon">
+                      <img :src="ImageIcon" alt="图片" />
+                    </div>
+                    <div class="category-info">
+                      <div class="category-title">图片</div>
+                      <div class="category-types">JPG, JPEG, PNG, GIF, WEBP, SVG</div>
+                    </div>
+                    <el-checkbox v-model="editingVariable.supportedTypes!.image" @click.stop />
+                  </div>
+                </div>
+                
+                <div class="file-category">
+                  <div class="category-header" @click="toggleFileTypeSupport('audio')">
+                    <div class="category-icon">
+                      <img :src="AudioIcon" alt="音频" />
+                    </div>
+                    <div class="category-info">
+                      <div class="category-title">音频</div>
+                      <div class="category-types">MP3, M4A, WAV, AMR, MPGA</div>
+                    </div>
+                    <el-checkbox v-model="editingVariable.supportedTypes!.audio" @click.stop />
+                  </div>
+                </div>
+                
+                <div class="file-category">
+                  <div class="category-header" @click="toggleFileTypeSupport('video')">
+                    <div class="category-icon">
+                      <img :src="VideoIcon" alt="视频" />
+                    </div>
+                    <div class="category-info">
+                      <div class="category-title">视频</div>
+                      <div class="category-types">MP4, MOV, MPEG, WEBM</div>
+                    </div>
+                    <el-checkbox v-model="editingVariable.supportedTypes!.video" @click.stop />
+                  </div>
+                </div>
+                
+                <div class="file-category">
+                  <div class="category-header" @click="toggleFileTypeSupport('others')">
+                    <div class="category-icon">
+                      <img :src="OtherFileIcon" alt="其他文件类型" />
+                    </div>
+                    <div class="category-info">
+                      <div class="category-title">其他文件类型</div>
+                      <div class="category-input">
+                        <el-input 
+                          v-model="editingVariable.customFileExtensions"
+                          placeholder="+ + 文件扩展名，例如 .doc"
+                          @click.stop
+                        />
+                      </div>
+                    </div>
+                    <el-checkbox v-model="editingVariable.supportedTypes!.others" @click.stop />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="upload-method-section">
+                <div class="section-title">上传文件类型</div>
+                <div class="upload-method-tabs">
+                  <div 
+                    :class="['method-tab', { active: editingVariable.uploadMethods?.includes('manual') }]"
+                    @click="toggleUploadMethod('manual')"
+                  >
+                    本地上传
+                  </div>
+                  <div 
+                    :class="['method-tab', { active: editingVariable.uploadMethods?.includes('url') }]"
+                    @click="toggleUploadMethod('url')"
+                  >
+                    URL上传
+                  </div>
+                </div>
+              </div>
+              
+              <div class="upload-limits">
+                <div class="section-title">文件上传限制</div>
+                <div class="upload-limit-item">
+                  <label class="limit-label">最大文件数：</label>
+                  <el-input-number 
+                    v-model="editingVariable.maxFiles" 
+                    :min="1" 
+                    :max="100"
+                    :disabled="editingVariable.var_type === 'file'"
+                    size="small"
+                    style="width: 120px"
+                  />
+                  <span v-if="editingVariable.var_type === 'file'" class="file-type-note">
+                    文件类型固定为1个文件
+                  </span>
+                </div>
+                <div class="upload-limit-item">
+                  <label class="limit-label">单个文件最大大小：</label>
+                  <el-input-number 
+                    v-model="editingVariable.maxFileSize" 
+                    :min="1" 
+                    :max="1000"
+                    size="small"
+                    style="width: 120px"
+                  />
+                  <span class="unit-label">MB</span>
+                </div>
+                
+                <div class="upload-limit-item">
+                  <label class="limit-label">必填文件：</label>
+                  <el-checkbox 
+                    v-model="editingVariable.required"
+                    size="small"
+                  />
+                  <span class="checkbox-note">选中后，用户在对话时必须上传文件</span>
+                </div>
+              </div>
+            </div>
+          </el-form-item>
+          
+          <el-form-item label="变量值" prop="value">
+            <!-- 字符串类型 -->
+            <el-input 
+              v-if="editingVariable.var_type === 'string'"
+              v-model="editingVariable.value" 
+              placeholder="请输入字符串值" 
+            />
+            
+            <!-- 数字类型 -->
+            <el-input-number 
+              v-else-if="editingVariable.var_type === 'number'"
+              v-model="editingVariable.value" 
+              placeholder="请输入数字值"
+              :precision="2"
+              style="width: 100%"
+            />
+            
+            <!-- 布尔值类型 -->
+            <el-select 
+              v-else-if="editingVariable.var_type === 'boolean'"
+              v-model="editingVariable.value" 
+              placeholder="选择布尔值"
+            >
+              <el-option label="true" :value="true" />
+              <el-option label="false" :value="false" />
+            </el-select>
+            
+            <!-- 密钥类型 -->
+            <el-input 
+              v-else-if="editingVariable.var_type === 'secret'"
+              v-model="editingVariable.value" 
+              type="password"
+              placeholder="请输入密钥值"
+              show-password
+            />
+            
+            <!-- 对象类型 -->
+            <el-input 
+              v-else-if="editingVariable.var_type === 'object'"
+              v-model="editingVariable.valueJson" 
+              type="textarea"
+              :rows="4"
+              placeholder="请输入JSON格式的对象值" 
+            />
+            
+            <!-- 文件类型 -->
+            <div v-else-if="editingVariable.var_type === 'file'" class="file-input-section">
+              <div class="file-type-note">
+                <el-icon><IconDocument /></el-icon>
+                <span>文件类型变量将在对话时由用户上传</span>
+              </div>
+            </div>
+            
+            <!-- 数组[字符串]类型 -->
+            <div v-else-if="editingVariable.var_type === 'array[string]'" class="array-input-section">
+              <div class="array-type-note">
+                <el-icon><IconList /></el-icon>
+                <span>字符串数组变量将在对话时由用户输入，默认为空数组</span>
+              </div>
+            </div>
+            
+            <!-- 数组[数字]类型 -->
+            <div v-else-if="editingVariable.var_type === 'array[number]'" class="array-input-section">
+              <div class="array-type-note">
+                <el-icon><IconList /></el-icon>
+                <span>数字数组变量将在对话时由用户输入，默认为空数组</span>
+              </div>
+            </div>
+            
+            <!-- 数组[布尔值]类型 -->
+            <div v-else-if="editingVariable.var_type === 'array[boolean]'" class="array-input-section">
+              <div class="array-type-note">
+                <el-icon><IconList /></el-icon>
+                <span>布尔值数组变量将在对话时由用户选择，默认为空数组</span>
+              </div>
+                         </div>
+             
+             <!-- 数组[文件]类型 -->
+             <div v-else-if="editingVariable.var_type === 'array[file]'" class="file-array-section">
+               <div class="file-type-note">
+                 <el-icon><IconDocument /></el-icon>
+                 <span>文件列表类型变量将在对话时由用户上传，默认为空数组</span>
+               </div>
+             </div>
+             
+             <!-- 数组[对象]类型 -->
+            <div v-else-if="editingVariable.var_type === 'array[object]'" class="array-input-section">
+              <div class="array-type-note">
+                <el-icon><IconList /></el-icon>
+                <span>对象数组变量将在对话时由用户输入JSON格式数据，默认为空数组</span>
+              </div>
+            </div>
+            
+            <!-- 数组[密钥]类型 -->
+            <div v-else-if="editingVariable.var_type === 'array[secret]'" class="array-input-section">
+              <div class="array-type-note">
+                <el-icon><IconList /></el-icon>
+                <span>密钥数组变量将在对话时由用户输入，默认为空数组</span>
+              </div>
+            </div>
+            
+            <!-- 数组[任意]类型 -->
+            <div v-else-if="editingVariable.var_type === 'array[any]'" class="array-input-section">
+              <div class="array-type-note">
+                <el-icon><IconList /></el-icon>
+                <span>任意类型数组变量将在对话时由用户输入，默认为空数组</span>
+              </div>
+            </div>
+          </el-form-item>
+          
+          <el-form-item label="描述">
+            <el-input 
+              v-model="editingVariable.description" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入变量描述（可选）" 
+            />
+          </el-form-item>
+        </el-form>
         
-        <el-form-item label="变量类型">
-          <el-select v-model="editingVariable.var_type" placeholder="选择变量类型">
-            <el-option label="字符串" value="string" />
-            <el-option label="数字" value="number" />
-            <el-option label="布尔值" value="boolean" />
-            <el-option label="对象" value="object" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="变量值">
-          <el-input 
-            v-if="editingVariable.var_type !== 'object'"
-            v-model="editingVariable.value" 
-            placeholder="请输入变量值" 
-          />
-          <el-input 
-            v-else
-            v-model="editingVariable.valueJson" 
-            type="textarea"
-            :rows="4"
-            placeholder="请输入JSON格式的对象值" 
-          />
-        </el-form-item>
-        
-        <el-form-item label="描述">
-          <el-input 
-            v-model="editingVariable.description" 
-            placeholder="请输入变量描述（可选）" 
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="handleVariableDialogClose">取消</el-button>
-          <el-button 
-            v-if="isEditingVariable"
-            type="danger" 
-            @click="deleteConversationVariable"
-          >
-            删除
-          </el-button>
-          <el-button 
-            type="primary" 
-            @click="saveConversationVariable"
-          >
-            保存
-          </el-button>
-        </div>
-      </template>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="handleVariableDialogClose">取消</el-button>
+            <el-button 
+              v-if="isEditingVariable"
+              type="danger" 
+              @click="deleteConversationVariable"
+            >
+              删除
+            </el-button>
+            <el-button 
+              type="primary" 
+              @click="saveConversationVariable"
+            >
+              保存
+            </el-button>
+          </div>
+        </template>
     </el-dialog>
   </div>
 </template>
@@ -194,10 +438,18 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { 
   ElDrawer, ElButton, ElInput, ElDialog, ElForm, ElFormItem, 
-  ElSelect, ElOption, ElMessage, ElAlert
+  ElSelect, ElOption, ElMessage, ElAlert, ElUpload, ElCheckbox,
+  ElInputNumber, ElTag, ElDivider, ElOptionGroup
 } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Upload as IconUpload, Delete as IconDelete, Document as IconDocument, List as IconList } from '@element-plus/icons-vue'
 import { listVariables, createVariable, updateVariable, deleteVariable } from '@/api/variable'
+
+// 导入SVG图标组件
+import DocumentIcon from '@/assets/svgs/document.svg'
+import ImageIcon from '@/assets/svgs/image.svg'
+import AudioIcon from '@/assets/svgs/audio.svg'
+import VideoIcon from '@/assets/svgs/video.svg'
+import OtherFileIcon from '@/assets/svgs/other-file.svg'
 
 interface Variable {
   name: string
@@ -206,6 +458,19 @@ interface Variable {
   value?: any
   description?: string
   valueJson?: string
+  // 移除没有后端意义的displayName
+  supportedTypes?: {
+    document: boolean
+    image: boolean
+    audio: boolean
+    video: boolean
+    others: boolean
+  }
+  uploadMethods?: string[] // 改为数组格式，与后端保持一致
+  maxFiles?: number // 改为maxFiles，与后端保持一致
+  customFileExtensions?: string
+  maxFileSize?: number // 新增：文件大小限制
+  required?: boolean // 新增：文件是否必填
 }
 
 interface Props {
@@ -236,6 +501,18 @@ const variablesLoading = ref(false)
 const showVariableDialog = ref(false)
 const editingVariable = ref<Variable | null>(null)
 const isEditingVariable = ref(false)
+const variableFormRef = ref()
+
+// 表单验证规则
+const variableFormRules = {
+  name: [
+    { required: true, message: '请输入变量名称', trigger: 'blur' },
+    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '变量名只能包含字母、数字和下划线，且必须以字母或下划线开头', trigger: 'blur' }
+  ],
+  var_type: [
+    { required: true, message: '请选择变量类型', trigger: 'change' }
+  ]
+}
 
 const emits = defineEmits(['closeDrawer', 'saveStartNode', 'variablesUpdated', 'saveNodeDescription'])
 
@@ -268,7 +545,6 @@ const loadAllVariables = async () => {
         if (convVariables && Array.isArray(convVariables)) {
           // 后端已经过滤了包含step_id的变量，直接使用
           conversationVariables.value = convVariables
-          console.log('✅ 开始节点加载的全局对话变量:', conversationVariables.value.length, '个')
         } else {
           conversationVariables.value = []
         }
@@ -442,7 +718,19 @@ const addConversationVariable = () => {
     scope: 'conversation',
     value: '',
     description: '',
-    valueJson: ''
+    valueJson: '',
+    supportedTypes: { // 支持的文件类型
+      document: false,
+      image: false,
+      audio: false,
+      video: false,
+      others: false
+    },
+    uploadMethods: ['manual'], // 默认支持手动上传，与后端保持一致
+    maxFiles: 1, // 默认最大文件数，与后端保持一致
+    customFileExtensions: '', // 自定义文件扩展名
+    maxFileSize: 10, // 默认单个文件最大大小
+    required: false // 默认非必填
   }
   isEditingVariable.value = false
   showVariableDialog.value = true
@@ -450,9 +738,94 @@ const addConversationVariable = () => {
 
 // 编辑对话变量
 const editConversationVariable = (variable: Variable) => {
+  let supportedTypes = {
+    document: false,
+    image: false,
+    audio: false,
+    video: false,
+    others: false
+  }
+  
+  let uploadMethods = ['manual']
+  let maxFiles = 1
+  let customFileExtensions = ''
+  let maxFileSize = 10 // 默认单个文件最大大小
+  let required = false // 默认非必填
+  
+  // 解析后端返回的value字段（如果是文件类型）
+  if (isFileType(variable.var_type) && variable.value) {
+    try {
+      let parsedValue: any = variable.value
+      
+      // 如果value是字符串，尝试解析JSON
+      if (typeof variable.value === 'string') {        
+        // 先尝试直接解析
+        try {
+          parsedValue = JSON.parse(variable.value);
+        } catch (firstError) {          
+          let normalizedValue = variable.value
+            .replace(/'/g, '"')  // 替换所有单引号为双引号
+            .replace(/(\w+):/g, '"$1":')  // 确保属性名有双引号
+          parsedValue = JSON.parse(normalizedValue);
+        }
+      }
+      
+      // 从解析的value中提取文件配置信息
+      if (parsedValue && typeof parsedValue === 'object') {
+        if (parsedValue.supported_types && Array.isArray(parsedValue.supported_types)) {
+          const parsedTypes = parseExtensionsToFileTypes(parsedValue.supported_types)
+          supportedTypes = {
+            document: parsedTypes.document,
+            image: parsedTypes.image,
+            audio: parsedTypes.audio,
+            video: parsedTypes.video,
+            others: parsedTypes.others
+          }
+          
+          // 处理自定义文件扩展名
+          if (parsedTypes.customExts && parsedTypes.customExts.length > 0) {
+            customFileExtensions = parsedTypes.customExts.join(', ')
+          }
+          
+        }
+        
+        // 提取上传方式
+        if (parsedValue.upload_methods && Array.isArray(parsedValue.upload_methods)) {
+          uploadMethods = parsedValue.upload_methods
+        }
+        
+        // 提取最大文件数
+        if (parsedValue.max_files && typeof parsedValue.max_files === 'number') {
+          maxFiles = parsedValue.max_files
+        }
+
+        // 提取单个文件最大大小
+        if (parsedValue.max_file_size && typeof parsedValue.max_file_size === 'number') {
+          maxFileSize = Math.round(parsedValue.max_file_size / (1024 * 1024)) // 转换为MB
+        }
+
+        // 提取是否必填
+        if (parsedValue.required && typeof parsedValue.required === 'boolean') {
+          required = parsedValue.required
+        }
+      }
+    } catch (error) {
+      console.error('❌ 解析文件类型变量value失败:', error)
+      console.error('❌ 原始数据:', variable.value)
+      console.error('❌ 数据类型:', typeof variable.value)
+      // 使用默认值
+    }
+  }
+  
   editingVariable.value = {
     ...variable,
-    valueJson: typeof variable.value === 'object' ? JSON.stringify(variable.value, null, 2) : ''
+    valueJson: typeof variable.value === 'object' ? JSON.stringify(variable.value, null, 2) : '',
+    supportedTypes: supportedTypes,
+    uploadMethods: uploadMethods,
+    maxFiles: maxFiles,
+    customFileExtensions: customFileExtensions,
+    maxFileSize: maxFileSize,
+    required: required
   }
   isEditingVariable.value = true
   showVariableDialog.value = true
@@ -484,51 +857,65 @@ const saveConversationVariable = async () => {
   try {
     let value = editingVariable.value.value
     
-
-    
-    // 简单的前端验证（后端现在负责类型转换）
+    // 根据变量类型处理值
     switch (editingVariable.value.var_type) {
+      case 'string':
+        value = editingVariable.value.value || ''
+        break
+        
       case 'number':
-        // 基本数字格式验证
-        if (value && isNaN(Number(value))) {
-          ElMessage.error('请输入有效的数字')
-          return
+        if (editingVariable.value.value !== null && editingVariable.value.value !== undefined) {
+          value = Number(editingVariable.value.value)
+          if (isNaN(value)) {
+            ElMessage.error('请输入有效的数字')
+            return
+          }
+        } else {
+          value = 0
         }
         break
+        
+      case 'boolean':
+        value = Boolean(editingVariable.value.value)
+        break
+        
+      case 'secret':
+        value = editingVariable.value.value || ''
+        break
+        
       case 'object':
-        // JSON格式验证
-        let jsonStr = value
         if (editingVariable.value.valueJson) {
-          jsonStr = editingVariable.value.valueJson
-        }
-        if (jsonStr) {
           try {
-            JSON.parse(jsonStr)
-            value = jsonStr
+            value = JSON.parse(editingVariable.value.valueJson)
           } catch (error) {
             ElMessage.error('JSON格式不正确，请检查对象值的语法')
             return
           }
+        } else {
+          value = {}
         }
         break
+        
+      case 'file':
+      case 'array[file]':
+        // 文件类型不需要保存默认值，只保存配置信息
+        value = null
+        break
+        
+      case 'array[string]':
       case 'array[number]':
-        // 数字数组格式验证
-        if (value && typeof value === 'string') {
-          try {
-            const arrayValue = JSON.parse(value)
-            if (!Array.isArray(arrayValue)) {
-              throw new Error('请输入数组格式')
-            }
-          } catch (error) {
-            ElMessage.error('请输入有效的JSON数组格式，如：[1,2,3]')
-            return
-          }
-        }
+      case 'array[boolean]':
+      case 'array[object]':
+      case 'array[secret]':
+      case 'array[any]':
+        // 所有数组类型默认为空数组
+        value = []
         break
+        
+      default:
+        value = editingVariable.value.value
     }
     
-    // 所有值都以字符串格式发送，让后端处理类型转换
-
     const variableData = {
       name: editingVariable.value.name.trim(),
       var_type: editingVariable.value.var_type,
@@ -538,8 +925,15 @@ const saveConversationVariable = async () => {
       flow_id: props.flowId
     }
     
-
-    
+    // 如果是文件类型，添加文件专用字段
+    if (isFileType(editingVariable.value.var_type)) {
+      (variableData as any).supported_types = getSupportedTypesArray()
+      ;(variableData as any).upload_methods = editingVariable.value.uploadMethods || ['manual']
+      // 🔑 修复：array[file]类型默认支持多个文件
+      ;(variableData as any).max_files = editingVariable.value.maxFiles || (editingVariable.value.var_type === 'array[file]' ? 10 : 1)
+      ;(variableData as any).max_file_size = (editingVariable.value.maxFileSize || 10) * 1024 * 1024 // 转换为字节
+      ;(variableData as any).required = editingVariable.value.required || false // 是否必填
+    }
 
     if (isEditingVariable.value) {
       // 更新变量（配置阶段使用flow_id）
@@ -548,10 +942,20 @@ const saveConversationVariable = async () => {
         scope: 'conversation',
         flow_id: props.flowId
       }
-      const updateData = { 
-        value: variableData.value, 
+      const updateData: any = { 
+        value: value,
         description: variableData.description,
-        var_type: variableData.var_type  // 添加变量类型字段
+        var_type: variableData.var_type
+      }
+      
+      // 如果是文件类型，添加文件专用字段到更新数据中
+      if (isFileType(editingVariable.value.var_type)) {
+        updateData.supported_types = getSupportedTypesArray()
+        updateData.upload_methods = editingVariable.value.uploadMethods || ['manual']
+        // 🔑 修复：array[file]类型默认支持多个文件
+        updateData.max_files = editingVariable.value.maxFiles || (editingVariable.value.var_type === 'array[file]' ? 10 : 1)
+        updateData.max_file_size = (editingVariable.value.maxFileSize || 10) * 1024 * 1024 // 转换为字节
+        updateData.required = editingVariable.value.required || false // 是否必填
       }
       
       const updateResult = await updateVariable(updateParams, updateData)
@@ -574,8 +978,6 @@ const saveConversationVariable = async () => {
       stack: error?.stack,
       response: error?.response
     })
-    
-
     
     // 更详细的错误信息
     let errorMessage = '保存变量失败'
@@ -691,6 +1093,148 @@ onMounted(() => {
     loadAllVariables()
   })
 })
+
+// 检查是否为文件类型
+const isFileType = (varType: string): boolean => {
+  return varType === 'file' || varType === 'array[file]'
+}
+
+// 变量类型改变时的处理
+const onVariableTypeChange = (newType: string) => {
+  if (!editingVariable.value) return
+  
+  // 重置相关属性
+  editingVariable.value.value = ''
+  editingVariable.value.valueJson = ''
+  editingVariable.value.customFileExtensions = '' // 重置自定义文件扩展名
+  editingVariable.value.maxFileSize = 10 // 重置单个文件最大大小
+  
+  // 根据类型设置默认值
+  if (newType === 'boolean') {
+    editingVariable.value.value = false
+  } else if (newType === 'number') {
+    editingVariable.value.value = 0
+  } else if (isFileType(newType)) {
+    // 文件类型设置支持的文件格式，但不需要默认值
+    editingVariable.value.supportedTypes = {
+      document: true,
+      image: false,
+      audio: false,
+      video: false,
+      others: false
+    }
+    editingVariable.value.uploadMethods = ['manual']
+    // 文件类型固定为1，数组文件类型默认为5
+    editingVariable.value.maxFiles = newType === 'file' ? 1 : 5
+    // 文件类型不需要默认值
+    editingVariable.value.value = undefined
+  }
+}
+
+// 获取支持的文件类型数组
+const getSupportedTypesArray = (): string[] => {
+  if (!editingVariable.value || !editingVariable.value.supportedTypes) return []
+  
+  const types: string[] = []
+  const supportedTypes = editingVariable.value.supportedTypes
+  
+  if (supportedTypes.document) {
+    types.push('.txt', '.md', '.mdx', '.markdown', '.pdf', '.html', '.xlsx', '.xls', '.doc', '.docx', '.csv', '.eml', '.msg', '.pptx', '.ppt', '.xml', '.epub')
+  }
+  if (supportedTypes.image) {
+    types.push('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg')
+  }
+  if (supportedTypes.audio) {
+    types.push('.mp3', '.m4a', '.wav', '.amr', '.mpga')
+  }
+  if (supportedTypes.video) {
+    types.push('.mp4', '.mov', '.mpeg', '.webm')
+  }
+  
+  if (editingVariable.value.customFileExtensions) {
+    const customTypes = editingVariable.value.customFileExtensions
+      .split(',')
+      .map(ext => ext.trim())
+      .filter(ext => ext.startsWith('.'))
+    types.push(...customTypes)
+  }
+  
+  return types
+}
+
+// 解析文件扩展名数组，确定应该勾选哪些文件类型分类
+const parseExtensionsToFileTypes = (extensions: string[]): { document: boolean; image: boolean; audio: boolean; video: boolean; others: boolean; customExts: string[] } => {
+  const documentExts = ['.txt', '.md', '.mdx', '.markdown', '.pdf', '.html', '.xlsx', '.xls', '.doc', '.docx', '.csv', '.eml', '.msg', '.pptx', '.ppt', '.xml', '.epub']
+  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+  const audioExts = ['.mp3', '.m4a', '.wav', '.amr', '.mpga']
+  const videoExts = ['.mp4', '.mov', '.mpeg', '.webm']
+  
+  const result = {
+    document: false,
+    image: false,
+    audio: false,
+    video: false,
+    others: false
+  }
+  
+  const customExts: string[] = []
+  
+  extensions.forEach(ext => {
+    const lowerExt = ext.toLowerCase()
+    
+    if (documentExts.includes(lowerExt)) {
+      result.document = true
+    } else if (imageExts.includes(lowerExt)) {
+      result.image = true
+    } else if (audioExts.includes(lowerExt)) {
+      result.audio = true
+    } else if (videoExts.includes(lowerExt)) {
+      result.video = true
+    } else {
+      // 未知扩展名归类为其他类型
+      customExts.push(ext)
+      result.others = true
+    }
+  })
+  
+  return { ...result, customExts }
+}
+
+// 切换文件类型支持状态
+const toggleFileTypeSupport = (fileType: 'document' | 'image' | 'audio' | 'video' | 'others') => {
+  if (!editingVariable.value || !editingVariable.value.supportedTypes) return
+  
+  editingVariable.value.supportedTypes[fileType] = !editingVariable.value.supportedTypes[fileType]
+}
+
+// 切换上传方式
+const toggleUploadMethod = (method: 'manual' | 'url') => {
+  if (!editingVariable.value || !editingVariable.value.uploadMethods) return
+  
+  if (editingVariable.value.uploadMethods.includes(method)) {
+    editingVariable.value.uploadMethods = editingVariable.value.uploadMethods.filter(m => m !== method)
+  } else {
+    editingVariable.value.uploadMethods.push(method)
+  }
+}
+
+// 以下函数已移除，因为文件类型变量在定义阶段不需要实际文件上传：
+// - handleSingleFileChange
+// - handleMultipleFileChange  
+// - clearFile
+// - removeFromFileArray
+
+// 以下函数已移除，因为数组类型变量在定义阶段不需要设置默认值：
+// - addToStringArray
+// - removeFromStringArray
+// - addToNumberArray
+// - removeFromNumberArray
+// - addToBooleanArray
+// - removeFromBooleanArray
+// - addToObjectArray
+// - removeFromObjectArray
+// - addToSecretArray
+// - removeFromSecretArray
 </script>
 
 <style lang="scss" scoped>
@@ -934,5 +1478,368 @@ onMounted(() => {
 // 透明遮罩样式
 :deep(.transparent-modal) {
   background-color: transparent !important;
+}
+
+// 文件类型选择标签页
+.file-type-tabs {
+  margin-bottom: 20px;
+  
+  .tab-header {
+    display: flex;
+    gap: 8px;
+    background: var(--el-fill-color-extra-light);
+    padding: 4px;
+    border-radius: 8px;
+    
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      border: 1px solid transparent;
+      
+      &.active {
+        background: var(--el-color-primary);
+        color: white;
+        border-color: var(--el-color-primary);
+      }
+      
+      &:hover:not(.active) {
+        background: var(--el-color-primary-light-9);
+        border-color: var(--el-color-primary-light-7);
+      }
+      
+      .tab-icon {
+        font-size: 16px;
+        margin-bottom: 4px;
+      }
+      
+      .tab-text {
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// 支持的文件类型选择
+.supported-file-types {
+  margin-bottom: 20px;
+  
+  .file-category {
+    margin-bottom: 12px;
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--el-border-color-light);
+      border-radius: 8px;
+      background: var(--el-fill-color-extra-light);
+      transition: all 0.2s;
+      cursor: pointer;
+      
+      &:hover {
+        border-color: var(--el-color-primary-light-7);
+        background: var(--el-color-primary-light-9);
+      }
+      
+      &:active {
+        transform: translateY(1px);
+      }
+      
+      .category-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        img {
+          width: 20px;
+          height: 20px;
+          opacity: 0.6;
+          transition: all 0.2s;
+        }
+      }
+      
+      &:hover {
+        .category-icon img {
+          opacity: 0.9;
+        }
+      }
+      
+      .category-info {
+        flex: 1;
+        
+        .category-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--el-text-color-primary);
+          margin-bottom: 4px;
+        }
+        
+        .category-types {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+          line-height: 1.4;
+        }
+        
+        .category-input {
+          margin-top: 8px;
+          
+          .el-input {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 上传方式选择
+.upload-method-section {
+  margin-bottom: 20px;
+  
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    margin-bottom: 12px;
+  }
+  
+  .upload-method-tabs {
+    display: flex;
+    gap: 8px;
+    
+    .method-tab {
+      flex: 1;
+      padding: 8px 16px;
+      text-align: center;
+      border: 1px solid var(--el-border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      background: white;
+      
+      &.active {
+        border-color: var(--el-color-primary);
+        background: var(--el-color-primary);
+        color: white;
+      }
+      
+      &:hover:not(.active) {
+        border-color: var(--el-color-primary-light-7);
+        background: var(--el-color-primary-light-9);
+      }
+    }
+  }
+}
+
+// 上传限制设置
+.upload-limits {
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    margin-bottom: 8px;
+  }
+  
+  .upload-limit-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    
+    .limit-label {
+      font-size: 13px;
+      color: var(--el-text-color-primary);
+      font-weight: 500;
+      min-width: 120px;
+  }
+  
+    .unit-label {
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+    }
+    
+    .file-type-note {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      font-style: italic;
+    }
+    
+    .checkbox-note {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      margin-left: 8px;
+    }
+  }
+}
+
+// 文件输入区域
+.file-input-section {
+  .file-type-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--el-fill-color-extra-light);
+    border: 1px dashed var(--el-border-color-light);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+  }
+}
+
+// 文件数组区域
+.file-array-section {
+  .file-type-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--el-fill-color-extra-light);
+    border: 1px dashed var(--el-border-color-light);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+  }
+  
+
+}
+
+// 数组输入区域
+.array-input-section {
+  .array-type-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--el-fill-color-extra-light);
+    border: 1px dashed var(--el-border-color-light);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+  }
+}
+
+// 变量对话框样式增强
+:deep(.el-dialog) {
+  .el-dialog__body {
+    padding: 20px 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+  .el-form-item {
+    margin-bottom: 20px;
+    
+    .el-form-item__label {
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+    }
+    
+    .el-form-item__content {
+      .el-input__wrapper {
+        transition: all 0.2s;
+        
+        &:hover {
+          box-shadow: 0 0 0 1px var(--el-color-primary-light-7);
+        }
+      }
+      
+      .el-select {
+        width: 100%;
+      }
+      
+      .el-textarea__inner {
+        transition: all 0.2s;
+        
+        &:hover {
+          border-color: var(--el-color-primary-light-7);
+        }
+      }
+    }
+  }
+  
+  .el-upload {
+    .el-button {
+      border-style: dashed;
+      transition: all 0.2s;
+      
+      &:hover {
+        border-color: var(--el-color-primary);
+        color: var(--el-color-primary);
+      }
+    }
+  }
+}
+
+// 变量对话框特定样式
+.variable-dialog {
+  :deep(.el-dialog) {
+    max-height: 90vh;
+    
+    .el-dialog__header {
+      border-bottom: 1px solid var(--el-border-color-light);
+    }
+    
+    .el-dialog__body {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    .el-dialog__footer {
+      border-top: 1px solid var(--el-border-color-light);
+    }
+  }
+}
+
+// 文件配置容器
+.file-config-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--el-fill-color-extra-light);
+  
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--el-fill-color-light);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--el-border-color);
+    border-radius: 3px;
+    
+    &:hover {
+      background: var(--el-border-color-dark);
+    }
+  }
+}
+
+// 支持的文件类型区域优化
+.supported-file-types {
+  margin-bottom: 16px;
+  
+  .file-category:last-child {
+    margin-bottom: 0;
+  }
 }
 </style> 

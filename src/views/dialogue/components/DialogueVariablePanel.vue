@@ -3,8 +3,7 @@
     <!-- 面板头部 -->
     <div class="panel-header">
       <div class="header-left">
-        <div class="variable-icon">💬</div>
-        <span class="header-title">新对话设置</span>
+        <span class="header-title">变量设置</span>
       </div>
         <div class="header-right" v-if="isMinimized">
           <el-button
@@ -19,7 +18,7 @@
     </div>
 
     <!-- 面板内容 -->
-    <div v-if="!isMinimized" class="panel-content">
+    <div v-show="!isMinimized" class="panel-content">
       <div class="variable-list" v-loading="variablesLoading || false">
         <!-- 对话变量展示 -->
         <div 
@@ -27,22 +26,25 @@
           :key="`conv_${variable.name}`"
           class="variable-item"
         >
-          <div class="variable-label">
-            <span class="variable-type-icon">{{ getVariableTypeIcon(variable.var_type) }}</span>
-            {{ variable.name }}
-          </div>
-          <div class="variable-note">可选</div>
-          <div class="variable-input-wrapper">
+          <div class="variable-main">
+            <div class="variable-name-section">
+              <div class="variable-icon-small">{x}</div>
+              <div class="variable-details">
+                <div class="variable-name">{{ variable.name }}</div>
+                <div class="variable-type">{{ VARIABLE_TYPE_MAP[variable.var_type] || variable.var_type }}</div>
+              </div>
+            </div>
+            <div class="variable-value-section">
             <!-- String 和 Number 类型：普通输入框 -->
-            <el-input
-              v-if="variable.var_type === 'string' || variable.var_type === 'number'"
-              v-model="variable.displayValue"
-              :placeholder="getVariablePlaceholder(variable)"
-              :type="variable.var_type === 'number' ? 'number' : 'text'"
-              size="default"
-              @input="handleVariableInput(variable)"
-              class="variable-input"
-            />
+              <el-input
+                v-if="variable.var_type === 'string' || variable.var_type === 'number'"
+                v-model="variable.displayValue"
+                :placeholder="getVariablePlaceholder(variable)"
+                :type="variable.var_type === 'number' ? 'number' : 'text'"
+                size="small"
+                @input="handleVariableInput(variable)"
+                class="variable-input"
+              />
             
             <!-- Boolean 类型：开关 -->
             <el-switch
@@ -67,32 +69,114 @@
               class="variable-textarea"
             />
             
-            <!-- File 类型：文件上传 -->
-            <div v-else-if="variable.var_type === 'file'" class="file-upload-section">
-              <el-upload
-                class="variable-file-upload"
-                :auto-upload="false"
-                :show-file-list="false"
-                :on-change="(file) => handleFileChange(variable, file)"
-                :accept="getFileAcceptTypes()"
-              >
-                <el-button size="default" type="primary">
-                  <el-icon><IconUpload /></el-icon>
-                  选择文件
-                </el-button>
-              </el-upload>
-              <div v-if="variable.fileName" class="selected-file">
-                <span class="file-name">{{ variable.fileName }}</span>
-                <el-button
-                  size="small"
-                  type="danger"
-                  text
-                  @click="clearFileVariable(variable)"
+              <!-- File 类型 -->
+              <div v-else-if="variable.var_type === 'file'" class="file-upload-section">
+                <el-upload
+                  class="variable-file-upload"
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :on-change="(file) => handleFileChange(variable, file)"
+                  :accept="FILE_ACCEPT_TYPES"
+                  drag
                 >
-                  <el-icon><IconDelete /></el-icon>
-                </el-button>
+                  <template #trigger>
+                    <div class="upload-trigger">
+                      <el-icon class="upload-icon"><IconUpload /></el-icon>
+                      <div class="upload-text">
+                        <span>点击上传</span>
+                        <span class="upload-hint">或将文件拖拽到此处</span>
+                      </div>
+                    </div>
+                  </template>
+                  <template #tip>
+                    <div class="upload-tip">
+                      {{ getFileUploadTip(variable) }}
+                    </div>
+                  </template>
+                </el-upload>
+                
+                <!-- 已选择的文件列表 -->
+                <div v-if="variable.fileName" class="file-list">
+                  <div class="file-item">
+                    <div class="file-info">
+                      <el-icon class="file-icon"><Document /></el-icon>
+                      <span class="file-name">{{ variable.fileName }}</span>
+                      <span v-if="variable.fileUploaded" class="file-status success">
+                        <el-icon><CircleCheck /></el-icon>
+                        已上传
+                      </span>
+                      <span v-else class="file-status pending">
+                        <el-icon><Loading /></el-icon>
+                        待上传
+                      </span>
+                    </div>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      text
+                      @click="clearFileVariable(variable)"
+                      class="file-remove"
+                    >
+                      <el-icon><IconDelete /></el-icon>
+                    </el-button>
+                  </div>
+                </div>
               </div>
-            </div>
+            
+              <!-- Array[File] 类型 -->
+              <div v-else-if="variable.var_type === 'array[file]'" class="file-array-upload-section">
+                <el-upload
+                  class="variable-file-upload"
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :multiple="true"
+                  :on-change="(file, fileList) => handleFileArrayChange(variable, fileList)"
+                  :accept="FILE_ACCEPT_TYPES"
+                  drag
+                >
+                  <template #trigger>
+                    <div class="upload-trigger">
+                      <el-icon class="upload-icon"><IconUpload /></el-icon>
+                      <div class="upload-text">
+                        <span>点击上传</span>
+                        <span class="upload-hint">或将文件拖拽到此处</span>
+                      </div>
+                    </div>
+                  </template>
+                  <template #tip>
+                    <div class="upload-tip">
+                      {{ getFileUploadTip(variable) }}
+                    </div>
+                  </template>
+                </el-upload>
+                
+                <!-- 已选择的文件列表 -->
+                <div v-if="variable.fileList && variable.fileList.length > 0" class="file-list">
+                  <div v-for="(file, index) in variable.fileList" :key="index" class="file-item">
+                    <div class="file-info">
+                      <el-icon class="file-icon"><Document /></el-icon>
+                      <span class="file-name">{{ file.name }}</span>
+                      <span v-if="variable.fileListUploaded" class="file-status success">
+                        <el-icon><CircleCheck /></el-icon>
+                        已上传
+                      </span>
+                      <span v-else class="file-status pending">
+                        <el-icon><Loading /></el-icon>
+                        待上传
+                      </span>
+                    </div>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      text
+                      @click="removeFileFromArray(variable, index)"
+                      class="file-remove"
+                    >
+                      <el-icon><IconDelete /></el-icon>
+                    </el-button>
+                  </div>
+                </div>
+              </div>
             
             <!-- Array[String] 类型：标签输入 -->
             <div v-else-if="variable.var_type === 'array[string]'" class="string-array-section">
@@ -136,7 +220,8 @@
               size="default"
               @input="handleVariableInput(variable)"
               class="variable-input"
-            />
+              />
+            </div>
           </div>
         </div>
 
@@ -163,10 +248,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { ElMessage, ElTag, ElSwitch, ElUpload } from 'element-plus'
 import { IconUpload, IconDelete } from '@computing/opendesign-icons'
+import { Document, CircleCheck, Loading } from '@element-plus/icons-vue'
 import { updateVariable } from '@/api/variable'
+import { uploadFilesForVariable, deleteSession } from '@/apis/paths/conversation'
+
+// 常量定义 - 与DebugVariablePanel保持一致
+const VARIABLE_TYPE_MAP: Record<string, string> = {
+  'string': 'String',
+  'number': 'Number', 
+  'boolean': 'Boolean',
+  'object': 'Object',
+  'array': 'Array',
+  'file': 'File',
+  'array[file]': 'File[]',
+  'array[string]': 'String[]',
+  'secret': 'Secret'
+}
+
+const FILE_ACCEPT_TYPES = '.pdf,.docx,.doc,.txt,.md,.xlsx'
 
 interface Variable {
   name: string
@@ -177,7 +279,10 @@ interface Variable {
   displayValue?: string
   booleanValue?: boolean
   fileName?: string
-  fileList?: Array<{ name: string; file: File }>
+  fileObject?: File  // 添加文件对象存储
+  fileUploaded?: boolean  // 标记文件是否已上传
+  fileList?: Array<{ name: string; file?: File }>  // file设为可选
+  fileListUploaded?: boolean  // 标记文件数组是否已上传
   stringArray?: string[]
   stringArrayInput?: string
 }
@@ -196,6 +301,8 @@ const emit = defineEmits(['expand', 'startConversation', 'variableUpdated', 'min
 // 内部独立的变量状态
 const internalVariables = ref<Variable[]>([])
 const isStarting = ref(false)
+// 🔑 新增：防止重复调用标志
+const hasUpdatedVariables = ref(false)
 
 // 计算属性：检查是否应该默认最小化
 const shouldDefaultMinimize = computed(() => {
@@ -232,27 +339,127 @@ const isEditableVariable = (variable: Variable): boolean => {
   return true
 }
 
+// 文件上传失败时删除conversation
+const deleteConversationOnFailure = async (conversationId: string) => {
+  try {
+    await deleteSession({ conversationList: [conversationId] })
+    ElMessage.warning('文件上传失败，已取消对话创建')
+  } catch (error) {
+    console.error('删除conversation失败:', error)
+  }
+}
+
 // 初始化内部变量状态
 const initializeInternalVariables = () => {
   // 只显示用户可编辑的 conversation 变量
   const editableVariables = props.conversationVariables.filter(isEditableVariable)
   
-  internalVariables.value = editableVariables.map(variable => ({
-    ...variable,
-    displayValue: getVariableDisplayValue(variable.value),
-    // 初始化特殊类型的属性
-    booleanValue: variable.var_type === 'boolean' ? (variable.value === true || variable.value === 'true') : undefined,
-    fileName: variable.var_type === 'file' && variable.value?.name ? variable.value.name : undefined,
-    fileList: variable.var_type === 'array[file]' && Array.isArray(variable.value) 
-      ? variable.value.map(v => ({ name: v.name || v, file: v })) 
-      : [],
-    stringArray: variable.var_type === 'array[string]' && Array.isArray(variable.value) 
-      ? [...variable.value] 
-      : [],
-    stringArrayInput: ''
-  }))
+  // 🔑 重要修复：保存当前所有用户输入状态，不仅仅是文件
+  const currentUserStates = new Map<string, {
+    // 通用状态
+    displayValue?: string;
+    booleanValue?: boolean;
+    stringArray?: string[];
+    stringArrayInput?: string;
+    // 文件相关状态
+    fileName?: string; 
+    fileObject?: File; 
+    fileUploaded?: boolean; 
+    fileList?: Array<{ name: string; file?: File }>; 
+    fileListUploaded?: boolean;
+  }>()
   
-  console.log('💬 对话变量面板初始化，可编辑变量:', internalVariables.value.map(v => `${v.name}(${v.scope})`))
+  // 保存现有的用户输入状态
+  internalVariables.value.forEach(variable => {
+    currentUserStates.set(variable.name, {
+      displayValue: variable.displayValue,
+      booleanValue: variable.booleanValue,
+      stringArray: variable.stringArray,
+      stringArrayInput: variable.stringArrayInput,
+      fileName: variable.fileName,
+      fileObject: variable.fileObject,
+      fileUploaded: variable.fileUploaded,
+      fileList: variable.fileList,
+      fileListUploaded: variable.fileListUploaded
+    })
+  })
+  
+  internalVariables.value = editableVariables.map(variable => {
+    // 🔑 重要：优先使用用户已输入的状态
+    const existingUserState = currentUserStates.get(variable.name)
+    if (existingUserState) {
+      // 恢复用户状态
+      return {
+        ...variable,
+        displayValue: existingUserState.displayValue ?? getVariableDisplayValue(variable.value),
+        booleanValue: existingUserState.booleanValue ?? (variable.var_type === 'boolean' ? (variable.value === true || variable.value === 'true') : undefined),
+        fileName: existingUserState.fileName,
+        fileObject: existingUserState.fileObject,
+        fileUploaded: existingUserState.fileUploaded ?? false,
+        fileList: existingUserState.fileList ?? [],
+        fileListUploaded: existingUserState.fileListUploaded ?? false,
+        stringArray: existingUserState.stringArray ?? (variable.var_type === 'array[string]' && Array.isArray(variable.value) ? [...variable.value] : []),
+        stringArrayInput: existingUserState.stringArrayInput ?? ''
+      }
+    } else {
+      // 初次创建，使用默认值
+      let fileName: string | undefined = undefined
+      let fileList: Array<{ name: string; file?: File }> = []
+      let fileObject: File | undefined = undefined
+      let fileUploaded: boolean = false
+      let fileListUploaded: boolean = false
+      
+      // 从后端返回的文件变量数据中提取文件名
+      if (variable.var_type === 'file' && variable.value) {
+        try {
+          let fileValue = variable.value
+          if (typeof fileValue === 'string') {
+            fileValue = JSON.parse(fileValue)
+          }
+          
+          if (typeof fileValue === 'object' && fileValue !== null) {
+            if (fileValue.file_id) {
+              fileName = `已上传文件 (${fileValue.file_id.substring(0, 8)}...)`
+              fileUploaded = true
+            }
+          }
+        } catch (e) {
+          // 解析失败，使用默认值
+        }
+      } else if (variable.var_type === 'array[file]' && variable.value) {
+        try {
+          let fileValue = variable.value
+          if (typeof fileValue === 'string') {
+            fileValue = JSON.parse(fileValue)
+          }
+          
+          if (typeof fileValue === 'object' && fileValue !== null && Array.isArray(fileValue.file_ids)) {
+            fileList = fileValue.file_ids.map((fileId: string) => ({
+              name: `已上传文件 (${fileId.substring(0, 8)}...)`
+            }))
+            fileListUploaded = true
+          }
+        } catch (e) {
+          // 解析失败，使用默认值
+        }
+      }
+      
+      return {
+        ...variable,
+        displayValue: getVariableDisplayValue(variable.value),
+        booleanValue: variable.var_type === 'boolean' ? (variable.value === true || variable.value === 'true') : undefined,
+        fileName: fileName,
+        fileObject: fileObject,
+        fileUploaded: fileUploaded,
+        fileList: fileList,
+        fileListUploaded: fileListUploaded,
+        stringArray: variable.var_type === 'array[string]' && Array.isArray(variable.value) 
+          ? [...variable.value] 
+          : [],
+        stringArrayInput: ''
+      }
+    }
+  })
 }
 
 // 获取变量显示值
@@ -308,12 +515,37 @@ const getVariablePlaceholder = (variable: Variable): string => {
 
 // 获取文件接受类型
 const getFileAcceptTypes = (): string => {
-  return '.pdf,.docx,.doc,.txt,.md,.xlsx'
+  return FILE_ACCEPT_TYPES
+}
+
+// 获取文件上传提示信息
+const getFileUploadTip = (variable: Variable): string => {
+  if (variable.var_type === 'file') {
+    return `${getFileAcceptTypes()} 文件，单个文件不超过 ${getVariableMaxFileSize(variable)}MB`
+  } else if (variable.var_type === 'array[file]') {
+    return `${getFileAcceptTypes()} 文件，最多 ${getVariableMaxFiles(variable)} 个文件，单个文件不超过 ${getVariableMaxFileSize(variable)}MB`
+  }
+  return `${getFileAcceptTypes()} 文件`
+}
+
+// 获取变量的最大文件数
+const getVariableMaxFiles = (variable: Variable): number => {
+  if (variable.value && typeof variable.value === 'object' && 'max_files' in variable.value) {
+    return variable.value.max_files
+  }
+  return variable.var_type === 'file' ? 1 : 10
+}
+
+// 获取变量的最大文件大小（MB）
+const getVariableMaxFileSize = (variable: Variable): number => {
+  if (variable.value && typeof variable.value === 'object' && 'max_file_size' in variable.value) {
+    return Math.round(variable.value.max_file_size / (1024 * 1024))
+  }
+  return 10 // 默认10MB
 }
 
 // 处理变量输入事件
 const handleVariableInput = (variable: Variable) => {
-  console.log('🔧 变量值更新:', variable.name, '=', variable.displayValue)
 }
 
 // 更新布尔变量
@@ -349,12 +581,89 @@ const handleFileChange = async (variable: Variable, file: any) => {
   if (!file) return
   
   variable.fileName = file.name
-  // 这里可以添加文件上传逻辑
+  variable.fileObject = file.raw || file
+  variable.fileUploaded = false
+  
+  // 🔑 重要：文件发生变化时，重置更新标志
+  hasUpdatedVariables.value = false
+  
+  // 🔑 与DebugVariablePanel保持一致：没有conversationId时只做本地存储
+  if (!props.conversationId) {
+    ElMessage.success('文件已选择，开始对话后将上传')
+    return
+  }
+  
+  // 🔑 有conversationId时才通过batchUpdateVariables处理上传
+  // 注意：不直接在这里上传，而是等待batchUpdateVariables统一处理
 }
 
 // 清除文件变量
 const clearFileVariable = async (variable: Variable) => {
+  // 🔑 重要优化：只做前端缓存清理，不立即调用后端API
+  // 后端状态将在开始对话时通过两阶段处理统一更新
   variable.fileName = undefined
+  variable.fileObject = undefined
+  variable.fileUploaded = false
+  
+  // 🔑 重要：文件发生变化时，重置更新标志
+  hasUpdatedVariables.value = false
+  
+  // 🔑 与新的两阶段处理设计保持一致：
+  // 1. 删除操作只影响前端缓存
+  // 2. 后端变量池的更新留给batchUpdateVariables处理
+  // 3. 这样确保所有变量更新都在同一个事务中，避免状态冲突
+  
+  ElMessage.success('文件已移除，开始对话时将同步到后端')
+}
+
+// 处理文件数组选择
+const handleFileArrayChange = async (variable: Variable, fileList: any[]) => {
+  if (!variable.fileList) {
+    variable.fileList = []
+  }
+  
+  // 🔑 重要修复：过滤掉已经在内部列表中的文件，避免重复
+  const existingFileNames = new Set(variable.fileList.map(f => f.name))
+  const newFiles = fileList.filter(file => !existingFileNames.has(file.name))
+  
+  // 🔑 只添加新文件，保持现有文件
+  newFiles.forEach(file => {
+    variable.fileList!.push({
+      name: file.name,
+      file: file.raw || file
+    })
+  })
+  
+  variable.fileListUploaded = false
+  
+  // 🔑 重要：文件发生变化时，重置更新标志
+  hasUpdatedVariables.value = false
+  
+  // 🔑 与DebugVariablePanel保持一致：没有conversationId时只做本地存储
+  if (!props.conversationId) {
+    ElMessage.success('文件已选择，开始对话时将上传')
+    return
+  }
+  
+  // 🔑 有conversationId时才通过batchUpdateVariables处理上传
+  // 注意：不直接在这里上传，而是等待batchUpdateVariables统一处理
+}
+
+// 从文件数组中移除文件
+const removeFileFromArray = async (variable: Variable, index: number) => {
+  if (!variable.fileList) return
+  
+  // 🔑 重要优化：只做前端缓存清理，不立即调用后端API
+  // 后端状态将在开始对话时通过两阶段处理统一更新
+  const removedFile = variable.fileList[index]
+  variable.fileList.splice(index, 1)
+  
+  // 🔑 与新的两阶段处理设计保持一致：
+  // 1. 删除操作只影响前端缓存
+  // 2. 后端变量池的更新留给batchUpdateVariables处理
+  // 3. 这样确保所有变量更新都在同一个事务中，避免状态冲突
+  
+  ElMessage.success(`文件 "${removedFile.name}" 已移除，开始对话时将同步到后端`)
 }
 
 // 添加字符串到数组
@@ -381,81 +690,225 @@ const removeStringFromArray = (variable: Variable, index: number) => {
 // 批量更新所有变量到后端
 const batchUpdateVariables = async (): Promise<boolean> => {
   if (!props.conversationId) {
-    console.log('❌ 缺少对话ID，无法批量更新变量')
     return false
+  }
+
+  // 🔑 重要：防止重复调用，避免清空已上传的文件
+  if (hasUpdatedVariables.value) {
+    return true
   }
 
   const editableVariables = internalVariables.value.filter(isEditableVariable)
 
   if (editableVariables.length === 0) {
-    console.log('📋 没有可编辑变量需要更新')
+    hasUpdatedVariables.value = true
     return true
   }
 
   try {
-    console.log('🔄 开始批量更新变量到后端...')
-    console.log('📋 对话ID:', props.conversationId)
-    console.log('📋 要更新的可编辑变量:', editableVariables.map(v => v.name))
+    // 🔑 新的两阶段处理流程
     
-    const updatePromises = editableVariables.map(async (variable) => {
-      const updateParams = {
-        name: variable.name,
-        scope: 'conversation',
-        conversation_id: props.conversationId,
-        flow_id: props.appId
-      }
-      
-      // 根据变量类型处理值
-      let processedValue = variable.displayValue || variable.value
-      
-      // 特殊类型的值处理
-      if (variable.var_type === 'boolean') {
-        processedValue = variable.booleanValue
-      } else if (variable.var_type === 'number' && variable.displayValue) {
-        const numValue = Number(variable.displayValue)
-        processedValue = isNaN(numValue) ? variable.value : numValue
-      } else if (variable.var_type === 'object' && variable.displayValue) {
-        try {
-          processedValue = JSON.parse(variable.displayValue)
-        } catch (error) {
-          console.warn(`⚠️ 变量 ${variable.name} JSON 解析失败，使用原始值`)
-          processedValue = variable.displayValue
-        }
-      } else if (variable.var_type === 'array[string]') {
-        processedValue = variable.stringArray || []
-      } else if (variable.var_type === 'file') {
-        processedValue = variable.fileName ? { name: variable.fileName } : null
-      }
-      
-      const updateData = {
-        value: processedValue,
-        var_type: variable.var_type,
-        description: variable.description
-      }
-      
+    // 第一阶段：更新所有变量（包括清空文件变量的file_id）
+    const updateResults: Array<{ success: boolean; variable: string; error?: any }> = []
+    
+    for (const variable of editableVariables) {
       try {
-        const result = await updateVariable(updateParams, updateData)
-        console.log(`✅ 变量 ${variable.name} 更新成功:`, result)
-        return { success: true, variable: variable.name }
+        let processedValue
+        
+        if (variable.var_type === 'file' || variable.var_type === 'array[file]') {
+          // 文件变量：清空file_id但保留配置
+          const isArrayType = variable.var_type === 'array[file]'
+          processedValue = isArrayType ? 
+            { file_ids: [], ...getFileConfigFromVariable(variable) } : 
+            { file_id: "", ...getFileConfigFromVariable(variable) }
+        } else {
+          // 非文件变量：正常处理值
+          if (variable.var_type === 'boolean') {
+            processedValue = variable.booleanValue
+          } else if (variable.var_type === 'number' && variable.displayValue) {
+            const numValue = Number(variable.displayValue)
+            processedValue = isNaN(numValue) ? variable.value : numValue
+          } else if (variable.var_type === 'object' && variable.displayValue) {
+            try {
+              processedValue = JSON.parse(variable.displayValue)
+            } catch (error) {
+              processedValue = variable.displayValue
+            }
+          } else if (variable.var_type === 'array[string]') {
+            processedValue = variable.stringArray || []
+          } else {
+            processedValue = variable.displayValue || variable.value
+          }
+        }
+        
+        await updateVariable(
+          { 
+            name: variable.name, 
+            scope: 'conversation',
+            conversation_id: props.conversationId,
+            flow_id: props.appId
+          },
+          { 
+            value: processedValue,
+            var_type: variable.var_type,
+            description: variable.description
+          }
+        )
+        
+        updateResults.push({ success: true, variable: variable.name })
       } catch (error) {
-        console.error(`❌ 变量 ${variable.name} 更新失败:`, error)
-        return { success: false, variable: variable.name, error }
+        console.error(`变量 ${variable.name} 更新失败:`, error)
+        updateResults.push({ success: false, variable: variable.name, error })
       }
-    })
-    
-    const results = await Promise.all(updatePromises)
-    const successCount = results.filter(r => r.success).length
-    
-    console.log(`📊 变量更新结果: 成功 ${successCount}/${results.length}`)
-    
-    if (successCount > 0) {
-      emit('variableUpdated')
     }
     
-    return successCount > 0
+    // 检查第一阶段是否有失败
+    const failedUpdates = updateResults.filter(r => !r.success)
+    if (failedUpdates.length > 0) {
+      ElMessage.error(`变量更新失败: ${failedUpdates.map(r => r.variable).join(', ')}`)
+      return false
+    }
+    
+    // 第二阶段：处理文件上传
+    const fileVariables = editableVariables.filter(v => v.var_type === 'file' || v.var_type === 'array[file]')
+    const fileVariablesWithFiles = fileVariables.filter(v => 
+      (v.var_type === 'file' && v.fileName) || 
+      (v.var_type === 'array[file]' && v.fileList && v.fileList.length > 0)
+    )
+    
+    if (fileVariablesWithFiles.length > 0) {
+      for (const variable of fileVariablesWithFiles) {
+        const isArrayType = variable.var_type === 'array[file]'
+        const isUploaded = isArrayType ? variable.fileListUploaded : variable.fileUploaded
+        
+        if (!isUploaded) {
+          try {
+            // 准备上传数据
+            const formData = new FormData()
+            if (isArrayType) {
+              variable.fileList?.forEach(fileItem => {
+                if (fileItem.file) formData.append('documents', fileItem.file)
+              })
+            } else if (variable.fileObject) {
+              formData.append('documents', variable.fileObject)
+            }
+
+            // 上传文件
+            const [error] = await uploadFilesForVariable(
+              formData,
+              props.conversationId!,
+              variable.name,
+              variable.var_type,
+              'conversation',
+              props.appId
+            )
+
+            if (error) {
+              // 提取具体的错误信息
+              let errorMessage = '文件上传失败'
+              
+              try {
+                if (error?.response?.data) {
+                  const responseData = error.response.data
+                  if (typeof responseData === 'string') {
+                    try {
+                      const parsedData = JSON.parse(responseData)
+                      if (parsedData.detail) {
+                        errorMessage = parsedData.detail
+                      } else if (parsedData.message) {
+                        errorMessage = parsedData.message
+                      }
+                    } catch (jsonError) {
+                      errorMessage = responseData
+                    }
+                  } else if (typeof responseData === 'object') {
+                    if (responseData.detail) {
+                      errorMessage = responseData.detail
+                    } else if (responseData.message) {
+                      errorMessage = responseData.message
+                    }
+                  }
+                } else if (error?.response?.statusText) {
+                  errorMessage = error.response.statusText
+                } else if (error?.detail) {
+                  errorMessage = error.detail
+                } else if (error?.message) {
+                  errorMessage = error.message
+                }
+              } catch (parseError) {
+                // 解析错误信息时出错，使用默认消息
+              }
+              
+              ElMessage.error(errorMessage)
+              
+              // 清空文件缓存
+              if (isArrayType) {
+                variable.fileList = []
+                variable.fileListUploaded = false
+              } else {
+                variable.fileName = undefined
+                variable.fileObject = undefined
+                variable.fileUploaded = false
+              }
+              
+              // 文件上传失败时，清理可能已创建的无效会话
+              try {
+                await deleteSession({ conversationList: [props.conversationId!] })
+              } catch (cleanupError) {
+                // 清理无效会话失败，静默处理
+              }
+              
+              return false
+            }
+
+            // 标记上传完成
+            if (isArrayType) {
+              variable.fileListUploaded = true
+            } else {
+              variable.fileUploaded = true
+            }
+          } catch (error) {
+            console.error(`文件变量 ${variable.name} 上传失败:`, error)
+            ElMessage.error(`文件变量 ${variable.name} 上传失败`)
+            return false
+          }
+        }
+      }
+    }
+    
+    emit('variableUpdated')
+    
+    // 🔑 重要：标记变量已更新，防止重复调用
+    hasUpdatedVariables.value = true
+    
+    return true
   } catch (error) {
-    console.error('❌ 批量更新变量失败:', error)
+    console.error('批量更新变量失败:', error)
+    ElMessage.error('变量更新失败，无法开始对话')
     return false
+  }
+}
+
+// 这些函数已被新的两阶段批量处理逻辑替代，不再需要
+
+// 从变量中提取文件配置信息（不包括file_id/file_ids）
+const getFileConfigFromVariable = (variable: Variable): any => {
+  try {
+    if (variable.value && typeof variable.value === 'object') {
+      const { file_id, file_ids, ...config } = variable.value
+      return config
+    }
+  } catch (e) {
+    // 解析失败，返回默认配置
+  }
+  
+  // 返回默认文件配置
+  return {
+    supported_types: [],
+    upload_methods: ["manual"],
+    max_files: variable.var_type === 'file' ? 1 : 10,
+    max_file_size: 10 * 1024 * 1024, // 10MB
+    required: false
   }
 }
 
@@ -463,11 +916,41 @@ const batchUpdateVariables = async (): Promise<boolean> => {
 const handleStartConversation = async () => {
   isStarting.value = true
   try {
-    // 先更新所有变量
-    await batchUpdateVariables()
+    // 🔑 重要修复：处理conversationId不存在的情况
+    if (props.conversationId) {
+      // 如果conversationId已存在，先执行变量更新再开始对话
+      const updateSuccess = await batchUpdateVariables()
+      if (!updateSuccess) {
+        ElMessage.error('变量更新失败，无法开始对话')
+        return
+      }
+      
+      // 变量更新成功后，再通知父组件开始对话
+      emit('startConversation')
+    } else {
+      // 🔑 新增：如果conversationId不存在，先开始对话（创建conversation），然后更新变量
+      emit('startConversation')
+      
+      // 等待父组件创建conversation并设置conversationId
+      // 使用轮询方式等待conversationId
+      let retryCount = 0
+      const maxRetries = 10
+      
+      while (!props.conversationId && retryCount < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500)) // 等待500ms
+        retryCount++
+      }
+      
+      if (props.conversationId) {
+        const updateSuccess = await batchUpdateVariables()
+        if (!updateSuccess) {
+          ElMessage.warning('文件变量更新失败，可能影响对话效果')
+        }
+      } else {
+        ElMessage.warning('无法更新变量，对话可能受到影响')
+      }
+    }
     
-    // 通知父组件开始对话
-    emit('startConversation')
   } catch (error) {
     console.error('开始对话失败:', error)
     ElMessage.error('开始对话失败')
@@ -476,14 +959,51 @@ const handleStartConversation = async () => {
   }
 }
 
-// 监听props变化，重新初始化内部变量
+// 暴露方法给父组件
+defineExpose({
+  batchUpdateVariables
+})
+
+// 组件销毁时清理文件缓存
+onUnmounted(() => {
+  internalVariables.value.forEach(variable => {
+    if (variable.fileObject) {
+      variable.fileObject = undefined
+      variable.fileName = undefined
+      variable.fileUploaded = false
+    }
+    if (variable.fileList) {
+      variable.fileList = []
+      variable.fileListUploaded = false
+    }
+  })
+})
+
+// 监听props变化，重新初始化内部变量（只在外部数据源变化时）
 watch(
   () => props.conversationVariables,
-  (newVariables) => {
-    if (newVariables && newVariables.length >= 0) {
-      console.log('📡 外部变量数据变化，重新初始化内部状态')
-      initializeInternalVariables()
+  (newVariables, oldVariables) => {
+    // 🔑 重要修复：只在以下情况重新初始化
+    // 1. 首次加载（immediate: true）
+    // 2. 变量数量发生变化（新增或删除变量）
+    // 3. 变量类型发生变化
+    if (!oldVariables || newVariables.length !== oldVariables.length) {
+      initializeInternalVariables();
+      return;
     }
+    
+    // 检查变量类型是否发生变化
+    const hasTypeChange = newVariables.some((newVar, index) => {
+      const oldVar = oldVariables[index];
+      return oldVar && (newVar.name !== oldVar.name || newVar.var_type !== oldVar.var_type);
+    });
+    
+    if (hasTypeChange) {
+      initializeInternalVariables();
+      return;
+    }
+    
+    // 如果只是变量值的变化，不重新初始化，保持用户输入的状态
   },
   { immediate: true }
 )
@@ -495,17 +1015,11 @@ watch(
     // 只有在数据不为空（即已经完成初始化）且没有可编辑变量时才最小化
     // 避免在组件刚挂载时就最小化
     if (newInternalVariables !== null && shouldDefaultMinimize.value && !props.isMinimized && !props.variablesLoading) {
-      console.log('📋 没有可编辑变量，自动最小化面板')
       emit('minimize')
     }
   },
   { deep: true }
 )
-
-// 暴露方法给父组件调用
-defineExpose({
-  batchUpdateVariables
-})
 </script>
 
 <style lang="scss" scoped>
@@ -530,7 +1044,7 @@ defineExpose({
       border-bottom: none;
       
       .header-title {
-        font-size: 12px;
+        font-size: 12px !important;
       }
       
       .variable-icon {
@@ -589,49 +1103,65 @@ defineExpose({
       margin-bottom: 32px;
       
       .variable-item {
-        margin-bottom: 24px;
-        padding: 20px;
+        margin-bottom: 12px;
+        padding: 12px;
         background: var(--el-fill-color-extra-light);
+        border-radius: 6px;
         border: 1px solid var(--el-border-color-lighter);
-        border-radius: 8px;
         transition: all 0.2s ease;
-        
+
         &:hover {
           border-color: var(--el-color-primary-light-7);
           background: var(--el-color-primary-light-9);
         }
-        
+
         &:last-child {
           margin-bottom: 0;
         }
 
-        .variable-label {
-          font-size: 16px;
-          font-weight: 600;
-          color: var(--el-text-color-primary);
-          margin-bottom: 6px;
+        .variable-main {
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          
-          .variable-type-icon {
-            margin-right: 8px;
-            font-size: 16px;
+          gap: 12px;
+
+          .variable-name-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 140px;
+
+            .variable-icon-small {
+              color: var(--el-color-primary);
+              font-family: 'Monaco', 'Consolas', monospace;
+              font-weight: bold;
+              font-size: 12px;
+              width: 16px;
+              text-align: center;
+            }
+
+            .variable-details {
+              .variable-name {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--el-text-color-primary);
+                line-height: 1.2;
+              }
+
+              .variable-type {
+                font-size: 11px;
+                color: var(--el-text-color-secondary);
+                line-height: 1.2;
+              }
+            }
           }
-        }
 
-        .variable-note {
-          font-size: 13px;
-          color: var(--el-text-color-secondary);
-          margin-bottom: 12px;
-          padding: 4px 8px;
-          background: var(--el-color-warning-light-9);
-          border-radius: 4px;
-          display: inline-block;
-        }
+          .variable-value-section {
+            flex: 1;
+            min-width: 0;
 
-        .variable-input-wrapper {
-          .variable-input,
-          .variable-textarea {
+            .variable-input,
+            .variable-textarea {
             width: 100%;
             
             // 重置 wrapper 的样式，避免与 inner 重叠
@@ -695,31 +1225,153 @@ defineExpose({
             align-items: center;
           }
 
-          .file-upload-section {
+          .file-upload-section,
+          .file-array-upload-section {
             .variable-file-upload {
               width: 100%;
               
               :deep(.el-upload) {
                 width: 100%;
               }
+              
+              :deep(.el-upload-dragger) {
+                width: 100%;
+                height: 120px;
+                border: 2px dashed var(--el-border-color);
+                border-radius: 8px;
+                background: var(--el-fill-color-extra-light);
+                transition: all 0.3s ease;
+                
+                &:hover {
+                  border-color: var(--el-color-primary);
+                  background: var(--el-color-primary-light-9);
+                }
+                
+                &.is-dragover {
+                  border-color: var(--el-color-primary);
+                  background: var(--el-color-primary-light-8);
+                }
+              }
+              
+              .upload-trigger {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                padding: 20px;
+                
+                .upload-icon {
+                  font-size: 28px;
+                  color: var(--el-color-primary);
+                  margin-bottom: 8px;
+                }
+                
+                .upload-text {
+                  text-align: center;
+                  
+                  span {
+                    display: block;
+                    font-size: 14px;
+                    color: var(--el-text-color-primary);
+                    margin-bottom: 4px;
+                  }
+                  
+                  .upload-hint {
+                    font-size: 12px;
+                    color: var(--el-text-color-secondary);
+                  }
+                }
+              }
+              
+              .upload-tip {
+              margin-top: 8px;
+                font-size: 12px;
+                color: var(--el-text-color-secondary);
+                text-align: center;
+              }
             }
 
-            .selected-file {
-              margin-top: 8px;
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding: 8px 12px;
-              background: var(--el-fill-color-extra-light);
-              border-radius: 6px;
+            .file-list {
+              margin-top: 12px;
               
-              .file-name {
-                font-size: 13px;
-                color: var(--el-text-color-regular);
-                flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+              .file-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 12px;
+                background: var(--el-fill-color-extra-light);
+                border: 1px solid var(--el-border-color-lighter);
+                border-radius: 6px;
+                margin-bottom: 8px;
+                transition: all 0.2s ease;
+                
+                &:hover {
+                  background: var(--el-fill-color-light);
+                  border-color: var(--el-color-primary-light-7);
+                }
+                
+                &:last-child {
+                  margin-bottom: 0;
+                }
+                
+                .file-info {
+                  display: flex;
+                  align-items: center;
+                  flex: 1;
+                  min-width: 0;
+                  
+                  .file-icon {
+                    font-size: 16px;
+                    color: var(--el-color-primary);
+                    margin-right: 8px;
+                    flex-shrink: 0;
+                  }
+                
+                  .file-name {
+                    font-size: 13px;
+                    color: var(--el-text-color-primary);
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    margin-right: 8px;
+                  }
+                  
+                  .file-status {
+                    display: flex;
+                    align-items: center;
+                    font-size: 12px;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    flex-shrink: 0;
+                    
+                    .el-icon {
+                      margin-right: 4px;
+                      font-size: 12px;
+                    }
+                    
+                    &.success {
+                      color: var(--el-color-success);
+                      background: var(--el-color-success-light-9);
+                    }
+                    
+                    &.pending {
+                      color: var(--el-color-warning);
+                      background: var(--el-color-warning-light-9);
+                    }
+                  }
+                }
+                
+                .file-remove {
+                  flex-shrink: 0;
+                  margin-left: 8px;
+                  
+                  &:hover {
+                    color: var(--el-color-danger);
+                    background: var(--el-color-danger-light-9);
+                  }
+                }
               }
             }
           }
@@ -734,6 +1386,7 @@ defineExpose({
               display: flex;
               flex-wrap: wrap;
               gap: 6px;
+            }
             }
           }
         }

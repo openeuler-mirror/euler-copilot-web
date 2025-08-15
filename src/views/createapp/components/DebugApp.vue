@@ -2,6 +2,7 @@
 import CommonFooter from '@/components/commonFooter/CommonFooter.vue';
 import Bubble from '@/components/bubble/index.vue';
 import DialogueFlow from '@/components/dialoguePanel/DialogueFlow.vue';
+import FileAttachment from '@/components/dialoguePanel/FileAttachment.vue';
 import {
   useHistorySessionStore,
   useLangStore,
@@ -9,7 +10,7 @@ import {
   useChangeThemeStore,
 } from '@/store';
 import { storeToRefs } from 'pinia';
-import { computed, h, ref, watch } from 'vue';
+import { computed, h, ref, watch, onMounted } from 'vue';
 import { api } from '@/apis';
 import marked from '@/utils/marked';
 import userAvatar from '@/assets/svgs/dark_user.svg';
@@ -21,6 +22,7 @@ import { fetchStream } from '@/utils/fetchStream';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
 import dayjs from 'dayjs';
 import { useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
 
 
 let isDebugSuccess = false;
@@ -97,10 +99,6 @@ const { scrollToBottom } = useScrollBottom(chatContainerRef, {
   threshold: 15,
 });
 
-const { conversations, setConversations, stopMemoryMonitoring } = useConversations();
-
-const { isStreaming, queryStream, stopStream } = useStream();
-
 function useStream() {
   const isStreaming = ref(false);
 
@@ -161,23 +159,53 @@ function useStream() {
       for await (const chunk of fetchStream({
         readableStream: resp.body!,
       })) {
-        if (!chunk.data) {
-          break;
+        // 检查停止状态
+        if (!isStreaming.value) {
+          controller.abort()
+          break
         }
-        if (chunk.data.trim() === '[ERROR]') {
-          isStreaming.value = false;
-          const conversation =
-            conversations.value[conversations.value.length - 1];
-          conversation.answer[conversation.answerIndex].content =
-            '系统错误，请稍后再试';
-          break;
-        }
+        
         if (chunk.data.trim() === '[DONE]') {
-          isStreaming.value = false;
+          isStreaming.value = false
           setTimeout(() => {
-            scrollToBottom(true);
-          }, 100);
-          break;
+            scrollToBottom(true)
+          }, 100)
+          break
+        }
+        
+        // 🔑 重要修复：检查是否是ERROR消息（支持带详细信息的错误）
+        if (chunk.data.trim().startsWith('[ERROR]')) {
+          isStreaming.value = false
+          const conversation = conversations.value[conversations.value.length - 1]
+          
+          if (conversation && conversation.answer && conversation.answer[conversation.answerIndex]) {
+            // 提取错误信息并显示
+            const errorMsg = chunk.data.trim().replace('[ERROR]', '').trim()
+            conversation.answer[conversation.answerIndex].content = errorMsg || '系统错误，请稍后再试'
+            
+            // 🔑 重要：显示错误提示给用户
+            ElMessage.error(conversation.answer[conversation.answerIndex].content)
+          } else {
+            // 如果没有对话记录，直接显示错误
+            const errorMsg = chunk.data.trim().replace('[ERROR]', '').trim()
+            ElMessage.error(errorMsg || '系统错误，请稍后再试')
+          }
+          
+          // 🔑 重要：按正确顺序停止对话
+          // 1. 首先中断前端fetch连接
+          controller.abort()
+          
+          // 2. 然后调用后端停止接口，清理后端连接
+          try {
+            const [, res] = await api.stopGeneration()
+            if (res) {
+              // 后端停止成功
+            }
+          } catch (stopError) {
+            console.error('调用停止接口失败:', stopError)
+          }
+          
+          break
         }
 
         let conversation = conversations.value.find((item) => item.id === cId);
@@ -253,6 +281,26 @@ function useConversations() {
   }
 
   const conversations = ref<Conversation[]>([]);
+  
+  // 🔑 新增：当前对话的附件收集器
+  const currentConversationAttachments = ref<{
+    file_id: string;
+    filename: string;
+    file_type: string;
+    file_size: number;
+    variable_name: string;
+    content: string;
+    step_name: string;
+  }[]>([]);
+  
+  // 🔑 立即导出到全局，以便DialoguePanel可以访问
+  (window as any).currentConversationAttachments = currentConversationAttachments;
+  
+  // 🔑 在组件挂载时确保全局收集器可用
+  onMounted(() => {
+    // 再次确保全局收集器设置正确
+    (window as any).currentConversationAttachments = currentConversationAttachments;
+  });
   
   // 添加消息防抖机制
   let messageQueue: StreamChunk[] = [];
@@ -347,6 +395,17 @@ function useConversations() {
     let shouldScroll = false;
 
     if (event === 'init') {
+      // 🔑 重置所有附件收集器（开始新对话时）
+      currentConversationAttachments.value = [];
+      
+      // 🔑 重要：强制重新创建flowCodeAttachments数组，确保完全清空
+      const oldBackupCount = (window as any).flowCodeAttachments?.length || 0;
+      const isProtected = (window as any).flowCodeAttachmentsProtected;
+      
+      if (!isProtected || oldBackupCount === 0) {
+        (window as any).flowCodeAttachments = [];
+      }
+      
       const conversation = conversations.value.find(c => c.id === id);
       if (conversation) {
         conversation.answer.push({
@@ -368,6 +427,9 @@ function useConversations() {
       }
       shouldScroll = true;
     }
+    
+    // 🔑 移除全局事件监控中的文件收集逻辑，避免重复添加
+    // 文件收集统一在step.output事件中处理
     
     if (event === 'text.add') {
       if (!isDebugSuccess) {
@@ -412,6 +474,7 @@ function useConversations() {
       }
     }
     
+
     if (event === 'step.input') {
       const c = conversations.value[conversations.value.length - 1];
       
@@ -448,9 +511,81 @@ function useConversations() {
         const target = c.flowdata.data[0].find((item) => item.id === flow.stepId);
         
         if (target) {
-          target.data.output = content;
+          
+          // 🔑 统一的文件收集逻辑，带严格去重检查
+          const addFileToCollector = (fileData: any) => {
+            // 严格的去重检查：基于file_id和filename
+            const existingFile = currentConversationAttachments.value.find((item: any) => 
+              item.file_id === fileData.file_id && item.filename === fileData.filename
+            );
+            
+            if (!existingFile) {
+            currentConversationAttachments.value.push({
+                file_id: fileData.file_id,
+                filename: fileData.filename,
+                file_type: fileData.file_type,
+                file_size: fileData.file_size,
+                variable_name: fileData.variable_name,
+                content: fileData.content,
+              step_name: target.stepName // 记录来源步骤
+            });
+              return true;
+            } else {
+              return false;
+            }
+          };
+          
+          // 🔑 检查不同的文件格式并收集
+          let hasFileData = false;
+          
+          // 格式1：单个文件对象
+          if (typeof content === 'object' && content.file_id && content.filename && content.content) {
+            addFileToCollector(content);
+            hasFileData = true;
+          }
+          // 格式2：多文件格式 {type: 'files', files: [...]}
+          else if (typeof content === 'object' && content.type === 'files' && content.files && Array.isArray(content.files)) {
+            content.files.forEach((fileData: any) => {
+              if (fileData.file_id && fileData.filename && fileData.content) {
+                addFileToCollector(fileData);
+                hasFileData = true;
+              }
+            });
+          }
+          // 格式3：旧格式文件 {files: [...]}
+          else if (typeof content === 'object' && content.files && Array.isArray(content.files)) {
+            content.files.forEach((fileData: any) => {
+              if (fileData.file_id && fileData.filename && fileData.content) {
+                addFileToCollector(fileData);
+                hasFileData = true;
+              }
+            });
+          }
+          
+          // 设置步骤输出显示
+          if (hasFileData) {
+            // 在步骤输出中显示简要信息
+            target.data.output = {
+              type: 'file_reference',
+              message: `文件附件已添加到对话回复中`,
+              file_count: currentConversationAttachments.value.length
+            };
+          } else {
+            // 普通数据输出
+            target.data.output = content;
+          }
+          
           target.status = flow.stepStatus;
           target.costTime = metadata?.timeCost;
+          
+          // 如果是错误状态，设置错误信息
+          if (flow.stepStatus === 'error') {
+            // 从content中提取错误信息
+            if (typeof content === 'object' && content) {
+              target.error = content.error || content.message || '';
+              target.message = content.message || content.error || '';
+            }
+          }
           
           // 更新单个步骤状态后，检查整体工作流状态
           if (flow.stepStatus === 'error') {
@@ -509,9 +644,20 @@ function useConversations() {
         return;
       }
       
-      if (data.trim() === '[ERROR]') {
-        console.error('❌ [DebugApp.vue] 收到[ERROR]事件');
-        // 这里可以添加特殊的错误处理逻辑
+      // 🔑 重要修复：检查是否是ERROR消息（支持带详细信息的错误）
+      if (data.trim().startsWith('[ERROR]')) {
+        console.error('❌ [DebugApp.vue] 收到ERROR事件');
+        
+        // 提取错误信息并显示
+        const errorMsg = data.trim().replace('[ERROR]', '').trim();
+        ElMessage.error(errorMsg || '系统错误，请稍后再试');
+        
+        // 如果有对话对象，更新其内容
+        if (conversation && conversation.answer && conversation.answer[conversation.answerIndex]) {
+          conversation.answer[conversation.answerIndex].content = errorMsg || '系统错误，请稍后再试';
+        }
+        
+        console.log('❌ 处理错误消息:', errorMsg);
         return;
       }
       
@@ -558,8 +704,25 @@ function useConversations() {
     }
   };
 
-  return { conversations, setConversations, stopMemoryMonitoring };
+  defineExpose({
+    currentConversationAttachments // 导出附件收集器
+  });
+
+  return { conversations, setConversations, stopMemoryMonitoring, currentConversationAttachments };
 }
+
+// 🔑 计算属性：获取当前对话的附件（只在对话完成时显示）
+const { conversations, setConversations, stopMemoryMonitoring, currentConversationAttachments } = useConversations();
+
+const getCurrentAttachments = computed(() => {
+  if (isStreaming.value) {
+    return [];
+  }
+  
+  return currentConversationAttachments.value || [];
+});
+
+const { isStreaming, queryStream, stopStream } = useStream();
 
 async function onSend(q: string) {
   if (isStreaming.value) return;
@@ -776,6 +939,14 @@ watch(
                   :isWorkFlowDebug="true"
                 />
               </div>
+              
+              <!-- 🔑 附件显示 -->
+              <FileAttachment 
+                v-if="getCurrentAttachments.length > 0 && idx === conversations.length - 1"
+                :files="getCurrentAttachments"
+                style="margin-top: 16px; margin-bottom: 16px;"
+              />
+              
               <div class="bubble-footer">
                 <div class="action-toolbar">
                   <div class="left">

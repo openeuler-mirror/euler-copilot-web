@@ -397,6 +397,10 @@ defineExpose({
         .special-icon-wrapper {
           background-color: #f59e0b; /* 保持橙色，在深色主题下也是橙色 */
         }
+
+        .system-icon-wrapper {
+          background-color: #6366f1; /* 保持蓝色，在深色主题下也是蓝色 */
+        }
         
         .node-info {
           .node-name {

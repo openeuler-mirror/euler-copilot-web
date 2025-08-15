@@ -257,6 +257,92 @@ export const uploadFiles = (
   );
 };
 
+// 新增：专门用于变量文件上传的API
+export const uploadFilesForVariable = (
+  formData,
+  sessionId,
+  varName,
+  varType,
+  scope = 'conversation',
+  flowId?: string
+): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          documents: Array<any>;
+        }>
+      | undefined
+    ),
+  ]
+> => {
+  // 方式1：URL查询参数（推荐，符合后端接口定义）
+  const params = new URLSearchParams({
+    scope,
+    var_name: varName,
+    var_type: varType
+  });
+  
+  // 如果提供了flowId，添加到查询参数中
+  if (flowId) {
+    params.append('flow_id', flowId);
+  }
+  
+  return post(
+    `/api/document/${sessionId}?${params.toString()}`,
+    formData,
+    {},
+    {
+      'Content-Type': 'multipart/form-data',
+    },
+  );
+};
+
+// 新增：支持Form字段方式的文件上传API（备用方案）
+export const uploadFilesForVariableWithFormFields = (
+  files,
+  sessionId,
+  varName,
+  varType,
+  scope = 'conversation'
+): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          documents: Array<any>;
+        }>
+      | undefined
+    ),
+  ]
+> => {
+  // 方式2：Form字段方式
+  const formData = new FormData();
+  
+  // 添加文件
+  if (Array.isArray(files)) {
+    files.forEach(file => {
+      formData.append('documents', file);
+    });
+  } else {
+    formData.append('documents', files);
+  }
+  
+  // 添加变量相关参数作为Form字段
+  formData.append('scope', scope);
+  formData.append('var_name', varName);
+  formData.append('var_type', varType);
+  
+  return post(
+    `/api/document/${sessionId}`,
+    formData as any,
+    {},
+    {
+      'Content-Type': 'multipart/form-data',
+    },
+  );
+};
+
 export const deleteUploadedFile = (
   documentId: any,
 ): Promise<[any, FcResponse<any> | undefined]> => {
@@ -275,5 +361,7 @@ export const sessionApi = {
   stopGeneration: stopGeneration,
   getUploadFiles,
   uploadFiles,
+  uploadFilesForVariable,
+  uploadFilesForVariableWithFormFields,
   deleteUploadedFile,
 };

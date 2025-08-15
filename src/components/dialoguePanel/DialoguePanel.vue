@@ -11,7 +11,7 @@ import xss from 'xss';
 import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import DialogueThought from './DialogueThought.vue';
-import { onMounted, watch, onBeforeUnmount, reactive } from 'vue';
+import { onMounted, watch, onBeforeUnmount, reactive, computed, watchEffect } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
 import i18n from 'src/i18n';
@@ -55,12 +55,15 @@ export interface DialoguePanelProps {
   isWorkFlowDebug: boolean;
   // 是否隐藏输入参数（用于对话页面）
   hideInputParams?: boolean;
+  // 🔑 新增：当前QA的附件列表
+  files?: any[];
 }
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
 import DialogueFlow from './DialogueFlow.vue';
 import { api } from 'src/apis';
 import { MessageArray } from 'src/views/dialogue/types';
+import FileAttachment from './FileAttachment.vue';
 var option = ref();
 var show = ref(false);
 const size = reactive({
@@ -70,13 +73,51 @@ const size = reactive({
 const themeStore = useChangeThemeStore();
 var myChart;
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
+
 const props = withDefaults(defineProps<DialoguePanelProps>(), {
   isFinish: false,
   needRegernerate: false,
 });
-const messageArray = ref<MessageArray>(props.messageArray);
+
+const messageArray = ref<MessageArray[]>(props.messageArray || []);
 const thoughtContent = ref('');
 const contentAfterMark = ref('');
+
+  // 🔑 强制刷新触发器，必须在globalAttachments之前定义
+  const refreshTrigger = ref(0);
+
+  // 收集所有FlowCode组件的文件附件（只在对话完成时）
+  const globalAttachments = computed(() => {
+    // 依赖刷新触发器，确保能响应外部事件
+    const _ = refreshTrigger.value;
+    
+    if (!props.isFinish) {
+      return [];
+    }
+    
+    // 直接使用当前QA的files作为附件来源
+    return props.files || [];
+  });
+
+// 🔑 监听全局附件变化
+watchEffect(() => {
+  const attachments = globalAttachments.value;
+  // 静默监听，不输出日志
+});
+
+// 🔑 强制刷新机制：监听FlowCode的附件添加事件
+onMounted(() => {
+  const handleAttachmentAdded = (event: CustomEvent) => {
+    // 触发globalAttachments重新计算
+    refreshTrigger.value++;
+  };
+  
+  window.addEventListener('flowCodeAttachmentAdded', handleAttachmentAdded as EventListener);
+  
+  onBeforeUnmount(() => {
+    window.removeEventListener('flowCodeAttachmentAdded', handleAttachmentAdded as EventListener);
+  });
+});
 const index = ref(0);
 const isComment = ref('none');
 
@@ -200,7 +241,7 @@ watch(
   { immediate: true, deep: true },
 );
 const emits = defineEmits<{
-  (e: 'handleReport', qaRecordId: string, reason?: string): void;
+  (e: 'handleReport', qaRecordId: string, reason_type?: string, reason?: string): void;
   (
     e: 'handleSendMessage',
     groupId: string | undefined,
@@ -216,7 +257,16 @@ const handleCopy = (): void => {
     errorMsg(i18n.global.t('feedback.copied_failed'));
     return;
   }
-  writeText(props.content[props.currentSelected]);
+  if (props.currentSelected === undefined || props.currentSelected < 0 || props.currentSelected >= props.content.length) {
+    errorMsg(i18n.global.t('feedback.copied_failed'));
+    return;
+  }
+  const selectedContent = props.content[props.currentSelected];
+  if (selectedContent === undefined) {
+    errorMsg(i18n.global.t('feedback.copied_failed')); 
+    return;
+  }
+  writeText(selectedContent);
   successMsg(i18n.global.t('feedback.copied_successfully'));
   return;
 };
@@ -225,6 +275,9 @@ const handleCopy = (): void => {
 const handleLike = async (
   type: 'liked' | 'disliked' | 'report',
 ): Promise<void> => {
+  if (!props.recordList || !props.recordList[index.value]) {
+    return;
+  }
   const qaRecordId = props.recordList[index.value];
   if (type === 'liked') {
     await api
@@ -235,11 +288,12 @@ const handleLike = async (
         groupId: props.groupId,
       })
       .then((res) => {
-        if (res[1].code === 200) {
+        if (res && res[1] && res[1].code === 200) {
           isSupport.value = isSupport.value ? false : true;
           isAgainst.value = false;
-          messageArray.value.getAllItems()[index.value].comment =
-            isSupport.value ? 'liked' : 'none';
+          if (messageArray.value && Array.isArray(messageArray.value) && messageArray.value[index.value]) {
+            (messageArray.value as any)[index.value].comment = isSupport.value ? 'liked' : 'none';
+          }
         }
       });
   } else if (type === 'disliked') {
@@ -252,10 +306,12 @@ const handleLike = async (
           groupId: props.groupId,
         })
         .then((res) => {
-          if (res[1].code === 200) {
+          if (res && res[1] && res[1].code === 200) {
             isAgainst.value = false;
             isSupport.value = false;
-            messageArray.value.getAllItems()[index.value].comment = 'none';
+            if (messageArray.value && Array.isArray(messageArray.value) && messageArray.value[index.value]) {
+              (messageArray.value as any)[index.value].comment = 'none';
+            }
           }
         });
     } else {
@@ -272,6 +328,9 @@ const handleDislike = async (
   reasionLink?: string,
   reasonDescription?: string,
 ): Promise<void> => {
+  if (!props.recordList || !props.recordList[index.value]) {
+    return;
+  }
   const qaRecordId = props.recordList[index.value];
   await api
     .commentConversation({
@@ -284,13 +343,15 @@ const handleDislike = async (
       reasonDescription: reasonDescription,
     })
     .then((res) => {
-      if (res[1].code === 200) {
+      if (res && res[1] && res[1].code === 200) {
         isAgainstVisible.value = false;
         isAgainst.value = isAgainst.value ? false : true;
         isSupport.value = false;
-        messageArray.value.getAllItems()[index.value].comment = isAgainst.value
-          ? 'disliked'
-          : 'none';
+        if (messageArray.value && Array.isArray(messageArray.value) && messageArray.value[index.value]) {
+          (messageArray.value as any)[index.value].comment = isAgainst.value
+            ? 'disliked'
+            : 'none';
+        }
       }
     });
 };
@@ -312,6 +373,9 @@ const handleReport = async (
   reason_type: string,
   reason: string,
 ): Promise<void> => {
+  if (!props.recordList || !props.recordList[index.value]) {
+    return;
+  }
   const qaRecordId = props.recordList[index.value];
   emits('handleReport', qaRecordId, reason_type, reason);
   isAgainstVisible.value = false;
@@ -340,7 +404,9 @@ const prePageHandle = (cid: number) => {
     index.value = 0;
   } else {
     index.value--;
-    isComment.value = messageArray.value.getAllItems()[index.value].comment;
+    if (messageArray.value && Array.isArray(messageArray.value) && messageArray.value[index.value]) {
+      isComment.value = (messageArray.value as any)[index.value].comment;
+    }
     handleIsLike();
   }
 };
@@ -352,7 +418,9 @@ const nextPageHandle = (cid: number) => {
     index.value = (props.content as string[]).length - 1;
   } else {
     index.value++;
-    isComment.value = messageArray.value.getAllItems()[index.value].comment;
+    if (messageArray.value && Array.isArray(messageArray.value) && messageArray.value[index.value]) {
+      isComment.value = (messageArray.value as any)[index.value].comment;
+    }
     handleIsLike();
   }
 };
@@ -376,8 +444,8 @@ const handleIsLike = () => {
 };
 
 onMounted(() => {
-  if (props.messageArray?.value) {
-    isComment.value = props.messageArray.value.getCommentbyIndex(index.value);
+  if (props.messageArray && Array.isArray(props.messageArray) && props.messageArray[index.value]) {
+    isComment.value = (props.messageArray as any)[index.value].comment;
   }
   popperSize();
   setTimeout(() => {
@@ -389,12 +457,12 @@ watch(
   () => props.messageArray,
   () => {
     index.value = 0;
-    if (props.messageArray) {
-      index.value = props.messageArray?.getAllItems().length - 1;
+    if (props.messageArray && Array.isArray(props.messageArray)) {
+      index.value = props.messageArray.length - 1;
     }
-    messageArray.value = props.messageArray;
-    if (props.messageArray) {
-      isComment.value = props.messageArray.getAllItems()[index.value].comment;
+    messageArray.value = props.messageArray || [];
+    if (props.messageArray && Array.isArray(props.messageArray) && props.messageArray[index.value]) {
+      isComment.value = (props.messageArray as any)[index.value].comment;
     }
     handleIsLike();
   },
@@ -520,7 +588,7 @@ const chatWithParams = async () => {
     <div class="dialogue-panel__user" v-if="props.type === 'user'">
       <div class="dialogue-panel__user-time" v-if="createdAt">
         <div class="centerTimeStyle">
-          {{ dayjs(createdAt * 1000).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ dayjs((typeof createdAt === 'number' ? createdAt : new Date(createdAt).getTime() / 1000) * 1000).format('YYYY-MM-DD HH:mm:ss') }}
         </div>
       </div>
       <div class="dialogue-panel__user-time" v-else>
@@ -576,6 +644,13 @@ const chatWithParams = async () => {
             <div ref="echartsDraw" class="draw" style="color: grey"></div>
           </div>
         </div>
+        
+        <!-- 🔑 新增：对话附件显示 -->
+        <FileAttachment 
+          v-if="globalAttachments && globalAttachments.length > 0"
+          :files="globalAttachments"
+          style="margin-top: 16px;"
+        />
         <el-dialog
           :model-value="visible"
           :show-close="false"
@@ -585,7 +660,6 @@ const chatWithParams = async () => {
           :close-on-press-escape="false"
           :close-on-click-modal="false"
           align-center
-          overflow="scroll"
         >
           <JsonFormComponent
             :code="props.paramsList"

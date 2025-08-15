@@ -179,7 +179,8 @@ function sanitizeNodeData(nodeData, nodeId) {
     // 如果是DirectReply节点，确保parameters结构正确且内容为空
     cleanNodeData.parameters = {
       input_parameters: {
-        answer: ''  // 确保新建的DirectReply节点内容为空
+        answer: '',  // 确保新建的DirectReply节点内容为空
+        attachment: {}  // 添加空的attachment字段
       },
       output_parameters: {}
     };
@@ -217,6 +218,20 @@ function sanitizeNodeData(nodeData, nodeId) {
         operations: [] // VariableAssign节点的operations数组
       },
       output_parameters: {} // VariableAssign节点不需要输出参数
+    };
+  } else if (cleanNodeData.callId === 'FileExtract') {
+    // 如果是FileExtractor节点，设置正确的parameters结构
+    cleanNodeData.parameters = {
+      input_parameters: {
+        parse_method: '', // 文件解析方法
+        input_file: '' // 输入文件变量引用
+      },
+      output_parameters: {
+        text: {
+          type: 'string',
+          description: '提取的文本内容'
+        }
+      }
     };
   } else {
     // 对于所有其他节点类型（LLM、RAG、API、SQL等），使用API返回的原始parameters

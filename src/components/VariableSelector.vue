@@ -25,6 +25,8 @@ interface Props {
   currentStepId?: string
   selfVariables?: any[]
   selfScopeLabel?: string
+  typeFilter?: string[]
+  suffixTags?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -34,7 +36,9 @@ const props = withDefaults(defineProps<Props>(), {
   supportedScopes: () => ['conversation', 'system', 'env', 'user'],
   showVariableReference: true,
   selfVariables: () => [],
-  selfScopeLabel: ''
+  selfScopeLabel: '',
+  typeFilter: () => [],
+  suffixTags: () => []
 })
 
 const emit = defineEmits<{
@@ -60,6 +64,23 @@ const filteredVariables = computed(() => {
     variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
   )
 })
+
+// 类型过滤函数
+const filterByType = (variable: Variable): boolean => {
+  if (!props.typeFilter || props.typeFilter.length === 0) return true
+  return props.typeFilter.includes(variable.var_type)
+}
+
+// 搜索和类型过滤函数
+const filterVariable = (variable: Variable): boolean => {
+  const searchMatch = !searchText.value || 
+    variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
+    (variable.description?.toLowerCase().includes(searchText.value.toLowerCase()) ?? false)
+  
+  const typeMatch = filterByType(variable)
+  
+  return searchMatch && typeMatch
+}
 
 const groupedVariables = computed(() => {
   const groups = {
@@ -88,11 +109,7 @@ const groupedVariables = computed(() => {
         value: `{{self.${v.name}}}`,
         description: `${props.selfScopeLabel}: ${v.name}`
       }))
-      .filter(variable => 
-        !searchText.value || 
-        variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
-        variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
-      )
+      .filter(filterVariable)
     
     if (selfVars.length > 0) {
       result.push({
@@ -112,11 +129,7 @@ const groupedVariables = computed(() => {
       const nodeGroups = groupConversationVariablesByNode(variables)
       
       for (const nodeGroup of nodeGroups) {
-        const filteredVariables = nodeGroup.variables.filter(variable => 
-          !searchText.value || 
-          variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
-          variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
-        )
+        const filteredVariables = nodeGroup.variables.filter(filterVariable)
         
         if (filteredVariables.length > 0) {
           result.push({
@@ -130,11 +143,7 @@ const groupedVariables = computed(() => {
       }
     } else {
       // 其他作用域保持原有逻辑
-    const filteredVariables = variables.filter(variable => 
-      !searchText.value || 
-      variable.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
-      variable.description?.toLowerCase().includes(searchText.value.toLowerCase())
-    )
+    const filteredVariables = variables.filter(filterVariable)
       
       if (filteredVariables.length > 0) {
         result.push({
@@ -393,7 +402,20 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
           clearable
         >
           <template #suffix>
-            <ElIcon class="cursor-pointer"><Search /></ElIcon>
+            <div class="input-suffix">
+              <div v-if="suffixTags.length > 0" class="suffix-tags">
+                <ElTag
+                  v-for="tag in suffixTags"
+                  :key="tag"
+                  size="small"
+                  type="info"
+                  class="suffix-tag"
+                >
+                  {{ tag }}
+                </ElTag>
+              </div>
+              <ElIcon class="cursor-pointer search-icon"><Search /></ElIcon>
+            </div>
           </template>
         </ElInput>
       </template>
@@ -462,6 +484,34 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
 <style lang="scss" scoped>
 .variable-selector {
   width: 100%;
+  
+  .input-suffix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .suffix-tags {
+      display: flex;
+      gap: 4px;
+      
+      .suffix-tag {
+        --el-tag-bg-color: var(--el-color-info-light-9);
+        --el-tag-border-color: var(--el-color-info-light-7);
+        --el-tag-text-color: var(--el-color-info);
+        font-size: 10px;
+        height: 18px;
+        line-height: 16px;
+        padding: 0 4px;
+      }
+    }
+    
+    .search-icon {
+      color: var(--el-text-color-placeholder);
+      &:hover {
+        color: var(--el-color-primary);
+      }
+    }
+  }
 }
 
 .variable-list {

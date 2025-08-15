@@ -22,6 +22,7 @@ import { storeToRefs } from 'pinia';
 import { getCookie } from '@/apis/tools';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
 import { api } from 'src/apis';
+import { ElMessage } from 'element-plus';
 
 onMounted(() => {
   if (window.eulercopilot?.chat?.onCleanStorage) {
@@ -104,32 +105,77 @@ function useStream() {
         max_tokens: 2048,
       },
     };
-    const resp = await fetch('/api/chat', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers,
-    });
-    for await (const chunk of fetchStream({
-      readableStream: resp.body!,
-    })) {
-      if (!chunk.data) {
-        break;
+    
+    // 🔑 重要修复：添加AbortController来支持主动中断请求
+    const abortController = new AbortController();
+    
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers,
+        signal: abortController.signal, // 添加signal支持中断
+      });
+      
+      for await (const chunk of fetchStream({
+        readableStream: resp.body!,
+      })) {
+        // 检查停止状态
+        if (!isStreaming.value) {
+          abortController.abort()
+          break
+        }
+        
+        if (chunk.data.trim() === '[DONE]') {
+          isStreaming.value = false
+          break
+        }
+
+        // 🔑 重要修复：检查是否是ERROR消息（支持带详细信息的错误）
+        if (chunk.data.trim().startsWith('[ERROR]')) {
+          isStreaming.value = false
+          const conversation = conversations.value[conversations.value.length - 1]
+          
+          if (conversation) {
+            // 提取错误信息并显示
+            const errorMsg = chunk.data.trim().replace('[ERROR]', '').trim()
+            conversation.content = errorMsg || '系统错误，请稍后再试'
+            
+            // 🔑 重要：显示错误提示给用户
+            ElMessage.error(conversation.content)
+          } else {
+            // 如果没有对话记录，直接显示错误
+            const errorMsg = chunk.data.trim().replace('[ERROR]', '').trim()
+            ElMessage.error(errorMsg || '系统错误，请稍后再试')
+          }
+          
+          // 🔑 重要：按正确顺序停止对话
+          // 1. 首先中断前端fetchEventSource连接
+          abortController.abort()
+          
+          // 2. 然后调用后端停止接口，清理后端连接
+          try {
+            const [, res] = await api.stopGeneration()
+            if (res && res.code === 200) {
+              // 后端停止成功
+            }
+          } catch (stopError) {
+            console.error('调用停止接口失败:', stopError)
+          }
+          
+          break
+        }
+        setConversations(chunk.data, q);
       }
-      if (chunk.data.trim() === '[ERROR]') {
-        isStreaming.value = false;
-        const conversation =
-          conversations.value[conversations.value.length - 1];
-        conversation.content = '系统错误，请稍后再试';
-        break;
+    } catch (error: any) {
+      // 🔑 处理中断的情况
+      if (error.name === 'AbortError') {
+        console.log('✅ Stream已被成功中断');
+      } else {
+        console.error('❌ Stream处理出错:', error);
+        ElMessage.error('连接错误，请稍后重试');
       }
-      if (chunk.data.trim() === '[DONE]') {
-        isStreaming.value = false;
-        setTimeout(() => {
-          scrollToBottom(true);
-        }, 100);
-        break;
-      }
-      setConversations(chunk.data);
+      isStreaming.value = false;
     }
   };
 
@@ -167,7 +213,7 @@ function useConversations() {
 
   const conversations = ref<Conversation[]>([]);
 
-  const setConversations = (data: string) => {
+  const setConversations = (data: string, q: string) => {
     const conversation = conversations.value[conversations.value.length - 1];
     const { id, event, content, metadata } = JSON.parse(data) as StreamChunk;
     if (event === 'init') {

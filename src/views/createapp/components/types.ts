@@ -34,6 +34,8 @@ import USER_DOCUMENT_CLASS from '@/assets/svgs/userDatabaseClass.svg';
 // 引入图片--循环控制相关图标
 import REFRESH from '@/assets/svgs/Refresh.svg';
 import STOP_FILLED from '@/assets/svgs/StopFilled.svg';
+// 引入图片--文件处理相关图标
+import DOCUMENT from '@/assets/svgs/document.svg';
 // 工具类型
 export type LinkType = 'redirect' | 'action';
 
@@ -84,6 +86,9 @@ export const nodeTypeToIcon = {
   STOP_FILLED,
   continue: REFRESH,
   break: STOP_FILLED,
+  
+  // 文件处理相关图标
+  DOCUMENT,
 };
 
 // 这里是对应的图标
@@ -118,6 +123,12 @@ export const iconTypeList = [
     name: '变量赋值',
     value: 'VariableAssign',
     icon: CODE, // 暂时使用CODE图标，与菜单保持一致
+    class: 'systemNode',
+  },
+  {
+    name: '文件提取器',
+    value: 'FileExtract',
+    icon: CODE,
     class: 'systemNode',
   },
 ];

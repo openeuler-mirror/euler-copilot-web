@@ -8,6 +8,18 @@
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
 /// <reference types="vite/client" />
+
+declare module '*.svg' {
+  const content: string
+  export default content
+}
+
+declare module '*.svg?component' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
 declare interface Window {
   onHtmlEventDispatch: any;
   eulercopilot: any;
@@ -38,4 +50,6 @@ declare interface ImportMetaEnv {
   readonly VITE_MAIL_URL: string;
   readonly VITE_BULLETIN_URL: string;
   readonly VITE_HISS_URL: string;
+  
+  readonly VITE_WITCHAIND_PROXY_URL: string;
 }
