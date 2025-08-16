@@ -9,7 +9,7 @@ export const useLangStore = defineStore(
     const i18n = useI18n();
     const language = ref<string>();
 
-    const changeLanguage = (lang: 'zh_cn' | 'en') => {
+    const changeLanguage = (lang: 'zh' | 'en') => {
       language.value = lang;
       i18n.locale.value = language.value;
       if (ipcRenderer) {
@@ -26,7 +26,7 @@ export const useLangStore = defineStore(
         electronProcess.env['EULERCOPILOT_NLS_CONFIG'] &&
           changeLanguage(nlsConfig.userLocale);
       } else {
-        !language.value && changeLanguage('zh_cn');
+        !language.value && changeLanguage('zh');
       }
     });
     return {

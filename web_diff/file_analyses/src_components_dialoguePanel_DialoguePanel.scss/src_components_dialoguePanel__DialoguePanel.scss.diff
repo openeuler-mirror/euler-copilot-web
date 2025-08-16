@@ -1,0 +1,12 @@
+diff --git a/src/components/dialoguePanel/DialoguePanel.scss b/src/components/dialoguePanel/DialoguePanel.scss
+index 2ff42f9..a88c204 100644
+--- a/src/components/dialoguePanel/DialoguePanel.scss
++++ b/src/components/dialoguePanel/DialoguePanel.scss
+@@ -288,7 +288,6 @@
+ 
+     .loading {
+       display: flex;
+-      background-color: var(--o-bg-color-base);
+       border-radius: 8px !important;
+       border-top-left-radius: 0px !important;
+       border-radius: 8px !important;

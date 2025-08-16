@@ -108,6 +108,18 @@ export const getPartAppConfgUser = (): Promise<
   return get('/api/user');
 };
 
+/**
+ * 修改用户设置
+ * 
+ * @param params
+ * @returns
+ */
+export const updateUserInfo = (params: {
+  autoExecute: boolean;
+}): Promise<[any, FcResponse<unknown> | undefined]> => {
+  return post(`/api/user`, {autoExecute: params.autoExecute});
+};
+
 export const appCenterApi = {
   queryAppList,
   createOrUpdateApp,
@@ -116,4 +128,5 @@ export const appCenterApi = {
   releaseSingleAppData,
   changeSingleAppCollect,
   getPartAppConfgUser,
+  updateUserInfo,
 };

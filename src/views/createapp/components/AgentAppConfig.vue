@@ -36,6 +36,7 @@ const props = withDefaults(
   defineProps<{
     handleValidateContent: (val: any) => void;
     onDebug: (status: boolean) => void;
+    saveConfig: () => void;
   }>(),
   {},
 );
@@ -98,14 +99,16 @@ async function queryAgentConfig() {
   createAppFormRef.value?.clearValidate();
 
   if (res) {
-    const { name, description, permission, icon, mcpService, dialogRounds } =
+    const { name, description, permission, icon, mcpService, dialogRounds, llm } =
       res.result;
     createAppForm.icon = icon || '';
     createAppForm.name = name;
     createAppForm.description = description;
-    createAppForm.mcps = mcpService || [];
+    createAppForm.mcps = mcpService?.map((item) => item.id) || [];
     createAppForm.dialogRounds = dialogRounds || 3;
     createAppForm.permission = permission || createAppForm.permission;
+    // 如果有模型
+    createAppForm.model = llm?.llmId;
   }
   loading.value = false;
 }
@@ -115,6 +118,8 @@ function onMcpServiceSelected(mcps: Mcp[]) {
     createAppForm.mcps = mcps.map((item) => item.mcpserviceId);
     isMcpDrawerVisible.value = false;
   }
+  
+  props.saveConfig();
 }
 
 function onDeleteMcp(mcp: any) {
@@ -709,7 +714,7 @@ onMounted(async () => {
       font-size: 16px;
       font-weight: 700;
       color: #000;
-      height: 24px;
+      // height: 24px;
     }
     .el-collapse-item__content {
       margin: 0;

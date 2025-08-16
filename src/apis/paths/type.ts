@@ -45,6 +45,12 @@ export interface Metadata {
   inputTokens: number;
   outputTokens: number;
   timeCost: number;
+  footNoteMetadataList?:Array<{
+    footSource: string;
+    footType: string;
+    insertPosition: number;
+    releatedId: string;
+  }>
 }
 
 // 定义问答对数据结构
@@ -57,7 +63,8 @@ export interface ConversationRecord {
   content: Content;
   metadata: Metadata;
   comment: string;
-  created_at: string;
+  createdAt: string;
+  document?: any[];
 }
 
 // 定义对话内问答列表数据结构

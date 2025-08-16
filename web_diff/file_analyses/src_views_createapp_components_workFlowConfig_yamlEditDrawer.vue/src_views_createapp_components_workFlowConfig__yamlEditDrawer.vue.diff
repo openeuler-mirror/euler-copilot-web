@@ -1,0 +1,1004 @@
+diff --git a/src/views/createapp/components/workFlowConfig/yamlEditDrawer.vue b/src/views/createapp/components/workFlowConfig/yamlEditDrawer.vue
+index 9a19e68..8c9063a 100644
+--- a/src/views/createapp/components/workFlowConfig/yamlEditDrawer.vue
++++ b/src/views/createapp/components/workFlowConfig/yamlEditDrawer.vue
+@@ -8,155 +8,282 @@
+       class="flowDrawer"
+       :before-close="closeDrawer"
+     >
+-      <template #header> 
++      <template #header>
+         <div class="drawerHeader">
+           {{ $t('flow.step_configuration') }}-{{ yamlNodeName }}
+         </div>
+       </template>
+       <template #default>
+         <div class="drawerBody">
+-          <div v-if="yamlNodeId==='Choice'" class="yamlChoiceContainer">
++          <div v-if="yamlNodeId === 'Choice'" class="yamlChoiceContainer">
+             <div>
+               <el-button :icon="IconPlusCircle" @click="handleAddChoice">
+-                {{ $t('添加条件分支') }}
++                {{ $t('yaml.add_conditional_branches') }}
+               </el-button>
+             </div>
+-            <div v-for="(item, index) in choicesList" :key="index" class="yamlChoiceItem">
++            <div
++              v-for="(item, index) in choicesList"
++              :key="index"
++              class="yamlChoiceItem"
++            >
+               <div class="yamlChoiceItemTitle">
+-                <div v-if="item.is_default" >
+-                  否则
++                <div v-if="item.is_default">
++                  {{ $t('yaml.else') }}
+                 </div>
+                 <div v-else>
+                   <div v-if="index === 0">
+-                    如果
++                    {{ $t('yaml.if') }}
+                   </div>
+                   <div v-else>
+-                    否则如果
++                    {{ $t('yaml.else_if') }}
+                   </div>
+                 </div>
+-                <el-icon v-if="!item.is_default && choicesList.length > 2" class="delIcon" @click="handleDelChoice(index, item)">
++                <el-icon
++                  v-if="!item.is_default && choicesList.length > 2"
++                  class="delIcon"
++                  @click="handleDelChoice(index, item)"
++                >
+                   <IconMinimize />
+                 </el-icon>
+               </div>
+               <div class="yamlChoiceItemContent">
+-                <div v-if="item.conditions.length > 1" class="yamlChoiceItemLogic">
++                <!-- conditions数量大于1的时候才会显示逻辑运算符 -->
++                <div
++                  v-if="item.conditions.length > 1"
++                  class="yamlChoiceItemLogic"
++                >
+                   <el-select
+                     v-model="item.logic"
+                     class="yamlChoiceItemLogicSelect"
+                   >
+-                  <template #label >
+-                    {{ logicObj[item.logic] }}
+-                  </template>
+-                  <el-option :label="logicObj['and']" value="and" key="and"></el-option>
+-                  <el-option :label="logicObj['or']" value="or" key="or"></el-option>
+-                </el-select>
++                    <template #label>
++                      {{ logicObj[item.logic] }}
++                    </template>
++                    <el-option
++                      :label="logicObj['and']"
++                      value="and"
++                      key="and"
++                    ></el-option>
++                    <el-option
++                      :label="logicObj['or']"
++                      value="or"
++                      key="or"
++                    ></el-option>
++                  </el-select>
+                 </div>
+                 <div class="yamlConditionContainer">
+-                  <div v-for="(condition, cIndex) in item.conditions" :key="cIndex" class="yamlConditionItem">
++                  <div
++                    v-for="(condition, cIndex) in item.conditions"
++                    :key="cIndex"
++                    class="yamlConditionItem"
++                  >
++                    <!-- 左边选择条件 -->
+                     <el-select
+                       v-model="condition.operate"
+                       class="yamlConditionOperateSelect"
+-                      placeholder="请选择条件"
+-                      @change="(value) => onSelectOperateOption(value, index, cIndex)"
++                      :placeholder="
++                        i18n.global.t('yaml.please_select_condition')
++                      "
++                      @change="
++                        (value) => onSelectOperateOption(value, index, cIndex)
++                      "
+                     >
+-                    <template #label >
+-                      {{ opertionListMap.get(condition.operate)?.str }}
+-                      {{ opertionListMap.get(condition.operate)?.label }}
+-                    </template>
+-                    <el-option v-for="item in paramoperateList" :label="opertionListMap.get(item.operate)?.str+' '+opertionListMap.get(item.operate)?.label" :value="item.operate" :key="item.operate">
+-                     {{ opertionListMap.get(item.operate)?.str }}
+-                      {{ opertionListMap.get(item.operate)?.label }}
+-                    </el-option>
++                      <template #label>
++                        {{ opertionListMap.get(condition.operate)?.str }}
++                        {{ opertionListMap.get(condition.operate)?.label }}
++                      </template>
++                      <el-option
++                        v-for="item in paramoperateList[index][cIndex]"
++                        :label="
++                          opertionListMap.get(item.operate)?.str +
++                          ' ' +
++                          opertionListMap.get(item.operate)?.label
++                        "
++                        :value="item.operate"
++                        :key="item.operate"
++                      >
++                        {{ opertionListMap.get(item.operate)?.str }}
++                        {{ opertionListMap.get(item.operate)?.label }}
++                      </el-option>
+                     </el-select>
++                    <!-- 左值 -->
+                     <div class="yamlConditionValue">
+                       <el-select
+-                        v-model="condition.left.value"
+-                        placeholder="请选择"
++                        v-model="condition.left.name"
++                        :placeholder="i18n.global.t('yaml.please_select')"
+                         class="yamlConditionLeft"
+-                        :style="item.conditions.length > 1?{minWidth: '345px'}:{minWidth: '460px'}"
+-                        @change="(value) => onSelectOption(value, index, cIndex)"
++                        :style="
++                          item.conditions.length > 1
++                            ? { minWidth: '345px' }
++                            : { minWidth: '460px' }
++                        "
++                        @change="
++                          (value) => onSelectOption(value, index, cIndex)
++                        "
+                       >
+-                        <div class="option-container" v-for="item in leftOptions" :key="item.stepId" >
+-                          <el-option class="leftOption" v-if="item.visible" :disabled="item.isGroup" :label="item.paramPath" :value="item.paramPath" :style="{paddingLeft: item?.isGroup ? '' : '40px'}">
++                        <!-- leftOptions -->
++                        <div
++                          class="option-container"
++                          v-for="item in leftOptions"
++                          :key="item.stepId"
++                        >
++                          <el-option
++                            class="leftOption"
++                            v-if="item.visible"
++                            :label="item.paramPath"
++                            :value="item.paramPath"
++                            :style="{
++                              paddingLeft: item?.isGroup ? '' : '40px',
++                            }"
++                          >
+                             <template #default>
+                               <template v-if="item.isGroup">
+-                                {{ item.name }} 
++                                {{ item.name }}
+                                 <div class="arrowIcon">
+-                                  <el-icon v-if="!item.childVisible" @click.stop="handleGroupClick(item,true)">
+-                                    <IconCaretDown/>
++                                  <el-icon
++                                    v-if="!item.childVisible"
++                                    @click.stop="
++                                      handleGroupClick(item, true, cIndex)
++                                    "
++                                  >
++                                    <IconCaretDown />
+                                   </el-icon>
+-                                  <el-icon v-else @click.stop="handleGroupClick(item,false)">
+-                                    <IconCaretUp/>
++                                  <el-icon
++                                    v-else
++                                    @click.stop="handleGroupClick(item, false)"
++                                  >
++                                    <IconCaretUp />
+                                   </el-icon>
+                                 </div>
+                               </template>
+                               <template v-else>
+                                 <div>
+-                                {{ item.name }} 
+-                                <span class="paramType">
+-                                  {{ item.paramType }}
+-                                </span>
++                                  {{ item.name }}
++                                  <span class="paramType">
++                                    {{ item.paramType }}
++                                  </span>
+                                 </div>
+                               </template>
+                             </template>
+                           </el-option>
+                         </div>
+                       </el-select>
++                      <!-- 右值：输入或引用参数值 -->
+                       <div class="yamlConditionRight">
+-                        <span class="yamlConditionRightType">{{ condition.right.type ?? 'string' }}</span>
++                        <span class="yamlConditionRightType">
++                          {{ condition.right.type ?? '' }}
++                        </span>
+                         <el-input
+-                          v-model="condition.right.value"
+-                          placeholder="输入或引用参数值"
++                          v-model="condition.right.name"
++                          :placeholder="i18n.global.t('yaml.parameter_value')"
+                           class="yamlConditionRightSelect"
+-                          :value="condition.right.value || ''"
+-                          @change="(value) => onSelectInputOption(value, index, cIndex)"
++                          :value="condition.right.name || ''"
++                          @change="
++                            (value) =>
++                              onSelectInputOption(value, index, cIndex, 'input')
++                          "
+                         >
+-                        <template #append>
+-                          <el-select class="rightSelect" v-model="condition.right.value" placeholder="Select" @change="(value) => onSelectInputOption(value, index, cIndex)" 
+-                            :popper-options="{ modifiers: [{ name: 'offset', options: { offset: [-150, 10] } }] }"
+-                          >
+-                            <div class="option-container" v-for="item in leftOptions" :key="item.stepId" >
+-                              <el-option class="leftOption" v-if="item.visible" :disabled="item.isGroup" :label="item.paramPath" :value="item.paramPath" :style="{paddingLeft: item?.isGroup ? '' : '40px'}">
+-                                <template #default>
+-                                  <template v-if="item.isGroup">
+-                                    {{ item.name }} 
+-                                    <div class="arrowIcon">
+-                                      <el-icon v-if="!item.childVisible" @click.stop="handleGroupClick(item,true)">
+-                                        <IconCaretDown/>
+-                                      </el-icon>
+-                                      <el-icon v-else @click.stop="handleGroupClick(item,false)">
+-                                        <IconCaretUp/>
+-                                      </el-icon>
+-                                    </div>
++                          <template #append>
++                            <el-select
++                              class="rightSelect"
++                              v-model="condition.right.value"
++                              placeholder="Select"
++                              @change="
++                                (value) =>
++                                  onSelectInputOption(
++                                    value,
++                                    index,
++                                    cIndex,
++                                    'select',
++                                  )
++                              "
++                              :popper-options="{
++                                modifiers: [
++                                  {
++                                    name: 'offset',
++                                    options: { offset: [-150, 10] },
++                                  },
++                                ],
++                              }"
++                            >
++                              <div
++                                class="option-container"
++                                v-for="item in leftOptions"
++                                :key="item.stepId"
++                              >
++                                <el-option
++                                  class="leftOption"
++                                  v-if="item.visible"
++                                  :label="item.paramPath"
++                                  :value="item.paramPath"
++                                  :style="{
++                                    paddingLeft: item?.isGroup ? '' : '40px',
++                                  }"
++                                >
++                                  <template #default>
++                                    <template v-if="item.isGroup">
++                                      {{ item.name }}
++                                      <div class="arrowIcon">
++                                        <el-icon
++                                          v-if="!item.childVisible"
++                                          @click.stop="
++                                            handleGroupClick(item, true)
++                                          "
++                                        >
++                                          <IconCaretDown />
++                                        </el-icon>
++                                        <el-icon
++                                          v-else
++                                          @click.stop="
++                                            handleGroupClick(item, false)
++                                          "
++                                        >
++                                          <IconCaretUp />
++                                        </el-icon>
++                                      </div>
++                                    </template>
++                                    <template v-else>
++                                      <div>
++                                        {{ item.name }}
++                                        <span class="paramType">
++                                          {{ item.paramType }}
++                                        </span>
++                                      </div>
++                                    </template>
+                                   </template>
+-                                  <template v-else>
+-                                    <div>
+-                                    {{ item.name }} 
+-                                    <span class="paramType">
+-                                      {{ item.paramType }}
+-                                    </span>
+-                                    </div>
+-                                  </template>
+-                                </template>
+-                              </el-option>
+-                            </div>
+-                          </el-select>
+-                        </template>
++                                </el-option>
++                              </div>
++                            </el-select>
++                          </template>
+                         </el-input>
+                       </div>
+                     </div>
+-                    <el-icon v-if="cIndex > 0 && typeof cIndex === 'number'" class="delIcon" @click="handleDelCondition(index, cIndex)">
++                    <el-icon
++                      v-if="cIndex > 0 && typeof cIndex === 'number'"
++                      class="delIcon"
++                      @click="handleDelCondition(index, cIndex)"
++                    >
+                       <IconMinimize />
+                     </el-icon>
+                   </div>
+                 </div>
+               </div>
+               <div v-if="!item.is_default" class="addCondition">
+-                <el-button text :icon="IconPlusCircle" @click="handleAddCondition(index)">新增</el-button>
++                <el-button
++                  text
++                  :icon="IconPlusCircle"
++                  @click="handleAddCondition(index)"
++                >
++                  {{ $t('yaml.add') }}
++                </el-button>
+               </div>
+             </div>
+           </div>
+-          <el-collapse v-else v-model="activeName" class="o-hpc-collapse yamlContent">
++          <el-collapse
++            v-else
++            v-model="activeName"
++            class="o-hpc-collapse yamlContent"
++          >
+             <el-collapse-item
+               title="Consistency"
+               :key="item.title"
+@@ -249,7 +376,13 @@
+ <script lang="ts" setup>
+ import { onMounted, ref, watch } from 'vue';
+ import MirrorText from '../codeMirror/mirrorTextArea.vue';
+-import { IconCaretDown, IconCaretRight, IconCaretUp, IconMinimize, IconPlusCircle } from '@computing/opendesign-icons';
++import {
++  IconCaretDown,
++  IconCaretRight,
++  IconCaretUp,
++  IconMinimize,
++  IconPlusCircle,
++} from '@computing/opendesign-icons';
+ import yaml from 'js-yaml';
+ import { ElMessage } from 'element-plus';
+ import MonacoEditor from 'src/components/monaco/MonacoEditor.vue';
+@@ -264,7 +397,14 @@ const yamlInputCode = ref();
+ const yamlOutputCode = ref();
+ const yamlNodeName = ref();
+ const yamlNodeId = ref();
+-const choicesList = ref<Array<{ is_default: boolean; branch_id: string; conditions: any[]; logic: string}>>([]);
++const choicesList = ref<
++  Array<{
++    is_default: boolean;
++    branch_id: string;
++    conditions: any[];
++    logic: string;
++  }>
++>([]);
+ const infoDisabled = ref(true);
+ const yamlExpress = ref([
+   {
+@@ -287,9 +427,19 @@ const yamlExpress = ref([
+   },
+ ]);
+ const yamlBaseInfoRule = ref({
+-  name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
++  name: [
++    {
++      required: true,
++      message: i18n.global.t('flow.enterWorkflowName'),
++      trigger: 'blur',
++    },
++  ],
+   description: [
+-    { required: true, message: '请输入工作流描述', trigger: 'blur' },
++    {
++      required: true,
++      message: i18n.global.t('flow.enterWorkflowDesc'),
++      trigger: 'blur',
++    },
+   ],
+ });
+ const activeName = ref([
+@@ -312,117 +462,195 @@ interface Props {
+ const props = defineProps<Props>();
+ const emits = defineEmits(['closeDrawer', 'saveNode']);
+ 
+-const logicObj ={
+-  and: '且',
+-  or: '或',
+-}
++const logicObj = {
++  and: i18n.global.t('yaml.and'),
++  or: i18n.global.t('yaml.or'),
++};
+ 
+ const leftOptions = ref<any[]>([]);
+-const paramoperateList = ref<any>([])
++const paramoperateList = ref<any[][]>([]);
+ 
+-const handleGroupClick = (item: any, isVisible: boolean) => {
++const handleGroupClick = (item: any, isVisible: boolean, cIndex: number) => {
+   item.childVisible = isVisible;
+-  leftOptions.value.forEach(option => {
+-    if(option.stepId === item.stepId && !Object.hasOwn(option, 'isGroup')){
++  leftOptions.value.forEach((option) => {
++    if (option.stepId === item.stepId) {
+       option.visible = isVisible;
+     }
+-  })
+-}
+-const onSelectOption = (option: any,index:number, cIndex:number) => {
+-  const curOption = leftOptions.value.find(op => {
++  });
++};
++
++// 左值选择操作
++const onSelectOption = (option: any, index: number, cIndex: number) => {
++  const curOption = leftOptions.value.find((op) => {
+     return op.paramPath === option;
+   });
++  // 清空操作符
+   choicesList.value[index].conditions[cIndex].operate = null;
+-  choicesList.value[index].conditions[cIndex].right={
+-    step_id: null, type: null, value: null,name:null
+-  }
+-  choicesList.value[index].conditions[cIndex].left={
+-    step_id: curOption.stepId, type: curOption.paramType, value: option,name:curOption.pathName
+-  }
++  // 清空右值
++  choicesList.value[index].conditions[cIndex].right = {
++    step_id: null,
++    type: null,
++    value: null,
++    name: null,
++  };
++  // 重新赋值左值
++  let value = curOption.stepId + curOption.pathName;
++  choicesList.value[index].conditions[cIndex].left = {
++    step_id: curOption.stepId,
++    type: curOption.paramType,
++    value: value,
++    name: curOption.paramPath,
++  };
+   api
+-    .queryParameterOperate({ParamType:curOption.paramType})
+-    .then((res)=>{
+-      paramoperateList.value = res?.[1]?.result;
++    .queryParameterOperate({ ParamType: curOption.paramType })
++    .then((res) => {
++      if (paramoperateList.value[index].length > cIndex) {
++        paramoperateList.value[index][cIndex] = res?.[1]?.result;
++      } else {
++        paramoperateList.value[index].push(res?.[1]?.result);
++      }
+     })
+-    .catch((err)=>[
+-      console.error(err)
+-    ])
+-}
+-
++    .catch((err) => [console.error(err)]);
++};
+ 
+-const onSelectOperateOption = (option: any,index:number, cIndex:number) => {
++// 操作符选择操作
++const onSelectOperateOption = (option: any, index: number, cIndex: number) => {
+   choicesList.value[index].conditions[cIndex].operate = option;
+-  const curBindType = paramoperateList.value.find(op => {
++  const curBindType = paramoperateList.value[index][cIndex].find((op) => {
+     return op.operate === option;
+   })?.bind_type;
++  // 切换当前绑定类型
+   choicesList.value[index].conditions[cIndex].right.type = curBindType;
++  // 清空右值
+   choicesList.value[index].conditions[cIndex].right.value = null;
+-}
++  choicesList.value[index].conditions[cIndex].right.name = null;
++};
+ 
+-const onSelectInputOption = (option: any, index:number, cIndex:number) => {
++// 右值选择操作
++const onSelectInputOption = (
++  option: any,
++  index: number,
++  cIndex: number,
++  type: string,
++) => {
+   const targetType = choicesList.value[index].conditions[cIndex].right.type;
+   let isValid = true;
+-  // 类型检查逻辑
+-  switch (targetType) {
+-    case 'number':
+-      isValid = !isNaN(Number(option));
+-      break;
+-    case 'boolean':
+-      isValid = option === 'true' || option === 'false' || option === true || option === false;
+-      break;
+-    case 'list':
+-      if (typeof option === 'string') {
+-        try {
+-          const parsed = JSON.parse(option);
+-          isValid = Array.isArray(parsed);
+-        } catch {
+-          isValid = false;
++  const curOption = leftOptions.value.find((op) => {
++    return op.paramPath === option;
++  });
++  // 类型检查逻辑，两种情况：1输入，2选择
++  if (type === 'input') {
++    switch (targetType) {
++      case 'number':
++        isValid = !isNaN(Number(option));
++        break;
++      case 'boolean':
++        isValid =
++          option === 'true' ||
++          option === 'false' ||
++          option === true ||
++          option === false;
++        break;
++      case 'list':
++        if (typeof option === 'string') {
++          try {
++            const parsed = JSON.parse(option);
++            isValid = Array.isArray(parsed);
++          } catch {
++            isValid = false;
++          }
+         }
+-      }
+-      break;
+-    case 'dict':
+-      if (typeof option === 'string') {
+-        try {
+-          const parsed = JSON.parse(option);
+-          isValid = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+-        } catch {
+-          isValid = false;
++        break;
++      case 'dict':
++        if (typeof option === 'string') {
++          try {
++            const parsed = JSON.parse(option);
++            isValid =
++              typeof parsed === 'object' &&
++              parsed !== null &&
++              !Array.isArray(parsed);
++          } catch {
++            isValid = false;
++          }
+         }
+-      }
+-      break;
+-    case 'string':
+-    default:
+-      isValid = typeof option === 'string';
+-      break;
++        break;
++      case 'string':
++      default:
++        isValid = typeof option === 'string';
++        break;
++    }
++  } else {
++    isValid = curOption.paramType === targetType;
+   }
++
+   if (isValid) {
+-    choicesList.value[index].conditions[cIndex].right.value = option;
++    choicesList.value[index].conditions[cIndex].right.name = option;
+   } else {
+-    ElMessage.error(i18n.global.t('输入类型错误'));
++    ElMessage.error(i18n.global.t('yaml.input_type_error'));
++    return;
+   }
+-  const curOption = leftOptions.value.find(op => {
+-    return op.paramPath === option;
+-  });
+-  if(curOption?.stepId){
+-  choicesList.value[index].conditions[cIndex].right.step_id = curOption?.stepId ?? null;
+-  choicesList.value[index].conditions[cIndex].right.name = curOption?.pathName ?? null;
++
++  // 赋值右值信息-选择的情况
++  if (curOption?.stepId) {
++    choicesList.value[index].conditions[cIndex].right.step_id =
++      curOption?.stepId ?? null;
++    let value = curOption?.stepId + curOption?.pathName;
++    choicesList.value[index].conditions[cIndex].right.value = value ?? null;
++  } else {
++    // 输入的情况
++    choicesList.value[index].conditions[cIndex].right.value = option;
+   }
+-}
++};
+ 
+ watch(
+   () => [props.yamlContent, props.nodeName, props.nodeDesc, props.nodeId],
+   () => {
++    // 这里初始化左边条件选择
+     yamlInputCode.value = yaml.dump(props.yamlContent.input_parameters);
+     yamlOutputCode.value = yaml.dump(props.yamlContent.output_parameters);
+     yamlNodeName.value = props.nodeName;
+     yamlNodeId.value = props.nodeId;
+-    choicesList.value = JSON.parse(JSON.stringify(props.yamlContent?.input_parameters?.choices || [])).reverse();
++    choicesList.value = JSON.parse(
++      JSON.stringify(props.yamlContent?.input_parameters?.choices || []),
++    ).reverse();
+     yamlExpress.value[0].name = props.nodeName;
+     yamlExpress.value[0].description = props.nodeDesc;
+     yamlExpress.value[1].yamlCode = yaml.dump(
+       props.yamlContent.input_parameters,
+     );
+     yamlExpress.value[2].yamlCode = props.yamlContent.output_parameters;
++
++    let inputParameters = props.yamlContent.input_parameters;
++    if (inputParameters.choices) {
++      // 获取需要处理的 choices（倒序、过滤掉 is_default 为 true 的、只保留有条件的）
++      const processedChoices = inputParameters.choices
++        .slice()
++        .reverse()
++        .filter((choice) => !choice.is_default && choice.conditions.length > 0);
++
++      // 初始化 paramoperateList.value，为每个需要处理的 choice 预先创建一个空数组
++      //    这样后续异步回调中就能通过索引安全地访问和 push
++      paramoperateList.value = processedChoices.map(() => []);
++
++      // 如果input_parameters有值，则初始化 左值,paramoperateList选择项添加
++      processedChoices.forEach((item, index) => {
++        if (!item.is_default) {
++          if (item.conditions.length > 0) {
++            item.conditions.forEach((conditionItem, conditionIndex) => {
++              let paramType = conditionItem.left.type;
++              if (paramType) {
++                api
++                  .queryParameterOperate({ ParamType: paramType })
++                  .then((res) => {
++                    paramoperateList.value[index].push(res?.[1]?.result);
++                  })
++                  .catch((err) => [console.error(err)]);
++              }
++            });
++          }
++        }
++      });
++    }
+   },
+   { deep: true, immediate: true },
+ );
+@@ -450,23 +678,30 @@ const updateNodeYaml = () => {
+   let transResult;
+   let choiceHasEmpty = false;
+   try {
+-    if(yamlNodeId.value === 'Choice'){
+-      choicesList.value.forEach(item => {
+-        if(!item.is_default){
+-          item.conditions.forEach(condition => {
+-            if(!condition.left.value || !condition.right.value || !condition.operate){
++    if (yamlNodeId.value === 'Choice') {
++      choicesList.value.forEach((item) => {
++        if (!item.is_default) {
++          item.conditions.forEach((condition) => {
++            if (
++              !condition.left.value ||
++              !condition.right.value ||
++              !condition.operate
++            ) {
+               choiceHasEmpty = true;
+               return;
+             }
+-          })
++          });
+         }
+-      })
++      });
+     }
+-    if(yamlNodeId.value === 'Choice' && choiceHasEmpty){
+-      ElMessage.error(i18n.global.t('请完善条件'));
++    if (yamlNodeId.value === 'Choice' && choiceHasEmpty) {
++      ElMessage.error(i18n.global.t('yaml.please_improve_the_conditions'));
+       return;
+     }
+-    transResult = yamlNodeId.value === 'Choice'? JSON.parse(JSON.stringify(choicesList.value.reverse())) :yaml.load(yamlExpress.value[1].yamlCode ?? '');
++    transResult =
++      yamlNodeId.value === 'Choice'
++        ? JSON.parse(JSON.stringify(choicesList.value.reverse()))
++        : yaml.load(yamlExpress.value[1].yamlCode ?? '');
+     // 调用接口并更新--根据id包含更新后的yamlCode, name, desc
+     emits(
+       'saveNode',
+@@ -483,7 +718,8 @@ const updateNodeYaml = () => {
+ 
+ const handleAddChoice = () => {
+   // 处理 pop() 可能返回 undefined 的情况
+-  const last = choicesList.value.length > 0 ? choicesList.value.pop() : undefined;
++  const last =
++    choicesList.value.length > 0 ? choicesList.value.pop() : undefined;
+   choicesList.value.push({
+     is_default: false,
+     branch_id: crypto.randomUUID(),
+@@ -499,6 +735,8 @@ const handleAddChoice = () => {
+   if (last !== undefined) {
+     choicesList.value.push(last);
+   }
++  // 新增之后需要push空
++  paramoperateList.value.push([]);
+ };
+ const handleDelChoice = (index: number, branchItem: any) => {
+   // 添加类型注解
+@@ -506,17 +744,16 @@ const handleDelChoice = (index: number, branchItem: any) => {
+     ElMessage.error(i18n.global.t('semantic.choiceMin'));
+     return;
+   }
+-  
++
+   // 删除当前分支的边
+   if (props.getEdges) {
+-    console.log(props.getEdges, branchItem);
+     props.getEdges?.forEach((item) => {
+-      if(item.branchId === branchItem.branch_id && props.removeEdges){
+-        props.removeEdges([item.id])
++      if (item.branchId === branchItem.branch_id && props.removeEdges) {
++        props.removeEdges([item.id]);
+       }
+-    })
++    });
+   }
+-  
++
+   choicesList.value.splice(index, 1);
+ };
+ const handleAddCondition = (index: number) => {
+@@ -531,54 +768,65 @@ const handleAddCondition = (index: number) => {
+ };
+ const handleDelCondition = (index: number, cIndex: number) => {
+   // 添加类型注解和边界检查
+-  if (index >= 0 && index < choicesList.value.length && choicesList.value[index].conditions.length <= 1) {
++  if (
++    index >= 0 &&
++    index < choicesList.value.length &&
++    choicesList.value[index].conditions.length <= 1
++  ) {
+     ElMessage.error(i18n.global.t('semantic.conditionMin'));
+     return;
+   }
+-  if (index >= 0 && index < choicesList.value.length && cIndex >= 0 && cIndex < choicesList.value[index].conditions.length) {
++  if (
++    index >= 0 &&
++    index < choicesList.value.length &&
++    cIndex >= 0 &&
++    cIndex < choicesList.value[index].conditions.length
++  ) {
+     choicesList.value[index].conditions.splice(cIndex, 1);
+   }
+ };
+ 
+-onMounted(()=>{
++onMounted(() => {
++  // 1、页面加载时，获取Choice节点内参数
+   api
+     .queryParameter({
+       appId: route.query?.appId as string,
+       flowId: props.flowId,
+-      stepId: props.nodeYamlId
++      stepId: props.nodeYamlId,
+     })
+     .then((res) => {
+-      if(Array.isArray(res[1]?.result)){
+-        res[1]?.result?.forEach(item => {
++      if (Array.isArray(res[1]?.result)) {
++        res[1]?.result?.forEach((item) => {
+           leftOptions.value.push({
+-            stepId:item.stepId,
+-            name:item.name,
+-            paramPath:item.name,
+-            isGroup:true,
+-            visible:true,
+-            childVisible:false
++            stepId: item.stepId,
++            name: item.name,
++            paramPath: item.name,
++            isGroup: true,
++            visible: true,
++            childVisible: false,
++            paramType: item.paramsNode.paramType,
++            pathName: `/${item.name}`,
+           });
+-          if(item?.paramsNode?.subParams){
+-            item?.paramsNode?.subParams.forEach(param => {
++          if (item?.paramsNode?.subParams) {
++            item?.paramsNode?.subParams.forEach((param) => {
+               leftOptions.value.push({
+                 ...param,
+-                name:param.paramName,
+-                stepId:item.stepId,
+-                visible:false,
+-                paramPath:`${item.name}${param.paramPath.replace(/\//, '.')}`,
+-                pathName:param.paramPath,
+-              })
+-            })
++                name: param.paramName,
++                stepId: item.stepId,
++                visible: false,
++                paramPath: `${item.name}${param.paramPath.replace(/\//, '.')}`,
++                pathName: param.paramPath,
++              });
++            });
+           }
+-        })
+-
++        });
+       }
+     })
+     .catch((err) => {
+       console.error('Error fetching parameters:', err);
+       leftOptions.value = [];
+-    })
+-})
++    });
++});
+ </script>
+ 
+ <style lang="scss" scoped>
+@@ -651,13 +899,13 @@ onMounted(()=>{
+       width: 100%;
+       height: 100%;
+     }
+-    .yamlChoiceContainer{
++    .yamlChoiceContainer {
+       display: flex;
+       flex-direction: column;
+       gap: 8px;
+       min-width: 500px;
+-      
+-      .yamlChoiceItem{
++
++      .yamlChoiceItem {
+         background-color: var(--o-bg-color-light);
+         padding: 16px;
+         border-radius: 4px;
+@@ -669,39 +917,40 @@ onMounted(()=>{
+           display: flex;
+           justify-content: space-between;
+         }
+-        .yamlChoiceItemContent{
++        .yamlChoiceItemContent {
+           display: flex;
+           align-items: center;
+           gap: 8px;
+-          .yamlChoiceItemLogic{
+-            .yamlChoiceItemLogicSelect{
++          .yamlChoiceItemLogic {
++            .yamlChoiceItemLogicSelect {
+               max-width: 100px;
+             }
+           }
+-          .yamlConditionContainer{
++          .yamlConditionContainer {
+             display: flex;
+             flex-direction: column;
+             gap: 8px;
+-            .yamlConditionItem{
++            .yamlConditionItem {
+               display: flex;
+               align-items: center;
+               gap: 8px;
+               width: 100%;
+-              .el-select__wrapper{
++              .el-select__wrapper {
+                 padding: 0 8px;
+               }
+-              .yamlConditionOperateSelect{
++              .yamlConditionOperateSelect {
+                 max-width: 100px;
+               }
+-              .yamlConditionValue{
++              .yamlConditionValue {
+                 display: flex;
+                 flex-direction: column;
+                 gap: 8px;
+                 position: relative;
+-                .yamlConditionLeft{ }
+-                .yamlConditionRight{
++                .yamlConditionLeft {
++                }
++                .yamlConditionRight {
+                   display: flex;
+-                  .yamlConditionRightType{
++                  .yamlConditionRightType {
+                     text-align: center;
+                     display: inline-block;
+                     width: 87px;
+@@ -712,16 +961,16 @@ onMounted(()=>{
+                     overflow: hidden;
+                     text-overflow: ellipsis;
+                   }
+-                  .yamlConditionRightSelect{
+-                    .el-input__wrapper{
++                  .yamlConditionRightSelect {
++                    .el-input__wrapper {
+                       border-radius: 0;
+                     }
+-                    .rightSelect{
++                    .rightSelect {
+                       width: 50px !important;
+-                      .el-select__selection{
++                      .el-select__selection {
+                         display: none;
+                       }
+-                      .el-select__wrapper{
++                      .el-select__wrapper {
+                         width: 50px;
+                       }
+                     }
+@@ -731,7 +980,7 @@ onMounted(()=>{
+             }
+           }
+         }
+-        .addCondition{
++        .addCondition {
+           margin-left: 110px;
+           margin-top: 16px;
+         }
+@@ -739,18 +988,17 @@ onMounted(()=>{
+     }
+   }
+ }
+-.leftOption{
++.leftOption {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   position: relative;
+-  .arrowIcon{
+-    .el-icon{
+-
++  .arrowIcon {
++    .el-icon {
+       cursor: pointer;
+     }
+   }
+-  .paramType{
++  .paramType {
+     background-color: var(--o-border-color-base);
+     color: var(--o-text-color-tertiary);
+     padding: 0 8px;
+@@ -763,7 +1011,10 @@ onMounted(()=>{
+ 
+ .option-container {
+   min-width: 200px;
+-  .el-popper .is-disabled, .el-popper .is-disabled,.el-select-dropdown__item.is-disabled, .el-select-dropdown__item.is-disabled:hover{
++  .el-popper .is-disabled,
++  .el-popper .is-disabled,
++  .el-select-dropdown__item.is-disabled,
++  .el-select-dropdown__item.is-disabled:hover {
+     background-color: var(--o-select-dropdown-bg-color) !important;
+     color: var(--o-text-color-primary) !important;
+   }
+@@ -780,7 +1031,7 @@ onMounted(()=>{
+   min-width: 200px;
+   z-index: 9000;
+ }
+-.delIcon{
++.delIcon {
+   width: 24px;
+   height: 24px;
+   border-radius: 4px;

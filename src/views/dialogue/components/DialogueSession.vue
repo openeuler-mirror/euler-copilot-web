@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, nextTick } from 'vue';
 import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
 import UploadFileGroup from 'src/components/uploadFile/UploadFileGroup.vue';
 import InitalPanel from 'src/views/dialogue/components/InitalPanel.vue';
@@ -14,6 +14,8 @@ import { UploadTypeName, UploadStatus } from 'src/components/uploadFile/type';
 import CommonFooter from 'src/components/commonFooter/CommonFooter.vue';
 import { api } from 'src/apis';
 import { useHistorySessionStore } from 'src/store/historySession';
+import { ElMessage } from 'element-plus';
+import { useAccountStore } from 'src/store';
 import { successMsg, errorMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import DialogueVariablePanel from './DialogueVariablePanel.vue';
@@ -28,6 +30,9 @@ export interface DialogueSession {
   createAppForm: any;
 }
 
+const autoExecuteRef = ref(<boolean | undefined>false);
+const { userinfo } = storeToRefs(useAccountStore());
+
 const props = withDefaults(defineProps<DialogueSession>(), {});
 const Form = ref(props.createAppForm);
 const AppForm = ref(props.createAppForm);
@@ -36,11 +41,21 @@ const { pausedStream } = useSessionStore();
 const themeStore = useChangeThemeStore();
 const isCreateApp = ref(props?.isCreateApp);
 const selectedLLM = ref({});
+const curFileList = ref<Array<any>>([]);
 const handleChangeMode = (val: string) => {
   selectedLLM.value = val;
 };
 const llmOptions = ref([]);
 const { app } = storeToRefs(useSessionStore());
+const showFileSource = ref(false);
+
+const closeShowFileSource = () => {
+  showFileSource.value = false;
+};
+const openShowFileSource = (fileList: Array<any>) => {
+  showFileSource.value = true;
+  curFileList.value = fileList;
+};
 
 // 对话输入内容
 const dialogueInput = ref<string>('');
@@ -55,8 +70,9 @@ const currentFlowId = ref<string>('');
 
 // 对话列表
 const { sendQuestion } = useSessionStore();
-const { conversationList, isAnswerGenerating, dialogueRef } =
-  storeToRefs(useSessionStore());
+const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(
+  useSessionStore(),
+);
 const { generateSession } = useHistorySessionStore();
 const { currentSelectedSession } = storeToRefs(useHistorySessionStore());
 
@@ -291,7 +307,7 @@ const handleKeydown = (event: KeyboardEvent) => {
  *
  * @param item
  */
-const getItem = <T,>(item: ConversationItem, field: string): T | undefined => {
+const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
   
   if (field in item) {
     return (item as RobotConversationItem)[field] as T;
@@ -361,6 +377,7 @@ const isAllowToSend = computed(() => {
 // 会话切换时
 watch(currentSelectedSession, async (newVal) => {
   if (!newVal) return;
+  closeShowFileSource();
   const newExistList = existUploadMap.get(newVal);
   const newFileView = uploadViewsMap.get(newVal);
   let curPolling = pollingMap.get(newVal);
@@ -679,7 +696,12 @@ const getProviderLLM = async () => {
   }
 };
 
-// 🔑 移除全局收集器定义，改为使用per-QA的files字段
+const autoExecuteChange = async (value) => {
+  autoExecuteRef.value = value;
+  await nextTick();
+  Object.assign(userinfo.value, { auto_execute: value });
+  api.updateUserInfo({ autoExecute: value });
+};
 
 onMounted(() => {
   // 数据初始化
@@ -687,18 +709,27 @@ onMounted(() => {
   if (!inputRef.value) return;
   inputRef.value.focus();
   getProviderLLM();
-  
-  // 🔑 移除全局收集器初始化，改为使用per-QA的files字段
-  
+    
   // 🔑 重要修复：只在没有现有变量配置时才加载
   // 避免重复加载导致覆盖用户已输入的变量状态
   if (user_selected_app.value && conversationVariables.value.length === 0) {
     loadConversationVariables();
   } else if (user_selected_app.value && conversationVariables.value.length > 0) {
   }
-  
-
 });
+
+watch(
+  [userinfo],
+  () => {
+    if (userinfo.value.auto_execute) {
+      autoExecuteRef.value = userinfo.value.auto_execute;
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  },
+);
 
 watch(selectLLM, (newValue) => {
   if (newValue) {
@@ -757,7 +788,7 @@ const getappMode = (appId: string) => {
 watch(
   () => user_selected_app,
   (val, oldVal) => {
-    if (app.value) {
+    if (app.value.appId) {
       user_selected_app.value = app.value.appId;
     }
     if (user_selected_app.value && !isCreateApp.value) {
@@ -824,6 +855,89 @@ watch(
     deep: true,
   },
 );
+
+function downloadFun(url: string) {
+  const token = localStorage.getItem('ECSESSION');
+  if (!token) {
+    ElMessage.error(`Token is not available yet`);
+    return;
+  }
+  fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // 提取 Content-Disposition 头部
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let fileName = 'default-filename';
+      // 解析文件名（处理编码及格式）
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(
+          /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i,
+        );
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = decodeURIComponent(fileNameMatch[1].replace(/"/g, ''));
+        }
+      }
+      return response.blob().then((blob) => ({ blob, fileName }));
+    })
+    .then(({ blob, fileName }) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.style.display = 'none';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((error) => {
+      ElMessage.error(`下载失败: ${error}`);
+    });
+}
+const downLoadSourceFile = (file: any) => {
+  if (!file) return;
+  const url = `${window.origin}/witchaind/api/doc/download?docId=${file.documentId}`;
+  downloadFun(url);
+};
+
+const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp * 1000); // 秒转毫秒
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+/**
+ * @description 处理并过滤文件列表，将文件列表中的字段名统一为指定格式
+ * @param {ConversationItem} ConversationItem - 对话项对象
+ * @param {string} str - 字段名
+ * @returns {Array} 格式化后的文件列表
+ */
+const getFormatFileList = (ConversationItem, str) => {
+  let fileList: any = getItem(ConversationItem, str);
+  if (!fileList || fileList?.length === 0) return;
+  let newFileList: any = [];
+  fileList?.forEach((file) => {
+    if (file.associated === 'answer') {
+      newFileList.push({
+        documentId: file._id,
+        documentName: file.name,
+        documentAbstract: file.abstract,
+        documentType: file.type,
+        documentSize: file.size,
+        sourceUrl: file.sourceUrl,
+        documentOrder: file.order,
+        createdAt: file.created_at,
+        documentAuthor: file.author,
+      });
+    }
+  });
+  return newFileList;
+};
+
 </script>
 
 <template>
@@ -904,6 +1018,7 @@ watch(
           @handleReport="handleReport"
           @handleSendMessage="handleSendMessage"
           @clearSuggestion="clearSuggestion(index)"
+          @openShowFileSource="openShowFileSource"
         />
 
         <template v-if="conversationList.length === 0">
@@ -939,7 +1054,10 @@ watch(
             {{ $t('feedback.stop') }}
           </div>
         </div>
-        <div class="dialogue-conversation-bottom-selectGroup">
+        <div
+          class="dialogue-conversation-bottom-selectGroup"
+          v-if="!user_selected_app"
+        >
           <div class="modalSelectGroup">
             <el-dropdown
               trigger="click"
@@ -965,7 +1083,7 @@ watch(
                 </el-icon>
               </div>
               <div class="el-dropdown-link" v-else>
-                <span>请选择模型</span>
+                <span>{{ $t('app.modelSelected_input') }}</span>
                 <el-icon
                   :class="{ rotated: isDropdownOpen }"
                   style="margin-left: auto"
@@ -1007,7 +1125,10 @@ watch(
               />
             </div>
             <!-- 上传 -->
-            <div class="dialogue-conversation-bottom-sendbox__upload">
+            <div
+              class="dialogue-conversation-bottom-sendbox__upload"
+              v-if="!user_selected_app"
+            >
               <el-tooltip
                 placement="top"
                 :content="$t('upload.upload_tip_text')"
@@ -1032,6 +1153,38 @@ watch(
                     src="@/assets/svgs/upload_dark.svg"
                     @click="emitUpload"
                   />
+                </div>
+              </el-tooltip>
+            </div>
+            <!-- 自动执行 -->
+            <div
+              class="dialogue-conversation-bottom-sendbox__autoExecute"
+              v-if="user_selected_app"
+            >
+              <el-tooltip
+                placement="top"
+                :content="$t('history.auto_execute')"
+                effect="light"
+              >
+                <div class="switch-wrapper">
+                  <span
+                    style="
+                      width: 70px;
+                      display: inline-block;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      white-space: nowrap;
+                      vertical-align: middle;
+                    "
+                  >
+                    {{ $t('history.auto_execute') }}
+                  </span>
+                  <el-switch
+                    v-model="autoExecuteRef"
+                    :active-value="true"
+                    :inactive-value="false"
+                    @change="autoExecuteChange"
+                  ></el-switch>
                 </div>
               </el-tooltip>
             </div>
@@ -1071,6 +1224,51 @@ watch(
       <footer class="copilot-footer">
         <CommonFooter />
       </footer>
+    </div>
+    <div v-if="showFileSource" class="dialogue-rightContainer__file-source">
+      <div class="file-source__header">
+        <div class="file-source__title">
+          <span>{{ $t('upload.reference_source') }}</span>
+          <span>{{ curFileList.length || 0 }}</span>
+        </div>
+        <el-icon @click="closeShowFileSource">
+          <IconX />
+        </el-icon>
+      </div>
+      <div class="file-source__content-container">
+        <div class="file-source__content">
+          <div
+            v-for="(file, index) in curFileList"
+            :key="index"
+            class="file-source__item"
+          >
+            <div class="file-source__item-header">
+              <div class="file-source__item-header-left">
+                <span class="file-source__order">
+                  {{ file?.documentorder ?? index + 1 }}
+                </span>
+                <div class="file-source__type-icon">
+                  <img :src="typeSvgMap[file?.documentType]" alt="" />
+                </div>
+                <span class="file-source__name">{{ file?.documentName }}</span>
+              </div>
+              <el-tooltip content="下载" placement="top">
+                <span
+                  class="file-source__download"
+                  @click="downLoadSourceFile(file)"
+                ></span>
+              </el-tooltip>
+            </div>
+            <span class="file-source__desc">
+              {{ file?.documentAbstract ?? '' }}
+            </span>
+            <div class="file-source__footer">
+              <span>@{{ file?.documentAuthor }}</span>
+              <span>{{ formatDate(file?.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1345,6 +1543,25 @@ button[disabled]:hover {
             filter: invert(50%) sepia(66%) saturate(446%) hue-rotate(182deg)
               brightness(100%) contrast(103%);
           }
+        }
+      }
+
+      &__autoExecute {
+        position: absolute;
+        cursor: pointer;
+        width: 120px;
+        height: 32px;
+        box-sizing: border-box;
+        border: 1px solid rgba(223, 229, 239);
+        border-radius: 8px;
+        background: rgb(253, 254, 255);
+
+        .switch-wrapper {
+          position: absolute;
+          width: 120px;
+          height: 32px;
+          line-height: 30px;
+          text-align: center;
         }
       }
 

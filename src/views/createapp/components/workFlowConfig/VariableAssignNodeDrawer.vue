@@ -202,7 +202,7 @@ const conversationId = computed(() => {
     :model-value="visible"
     @update:model-value="closeDrawer"
     title="变量赋值节点配置"
-    :size="600"
+    :size="800"
     :before-close="closeDrawer"
   >
     <div class="variable-assign-drawer">

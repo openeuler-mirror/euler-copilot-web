@@ -1,0 +1,318 @@
+diff --git a/src/components/dialoguePanel/DialogueFlow.vue b/src/components/dialoguePanel/DialogueFlow.vue
+index e0c6a5d..e986a15 100644
+--- a/src/components/dialoguePanel/DialogueFlow.vue
++++ b/src/components/dialoguePanel/DialogueFlow.vue
+@@ -1,9 +1,14 @@
+ <script setup lang="ts">
+ import { ref, watch } from 'vue';
+ import FlowCode from './FlowCode.vue';
++import ParamsModel from './ParamsModel.vue';
+ import { StatusInfoTitle } from '@/views/createapp/components/types';
+-import { IconSuccess, IconError } from '@computing/opendesign-icons';
++import { getCookie } from '@/apis/tools';
++import { useSessionStore } from '@/store';
++import i18n from 'src/i18n';
++const { t } = i18n.global;
+ 
++const { sendQuestion } = useSessionStore();
+ const props = withDefaults(
+   defineProps<{
+     flowdata: any;
+@@ -13,13 +18,83 @@ const props = withDefaults(
+   {},
+ );
+ const contents = ref();
++const exData = ref(<any>[]);
++const exParam = ref(<any>[]);
++const paramIndex = ref(0);
++const taskId = ref();
+ const totalTime = ref(0);
++const paramsModelVisible = ref(false);
+ if (props.flowdata) {
+   contents.value = [props.flowdata];
++
++  if (props.flowdata.data[0]) {
++    for (const item of props.flowdata.data[0]) {
++      if (item && item?.data.exData) {
++        if (item.data.exData.reason) {
++        } else if (item.data.exData.message) {
++          exParam.value.push(item.data.exData);
++        }
++      }
++      if (item && item?.data.exParam) {
++        exParam.value.push(item.data.exParam);
++      }
++    }
++  }
+ }
+ 
+ const activeNames = ref([contents.value[0].id]);
+ const secondCollapseActiveName = ref<number[]>([]);
++function getRiskType(risk) {
++  const mapping = {
++    low: 'warning',
++  };
++  return mapping[risk] || 'warning';
++}
++
++const doFlow = async (type) => {
++  if (taskId) {
++    exData.value.pop();
++    taskId.value = null;
++    let content = '';
++    await sendQuestion(
++      undefined,
++      content,
++      undefined,
++      undefined,
++      undefined,
++      undefined,
++      { params: type },
++      null,
++      'wait',
++    );
++  }
++};
++
++const showParams = (index) => {
++  paramsModelVisible.value = true;
++  paramIndex.value = index;
++};
++const doParams = async (params) => {
++  let description = params.description;
++  delete params.description;
++  let newParams = { content: params, description: description };
++  if (taskId) {
++    taskId.value = null;
++    let content = '';
++    await sendQuestion(
++      undefined,
++      content,
++      undefined,
++      undefined,
++      undefined,
++      undefined,
++      newParams,
++      null,
++      'params',
++    );
++    exParam.value[paramIndex.value].status = true;
++  }
++};
+ 
+ watch(
+   () => props,
+@@ -31,6 +106,30 @@ watch(
+         totalTime.value += item.costTime || 0;
+       });
+     }
++    if (props.flowdata?.taskId) {
++      if (props.flowdata?.data.exParam) {
++        exParam.value.push(props.flowdata?.data.exParam);
++      } else {
++        exData.value.push(props.flowdata?.data.exData);
++      }
++      taskId.value = props.flowdata?.taskId;
++    } else {
++      let newContentList = props.flowdata?.data;
++      for (const newContent of newContentList) {
++        if (!(newContent instanceof Array)) {
++          continue;
++        }
++        for (const item of newContent) {
++          let input = item.data.input;
++          const isDuplicate = contents.value[0].data[0].some(
++            (it) => it.id === item.id,
++          );
++          if (!isDuplicate && input) {
++            contents.value[0].data[0].push(item);
++          }
++        }
++      }
++    }
+   },
+   { deep: true, immediate: true },
+ );
+@@ -40,13 +139,14 @@ watch(
+   <div
+     class="demo-collapse"
+     :class="{
+-      'border-blue': props.flowdata.status === 'running',
++      'border-blue': ['running', 'waiting'].includes(props.flowdata.status),
+       'border-green': props.flowdata.status === 'success',
+       'border-red': props.flowdata.status === 'error',
++      'border-grey': props.flowdata.status === 'cancelled',
+     }"
+   >
+     <section>
+-      <el-collapse v-model="activeNames" class="o-hpc-collapse">
++      <el-collapse v-model="activeNames" class="o-hpc-collapse" accordion>
+         <el-collapse-item
+           v-for="item in contents"
+           class="title"
+@@ -56,7 +156,7 @@ watch(
+           <template #title>
+             <div class="loading">
+               <img
+-                v-if="props.flowdata.status === 'running'"
++                v-if="['running', 'waiting'].includes(props.flowdata.status)"
+                 src="@/assets/images/loading.png"
+                 alt=""
+                 class="loading-animeIcon"
+@@ -69,12 +169,11 @@ watch(
+                   <IconSuccess />
+                 </el-icon>
+               </div>
+-              <!-- <img
+-                v-if="props.flowdata.status === 'error'"
+-                src="@/assets/images/flow_fail.png"
++              <img
++                v-if="props.flowdata.status === 'cancelled'"
++                src="@/assets/svgs/warning.svg"
+                 alt=""
+-                class="loading-icon"
+-              /> -->
++              />
+               <div class="loading-icon-box">
+                 <el-icon
+                   class="loading-title-icon"
+@@ -116,11 +215,7 @@ watch(
+               />
+             </el-icon>
+           </template>
+-          <template
+-            v-for="(p, $index) in item.data"
+-            :key="$index"
+-            class="6645ds"
+-          >
++          <template v-for="(p, $index) in item.data" :key="p.id">
+             <div v-if="!Array.isArray(p)" class="o-collapse-content">
+               {{ p }}
+             </div>
+@@ -133,12 +228,13 @@ watch(
+                 class="o-collapse-item normal"
+                 v-for="secItem in p"
+                 :key="secItem.id"
++                :title="secItem.title"
+                 :name="secItem.id"
+               >
+                 <template #title>
+                   <div class="loading">
+                     <img
+-                      v-if="secItem.status === 'running'"
++                      v-if="['running', 'waiting'].includes(secItem.status)"
+                       src="@/assets/images/loading.png"
+                       alt=""
+                       class="loading-animeIcon"
+@@ -193,6 +289,43 @@ watch(
+           </template>
+         </el-collapse-item>
+       </el-collapse>
++      <div style="margin: 0px 16px;">
++        <el-alert
++          class="wait-div"
++          v-for="(item, index) in exData"
++          :key="index"
++          :title="t('flow.flow_risk')"
++          :type="getRiskType(item?.risk)"
++          :description="item?.reason"
++          show-icon
++          :closable="false"
++          style="background: #FBF6E5;"
++        />
++        <div class="flow-button" v-if="taskId && exData">
++          <el-button @click="doFlow(false)">
++            {{ t('common.cancel') }}
++          </el-button>
++          <el-button type="primary" @click="doFlow(true)">
++            {{ t('common.confirm') }}
++          </el-button>
++        </div>
++      </div>
++      <div class="flow-paramas">
++        <el-text v-for="(item, index) in exParam" :key="index">
++          {{ item.message }}
++          <span v-if="taskId && exParam && !item?.status">
++            <el-button @click="showParams(index)" text>
++              {{ t('flow.parameterConfiguration') }}
++            </el-button>
++          </span>
++        </el-text>
++      </div>
++      <ParamsModel
++        v-model:visible="paramsModelVisible"
++        :item="exParam[0]"
++        :title="$t('flow.parameterConfiguration')"
++        @do-params="doParams"
++      />
+     </section>
+   </div>
+ </template>
+@@ -203,6 +336,18 @@ watch(
+ </style>
+ 
+ <style lang="scss" scope>
++.flow-paramas {
++  display: grid;
++  margin: 8px;
++}
++.wait-div {
++  margin-top: 16px;
++}
++.flow-button {
++  margin-top: 16px;
++  display: flex;
++  justify-content: flex-end;
++}
+ .el-collapse-item:last-child {
+   margin-bottom: 0px;
+ }
+@@ -218,6 +363,10 @@ watch(
+   background-color: rgb(194, 231, 199);
+   border-radius: 0px !important;
+ }
++.demo-collapse.border-grey .title .el-collapse-item__header:first-child {
++  background-color: rgb(208, 211, 216);
++  border-radius: 0px !important;
++}
+ .o-collapse-icon {
+   align-self: center;
+   padding: 0px;
+@@ -288,7 +437,7 @@ watch(
+       height: 14px;
+     }
+   }
+-  .loading-title-icon{
++  .loading-title-icon {
+     width: 24px;
+     height: 24px;
+     display: block;
+@@ -300,6 +449,10 @@ watch(
+   }
+ }
+ 
++.border-grey {
++  border: 1px solid #d0d3d8;
++}
++
+ .border-red {
+   border: 1px solid #f7c1c1;
+ }
+@@ -311,8 +464,7 @@ watch(
+ .border-blue {
+   border: 1px solid transparent;
+   border-radius: 4px;
+-  background:
+-    linear-gradient(white, white) padding-box,
++  background: linear-gradient(white, white) padding-box,
+     linear-gradient(180deg, #6c77fa, #6db9f9) border-box;
+ }
+ .demo-collapse {
+@@ -402,4 +554,7 @@ watch(
+ .totalTime.errorBg {
+   background-color: rgba(227, 32, 32, 0.2);
+ }
++.totalTime.cancelledBg {
++  background-color: rgba(208, 211, 216, 0.2);
++}
+ </style>

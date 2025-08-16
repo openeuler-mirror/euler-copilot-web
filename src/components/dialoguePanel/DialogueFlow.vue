@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
+import ParamsModel from './ParamsModel.vue';
 import { StatusInfoTitle } from '@/views/createapp/components/types';
+import { getCookie } from '@/apis/tools';
+import { useSessionStore } from '@/store';
+import i18n from 'src/i18n';
 import { IconSuccess, IconError } from '@computing/opendesign-icons';
+
+const { t } = i18n.global;
+const { sendQuestion } = useSessionStore();
 
 const props = withDefaults(
   defineProps<{
@@ -13,19 +20,87 @@ const props = withDefaults(
   {},
 );
 
-// 调试方法
-const debugCode = (desc: any, title: string) => {
-  return desc;
-};
-
 const contents = ref();
+const exData = ref(<any>[]);
+const exParam = ref(<any>[]);
+const paramIndex = ref(0);
+const taskId = ref();
 const totalTime = ref(0);
+const paramsModelVisible = ref(false);
+
 if (props.flowdata) {
   contents.value = [props.flowdata];
+
+  if (props.flowdata.data[0]) {
+    for (const item of props.flowdata.data[0]) {
+      if (item && item?.data.exData) {
+        if (item.data.exData.reason) {
+        } else if (item.data.exData.message) {
+          exParam.value.push(item.data.exData);
+        }
+      }
+      if (item && item?.data.exParam) {
+        exParam.value.push(item.data.exParam);
+      }
+    }
+  }
 }
 
 const activeNames = ref([contents.value[0].id]);
 const secondCollapseActiveName = ref<number[]>([]);
+
+function getRiskType(risk) {
+  const mapping = {
+    low: 'warning',
+  };
+  return mapping[risk] || 'warning';
+}
+
+const doFlow = async (type) => {
+  if (taskId) {
+    exData.value.pop();
+    taskId.value = null;
+    let content = '';
+    await sendQuestion(
+      undefined,
+      content,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { params: type },
+      null,
+      'wait',
+    );
+  }
+};
+
+const showParams = (index) => {
+  paramsModelVisible.value = true;
+  paramIndex.value = index;
+};
+
+const doParams = async (params) => {
+  let description = params.description;
+  delete params.description;
+  let newParams = { content: params, description: description };
+  if (taskId) {
+    taskId.value = null;
+    let content = '';
+    await sendQuestion(
+      undefined,
+      content,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      newParams,
+      null,
+      'params',
+    );
+    exParam.value[paramIndex.value].status = true;
+  }
+};
 
 watch(
   () => props,
@@ -37,6 +112,30 @@ watch(
         totalTime.value += item.costTime || 0;
       });
     }
+    if (props.flowdata?.taskId) {
+      if (props.flowdata?.data.exParam) {
+        exParam.value.push(props.flowdata?.data.exParam);
+      } else {
+        exData.value.push(props.flowdata?.data.exData);
+      }
+      taskId.value = props.flowdata?.taskId;
+    } else {
+      let newContentList = props.flowdata?.data;
+      for (const newContent of newContentList) {
+        if (!(newContent instanceof Array)) {
+          continue;
+        }
+        for (const item of newContent) {
+          let input = item.data.input;
+          const isDuplicate = contents.value[0].data[0].some(
+            (it) => it.id === item.id,
+          );
+          if (!isDuplicate && input) {
+            contents.value[0].data[0].push(item);
+          }
+        }
+      }
+    }
   },
   { deep: true, immediate: true },
 );
@@ -46,9 +145,10 @@ watch(
   <div
     class="demo-collapse"
     :class="{
-      'border-blue': props.flowdata.status === 'running',
+      'border-blue': ['running', 'waiting'].includes(props.flowdata.status),
       'border-green': props.flowdata.status === 'success',
       'border-red': props.flowdata.status === 'error',
+      'border-grey': props.flowdata.status === 'cancelled',
     }"
   >
     <section>
@@ -62,7 +162,7 @@ watch(
           <template #title>
             <div class="loading">
               <img
-                v-if="props.flowdata.status === 'running'"
+                v-if="['running', 'waiting'].includes(props.flowdata.status)"
                 src="@/assets/images/loading.png"
                 alt=""
                 class="loading-animeIcon"
@@ -73,6 +173,19 @@ watch(
                   v-if="props.flowdata.status === 'success'"
                 >
                   <IconSuccess />
+                </el-icon>
+              </div>
+              <img
+                v-if="props.flowdata.status === 'cancelled'"
+                src="@/assets/svgs/warning.svg"
+                alt=""
+              />
+              <div class="loading-icon-box">
+                <el-icon
+                  class="loading-title-icon"
+                  v-if="props.flowdata.status === 'error'"
+                >
+                  <IconError />
                 </el-icon>
               </div>
               <!-- <img
@@ -144,14 +257,14 @@ watch(
                 <template #title>
                   <div class="loading">
                     <img
-                      v-if="secItem.status === 'running'"
+                      v-if="['running', 'waiting'].includes(secItem.status)"
                       src="@/assets/images/loading.png"
                       alt=""
                       class="loading-animeIcon"
                     />
                     <div class="loading-icon-box">
                       <el-icon
-                        class="status-icon"
+                        class="loading-icon"
                         v-if="secItem.status === 'success'"
                       >
                         <IconSuccess />
@@ -159,7 +272,7 @@ watch(
                     </div>
                     <div class="loading-icon-box">
                       <el-icon
-                        class="status-icon"
+                        class="loading-icon"
                         v-if="secItem.status === 'error'"
                       >
                         <IconError />
@@ -192,11 +305,9 @@ watch(
                 >
                   <div class="code-bar">
                     <FlowCode 
-                      :code="debugCode(desc, String(index))" 
+                      :code="desc" 
                       :title="String(index)" 
                       :disabled="true"
-                      :stepStatus="secItem.status"
-                      :error="secItem.error || secItem.message"
                     />
                   </div>
                 </div>
@@ -205,6 +316,44 @@ watch(
           </template>
         </el-collapse-item>
       </el-collapse>
+      <div style="margin: 0px 16px;">
+        <el-alert
+          class="wait-div"
+          v-for="(item, index) in exData"
+          :key="index"
+          :title="t('flow.flow_risk')"
+          :type="getRiskType(item?.risk)"
+          :description="item?.reason"
+          show-icon
+          :closable="false"
+          style="background: #FBF6E5;"
+        />
+        <div class="flow-button" v-if="taskId && exData">
+          <el-button @click="doFlow(false)">
+            {{ t('common.cancel') }}
+          </el-button>
+          <el-button type="primary" @click="doFlow(true)">
+            {{ t('common.confirm') }}
+          </el-button>
+        </div>
+      </div>
+      <div class="flow-paramas" :class="{ 'has-content': exParam.length > 0 }">
+        <el-text v-for="(item, index) in exParam" :key="index">
+          {{ item.message }}
+          <span v-if="taskId && exParam && !item?.status">
+            <el-button @click="showParams(index)" text>
+              {{ t('flow.parameterConfiguration') }}
+            </el-button>
+          </span>
+        </el-text>
+      </div>
+      <ParamsModel
+        v-model:visible="paramsModelVisible"
+        :item="exParam[0]"
+        :title="$t('flow.parameterConfiguration')"
+        type="edit"
+        @do-params="doParams"
+      />
     </section>
   </div>
 </template>
@@ -215,6 +364,20 @@ watch(
 </style>
 
 <style lang="scss" scope>
+.flow-paramas {
+  display: grid;
+}
+.flow-paramas.has-content {
+  margin: 8px;
+}
+.wait-div {
+  margin-top: 16px;
+}
+.flow-button {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
 .el-collapse-item:last-child {
   margin-bottom: 0px;
 }
@@ -228,6 +391,10 @@ watch(
 }
 .demo-collapse.border-green .title .el-collapse-item__header:first-child {
   background-color: rgb(194, 231, 199);
+  border-radius: 0px !important;
+}
+.demo-collapse.border-grey .title .el-collapse-item__header:first-child {
+  background-color: rgb(208, 211, 216);
   border-radius: 0px !important;
 }
 .o-collapse-icon {
@@ -425,5 +592,26 @@ watch(
 }
 .totalTime.errorBg {
   background-color: rgba(227, 32, 32, 0.2);
+}
+.totalTime.cancelledBg {
+  background-color: rgba(208, 211, 216, 0.2);
+}
+.border-grey {
+  border: 1px solid #d0d3d8;
+}
+
+.border-red {
+  border: 1px solid #f7c1c1;
+}
+
+.border-green {
+  border: 1px solid #c2e7c7;
+}
+
+.border-blue {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: linear-gradient(white, white) padding-box,
+    linear-gradient(180deg, #6c77fa, #6db9f9) border-box;
 }
 </style>

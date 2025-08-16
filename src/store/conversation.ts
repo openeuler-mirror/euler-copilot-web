@@ -22,7 +22,7 @@ import {
   FlowType,
 } from 'src/views/dialogue/types';
 import { api } from 'src/apis';
-import { successMsg, errorMsg } from 'src/components/Message';
+import { successMsg } from 'src/components/Message';
 import i18n from 'src/i18n';
 import { Application } from 'src/apis/paths/type';
 import { handleAuthorize } from 'src/apis/tools';
@@ -51,12 +51,12 @@ export const useSessionStore = defineStore('conversation', () => {
 
   // #endregion
 
-  const { language } = useLangStore();
-
+  const langStore = useLangStore();
   // 是否暂停回答
   const isPaused = ref(false);
   // 会话列表
   const conversationList = ref<ConversationItem[]>([]);
+  const currentMessage = ref({});
   const app = ref<AppShowType>({
     appId: '',
     name: '',
@@ -66,7 +66,7 @@ export const useSessionStore = defineStore('conversation', () => {
   // ai回复是否还在生成中
   const isAnswerGenerating = ref(false);
 
-  // 🔑 移除全局收集器，改为在每个conversationItem中存储文件
+  const currentTaskId = ref(null);
 
   // 方法集合 - 用于处理不同类型的event message
   const dataTransfers = {
@@ -87,7 +87,9 @@ export const useSessionStore = defineStore('conversation', () => {
       conversationItem: RobotConversationItem,
       message: Record<string, unknown>,
     ) => {
-      conversationItem.message[conversationItem.currentInd] += message.content;
+      if (!conversationItem.files) {
+        conversationItem.files = [];
+      }
       conversationItem.files = [...conversationItem.files, message.content];
     },
     suggestionFunc: (
@@ -144,100 +146,12 @@ export const useSessionStore = defineStore('conversation', () => {
         (item) => item.id === flow.stepId,
       );
       if (target) {
-        
-        // 统一的文件收集逻辑，存储到当前conversationItem.files中
-        const addFileToConversationItem = (fileData: any) => {
-          // 确保conversationItem.files是数组
-          if (!conversationItem.files) {
-            conversationItem.files = [];
-          }
-          
-          // 严格的去重检查：基于file_id和filename
-          const existingFile = conversationItem.files.find((item: any) => 
-            item.file_id === fileData.file_id && item.filename === fileData.filename
-          );
-          
-          if (!existingFile) {
-            const fileItem = {
-              file_id: fileData.file_id,
-              filename: fileData.filename,
-              file_type: fileData.file_type,
-              file_size: fileData.file_size,
-              variable_name: fileData.variable_name,
-              content: fileData.content,
-              step_name: target.title // 记录来源步骤
-            };
-            
-            conversationItem.files.push(fileItem);
-            return true;
-          } else {
-            return false;
-          }
-        };
-        
-        // 🔑 检查不同的文件格式并收集
-        let hasFileData = false;
-        
-        // 格式1：单个文件对象
-        if (typeof message.content === 'object' && message.content && 
-            (message.content as any).file_id && (message.content as any).filename && (message.content as any).content) {
-          addFileToConversationItem(message.content);
-          hasFileData = true;
-        }
-        // 格式2：多文件格式 {type: 'files', files: [...]}
-        else if (typeof message.content === 'object' && message.content && 
-                 (message.content as any).type === 'files' && (message.content as any).files && 
-                 Array.isArray((message.content as any).files)) {
-          (message.content as any).files.forEach((fileData: any) => {
-            if (fileData.file_id && fileData.filename && fileData.content) {
-              addFileToConversationItem(fileData);
-              hasFileData = true;
-            }
-          });
-        }
-        // 格式3：旧格式文件 {files: [...]}
-        else if (typeof message.content === 'object' && message.content && 
-                 (message.content as any).files && Array.isArray((message.content as any).files)) {
-          (message.content as any).files.forEach((fileData: any) => {
-            if (fileData.file_id && fileData.filename && fileData.content) {
-              addFileToConversationItem(fileData);
-              hasFileData = true;
-            }
-          });
-        }
-        
-        // 设置步骤输出显示
-        if (hasFileData) {
-          // 保持原始文件格式，让FlowCode能够检测和显示
         target.data.output = message.content;
-        } else {
-          // 普通数据输出
-          target.data.output = message.content;
-        }
-        
-        target.status = flow.stepStatus;
+        target.status = 'success';
         // 工作流添加每阶段的时间耗时
         target['costTime'] = metadata.timeCost;
-        
-        // 修复：更新整体flowdata状态逻辑
-        if (conversationItem.flowdata) {
-          if (flow.stepStatus === 'error') {
-            // 如果有错误，立即设置为错误状态
-            conversationItem.flowdata.status = 'error';
-          } else if (flow.stepStatus === 'success') {
-            // 如果步骤成功，检查是否所有步骤都完成了
-            const allSteps = conversationItem.flowdata.data[0];
-            const allCompleted = allSteps.every(step => 
-              step.status === 'success' || step.status === 'error'
-            );
-            
-            if (allCompleted) {
-              // 所有步骤都完成了，检查是否有错误
-              const hasError = allSteps.some(step => step.status === 'error');
-              conversationItem.flowdata.status = hasError ? 'error' : 'success';
-            }
-            // 如果还有步骤未完成，保持running状态
-          }
+        if (flow.step_status === 'error' && conversationItem.flowdata) {
+          conversationItem.flowdata.status = flow.stepStatus;
         }
       }
     },
@@ -246,15 +160,9 @@ export const useSessionStore = defineStore('conversation', () => {
       message: Record<string, unknown>,
       isFlowDebug: boolean,
     ) => {
-      
       const content = (message.content || {}) as Record<string, unknown>;
       const contentFlow = (content.flow || {}) as Record<string, string>;
       const messageFlow = (message.flow || {}) as Record<string, string>;
-      
-      // 🔑 关键修复：在 flow.stop 时就停止生成状态
-      conversationItem.isFinish = true;
-      isAnswerGenerating.value = false;
-      
       if (isFlowDebug) {
         // 如果是工作流的调试功能-添加status/data
         conversationItem.flowdata = {
@@ -265,16 +173,15 @@ export const useSessionStore = defineStore('conversation', () => {
           display: true,
           data: conversationItem?.flowdata?.data,
         };
-        
-        $bus.emit('debugChatEnd');
       } else if (content.type !== 'schema' && conversationItem.flowdata) {
         // 删除 end 逻辑
         conversationItem.flowdata = {
-          id: contentFlow.stepId,
-          title: i18n.global.t('flow.flow_end'),
-          progress: contentFlow.stepProgress,
-          status: 'success',
+          id: messageFlow.stepId,
+          title: currentTaskId ? i18n.global.t('flow.flow_start') : i18n.global.t('flow.flow_end'),
+          progress: messageFlow.stepProgress,
+          status: currentTaskId ? messageFlow.flowStatus : 'success',
           display: true,
+          taskId: currentTaskId.value,
           data: conversationItem.flowdata.data,
         };
       } else {
@@ -287,67 +194,101 @@ export const useSessionStore = defineStore('conversation', () => {
           conversationItem.paramsList = content.data;
         }
       }
-      
-      },
-      loopProgress: (
-        conversationItem: RobotConversationItem,
-        message: Record<string, unknown>,
-      ) => {
-        const content = (message.content || {}) as Record<string, unknown>;
-        
-        // 更新循环进度显示，但不停止生成状态
-        if (conversationItem.flowdata) {
-          conversationItem.flowdata.progress = `${content.iteration}/${content.total}`;
-          conversationItem.flowdata.status = 'running'; // 确保状态保持为运行中
-        }
-      },
-      loopCompleted: (
-        conversationItem: RobotConversationItem,
-        message: Record<string, unknown>,
-        isFlowDebug: boolean,
-      ) => {
-        const content = (message.content || {}) as Record<string, unknown>;
-        
-        // 🔑 关键修改：循环完成时立即停止生成状态
-        conversationItem.isFinish = true;
-        isAnswerGenerating.value = false;
-        
-        // 更新flowdata状态
-        if (conversationItem.flowdata) {
-          conversationItem.flowdata.status = 'success';
-          conversationItem.flowdata.progress = `${content.iteration_count}/${content.iteration_count}`;
-        }
-        
-        // 如果是工作流调试，发送完成事件
-        if (isFlowDebug) {
-          $bus.emit('debugChatEnd');
-        }
     },
     dataDone: (
       conversationItem: RobotConversationItem,
       isFlowDebug: boolean,
     ) => {
-      
       if (excelPath.value.length > 0) {
         conversationItem.message[conversationItem.currentInd] +=
           `</p><p>下载地址：${excelPath.value}`;
       }
-      
-      // 🔑 只有在还没完成时才设置完成状态
-      if (!conversationItem.isFinish) {
-        conversationItem.isFinish = true;
-        isAnswerGenerating.value = false;
-        
-        // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
-        if (isFlowDebug) {
-          $bus.emit('debugChatEnd');
-        }
+      conversationItem.isFinish = true;
+      isAnswerGenerating.value = false;
+      // 如果是工作流的调试功能-调试对话结束时-发送调试对话结束
+      if (isFlowDebug) {
+        $bus.emit('debugChatEnd');
       }
+    },
+    waitingForStart: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+    ) => {
+      const flow = (message.flow || {}) as Record<string, string>;
+      const content = (message.content || {}) as Record<string, string>;
+      conversationItem.flowdata = {
+        id: flow.stepId,
+        title: flow.stepName,
+        status: flow.stepStatus,
+        taskId: currentTaskId,
+        data: {
+          exData: content,
+        },
+      };
+      if (conversationItem.flowdata) {
+        conversationItem.flowdata.progress = flow.stepProgress;
+        conversationItem.flowdata.status = flow.stepStatus;
+      }
+    },
+    waitingForParam: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+    ) => {
+      const flow = (message.flow || {}) as Record<string, string>;
+      const content = (message.content || {}) as Record<string, string>;
+      conversationItem.flowdata = {
+        id: flow.stepId,
+        title: flow.stepName,
+        status: flow.stepStatus,
+        taskId: currentTaskId,
+        data: {
+          exParam: content,
+        },
+      };
+      if (conversationItem.flowdata) {
+        conversationItem.flowdata.progress = flow.stepProgress;
+        conversationItem.flowdata.status = flow.stepStatus;
+      }
+    },
+    flowCancel: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+    ) => {
+      const content = (message.content || {}) as Record<string, unknown>;
+      const contentFlow = (content.flow || {}) as Record<string, string>;
+      const messageFlow = (message.flow || {}) as Record<string, string>;
+
+      // 取消运行
+      conversationItem.flowdata = {
+        id: contentFlow.stepId,
+        title: i18n.global.t('flow.flow_cancel'),
+        progress: contentFlow.stepProgress,
+        status: messageFlow.stepStatus,
+        display: true,
+        data: conversationItem?.flowdata?.data,
+      };
+    },
+    flowSuccess: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+      isFlowDebug: boolean,
+    ) => {
+      const content = (message.content || {}) as Record<string, unknown>;
+      const contentFlow = (content.flow || {}) as Record<string, string>;
+      const messageFlow = (message.flow || {}) as Record<string, string>;
+      conversationItem.flowdata = {
+        id: contentFlow.stepId,
+        title: i18n.global.t('flow.flow_end'),
+        progress: contentFlow.stepProgress,
+        status: 'success',
+        display: true,
+        data: conversationItem?.flowdata?.data,
+      };
     },
   };
 
   // chat message回调
-  const handleMsgDataShow = async (
+  const handleMsgDataShow = (
     params: Record<string, unknown>,
     msgData: Record<string, unknown>,
     conversationItem: RobotConversationItem,
@@ -358,87 +299,27 @@ export const useSessionStore = defineStore('conversation', () => {
       return;
     }
     const rawMsgData = msgData.data as string;
-    
     if (rawMsgData === '[DONE]') {
       dataTransfers.dataDone(conversationItem, !!params.type);
       return;
     }
-
-
-
-    // 🔑 重要修复：处理带详细信息的ERROR消息
-    if (rawMsgData.startsWith('[ERROR]')) {
-      console.error('❌ 收到ERROR事件，停止对话生成:', rawMsgData);
-      conversationItem.isFinish = true;
-      isAnswerGenerating.value = false;
-      
-      // 🔑 重要：按正确顺序停止对话
-      // 1. 首先中断前端fetchEventSource连接
-      controller.abort();
-      
-      // 2. 然后调用后端停止接口，清理后端WebSocket连接
-      try {
-        const resp = await api.stopGeneration();
-        if (resp?.[1]?.code === 200) {
-          // 后端停止成功
-        }
-      } catch (stopError) {
-        console.error('调用停止接口失败:', stopError);
-        // 即使停止接口失败，也继续处理错误显示
-      }
-      
-      // 提取错误信息
-      const errorMessage = rawMsgData.replace('[ERROR]', '').trim();
-      
-      // 🔑 修复：确保错误信息正确显示在对话内容中
-      // 初始化message数组和currentInd，如果不存在的话
-      if (!conversationItem.message || conversationItem.message.length === 0) {
-        conversationItem.message = [''];
-        conversationItem.currentInd = 0;
-      }
-      
-      const currentIndex = conversationItem.currentInd || 0;
-      
-      // 确保currentIndex对应的message元素存在
-      if (!conversationItem.message[currentIndex]) {
-        conversationItem.message[currentIndex] = '';
-      }
-      
-      // 设置错误信息到对话内容中
-      conversationItem.message[currentIndex] = errorMessage || '系统错误，请稍后再试';
-      
-      // 🔑 重要：显示错误提示给用户
-      errorMsg(errorMessage || '系统错误，请稍后再试');
+    if (rawMsgData === '[ERROR]') {
+      dataTransfers.dataDone(conversationItem, !!params.type);
       return;
     }
 
     // 同一时间戳传来的decodeValue是含有三条信息的合并，so需要分割
-    // 这里json解析，添加错误处理
-    let message: any;
-    try {
-      message = JSON.parse(rawMsgData || '{}');
-    } catch (parseError) {
-      console.error('📨 JSON解析失败:', {
-        rawData: rawMsgData,
-        error: parseError,
-        length: rawMsgData?.length
-      });
-      // 如果解析失败，尝试处理为文本消息
-      if (rawMsgData && rawMsgData.trim()) {
-        dataTransfers.textAdd(conversationItem, {
-          event: 'text.add',
-          content: { text: rawMsgData }
-        });
-      }
-      return;
-    }
+    // 这里json解析
+    const message = JSON.parse(rawMsgData || '{}');
     const eventType = message['event'];
     if ('metadata' in message) {
       conversationItem.metadata = message.metadata;
     }
+    currentTaskId.value = message.taskId;
     if ('event' in message) {
       switch (eventType) {
         case 'text.add':
+          currentMessage.value = message;
           dataTransfers.textAdd(conversationItem, message);
           break;
         case 'heartbeat':
@@ -448,7 +329,7 @@ export const useSessionStore = defineStore('conversation', () => {
           break;
         case 'document.add':
           // 遇到文档添加事件，先省略
-          // dataTransfers.documentAdd(conversationItem, message);
+          dataTransfers.documentAdd(conversationItem, message);
           break;
         case 'Suggestion':
           dataTransfers.suggestionFunc(conversationItem, message);
@@ -456,7 +337,7 @@ export const useSessionStore = defineStore('conversation', () => {
         case 'init':
           //初始化获取 metadata
           conversationItem.metadata = message.metadata;
-          conversationItem.createdAt = message.content.created_at;
+          conversationItem.createdAt = message.content.createdAt;
           conversationItem.groupId = message.groupId;
           break;
         case 'flow.start':
@@ -469,17 +350,25 @@ export const useSessionStore = defineStore('conversation', () => {
         case 'step.output':
           dataTransfers.stepOutput(conversationItem, message);
           break;
+        case 'step.waiting_for_start':
+          // 事件流等待开始
+          dataTransfers.waitingForStart(conversationItem, message);
+          break;
+        case 'step.waiting_for_param':
+          // 事件流等待参数
+          dataTransfers.waitingForParam(conversationItem, message);
+          break;
+        case 'flow.cancel':
+          // 事件流取消
+          dataTransfers.flowCancel(conversationItem, message);
+          break;
         case 'flow.stop':
           //时间流结束
           dataTransfers.flowStop(conversationItem, message, !!params.type);
           break;
-        case 'loop.progress':
-          //循环进度更新
-          dataTransfers.loopProgress(conversationItem, message);
-          break;
-        case 'loop.completed':
-          //循环完成
-          dataTransfers.loopCompleted(conversationItem, message, !!params.type);
+        case 'flow.success':
+          //时间流结束
+          dataTransfers.flowSuccess(conversationItem, message, !!params.type);
           break;
         default:
           break;
@@ -512,7 +401,7 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: params.conversationId,
             features: features,
             groupId: params.groupId,
-            language,
+            language: langStore.language,
             question: params.question,
             // record_id: params.qaRecordId,
           }),
@@ -531,6 +420,7 @@ export const useSessionStore = defineStore('conversation', () => {
           },
           conversationId: params.conversationId,
           debug: true,
+          language: langStore.language,
           question: params.question,
         }),
         openWhenHidden: true,
@@ -541,6 +431,7 @@ export const useSessionStore = defineStore('conversation', () => {
       params: Record<string, unknown>,
       innerParams: Record<string, unknown>,
       fetchParams: Record<string, unknown>,
+      isDebug: boolean,
     ) => {
       await fetchEventSource(url, {
         ...fetchParams,
@@ -551,9 +442,10 @@ export const useSessionStore = defineStore('conversation', () => {
             flowId: '',
             params: innerParams || {},
           },
+          ...(isDebug && { debug: isDebug }),
           conversationId: params.conversationId,
           features: features,
-          language,
+          language: langStore.language,
           groupId: params.groupId,
           question: params.question,
           record_id: params.qaRecordId,
@@ -579,10 +471,22 @@ export const useSessionStore = defineStore('conversation', () => {
           conversationId: params.conversationId,
           features: features,
           groupId: params.groupId,
-          language,
+          language: langStore.language,
           question: params.question,
           record_id: params.qaRecordId,
         }),
+        openWhenHidden: true,
+      });
+    },
+    fetchWait: async (
+      url: string,
+      params: Record<string, unknown>,
+      innerParams: Record<string, unknown>,
+      fetchParams: Record<string, unknown>,
+    ) => {
+      await fetchEventSource(url, {
+        ...fetchParams,
+        body: JSON.stringify({ taskId: currentTaskId.value, params: params }),
         openWhenHidden: true,
       });
     },
@@ -617,6 +521,8 @@ export const useSessionStore = defineStore('conversation', () => {
       type?: any;
     },
     ind?: number,
+    waitType?: string,
+    isDebug?: boolean,
   ): Promise<void> => {
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
@@ -632,15 +538,7 @@ export const useSessionStore = defineStore('conversation', () => {
       if (params.params && typeof params.params === 'object') {
         pp = params.params;
       } else if (params.params && typeof params.params === 'string') {
-        try {
-          pp = Object(JSON.parse(params.params));
-        } catch (parseError) {
-          console.error('📨 参数解析失败:', {
-            params: params.params,
-            error: parseError
-          });
-          pp = {}; // 使用空对象作为默认值
-        }
+        pp = Object(JSON.parse(params.params));
       }
       isPaused.value = false;
       excelPath.value = '';
@@ -667,18 +565,23 @@ export const useSessionStore = defineStore('conversation', () => {
           resp = response;
         },
         onmessage: async (ev) => {
-          await handleMsgDataShow(params, ev, conversationItem);
+          handleMsgDataShow(params, ev, conversationItem);
         },
       };
-
-      if (params.user_selected_flow) {
+      if(isDebug){
+        await funcFetch.fetchAppNew(streamUrl, params, pp, fetchParams, isDebug);
+      } else if (params.user_selected_flow) {
         // 之前的对话历史记录
         await funcFetch.fetchHistory(streamUrl, params, pp, fetchParams);
       } else if (params.user_selected_app) {
         // 新的工作流调试记录
         await funcFetch.fetchAppNew(streamUrl, params, pp, fetchParams);
-        // } else if (false) {
-        //   //写传参数情况
+      } else if (waitType) {
+        if (waitType === 'params') {
+          await funcFetch.fetchWait(streamUrl, params, pp, fetchParams);
+        } else {
+          await funcFetch.fetchWait(streamUrl, params.params, pp, fetchParams);
+        }
       } else {
         await funcFetch.fetchDefault(streamUrl, params, pp, fetchParams);
       }
@@ -728,6 +631,8 @@ export const useSessionStore = defineStore('conversation', () => {
    * @param user_selected_flow
    * @param params
    * @param type
+   * @param waitType
+   * @param isDebug
    */
   const sendQuestion = async (
     groupId: string | undefined,
@@ -738,6 +643,8 @@ export const useSessionStore = defineStore('conversation', () => {
     user_selected_flow?: string,
     params?: any,
     type?: any,
+    waitType?: string,
+    isDebug?: boolean,
   ): Promise<void> => {
     const { updateSessionTitle, currentSelectedSession } =
       useHistorySessionStore();
@@ -761,7 +668,7 @@ export const useSessionStore = defineStore('conversation', () => {
         comment: 'none',
       });
       targetItem.currentInd = targetItem.message.length - 1; //123
-    } else {
+    } else if (!waitType) {
       // 初次生成 ，创建一个问题和一个回答
       const ind = conversationList.value.length - 1;
       const messageList = new MessageArray();
@@ -810,7 +717,10 @@ export const useSessionStore = defineStore('conversation', () => {
         params: params || undefined,
       };
     }
-    await getStream(getStreamParams, regenerateInd ?? undefined);
+    if (waitType) {
+      getStreamParams = params;
+    }
+    await getStream(getStreamParams, regenerateInd ?? undefined, waitType, isDebug);
   };
 
   /**
@@ -829,7 +739,7 @@ export const useSessionStore = defineStore('conversation', () => {
     targetItem.message[0] += '暂停生成';
     targetItem.isFinish = true;
     cancel();
-    const resp = await api.stopGeneration();
+    const resp = await api.stopGeneration(currentMessage.value.taskId);
     if (resp?.[1]?.code === 200) {
       isAnswerGenerating.value = false;
     }
@@ -900,6 +810,21 @@ export const useSessionStore = defineStore('conversation', () => {
   // #endregion
 
   /**
+   * 处理历史对话数据中尾注位置
+   */
+  const handleMessage = (record: any): string => {
+    let message = record.content.answer;
+    record.metadata.footNoteMetadataList?.reverse().forEach((footNoteMetadata: any) => {
+      const insertFile = record.document?.filter((file: any) => file._id === footNoteMetadata.releatedId);
+      const insertNumber = insertFile[0]?.order;
+      if (!insertNumber) return;
+      const pos = footNoteMetadata.insertPosition;
+      message = message.slice(0, pos) + `[[${insertNumber}]]` + message.slice(pos)
+    });
+    return message;
+  }
+
+  /**
    * 获取历史对话数据
    * @param conversationId
    */
@@ -936,12 +861,12 @@ export const useSessionStore = defineStore('conversation', () => {
             cid: conversationList.value.length + 1,
             belong: 'user',
             message: record.content.question,
-            createdAt: record.created_at,
+            createdAt: record.createdAt,
           },
           {
             cid: conversationList.value.length + 2,
             belong: 'robot',
-            message: [record.content.answer],
+            message: [handleMessage(record)],
             messageList,
             currentInd: 0,
             isAgainst: false,
@@ -951,6 +876,7 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: record.conversationId,
             groupId: record.groupId,
             metadata: record.metadata,
+            document: record.document,
             flowdata: record?.flow
               ? (generateFlowData(record.flow) as FlowType)
               : undefined,
@@ -965,22 +891,31 @@ export const useSessionStore = defineStore('conversation', () => {
   const generateFlowData = (record: any): FlowDataType => {
     const flowData = {
       id: record.recordId,
-      title: record.id,
-      status: 'success',
+      title: record.flowName,
+      status: record.flowStatus,
       display: true,
       flowId: record.flowId,
       data: [[]] as any[],
     };
+    // 看有没有取消的
+    let isCancelled = false;
     for (let i = 0; i < record.steps.length; i++) {
       flowData.data[0].push({
         id: record.steps[i].stepId,
-        title: record.steps[i].stepId,
+        title: record.steps[i].stepName,
         status: record.steps[i].stepStatus,
         data: {
           input: record.steps[i].input,
           output: record.steps[i].output,
+          ...(record.steps[i].exData && { exData: record.steps[i].exData }),
         },
       });
+      if (record.steps[i].stepStatus === 'cancelled') {
+        isCancelled = true;
+      }
+    }
+    if (isCancelled) {
+      flowData.status = 'cancelled';
     }
     return flowData;
   };
@@ -990,18 +925,13 @@ export const useSessionStore = defineStore('conversation', () => {
    */
   const stopDebug = async (): Promise<void> => {
     isPaused.value = true;
-    
-    // 安全检查：确保 conversationList 不为空
-    if (conversationList.value.length > 0) {
-      (
-        conversationList.value[
-          conversationList.value.length - 1
-        ] as RobotConversationItem
-      ).isFinish = true;
-    }
-    
+    (
+      conversationList.value[
+      conversationList.value.length - 1
+      ] as RobotConversationItem
+    ).isFinish = true;
     cancel();
-    const resp = await api.stopGeneration();
+    const resp = await api.stopGeneration(currentMessage.value.taskId);
     if (resp?.[1]?.code === 200) {
       isAnswerGenerating.value = false;
     }
@@ -1018,6 +948,7 @@ export const useSessionStore = defineStore('conversation', () => {
     dialogueRef,
     app,
     appList,
+    currentMessage,
     sendQuestion,
     pausedStream,
     stopDebug,

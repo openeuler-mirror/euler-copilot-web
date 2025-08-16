@@ -595,7 +595,7 @@ const formatValue = (value, type) => {
     @update:model-value="emit('update:visible', $event)"
     title="配置条件分支"
     direction="rtl"
-    size="600px"
+    size="50%"
     :before-close="handleClose"
     class="choice-branch-drawer"
   >

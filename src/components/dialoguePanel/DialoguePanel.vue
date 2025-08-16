@@ -11,14 +11,29 @@ import xss from 'xss';
 import { errorMsg, successMsg } from 'src/components/Message';
 import ReportPopover from 'src/views/dialogue/components/ReportPopover.vue';
 import DialogueThought from './DialogueThought.vue';
-import { onMounted, watch, onBeforeUnmount, reactive, computed, watchEffect } from 'vue';
+import { onMounted, watch, onBeforeUnmount, reactive, computed, watchEffect, provide, ref as vueRef } from 'vue';
 import * as echarts from 'echarts';
 import color from 'src/assets/color';
 import i18n from 'src/i18n';
+import * as _ from 'lodash';
 import { storeToRefs } from 'pinia';
 import { useLangStore } from 'src/store';
 const { user_selected_app } = storeToRefs(useHistorySessionStore());
 import { Suggestion } from 'src/apis/paths/type';
+import docSvg from '@/assets/svgs/doc.svg';
+import docxSvg from '@/assets/svgs/docx.svg';
+import mdSvg from '@/assets/svgs/md.svg';
+import pdfSvg from '@/assets/svgs/pdf.svg';
+import txtSvg from '@/assets/svgs/txt_green.svg';
+import xlsxSvg from '@/assets/svgs/xlsx.svg';
+import htmlSvg from '@/assets/svgs/html.svg';
+import jpegSvg from '@/assets/svgs/jpeg.svg';
+import pngSvg from '@/assets/svgs/png.svg';
+import jsonSvg from '@/assets/svgs/json.svg';
+import pptxSvg from '@/assets/svgs/pptx.svg';
+import yamlSvg from '@/assets/svgs/yaml.svg';
+import zipSvg from '@/assets/svgs/zip.svg';
+import { IconCaretRight } from '@computing/opendesign-icons';
 const { params } = storeToRefs(useHistorySessionStore());
 const { language } = storeToRefs(useLangStore());
 const echartsDraw = ref();
@@ -53,10 +68,8 @@ export interface DialoguePanelProps {
   modeOptions: any;
   // 是否是工作流调试模式
   isWorkFlowDebug: boolean;
-  // 是否隐藏输入参数（用于对话页面）
-  hideInputParams?: boolean;
-  // 🔑 新增：当前QA的附件列表
-  files?: any[];
+  // 文件列表（目标分支实现）
+  fileList?: any;
 }
 import JsonFormComponent from './JsonFormComponent.vue';
 import { Metadata } from 'src/apis/paths/type';
@@ -72,6 +85,23 @@ const size = reactive({
 });
 const themeStore = useChangeThemeStore();
 var myChart;
+
+// 🔑 目标分支：文件类型图标映射
+const typeSvgMap = {
+  doc: docSvg,
+  docx: docxSvg,
+  md: mdSvg,
+  pdf: pdfSvg,
+  txt: txtSvg,
+  xlsx: xlsxSvg,
+  html: htmlSvg,
+  jpeg: jpegSvg,
+  png: pngSvg,
+  json: jsonSvg,
+  pptx: pptxSvg,
+  yaml: yamlSvg,
+  zip: zipSvg,
+};
 const { pausedStream, reGenerateAnswer, prePage, nextPage } = useSessionStore();
 
 const props = withDefaults(defineProps<DialoguePanelProps>(), {
@@ -79,45 +109,142 @@ const props = withDefaults(defineProps<DialoguePanelProps>(), {
   needRegernerate: false,
 });
 
+// 🔑 目标分支：emits定义
+const emits = defineEmits<{
+  (e: 'handleReport', qaRecordId: string, reason_type: string, reason?: string): void;
+  (
+    e: 'handleSendMessage',
+    groupId: string | undefined,
+    question: string,
+    user_selected_flow?: any,
+  ): void;
+  (e: 'clearSuggestion', index: number): void;
+  (e: 'openShowFileSource', fileList: Array<any>): void;
+}>();
+
 const messageArray = ref<MessageArray[]>(props.messageArray || []);
 const thoughtContent = ref('');
 const contentAfterMark = ref('');
 
-  // 🔑 强制刷新触发器，必须在globalAttachments之前定义
-  const refreshTrigger = ref(0);
+// 🔑 目标分支：文件处理相关的tooltip逻辑
+const tooltipRef = ref<HTMLElement | null>(null);
 
-  // 收集所有FlowCode组件的文件附件（只在对话完成时）
-  const globalAttachments = computed(() => {
-    // 依赖刷新触发器，确保能响应外部事件
-    const _ = refreshTrigger.value;
-    
-    if (!props.isFinish) {
-      return [];
+// 🔑 新增：全局文件附件收集器
+interface FileAttachmentData {
+  file_id: string;
+  filename: string;
+  file_type: string;
+  file_size: number;
+  content: string;
+  variable_name: string;
+}
+
+const globalFileAttachments = vueRef<FileAttachmentData[]>([]);
+
+// 🔑 提供给FlowCode组件的文件附件注册函数
+const registerFileAttachment = (file: FileAttachmentData) => {
+  // 避免重复添加（基于file_id去重）
+  const existingIndex = globalFileAttachments.value.findIndex(f => f.file_id === file.file_id);
+  if (existingIndex === -1) {
+    globalFileAttachments.value.push(file);
+  } else {
+    // 如果文件已存在，更新内容（处理文件更新的情况）
+    globalFileAttachments.value[existingIndex] = file;
+  }
+};
+
+// 🔑 提供给FlowCode组件的文件附件批量注册函数
+const registerFileAttachments = (files: FileAttachmentData[]) => {
+  files.forEach(file => registerFileAttachment(file));
+};
+
+// 🔑 清空文件附件收集器（新对话开始时）
+const clearFileAttachments = () => {
+  globalFileAttachments.value = [];
+};
+
+// 🔑 通过provide向子组件提供文件附件注册方法
+provide('registerFileAttachment', registerFileAttachment);
+provide('registerFileAttachments', registerFileAttachments);
+
+const generateContent = (content: string) => {
+  if (!content) return '';
+  let result = '';
+  props.fileList?.forEach((file) => {
+    if (file.documentOrder === Number(content)) {
+      result += `<img src="${typeSvgMap[file?.documentType]}" crossOrigin="anonymous" alt="">`;
+      result += `<div class="tooltip-name">${file?.documentName || ''}</div>`;
+      result = `<div class="tooltip-title">${result}</div>`;
+      result += `<div class="tooltip-abstract">${file?.documentAbstract || ''}</div>`;
     }
-    
-    // 直接使用当前QA的files作为附件来源
-    return props.files || [];
   });
+  console.log('生成的内容:', result);
+  result = `<div class="tooltip-container">${result}</div>`;
+  return result;
+};
 
-// 🔑 监听全局附件变化
-watchEffect(() => {
-  const attachments = globalAttachments.value;
-  // 静默监听，不输出日志
-});
+const showTooltip = (content: string, event: MouseEvent) => {
+  if (!tooltipRef.value) return;
+  
+  const curId = (event.target as HTMLElement)?.id;
+  tooltipRef.value.className = "mark-number-tooltip";
+  tooltipRef.value.innerHTML = generateContent(content) || '';
+  const markedDiv = document.getElementById(curId);
+  const curRect = markedDiv?.getBoundingClientRect();
+  if (!curRect) return;
+  
+  tooltipRef.value.style.borderRadius = '8px';
+  tooltipRef.value.style.padding = '16px';
+  tooltipRef.value.style.boxShadow = '0 4px 16px 0 rgba(0,0,0,0.2)';
+  setTimeout(() => {
+    if (!tooltipRef.value) return;
+    document.body.appendChild(tooltipRef.value);
+    setTimeout(() => {
+      if (!tooltipRef.value) return;
+      tooltipRef.value.style.left = `${curRect.left + curRect.width / 2}px`;
+      tooltipRef.value.style.top = `${curRect.y - tooltipRef.value.getBoundingClientRect().height - 4}px`;
+    }, 0);
+  }, 10);
 
-// 🔑 强制刷新机制：监听FlowCode的附件添加事件
-onMounted(() => {
-  const handleAttachmentAdded = (event: CustomEvent) => {
-    // 触发globalAttachments重新计算
-    refreshTrigger.value++;
-  };
-  
-  window.addEventListener('flowCodeAttachmentAdded', handleAttachmentAdded as EventListener);
-  
-  onBeforeUnmount(() => {
-    window.removeEventListener('flowCodeAttachmentAdded', handleAttachmentAdded as EventListener);
+  tooltipRef.value.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const downloadBtn = (e.target as HTMLElement).closest('.download-btn');
+    if (downloadBtn) {
+      const fileName = downloadBtn.getAttribute('data-file-name');
+      const fileUrl = downloadBtn.getAttribute('data-file-url');
+      if (fileName && fileUrl) {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
   });
-});
+};
+
+// 🔑 目标分支：处理内容中的标记和鼠标事件
+const handleMouseOver = _.debounce((event) => {
+  if (event.target.className.includes('mark-number')) {
+    setTimeout(() => showTooltip(event.target.textContent, event), 100);
+  }
+}, 100);
+
+const handleMouseMove = (event) => {
+  if (!event.target.className.includes('mark-number') && !event.target.className.includes('mark-number-tooltip')) {
+    if (tooltipRef.value) tooltipRef.value.remove();
+  }
+};
+
+// 🔑 目标分支：处理标记内容
+const processMarkedContent = (content: string) => {
+  return content.replace(/\[\[(\d+)\]\]/g, (_match, value) => {
+    const randomId = 'marked_' + Math.floor(Math.random() * 10000000);
+    return `<span class="mark-number" id="${randomId}">${value} </span>`;
+  });
+};
+
 const index = ref(0);
 const isComment = ref('none');
 
@@ -218,6 +345,8 @@ watch(
     thoughtContent.value = '';
     contentAfterMark.value = '';
     index.value = 0;
+    // 🔑 新对话开始时清空文件附件收集器
+    clearFileAttachments();
   },
   { immediate: false },
 );
@@ -240,16 +369,7 @@ watch(
   },
   { immediate: true, deep: true },
 );
-const emits = defineEmits<{
-  (e: 'handleReport', qaRecordId: string, reason_type?: string, reason?: string): void;
-  (
-    e: 'handleSendMessage',
-    groupId: string | undefined,
-    question: string,
-    user_selected_flow?: any,
-  ): void;
-  (e: 'clearSuggestion', index: number): void;
-}>();
+// 重复的emits声明已移除，使用第一个
 
 // 复制功能
 const handleCopy = (): void => {
@@ -528,6 +648,8 @@ onBeforeUnmount(() => {
   index.value = 0;
   thoughtContent.value = '';
   contentAfterMark.value = '';
+  // 🔑 清理文件附件收集器
+  clearFileAttachments();
 });
 
 const answer_zoom = ref(false);
@@ -549,6 +671,11 @@ const selectQuestion = (item: Suggestion) => {
   } else {
     emits('handleSendMessage', undefined, question);
   }
+};
+
+// 🔑 目标分支：文件点击处理函数
+const handleFileClick = () => {
+  emits('openShowFileSource', props.fileList);
 };
 
 const popperSize = () => {
@@ -610,7 +737,7 @@ const chatWithParams = async () => {
           <JsonFormComponent
             :code="props.inputParams"
             title="参数补充"
-            v-if="props.inputParams && !props.isWorkFlowDebug && !props.hideInputParams"
+            v-if="props.inputParams && !props.isWorkFlowDebug"
             type="input"
           />
         </div>
@@ -629,28 +756,47 @@ const chatWithParams = async () => {
             !thoughtContent,
         }"
       >
+        <!-- 🔑 目标分支：文件显示区域 -->
+        <div v-if="props.fileList?.length" class="dialogue-panel__robot-file" @click="handleFileClick">
+          <div class="file-title">
+            <img src="@/assets/svgs/files.svg" alt="">
+            <span>{{$t('upload.quote_front')}}{{props.fileList?.length}}{{$t('upload.quote_back')}}</span>
+            <el-icon>
+              <IconCaretRight />
+            </el-icon>
+          </div>
+        </div>
+        
         <!-- 这里是flowData -->
         <DialogueFlow
           v-if="flowdata"
           :isWorkFlowDebug="props.isWorkFlowDebug"
           :flowdata="props.flowdata"
         />
+        
+        <!-- 🔑 目标分支：Tooltip容器 -->
+        <Teleport to="body">
+          <div ref="tooltipRef"></div>
+        </Teleport>
         <DialogueThought :content="thoughtContent" v-if="thoughtContent" />
         <div v-if="contentAfterMark" id="markdown-preview">
-          <div v-html="contentAfterMark"></div>
+          <div v-html="processMarkedContent(contentAfterMark)" 
+          @mouseover="handleMouseOver" @mousemove="handleMouseMove"></div>
           <a v-if="props.paramsList" @click="visible = true">补充参数</a>
           <!-- <img class="answer_img" src="" alt="" @click="zoom_in($event)" /> -->
           <div class="loading-echarts">
             <div ref="echartsDraw" class="draw" style="color: grey"></div>
           </div>
+          
+          <!-- 🔑 新增：全局文件附件显示区域 -->
+          <FileAttachment
+            v-if="globalFileAttachments.length > 0"
+            :files="globalFileAttachments"
+          />
         </div>
         
         <!-- 🔑 新增：对话附件显示 -->
-        <FileAttachment 
-          v-if="globalAttachments && globalAttachments.length > 0"
-          :files="globalAttachments"
-          style="margin-top: 16px;"
-        />
+        <!-- FileAttachment已被目标分支的文件显示方式替换 -->
         <el-dialog
           :model-value="visible"
           :show-close="false"
@@ -864,4 +1010,104 @@ const chatWithParams = async () => {
 </template>
 <style lang="scss">
 @import './DialoguePanel.scss';
+</style>
+<style lang="scss">
+/* 🔑 目标分支：文件标记和tooltip样式 */
+.mark-number{
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  font-size: 12px;
+  text-align: center;
+  border-radius: 50%;
+  background-color: var(--o-border-color-lighter);
+  color: var(--o-text-color-primary);
+  cursor: pointer;
+  position: relative;
+  bottom: 2px;
+  margin: 0 2px;
+}
+
+.mark-number-tooltip {
+  position: fixed;
+  top: 0px;
+  background: white;
+  border: 1px solid #ddd;
+  padding: 16px;
+  max-width: 264px;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+  
+  .tooltip-container{
+    .tooltip-title{
+      line-height: 22px;
+      .tooltip-name{
+        display: inline;
+        font-size: 14px;
+        color: var(--o-text-color-primary);
+        margin-bottom: 4px;
+        word-break: break-all;
+      }
+      img{
+        width: 16px;
+        height: 16px;
+        margin-right: 2px;
+        line-height: 22px;
+        vertical-align: middle;
+        position: relative;
+        bottom: 2px;
+      }
+    }
+    .tooltip-abstract{
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--o-text-color-secondary);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      text-overflow: ellipsis;
+      word-break: break-all;
+    }
+  }
+}
+
+.mark-number:hover {
+  background-color: #7AA5FF;
+  color: white;
+  transition: 200ms;
+}
+
+/* 🔑 目标分支：文件显示区域样式 */
+.dialogue-panel__robot-file{
+  display: inline-block;
+  background-color: var(--o-bg-color-light);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--o-text-color-secondary);
+  
+  .file-title{
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer !important;
+    &:hover{
+      color: #7AA5FF;
+    }
+    img{
+      margin-right: 2px;
+    }
+    .el-icon{
+      color: var(--o-text-color-tertiary);
+    }
+  }
+}
 </style>

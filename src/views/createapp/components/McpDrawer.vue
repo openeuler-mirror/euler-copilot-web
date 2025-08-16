@@ -9,8 +9,12 @@ import lightNull from '@/assets/svgs/light_null.svg';
 import DarkNull from '@/assets/svgs/dark_null.svg';
 import { storeToRefs } from 'pinia';
 import { useChangeThemeStore } from '@/store';
+import ActiveModel from '@/views/api/components/ActiveModel.vue';
 
 const { t } = i18n.global;
+const activeModelVisible = ref(false);
+const activeModelItem = ref({});
+const loading = ref(false);
 
 export interface Mcp {
   mcpserviceId: string;
@@ -50,22 +54,24 @@ const mcpList = ref<McpWithChecked[]>([]);
 
 const searchKeyword = ref();
 
+const mcpType = ref('all_select');
+const mcpIsActive = ref(<boolean | null>null);
 /**
  * 查询MCP服务
  */
 async function queryMcpList() {
   const [, res] = await api.getMcpList({
     keyword: searchKeyword.value,
+    isActive: mcpIsActive.value,
+    isInstall: true,
   });
   if (res) {
-    mcpList.value = res.result.services
-      .filter((mcp) => mcp.isActive)
-      .map((item) => {
-        return {
-          ...item,
-          isChecked: false,
-        };
-      });
+    mcpList.value = res.result.services.map((item) => {
+      return {
+        ...item,
+        isChecked: props.checkedList.includes(item.mcpserviceId),
+      };
+    });
   }
 }
 
@@ -97,6 +103,51 @@ watch(
 onMounted(() => {
   queryMcpList();
 });
+
+const handleSearchMcpList = (type: 'all_select' | 'active' | 'not_active') => {
+  mcpType.value = type;
+  if (type === 'all_select') {
+    mcpIsActive.value = null;
+  } else {
+    if (type === 'active') {
+      mcpIsActive.value = true;
+    } else {
+      mcpIsActive.value = false;
+    }
+  }
+  queryMcpList();
+};
+
+async function showActive(item: any) {
+  if (item.isActive) {
+    loading.value = true;
+    onActiveService(item.mcpserviceId, item.isActive);
+  } else {
+    const [, res] = await api.getMcpServiceDetail(item.mcpserviceId, true);
+    if (res) {
+      activeModelVisible.value = true;
+      activeModelItem.value = res.result;
+    }
+  }
+}
+
+function doActive(form: any) {
+  loading.value = true;
+  onActiveService(activeModelItem.value.serviceId, false, form);
+}
+
+async function onActiveService(
+  serviceId: string,
+  active: boolean = true,
+  mcpEnv?: any,
+) {
+  const [, res] = await api.activeMcpService(serviceId, !active, mcpEnv);
+  if (res) {
+    queryMcpList();
+    ElMessage.success('Success');
+    loading.value = false;
+  }
+}
 </script>
 <template>
   <div class="prompt-drawer">
@@ -106,7 +157,7 @@ onMounted(() => {
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
-      <div class="wrapper">
+      <div class="wrapper" v-loading="loading">
         <div class="search">
           <el-input
             class="search-input"
@@ -117,16 +168,51 @@ onMounted(() => {
             clearable
           ></el-input>
         </div>
-
+        <el-tabs
+          v-model="mcpType"
+          class="plugin-tabs"
+          @tab-click="(tab) => handleSearchMcpList(tab.props.name)"
+        >
+          <el-tab-pane
+            :label="$t('plugin_center.mcp.all_select')"
+            name="all_select"
+            :lazy="true"
+          ></el-tab-pane>
+          <el-tab-pane
+            :label="$t('plugin_center.mcp.active')"
+            name="active"
+            :lazy="true"
+          ></el-tab-pane>
+          <el-tab-pane
+            :label="$t('plugin_center.mcp.not_active')"
+            name="not_active"
+            :lazy="true"
+          ></el-tab-pane>
+        </el-tabs>
         <div class="mcp-list" v-if="mcpList.length">
           <template v-for="item in mcpList" :key="item.id">
             <div class="mcp-item" @click="onMcpItemClick(item)">
-              <el-checkbox v-model="item.isChecked" @click.stop />
+              <el-checkbox
+                v-model="item.isChecked"
+                :disabled="!item.isActive"
+                @click.stop
+              />
               <img :src="item.icon" alt="" />
               <div>
                 <p>{{ item.name }}</p>
                 <p>{{ item.description }}</p>
               </div>
+              <el-button
+                text
+                @click.stop="showActive(item)"
+                class="mcp-item-status"
+              >
+                {{
+                  item.isActive
+                    ? t('plugin_center.mcp.deactivate')
+                    : t('plugin_center.mcp.activate')
+                }}
+              </el-button>
             </div>
           </template>
         </div>
@@ -148,6 +234,12 @@ onMounted(() => {
       </template>
     </el-drawer>
   </div>
+  <ActiveModel
+    v-model:visible="activeModelVisible"
+    :item="activeModelItem"
+    :title="$t('plugin_center.mcp.active_mcp_service')"
+    @do-active="doActive"
+  />
 </template>
 <style lang="scss" scoped>
 .prompt-drawer {
@@ -197,6 +289,12 @@ onMounted(() => {
       flex-direction: column;
       margin: 16px 0;
       gap: 8px;
+
+      .mcp-item-status {
+        margin-left: auto;
+        padding-left: 16px;
+      }
+
       .mcp-item {
         display: flex;
         align-items: center;
@@ -222,5 +320,14 @@ onMounted(() => {
       }
     }
   }
+}
+</style>
+<style>
+.plugin-tabs {
+  padding-right: 8px;
+  --o-tabs-font-size: 14px;
+  --o-tabs-item-padding: 5px 16px 0 5px;
+  --o-tabs-line-height: 32px;
+  --o-tabs-color_active: rgb(99, 149, 253);
 }
 </style>

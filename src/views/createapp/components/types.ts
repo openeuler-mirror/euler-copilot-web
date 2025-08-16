@@ -7,6 +7,8 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
+import i18n from 'src/i18n';
+
 import type {
   UserDialoguePanelType,
   RobotDialoguePanelType,
@@ -93,40 +95,39 @@ export const nodeTypeToIcon = {
 
 // 这里是对应的图标
 export const iconTypeList = [
-  { name: 'HTTP请求', value: 'API', icon: API, class: 'otherNode' },
-  { name: 'MCP', value: 'MCP', icon: API, class: 'otherNode' },
-  { name: 'SQL查询', value: 'SQL', icon: API, class: 'otherNode' },
-  { name: '图表', value: 'Graph', icon: API, class: 'otherNode' },
-  { name: '代码执行', value: 'Code', icon: CODE, class: 'otherNode' },
-  { name: '大模型', value: 'LLM', icon: LLM, class: 'systemNode' },
-  { name: '知识库', value: 'RAG', icon: KENOWLEDGE_BASE, class: 'systemNode' },
+  { name: i18n.global.t('opertion.api'), value: 'API', icon: API, class: 'otherNode' },
+  { name: i18n.global.t('opertion.mcp'), value: 'MCP', icon: API, class: 'otherNode' },
+  { name: i18n.global.t('opertion.sql'), value: 'SQL', icon: API, class: 'otherNode' },
+  { name: i18n.global.t('opertion.gcraph'), value: 'Graph', icon: API, class: 'otherNode' },
+  { name: i18n.global.t('opertion.llm'), value: 'LLM', icon: LLM, class: 'systemNode' },
+  { name: i18n.global.t('opertion.rag'), value: 'RAG', icon: KENOWLEDGE_BASE, class: 'systemNode' },
   {
-    name: '问题推荐',
+    name: i18n.global.t('opertion.suggestion'),
     value: 'Suggestion',
     icon: get_CVE_DETAIL,
     class: 'aposNode',
   },
   // 循环控制节点
   {
-    name: '跳过本轮',
+    name: i18n.global.t('opertion.skip_round'),
     value: 'continue',
     icon: REFRESH,
     class: 'systemNode',
   },
   {
-    name: '退出循环',
+    name: i18n.global.t('opertion.exit_loop'),
     value: 'break',
     icon: STOP_FILLED,
     class: 'systemNode',
   },
   {
-    name: '变量赋值',
+    name: i18n.global.t('opertion.variable_assign'),
     value: 'VariableAssign',
     icon: CODE, // 暂时使用CODE图标，与菜单保持一致
     class: 'systemNode',
   },
   {
-    name: '文件提取器',
+    name: i18n.global.t('opertion.file_extract'),
     value: 'FileExtract',
     icon: CODE,
     class: 'systemNode',
@@ -187,3 +188,50 @@ export interface ListItem {
   id: string;
   value: string | null;
 }
+
+const opertionList = [
+  // Number operations
+  {value: 'number_equal', label: i18n.global.t('opertion.equal'), str: '='},
+  {value: 'number_not_equal', label: i18n.global.t('opertion.not_equal'), str: '≠'},
+  {value: 'number_greater_than', label: i18n.global.t('opertion.greater_than'), str: '>'},
+  {value: 'number_less_than', label: i18n.global.t('opertion.less_than'), str: '<'},
+  {value: 'number_greater_than_or_equal', label: i18n.global.t('opertion.greater_than_or_equal'), str: '≥'},
+  {value: 'number_less_than_or_equal', label: i18n.global.t('opertion.less_than_or_equal'), str: '≤'},
+
+  // String operations
+  {value: 'string_equal', label: i18n.global.t('opertion.equal'), str: '='},
+  {value: 'string_not_equal', label: i18n.global.t('opertion.not_equal'), str: '≠'},
+  {value: 'string_contains', label: i18n.global.t('opertion.contains'), str: ''},
+  {value: 'string_not_contains', label: i18n.global.t('opertion.does_not_contain'), str: ''},
+  {value: 'string_starts_with', label: i18n.global.t('opertion.starts_with'), str: '='},
+  {value: 'string_ends_with', label: i18n.global.t('opertion.ends_with'), str: '='},
+  {value: 'string_length_equal', label: i18n.global.t('opertion.length_equal'), str: '|...|='},
+  {value: 'string_length_greater_than', label: i18n.global.t('opertion.length_greater_than'), str: '|...|>'},
+  {value: 'string_length_greater_than_or_equal', label: i18n.global.t('opertion.length_greater_than_or_equal'), str: '|...|≥'},
+  {value: 'string_length_less_than', label: i18n.global.t('opertion.length_less_than'), str: '|...|<'},
+  {value: 'string_length_less_than_or_equal', label: i18n.global.t('opertion.length_less_than_or_equal'), str: '|...|≤'},
+  {value: 'string_regex_match', label: i18n.global.t('opertion.regex_match'), str: '\\+'},
+
+  // List operations
+  {value: 'list_equal', label: i18n.global.t('opertion.equal'), str: '='},
+  {value: 'list_not_equal', label: i18n.global.t('opertion.not_equal'), str: '≠'},
+  {value: 'list_contains', label: i18n.global.t('opertion.contains'), str: ''},
+  {value: 'list_not_contains', label: i18n.global.t('opertion.does_not_contain'), str: ''},
+  {value: 'list_length_equal', label: i18n.global.t('opertion.length_equal'), str: '|...|='},
+  {value: 'list_length_greater_than', label: i18n.global.t('opertion.length_greater_than'), str: '|...|>'},
+  {value: 'list_length_greater_than_or_equal', label: i18n.global.t('opertion.length_greater_than_or_equal'), str: '|...|≥'},
+  {value: 'list_length_less_than', label: i18n.global.t('opertion.length_less_than'), str: '|...|<'},
+  {value: 'list_length_less_than_or_equal', label: i18n.global.t('opertion.length_less_than_or_equal'), str: '|...|≤'},
+
+  // Boolean operations
+  {value: 'bool_equal', label: i18n.global.t('opertion.equal'), str: '='},
+  {value: 'bool_not_equal', label: i18n.global.t('opertion.not_equal'), str: '≠'},
+
+  // Dictionary operations
+  {value: 'dict_equal', label: i18n.global.t('opertion.equal'), str: '='},
+  {value: 'dict_not_equal', label: i18n.global.t('opertion.not_equal'), str: '≠'},
+  {value: 'dict_contains_key', label: i18n.global.t('opertion.contains_key'), str: ''},
+  {value: 'dict_not_contains_key', label: i18n.global.t('opertion.does_not_contain_key'), str: ''}
+]
+
+ export const opertionListMap = new Map(opertionList.map(item => [item.value, item]));

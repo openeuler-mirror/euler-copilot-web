@@ -39,6 +39,10 @@ onMounted(() => {
   if (currentAppType) {
     createAppType.value = currentAppType;
   }
+  // 如果是agent直接可以发布
+  if(appType.value === 'agent') {
+    publishValidate.value = true;
+  }
 });
 
 onUnmounted(() => {
@@ -142,6 +146,7 @@ const saveApp = async (type: 'agent' | 'flow') => {
         appType: type,
         icon: formData.icon,
         name: formData.name,
+        llm: formData.model,
         description: formData.description,
         dialogRounds: formData.dialogRounds,
         mcpService: formData.mcps,
@@ -169,6 +174,10 @@ const getPublishStatus = (status) => {
   } else {
     publishStatus.value = '未发布';
   }
+};
+
+const saveConfig = () => {
+  saveApp(appType.value as 'agent' | 'flow');
 };
 
 const handleJumperAppCenter = () => {
@@ -256,6 +265,7 @@ function onDebugSuccess(status: boolean) {
         v-else-if="appType === 'agent'"
         :handleValidateContent="handleValidateContent"
         :onDebug="onDebugSuccess"
+        :saveConfig="saveConfig"
       />
     </div>
     <div

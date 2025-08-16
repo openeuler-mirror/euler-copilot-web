@@ -6,7 +6,6 @@ import { ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
-import BranchNode from './workFlowConfig/BranchNode.vue';
 import ChoiceBranchNode from './workFlowConfig/ChoiceBranchNode.vue';
 import VariableAssignNode from './workFlowConfig/VariableAssignNode.vue';
 import LoopNode from './workFlowConfig/LoopNode.vue';
@@ -48,8 +47,11 @@ import CustomLoading from '../../customLoading/index.vue';
 import EditFlowName from './workFlowConfig/editFlowName.vue';
 import NodeListPanel from './workFlowConfig/NodeListPanel.vue';
 import EnvironmentVariableDrawer from './workFlowConfig/EnvironmentVariableDrawer.vue';
+import { useLangStore } from '@/store';
 
 const { t } = useI18n();
+const langStore = useLangStore();
+
 const copilotAside = ref<HTMLElement>();
 const isCopilotAsideVisible = ref(false);
 
@@ -1085,6 +1087,7 @@ onMounted(() => {
     .queryAllFlowService({
       page: 1,
       pageSize: 10,
+      language: langStore.language,
     })
     .then((res) => {
       const services = res[1]?.result.services || [];
@@ -1161,6 +1164,7 @@ const nodesChange = (nodes) => {
     removeSelectedNodes([getSelectedNodes.value[0]]);
   }
   if (nodes?.[0]?.type === 'remove') {
+    // TODO 为什么0.10.0删除了delNode？
     delNode(nodes[0].id);
     // 节点增加删除时直接将工作流debug状态置为false
     emits('updateFlowsDebug', false);
@@ -2127,7 +2131,10 @@ const saveFlow = async (updateNodeParameter?, debug?) => {
     if (response[1]?.result) {
       queryFlow('update');
       const updatedCurFlow = response[1].result.flow;
-      isNodeConnect.value = response[1].result.connectivity;
+      isNodeConnect.value = updatedCurFlow.connectivity;
+      if (!isNodeConnect.value) {
+        ElMessage.error(i18n.global.t('semantic.check_connect'));
+      }
       redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
     }
 
@@ -2262,17 +2269,6 @@ defineExpose({
             @updateConnectHandle="updateConnectHandle"
             @insertNodeFromHandle="handleInsertNodeFromHandle"
           ></CustomNode>
-        </template>
-
-        <!-- 自定义分支节点 -->
-        <template #node-branch="branchNodeProps">
-          <BranchNode
-            v-bind="branchNodeProps"
-            :disabled="debugDialogVisible"
-            :selected="selectedNodeId === branchNodeProps.id"
-            @delNode="delNode"
-            @editYamlDrawer="editYamlDrawer"
-          ></BranchNode>
         </template>
 
         <!-- 条件分支节点 -->
@@ -2435,7 +2431,7 @@ defineExpose({
         <el-tooltip
           v-if="!isNodeAndLineConnect && !isNodeConnect"
           effect="dark"
-          :content="$t('semantic.publish_condition')"
+          :content="$t('semantic.check_connect')"
           placement="top"
         >
           <div class="debugBtn isDebugDis"></div>
@@ -2450,7 +2446,9 @@ defineExpose({
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
           <div class="icon" :class="`${debugStatus}Icon`"></div>
-          <div class="resultText">{{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}</div>
+          <div class="resultText">
+            {{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}
+          </div>
           <span
             class="time"
             :class="`${debugStatus}Bg`"
