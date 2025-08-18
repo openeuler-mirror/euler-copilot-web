@@ -31,6 +31,7 @@ import { getSrcIcon, DefaultViewPortZoom } from './types';
 import $bus from 'src/bus/index';
 import CustomLoading from '../../customLoading/index.vue';
 import EditFlowName from './workFlowConfig/editFlowName.vue';
+import { useLangStore } from 'src/store';
 
 const { t } = useI18n();
 const copilotAside = ref<HTMLElement>();
@@ -70,6 +71,8 @@ const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
 const connectHandleNodeId = ref('');
 const updateFlowsDebugStatus = ref(false);
+const langStore = useLangStore();
+
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
   if (isCopilotAsideVisible.value) {
@@ -268,6 +271,7 @@ onMounted(() => {
     .queryAllFlowService({
       page: 1,
       pageSize: 10,
+      language: langStore.language,
     })
     .then((res) => {
       apiServiceList.value = res[1]?.result.services;
