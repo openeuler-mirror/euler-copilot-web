@@ -54,6 +54,7 @@ const props = defineProps<CardInfo>();
     display: flex;
     flex-direction: column;
     gap: 4px;
+    width: 70%;
 
     &__top {
       min-height: 24px;
@@ -66,7 +67,7 @@ const props = defineProps<CardInfo>();
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        width: 80%;
+        width: 70%;
         font-weight: 700;
       }
     }

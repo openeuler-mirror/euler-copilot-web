@@ -10,6 +10,8 @@ const getMcpList = (params: {
   keyword?: string;
   page?: number;
   pageSize?: number;
+  isInstall?: boolean | null;
+  isActive?: boolean | null;
 }) => {
   return get<{
     currentPage: number;
@@ -69,13 +71,13 @@ const createOrUpdateMcpService = (params: {
   name: string;
   overview: string;
   description: string;
-  config: string;
+  config: object;
   mcpType: 'stdio' | 'sse' | 'stream';
 }) => {
   return post<{
     service_id: string;
     name: string;
-  }>(`${MCP_BASE_URL}`, params);
+  }>(`${MCP_BASE_URL}`, params, { 'Content-Type': 'application/json' });
 };
 
 const deleteMcpService = (id: string) => {
@@ -84,6 +86,10 @@ const deleteMcpService = (id: string) => {
 
 const activeMcpService = (id: string, active: boolean) => {
   return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`, { active });
+};
+
+const installMcpService = (id: string) => {
+  return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}/install`);
 };
 
 // 定义一个名为uploadMcpIcon的函数，接收两个参数serviceId和icon
@@ -96,7 +102,7 @@ const uploadMcpIcon = (params: {
   formData.append('icon', params.icon);
   // 使用post方法向MCP_BASE_URL/${id}发送请求，请求体为{ icon: params.icon }
   return post<{ icon: string }>(
-    `${MCP_BASE_URL}`,
+    `${MCP_BASE_URL}/icon/${params.serviceId}`,
     formData,
     {
       serviceId: params.serviceId,
@@ -111,5 +117,6 @@ export const mcpApi = {
   createOrUpdateMcpService,
   deleteMcpService,
   activeMcpService,
+  installMcpService,
   uploadMcpIcon
 };

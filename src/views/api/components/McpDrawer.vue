@@ -149,7 +149,7 @@ async function onConfirm(formEl: FormInstance | undefined) {
       icon: form.icon,
       name: form.name,
       description: form.description,
-      config: form.mcpConfig,
+      config: JSON.parse(form.mcpConfig),
       mcpType: form.type,
     });
 

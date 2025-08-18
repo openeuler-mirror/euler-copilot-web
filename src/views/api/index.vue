@@ -103,6 +103,30 @@
               :lazy="true"
             ></el-tab-pane>
           </el-tabs>
+          <el-tabs
+            v-if="pluginType === 'mcp'"
+            v-model="mcpType"
+            class="plugin-tabs"
+            @tab-click="(tab) => handleSearchMcpList(tab.props.name)"
+          >
+            <el-tab-pane
+              :label="$t('plugin_center.mcp.all_select')"
+              name="all_select"
+              :lazy="true"
+            ></el-tab-pane>
+            <el-tab-pane
+              :label="$t('plugin_center.mcp.installed')"
+              name="installed"
+              :lazy="true"
+              v-if="userinfo.is_admin"
+            ></el-tab-pane>
+            <el-tab-pane
+              :label="$t('plugin_center.mcp.not_installed')"
+              name="not_installed"
+              :lazy="true"
+              v-if="userinfo.is_admin"
+            ></el-tab-pane>
+          </el-tabs>
           <div class="apiCenterCardBox" v-if="pluginLists.length">
             <div
               v-for="item in pluginLists"
@@ -130,6 +154,7 @@
                       <IconUnfavorite v-else />
                     </div>
                     <div v-else-if="pluginType === 'mcp'">
+                      <!-- 安装中 -->
                       <div v-if="item.status === 'installing'" class="loading">
                         <img
                           src="@/assets/images/loading.png"
@@ -140,10 +165,34 @@
                           {{ t('plugin_center.mcp.installing') }}
                         </div>
                       </div>
-                      <div v-else-if="item.status === 'failed'" class="failed">
+                      <!-- 安装失败 -->
+                      <div
+                        v-else-if="item.status === 'failed'"
+                        class="statusDiv"
+                      >
                         <img src="@/assets/svgs/error.svg" alt="" />
                         <div class="failed-text">
                           {{ t('plugin_center.mcp.install_failed') }}
+                        </div>
+                      </div>
+                      <!-- 安装成功 -->
+                      <div
+                        v-else-if="['ready'].includes(item.status)"
+                        class="statusDiv"
+                      >
+                        <img src="@/assets/svgs/success.svg" alt="" />
+                        <div class="failed-text">
+                          {{ t('plugin_center.mcp.install_success') }}
+                        </div>
+                      </div>
+                      <!-- 未安装 -->
+                      <div
+                        v-else-if="['init', 'cancelled'].includes(item.status)"
+                        class="statusDiv"
+                      >
+                        <img src="@/assets/svgs/warning.svg" alt="" />
+                        <div class="failed-text">
+                          {{ t('plugin_center.mcp.not_installed') }}
                         </div>
                       </div>
                     </div>
@@ -156,7 +205,7 @@
                           class="apiCenterCardId"
                           v-if="pluginType === 'mcp'"
                         >
-                          <span style="font-weight: 700 !important;">ID: </span>
+                          <span style="font-weight: 700 !important">ID:</span>
                           <span>{{ item.serviceId }}</span>
                           <el-tooltip
                             effect="dark"
@@ -171,11 +220,32 @@
                           </el-tooltip>
                         </div>
                         <div
-                          class="apiCenterCardOps"
-                          v-if="item.status !== 'installing'"
+                          v-if="
+                            (userinfo.user_sub === item.author &&
+                              pluginType === 'semantic_interface') ||
+                            (userinfo.is_admin && pluginType === 'mcp')
+                          "
+                          class="deleteAndEdit"
                         >
+                          <!-- 未安装、安装失败：安装 -->
                           <el-button
-                            v-if="pluginType === 'mcp'"
+                            v-if="
+                              pluginType === 'mcp' &&
+                              ['init', 'cancelled', 'failed'].includes(item.status)
+                            "
+                            text
+                            @click.stop="
+                              onInstallService(item.serviceId, item.isActive)
+                            "
+                          >
+                            {{ t('plugin_center.mcp.install') }}
+                          </el-button>
+                          <!-- 安装成功：激活 -->
+                          <el-button
+                            v-if="
+                              pluginType === 'mcp' &&
+                              ['ready'].includes(item.status)
+                            "
                             text
                             @click.stop="
                               onActiveService(item.serviceId, item.isActive)
@@ -187,29 +257,31 @@
                                 : t('plugin_center.mcp.activate')
                             }}
                           </el-button>
-                          <div
-                            v-if="
-                              (userinfo.user_sub === item.author &&
-                                pluginType === 'semantic_interface') ||
-                              (userinfo.is_admin && pluginType === 'mcp')
+                          <!-- 未安装、安装成功、安装失败：编辑 -->
+                          <el-button
+                            text
+                            v-if="!['installing'].includes(item.status)"
+                            @click.stop="
+                              openSidebar('edit', item.serviceId, pluginType)
                             "
-                            class="deleteAndEdit"
                           >
-                            <el-button
-                              text
-                              @click.stop="
-                                openSidebar('edit', item.serviceId, pluginType)
-                              "
-                            >
-                              {{ $t('semantic.interface_edit') }}
-                            </el-button>
-                            <el-button
-                              text
-                              @click.stop="handleDelPlugin(item.serviceId)"
-                            >
-                              {{ $t('semantic.interface_delete') }}
-                            </el-button>
-                          </div>
+                            {{ $t('semantic.interface_edit') }}
+                          </el-button>
+                          <!-- 安装中：取消 -->
+                          <el-button
+                            text
+                            v-if="['installing'].includes(item.status)"
+                            @click.stop="onActiveService(item.serviceId, false)"
+                          >
+                            {{ $t('semantic.cancel') }}
+                          </el-button>
+                          <!-- 删除 -->
+                          <el-button
+                            text
+                            @click.stop="handleDelPlugin(item.serviceId)"
+                          >
+                            {{ $t('semantic.interface_delete') }}
+                          </el-button>
                         </div>
                       </div>
                     </div>
@@ -285,12 +357,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import {
-  IconCaretDown,
-  IconSearch,
-  IconFavorite,
-  IconUnfavorite,
-} from '@computing/opendesign-icons';
+import { IconError } from '@computing/opendesign-icons';
 import './style.scss';
 import PluginCard from './components/PluginCard.vue';
 import { ref, onMounted, watch, markRaw, onBeforeUnmount } from 'vue';
@@ -348,7 +415,7 @@ const pluginLists = ref<
     name: string;
     published?: boolean;
     isActive?: boolean;
-    status?: 'installing' | 'ready' | 'failed';
+    status?: 'init' | 'installing' | 'cancelled' | 'ready' | 'failed';
   }[]
 >([]);
 
@@ -373,6 +440,10 @@ const currentPage = ref(1);
 const totalCount = ref(0);
 const currentPageSize = ref(pagination.value.pageSizes[0]);
 const loading = ref(false);
+
+const mcpType = ref('all_select');
+const mcpIsActive = ref(<boolean | null> null);
+const mcpIsInstall = ref(<boolean | null> (userinfo.value.is_admin ? null : true));
 
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
@@ -493,7 +564,8 @@ async function queryMcpServices() {
     pageSize: currentPageSize.value,
     searchType: apiSearchType.value,
     keyword: apiSearchValue.value || undefined,
-    [apiType.value]: true,
+    isInstall: mcpIsInstall.value,
+    isActive: mcpIsActive.value,
   });
   if (res) {
     let installingCount = 0;
@@ -547,6 +619,27 @@ const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
   }
 };
 
+const handleSearchMcpList = (
+  type: 'all_select' | 'installed' | 'not_installed',
+) => {
+  mcpType.value = type;
+  if (type === 'all_select') {
+    mcpIsActive.value = null;
+    mcpIsInstall.value = null;
+    queryList(pluginType.value);
+  } else {
+    if (type === 'installed') {
+      mcpIsInstall.value = true;
+    } else {
+      mcpIsInstall.value = false;
+    }
+
+    currentPage.value = 1;
+    currentPageSize.value = 16;
+    queryList(pluginType.value);
+  }
+};
+
 function onCopyServiceId(id: string) {
   writeText(id);
   successMsg(t('feedback.copied_successfully'));
@@ -579,6 +672,14 @@ const handleDelPlugin = async (id: string) => {
 async function onActiveService(serviceId: string, active: boolean = true) {
   const [, res] = await api.activeMcpService(serviceId, !active);
   if (res) {
+    queryList(pluginType.value);
+  }
+}
+
+async function onInstallService(serviceId: string) {
+  const [, res] = await api.installMcpService(serviceId);
+  if (res) {
+    successMsg(t('plugin_center.mcp.install_success'));
     queryList(pluginType.value);
   }
 }
@@ -664,7 +765,7 @@ onBeforeUnmount(() => {
     cursor: not-allowed;
   }
   .loading,
-  .failed {
+  .statusDiv {
     display: flex;
     height: auto;
     width: 100%;
