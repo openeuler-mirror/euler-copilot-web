@@ -20,7 +20,8 @@ const BASE_URL = '/api/conversation';
 export const stopGeneration = (taskId: string): Promise<
   [any, FcResponse<object> | undefined]
 > => {
-  return post(`/api/stop?taskId=${taskId}`);
+  let url = taskId === undefined ? '/api/stop' : `/api/stop?taskId=${taskId}`;
+  return post(url);
 };
 
 /**
