@@ -57,7 +57,7 @@ function getRiskType(risk) {
 }
 
 const doFlow = async (type) => {
-  if (taskId) {
+  if (taskId.value) {
     exData.value.pop();
     taskId.value = null;
     let content = '';
@@ -84,7 +84,7 @@ const doParams = async (params) => {
   let description = params.description;
   delete params.description;
   let newParams = { content: params, description: description };
-  if (taskId) {
+  if (taskId.value) {
     taskId.value = null;
     let content = '';
     await sendQuestion(

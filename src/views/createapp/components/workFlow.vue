@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
-import { onMounted, ref, watch, onUnmounted, computed } from 'vue';
+import { onMounted, ref, watch, onUnmounted, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
@@ -108,6 +108,20 @@ const isNodeConnect = ref(false);
 const loading = ref(false);
 const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
+
+// 确保HTML根元素与主题状态同步
+watch(() => themeStore.theme, (newTheme) => {
+  if (newTheme === 'dark') {
+    if (!document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.add('dark');
+    }
+  } else {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+}, { immediate: true });
+
 const connectHandleNodeId = ref('');
 const updateFlowsDebugStatus = ref(false);
 // 添加选中节点状态管理
@@ -2770,34 +2784,35 @@ defineExpose({
   }
 }
 
-// 环境变量按钮样式
+// 环境变量按钮样式 - 使用专门的环境变量CSS变量
 .envBtn {
   width: 32px;
   height: 32px;
-  background: #ffffff;
-  border: 1px solid #e0e7ff;
+  background: var(--flow-env-default);
   border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 12px;
-  color: #486bf7;
-  cursor: pointer;
+  color: #0277ff;
+  border: 1px solid #e1e4e8;
   
   &:hover {
-    background: #dbeafe;
-    border-color: #93c5fd;
-    color: #2563eb; 
+    background: var(--flow-env-hover);
+    color: #0277ff;
+    border-color: #0277ff;
   }
   &:active {
-    background: #bfdbfe;
+    background: var(--flow-env-active);
+    color: #0277ff;
   }
-}
-.envBtn.isEnvDis {
-  background: #f9fafb;
-  border-color: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
+  
+  &.isEnvDis {
+    background: var(--flow-env-dis);
+    cursor: not-allowed;
+    color: #9ca3af;
+    border-color: #e1e4e8;
+  }
 }
 
 // 深色主题支持
@@ -2850,24 +2865,23 @@ defineExpose({
     }
   }
   
+  // 环境变量按钮在深色主题下的样式调整
   .envBtn {
-    background: #1e3a8a;
-    border-color: #3730a3;
-    color: #60a5fa;
+    color: #0277ff;
+    border-color: rgba(255, 255, 255, 0.1);
     
     &:hover {
-      background: #1e40af;
-      border-color: #4338ca;
-      color: #93c5fd;
+      color: #0277ff;
+      border-color: #0277ff;
     }
+    
     &:active {
-      background: #1d4ed8;
+      color: #0277ff;
     }
     
     &.isEnvDis {
-      background: #374151;
-      border-color: #4b5563;
       color: #6b7280;
+      border-color: rgba(255, 255, 255, 0.1);
     }
   }
 }

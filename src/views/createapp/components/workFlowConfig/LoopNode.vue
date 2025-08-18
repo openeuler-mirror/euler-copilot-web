@@ -12,6 +12,7 @@ import CustomEdge from './CustomEdge.vue';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { getId, sanitizeNodeData, createNewNode } from './useDnD';
+import { useChangeThemeStore } from '@/store';
 
 const props = defineProps({
   id: {
@@ -55,6 +56,8 @@ const props = defineProps({
 const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle', 'editLoopNode', 'editSubFlowNode', 'showInsertNodeMenu', 'insertNodeFromHandle', 'updateSubFlowId']);
 
 const { t } = useI18n();
+const themeStore = useChangeThemeStore();
+
 
 // Loop节点专用的额外节点类型定义
 const extraLoopNodeTypes = ref([
@@ -2713,7 +2716,7 @@ export default {
                       height="10" 
                       patternUnits="userSpaceOnUse"
                     >
-                      <circle cx="1" cy="1" r="1" fill="#dfe5ef"/>
+                      <circle cx="1" cy="1" r="1" :fill="themeStore?.theme === 'dark' ? '#3e4551' : '#dfe5ef'"/>
                     </pattern>
                   </defs>
                   <rect 
@@ -3177,7 +3180,7 @@ export default {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   min-width: 320px;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .loopNodeStyle.node-selected {
@@ -4195,38 +4198,42 @@ export default {
   box-shadow: 0 2px 8px rgba(99, 149, 253, 0.3);
 }
 
-/* 深色主题支持 */
+/* 深色主题支持 - 使用用户指定的颜色规范 */
 .dark .loopNodeStyle {
-  background: #1f2937;
-  border-color: #374151;
+  background: #26262a !important;
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .dark .title .label {
-  color: #f3f4f6;
+  color: #ffffff !important;
 }
 
 .dark .title .iconStyle {
-  color: #a5b4fc;
+  color: #ffffff !important;
 }
 
 .dark .loopInfo {
-  background: #374151;
-  border-color: #4b5563;
+  background: #26262a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .dark .infoLabel {
-  color: #9ca3af;
+  color: #ffffff !important;
 }
 
 .dark .infoValue {
-  background: #4b5563;
-  border-color: #6b7280;
-  color: #f3f4f6;
+  background: #26262a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
 }
 
 .dark .embeddedFlowCanvas {
-  background: #374151;
-  border-color: #4b5563;
+  background: #26262a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .vue-flow-like-canvas {
+  background: #262626 !important;
 }
 
 /* 深色主题下的Handle样式 */
@@ -4240,6 +4247,129 @@ export default {
 .dark .loopNodeStyle :deep(.vue-flow__handle-right.isConnecting) {
   background: #4f46e5;
   border-color: #374151;
+}
+
+/* 深色主题下的子画布节点样式 */
+.dark .embeddedCustomNodeStyle {
+  background: #26262a !important;
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
+  
+  .nodeBox {
+    background: #26262a !important;
+  }
+  
+  .title .label {
+    color: #ffffff !important;
+  }
+  
+  .nodeFooter {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+    
+    .nodeIdText {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    .copydocument {
+      color: rgba(255, 255, 255, 0.6) !important;
+      
+      &:hover {
+        color: rgba(255, 255, 255, 0.8) !important;
+      }
+    }
+  }
+}
+
+/* 深色主题下的开始/结束节点样式 */
+.dark .embeddedCustomNodeStyle.vue-flow__node-start,
+.dark .embeddedCustomNodeStyle.vue-flow__node-end,
+.dark .embeddedCustomNodeStyle.vue-flow__node-break,
+.dark .embeddedCustomNodeStyle.vue-flow__node-continue {
+  background: #26262a !important;
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
+  
+  .nodeSaEBorderBox {
+    background: #26262a !important;
+  }
+  
+  .saEText {
+    color: #ffffff !important;
+  }
+}
+
+/* 深色主题下的Choice节点样式 */
+.dark .choiceBranchNodeStyle {
+  background: #26262a !important;
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
+  
+  .title .label {
+    color: #ffffff !important;
+  }
+  
+  .branchItem {
+    background: #26262a !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    
+    .caseLabel {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .branchCondition {
+      color: #ffffff !important;
+      
+      .defaultText {
+        color: rgba(255, 255, 255, 0.6) !important;
+      }
+    }
+  }
+  
+  .emptyBranches {
+    background: #26262a !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    
+    .emptyText {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+  }
+}
+
+/* 深色主题下的VariableAssign节点样式 */
+.dark .embeddedCustomNodeStyle .operations-list {
+  .operation-item {
+    background: rgba(99, 179, 237, 0.15) !important;
+    border-color: rgba(99, 179, 237, 0.3) !important;
+    
+    .variable-name {
+      color: #63b3ed !important;
+    }
+    
+    .operation-type {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+  }
+}
+
+.dark .embeddedCustomNodeStyle .no-operations {
+  .placeholder-text {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+}
+
+/* 深色主题下的子画布Handle样式 */
+.dark .vue-flow-like-canvas .vue-flow__nodes .vue-flow__node.embeddedCustomNodeStyle .vue-flow__handle {
+  background: #6395fd !important;
+  border-color: #374151 !important;
+}
+
+.dark .vue-flow-like-canvas .vue-flow__nodes .vue-flow__node.embeddedCustomNodeStyle .vue-flow__handle.connecting {
+  background: #4f46e5 !important;
+  border-color: #374151 !important;
+}
+
+.dark .vue-flow-like-canvas .vue-flow__nodes .vue-flow__node.embeddedCustomNodeStyle:hover .vue-flow__handle {
+  background: #4f46e5 !important;
+  border-color: #374151 !important;
 }
 
 /* 禁用Choice节点内部的nodeBox点击事件，让容器统一处理 */

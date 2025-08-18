@@ -268,7 +268,7 @@ watch(
     border-radius: 8px;
     min-width: 200px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   
   &.node-selected .nodeContainer {
@@ -568,11 +568,11 @@ watch(
 
 
 
-// 深色主题支持
+// 深色主题支持 - 使用用户指定的颜色规范
 .dark {
   .variable-assign-border {
-    background: #2d3748;
-    border-color: #4a5568;
+    background: #26262a !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
     
     &:hover {
       border-color: #3182ce;
@@ -606,7 +606,7 @@ watch(
       }
       
       .node-title {
-        color: #e2e8f0;
+        color: #ffffff !important;
       }
     }
     

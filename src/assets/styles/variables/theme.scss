@@ -85,6 +85,12 @@ body[theme='dark'] {
   --flow-debug-hover: url('../../assets/svgs/dark_debug_hover.svg');
   --flow-debug-active: url('../../assets/svgs/dark_debug_active.svg');
   --flow-debug-dis: url('../../assets/svgs/dark_debug_dis.svg');
+  
+  // 环境变量按钮专用变量 - 使用纯色背景
+  --flow-env-default: #374151;
+  --flow-env-hover: #4b5563;
+  --flow-env-active: #374151;
+  --flow-env-dis: #6b7280;
   // 这里是不同种类的展开收起图标
   --expand-fold-default: url('../../assets/svgs/dark_expand_fold.svg');
   --expand-fold-hover: url('../../assets/svgs/dark_expand_fold_hover.svg');
@@ -187,6 +193,12 @@ body[theme='light'] {
   --flow-debug-hover: url('../../assets/svgs/light_debug_hover.svg');
   --flow-debug-active: url('../../assets/svgs/light_debug_active.svg');
   --flow-debug-dis: url('../../assets/svgs/light_debug_dis.svg');
+  
+  // 环境变量按钮专用变量 - 使用纯色背景
+  --flow-env-default: #ffffff;
+  --flow-env-hover: #f8f9fa;
+  --flow-env-active: #e9ecef;
+  --flow-env-dis: #f8f9fa;
   // 这里是不同种类的展开收起图标
   --expand-fold-default: url('../../assets/svgs/light_expand_fold.svg');
   --expand-fold-hover: url('../../assets/svgs/light_expand_fold_hover.svg');

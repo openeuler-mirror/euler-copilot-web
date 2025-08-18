@@ -133,7 +133,7 @@
               :key="item.serviceId"
               class="apiCenterCardSingle"
             >
-              <div @click="openSidebar('get', item.serviceId, pluginType)">
+              <div @click="openSidebar('get', item.serviceId!, pluginType)">
                 <PluginCard
                   :name="item.name"
                   :description="item.description"
@@ -206,14 +206,14 @@
                           v-if="pluginType === 'mcp'"
                         >
                           <span style="font-weight: 700 !important">ID:</span>
-                          <span>{{ item.serviceId }}</span>
+                          <span>{{ item.serviceId! }}</span>
                           <el-tooltip
                             effect="dark"
                             :content="$t('common.copy')"
                             placement="top"
                           >
                             <el-icon
-                              @click.stop="onCopyServiceId(item.serviceId)"
+                              @click.stop="onCopyServiceId(item.serviceId!)"
                             >
                               <CopyDocument />
                             </el-icon>
@@ -238,7 +238,7 @@
                             "
                             text
                             @click.stop="
-                              onInstallService(item.serviceId, item.isActive)
+                              onInstallService(item.serviceId!)
                             "
                           >
                             {{ t('plugin_center.mcp.install') }}
@@ -266,7 +266,7 @@
                               !['installing'].includes(item.status)
                             "
                             @click.stop="
-                              openSidebar('edit', item.serviceId, pluginType)
+                              openSidebar('edit', item.serviceId!, pluginType)
                             "
                           >
                             {{ $t('semantic.interface_edit') }}
@@ -278,7 +278,7 @@
                               userinfo.is_admin &&
                               ['installing'].includes(item.status)
                             "
-                            @click.stop="onActiveService(item.serviceId, true)"
+                            @click.stop="onActiveService(item.serviceId!, true)"
                           >
                             {{ $t('semantic.cancel') }}
                           </el-button>
@@ -286,7 +286,7 @@
                           <el-button
                             v-if="userinfo.is_admin"
                             text
-                            @click.stop="handleDelPlugin(item.serviceId)"
+                            @click.stop="handleDelPlugin(item.serviceId!)"
                           >
                             {{ $t('semantic.interface_delete') }}
                           </el-button>
@@ -301,6 +301,19 @@
           <div class="appCenterNoData" v-else>
             <div class="noDataIcon"></div>
             <div class="desc">{{ $t('semantic.no_data') }}</div>
+          </div>
+          <!-- 分页组件 -->
+          <div class="pagination-container" v-if="totalCount > 0">
+            <el-pagination
+              class="pagination"
+              v-model:current-page="currentPage"
+              v-model:page-size="currentPageSize"
+              :page-sizes="pagination.pageSizes"
+              :layout="pagination.layout"
+              :total="totalCount"
+              popper-class="appPagination"
+              @change="handleChangePage"
+            />
           </div>
         </div>
       </div>
@@ -351,27 +364,17 @@
         :service-id="selectedServiceId"
       />
     </div>
-    <el-pagination
-      class="pagination"
-      v-if="totalCount >= 16"
-      v-model:current-page="currentPage"
-      v-model:page-size="currentPageSize"
-      :page-sizes="pagination.pageSizes"
-      :layout="pagination.layout"
-      :total="totalCount"
-      popper-class="appPagination"
-      @change="handleChangePage"
-    />
   </div>
   <ActiveModel
     v-model:visible="activeModelVisible"
     :item="activeModelItem"
+    type="edit"
     :title="$t('plugin_center.mcp.active_mcp_service')"
     @do-active="doActive"
   />
 </template>
 <script setup lang="ts">
-import { IconError } from '@computing/opendesign-icons';
+import { IconError, IconSearch, IconCaretDown, IconFavorite, IconUnfavorite } from '@computing/opendesign-icons';
 import './style.scss';
 import PluginCard from './components/PluginCard.vue';
 import { ref, onMounted, watch, markRaw, onBeforeUnmount } from 'vue';
@@ -400,7 +403,7 @@ const mcpDrawerVisible = ref(false);
 const mcpDetailDrawerVisible = ref(false);
 
 const activeModelVisible = ref(false);
-const activeModelItem = ref({});
+const activeModelItem = ref<any>({});
 
 function onOpenMcpDrawer(id?: string) {
   if (id) {
@@ -452,12 +455,12 @@ const apiSearchValue = ref();
 const getServiceName = ref('');
 const { userinfo } = storeToRefs(useAccountStore());
 const pagination = ref({
-  pageSizes: [],
-  layout: 'total,prev,pager,next,jumper',
+  pageSizes: [10, 20, 50, 100],
+  layout: 'total, sizes, prev, pager, next, jumper',
 });
 const currentPage = ref(1);
 const totalCount = ref(0);
-const currentPageSize = ref(pagination.value.pageSizes[0]);
+const currentPageSize = ref(20);
 const loading = ref(false);
 
 const mcpType = ref('all_select');
@@ -604,6 +607,10 @@ async function queryMcpServices() {
         status: item.status,
       };
     });
+    // 更新分页信息
+    currentPage.value = res.result.currentPage || currentPage.value;
+    totalCount.value = res.result.totalCount || 0;
+    
     if (installingCount === 0 && timer) {
       clearInterval(timer);
       timer = null;
@@ -620,7 +627,7 @@ const handleFavorite = (e, item) => {
   e.stopPropagation();
   api
     .changeSingleApiCollect({
-      serviceId: item.serviceId,
+      serviceId: item.serviceId!,
       favorited: !item.favorited,
     })
     .then(() => {
@@ -629,36 +636,27 @@ const handleFavorite = (e, item) => {
 };
 
 const handleSearchApiList = (type: 'my' | 'createdByMe' | 'favorited') => {
-  if (type === 'my') {
-    apiType.value = 'my';
-    queryList(pluginType.value);
-  } else {
-    apiType.value = type;
-    currentPage.value = 1;
-    currentPageSize.value = 16;
-    queryList(pluginType.value);
-  }
+  apiType.value = type;
+  currentPage.value = 1;
+  queryList(pluginType.value);
 };
 
 const handleSearchMcpList = (
   type: 'all_select' | 'installed' | 'not_installed',
 ) => {
   mcpType.value = type;
+  currentPage.value = 1;
+  
   if (type === 'all_select') {
     mcpIsActive.value = null;
     mcpIsInstall.value = null;
-    queryList(pluginType.value);
+  } else if (type === 'installed') {
+    mcpIsInstall.value = true;
   } else {
-    if (type === 'installed') {
-      mcpIsInstall.value = true;
-    } else {
-      mcpIsInstall.value = false;
-    }
-
-    currentPage.value = 1;
-    currentPageSize.value = 16;
-    queryList(pluginType.value);
+    mcpIsInstall.value = false;
   }
+  
+  queryList(pluginType.value);
 };
 
 function onCopyServiceId(id: string) {
@@ -692,9 +690,9 @@ const handleDelPlugin = async (id: string) => {
 
 async function showActive(item: any) {
   if (item.isActive) {
-    onActiveService(item.serviceId, item.isActive);
+    onActiveService(item.serviceId!, item.isActive);
   } else {
-    const [, res] = await api.getMcpServiceDetail(item.serviceId, true);
+    const [, res] = await api.getMcpServiceDetail(item.serviceId!, true);
     if (res) {
       activeModelVisible.value = true;
       activeModelItem.value = res.result;
@@ -703,7 +701,9 @@ async function showActive(item: any) {
 }
 
 function doActive(form: any) {
-  onActiveService(activeModelItem.value.serviceId, false, form);
+  if (activeModelItem.value?.serviceId) {
+    onActiveService(activeModelItem.value.serviceId, false, form);
+  }
 }
 
 async function onActiveService(
@@ -733,12 +733,14 @@ function onPluginTypeClick(type: 'semantic_interface' | 'mcp') {
     return;
   }
   pluginType.value = type;
+  currentPage.value = 1;
   queryList(pluginType.value);
 }
 
 watch(
   () => [apiSearchValue, apiSearchType],
   () => {
+    currentPage.value = 1;
     queryList(pluginType.value);
   },
   { deep: true },
@@ -758,6 +760,14 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .create-button__icon {
   border-radius: 20px;
+}
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--o-border-color-light);
+  flex-shrink: 0;
 }
 .pagination {
   display: flex !important;
@@ -897,6 +907,7 @@ img {
 <style>
 .plugin-tabs {
   padding-right: 8px;
+  flex-shrink: 0;
   --o-tabs-font-size: 14px;
   --o-tabs-item-padding: 5px 16px 0 5px;
   --o-tabs-line-height: 32px;

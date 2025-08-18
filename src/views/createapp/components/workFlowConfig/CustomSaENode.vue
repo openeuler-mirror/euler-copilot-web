@@ -247,7 +247,7 @@ watch(
   box-sizing: border-box;
   border-radius: 10px;
   cursor: pointer; // 添加鼠标指针
-  transition: all 0.3s ease; // 添加过渡效果
+  transition: transform 0.3s ease, box-shadow 0.3s ease; // 只对变换和阴影添加过渡效果
   
   &:hover {
     transform: translateY(-1px);
@@ -453,5 +453,52 @@ watch(
   opacity: 1;
   visibility: visible;
   transition: opacity 0.2s ease 0s, visibility 0s ease 0s; /* 立即显示 */
+}
+
+/* 黑夜模式支持 - 使用用户指定的颜色规范 */
+.dark .nodeSaEBorder {
+  background: #26262a !important;
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
+  
+  .nodeSaEBorderBox {
+    background: #26262a !important;
+  }
+  
+  .saEText {
+    color: #ffffff !important;
+  }
+  
+  .variableItem {
+    background: rgba(99, 179, 237, 0.15) !important;
+    border-color: rgba(99, 179, 237, 0.3) !important;
+  }
+  
+  .variablePrefix {
+    color: #63b3ed !important;
+  }
+  
+  .label {
+    color: #ffffff !important;
+  }
+  
+  .iconStyle {
+    color: #ffffff !important;
+  }
+  
+  .variable-count {
+    color: #ffffff;
+    background: rgba(99, 179, 237, 0.2);
+  }
+  
+  .handle-plus-button .plus-icon {
+    color: #63b3ed;
+    background: #26262a;
+    border-color: #63b3ed;
+    
+    &:hover {
+      background: #63b3ed;
+      color: #26262a;
+    }
+  }
 }
 </style>

@@ -604,7 +604,7 @@ const handleBranchInsertNode = (event: Event, branchId: string) => {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   min-width: 320px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
     border-color: #6395fd;
@@ -1091,14 +1091,14 @@ const handleBranchInsertNode = (event: Event, branchId: string) => {
   }
 }
 
-// 深色主题支持
+// 深色主题支持 - 使用用户指定的颜色规范
 .dark {
   .choiceBranchNodeStyle {
-    background: #1f2937;
-    border-color: #374151;
+    background: #26262a !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
     
     .title .label {
-      color: #f3f4f6;
+      color: #ffffff !important;
     }
     
     .branchItem {

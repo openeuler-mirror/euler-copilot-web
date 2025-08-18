@@ -441,4 +441,74 @@ const handleSourceHandleLeave = () => {
   visibility: visible;
   transition: opacity 0.2s ease 0s, visibility 0s ease 0s; /* 立即显示 */
 }
+
+/* 黑夜模式支持 - 使用用户指定的颜色规范 */
+.dark .customNodeStyle {
+  background: #26262a !important;
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  .nodeBox {
+    background: #26262a !important;
+    
+    .title {
+      .label {
+        color: #ffffff !important;
+      }
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+  }
+  
+  .nodeFooter {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+    
+    .nodeIdText {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    .copydocument {
+      color: rgba(255, 255, 255, 0.6) !important;
+      
+      &:hover {
+        color: rgba(255, 255, 255, 0.8) !important;
+      }
+    }
+  }
+  
+  .deleteButton {
+    background-color: #e53e3e;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+    
+    &:hover {
+      background-color: #c53030;
+      box-shadow: 0 6px 20px rgba(229, 62, 62, 0.5);
+    }
+    
+    &:active {
+      background-color: #9c2222;
+    }
+  }
+  
+  .handle-plus-button .plus-icon {
+    background: #26262a;
+    border-color: #63b3ed;
+    color: #63b3ed;
+    box-shadow: 0 3px 8px rgba(99, 179, 237, 0.4);
+    
+    &:hover {
+      background: #63b3ed;
+      color: #26262a;
+      box-shadow: 0 5px 15px rgba(99, 179, 237, 0.6);
+    }
+  }
+}
 </style>

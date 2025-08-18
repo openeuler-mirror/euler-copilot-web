@@ -177,9 +177,9 @@ export const useSessionStore = defineStore('conversation', () => {
         // 删除 end 逻辑
         conversationItem.flowdata = {
           id: messageFlow.stepId,
-          title: currentTaskId ? i18n.global.t('flow.flow_start') : i18n.global.t('flow.flow_end'),
+          title: currentTaskId.value ? i18n.global.t('flow.flow_start') : i18n.global.t('flow.flow_end'),
           progress: messageFlow.stepProgress,
-          status: currentTaskId ? messageFlow.flowStatus : 'success',
+          status: currentTaskId.value ? messageFlow.flowStatus : 'success',
           display: true,
           taskId: currentTaskId.value,
           data: conversationItem.flowdata.data,

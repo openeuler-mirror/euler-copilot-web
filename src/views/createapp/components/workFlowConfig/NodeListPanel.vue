@@ -117,9 +117,17 @@ const serviceNodes = computed(() => {
 const filteredNodes = computed(() => {
   let nodes = [...serviceNodes.value];
   
-  // 添加额外的节点类型
+  // 添加额外的节点类型，但需要去重（根据callId判断）
   if (props.extraNodeTypes && props.extraNodeTypes.length > 0) {
-    nodes = [...nodes, ...props.extraNodeTypes];
+    // 获取现有节点的callId集合
+    const existingCallIds = new Set(nodes.map(node => node.callId));
+    
+    // 只添加不重复的额外节点类型
+    const uniqueExtraNodes = props.extraNodeTypes.filter(extraNode => 
+      !existingCallIds.has(extraNode.callId)
+    );
+    
+    nodes = [...nodes, ...uniqueExtraNodes];
   }
   
   // 首先过滤掉排除的节点类型

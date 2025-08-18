@@ -23,7 +23,7 @@ const { t } = i18n.global;
 export const stopGeneration = (taskId: string): Promise<
   [any, FcResponse<object> | undefined]
 > => {
-  let url = taskId === undefined ? '/api/stop' : `/api/stop?taskId=${taskId}`;
+  const url = taskId === undefined ? '/api/stop' : `/api/stop?taskId=${taskId}`;
   return post(url);
 };
 
