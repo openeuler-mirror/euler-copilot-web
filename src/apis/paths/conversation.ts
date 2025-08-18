@@ -17,10 +17,10 @@ const BASE_URL = '/api/conversation';
  * 停止生成
  * @returns
  */
-export const stopGeneration = (): Promise<
+export const stopGeneration = (taskId: string): Promise<
   [any, FcResponse<object> | undefined]
 > => {
-  return post(`/api/stop`);
+  return post(`/api/stop?taskId=${taskId}`);
 };
 
 /**

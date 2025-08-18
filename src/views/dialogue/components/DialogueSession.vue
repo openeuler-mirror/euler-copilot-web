@@ -851,7 +851,7 @@ const getFormatFileList = (ConversationItem,str)=>{
                 </el-icon>
               </div>
               <div class="el-dropdown-link" v-else>
-                <span>请选择模型</span>
+                <span>{{ $t('app.modelSelected_input') }}</span>
                 <el-icon
                   :class="{ rotated: isDropdownOpen }"
                   style="margin-left: auto"

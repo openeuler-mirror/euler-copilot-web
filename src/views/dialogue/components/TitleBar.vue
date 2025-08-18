@@ -28,7 +28,7 @@ onMounted(async () => {
     : `${origin}/witchaind`;
 });
 
-const changeLanguagefun = (lang: 'zh_cn' | 'en') => {
+const changeLanguagefun = (lang: 'zh' | 'en') => {
   changeLanguage(lang);
   // 同步语言到iframe
   const iframe = document.querySelector<HTMLIFrameElement>('#my-iframe');
@@ -97,7 +97,7 @@ const headerStyles = computed<CSSProperties>(() => {
     </span>
     <div class="header-right">
       <div class="language">
-        <span v-if="lang === 'English'" @click="changeLanguagefun('zh_cn')">
+        <span v-if="lang === 'English'" @click="changeLanguagefun('zh')">
           <img id="sun-icon" src="@/assets/svgs/language-en.svg" alt="" />
         </span>
         <span v-else @click="changeLanguagefun('en')">
