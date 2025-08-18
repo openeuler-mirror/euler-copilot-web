@@ -9,7 +9,7 @@
 // See the Mulan PSL v2 for more details.
 import * as nls from './nls';
 
-export const LANGUAGE_DEFAULT = 'zh_cn';
+export const LANGUAGE_DEFAULT = 'zh';
 
 let _isWindows = false;
 let _isMacintosh = false;

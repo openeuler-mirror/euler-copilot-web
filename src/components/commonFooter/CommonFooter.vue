@@ -13,7 +13,7 @@ const policy = ref<string>('');
  */
 const readAgreement = async () => {
   const localLang = localStorage.getItem('copilot_language');
-  const locale = (localLang && JSON.parse(localLang).language) || 'zh_cn';
+  const locale = (localLang && JSON.parse(localLang).language) || 'zh';
   const response =
     locale === 'en'
       ? await import('src/conf/agreement-en.md?raw')
@@ -24,7 +24,7 @@ const readAgreement = async () => {
 
 const readPolicy = async () => {
   const localLang = localStorage.getItem('copilot_language');
-  const locale = (localLang && JSON.parse(localLang).language) || 'zh_cn';
+  const locale = (localLang && JSON.parse(localLang).language) || 'zh';
   const response =
     locale === 'en'
       ? await import('src/conf/policy-en.md?raw')

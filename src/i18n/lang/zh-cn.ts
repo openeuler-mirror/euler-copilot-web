@@ -111,6 +111,8 @@ export default {
       cancel: '取消',
       all_select: '全部',
       installed: '已安装',
+      not_active: '未激活', 
+      active: '已激活',
     },
     upload_icon: '上传图标',
     please_upload_icon: '请上传图标',

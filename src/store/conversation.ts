@@ -51,12 +51,12 @@ export const useSessionStore = defineStore('conversation', () => {
 
   // #endregion
 
-  const { language } = useLangStore();
-
+  const langStore = useLangStore();
   // 是否暂停回答
   const isPaused = ref(false);
   // 会话列表
   const conversationList = ref<ConversationItem[]>([]);
+  const currentMessage = ref({});
   const app = ref<AppShowType>({
     appId: '',
     name: '',
@@ -236,6 +236,7 @@ export const useSessionStore = defineStore('conversation', () => {
     if ('event' in message) {
       switch (eventType) {
         case 'text.add':
+          currentMessage.value = message;
           dataTransfers.textAdd(conversationItem, message);
           break;
         case 'heartbeat':
@@ -301,7 +302,7 @@ export const useSessionStore = defineStore('conversation', () => {
             conversationId: params.conversationId,
             features: features,
             groupId: params.groupId,
-            language,
+            language: langStore.language,
             question: params.question,
             // record_id: params.qaRecordId,
           }),
@@ -320,6 +321,7 @@ export const useSessionStore = defineStore('conversation', () => {
           },
           conversationId: params.conversationId,
           debug: true,
+          language: langStore.language,
           question: params.question,
         }),
         openWhenHidden: true,
@@ -342,7 +344,7 @@ export const useSessionStore = defineStore('conversation', () => {
           },
           conversationId: params.conversationId,
           features: features,
-          language,
+          language: langStore.language,
           groupId: params.groupId,
           question: params.question,
           record_id: params.qaRecordId,
@@ -368,7 +370,7 @@ export const useSessionStore = defineStore('conversation', () => {
           conversationId: params.conversationId,
           features: features,
           groupId: params.groupId,
-          language,
+          language: langStore.language,
           question: params.question,
           record_id: params.qaRecordId,
         }),
@@ -451,7 +453,6 @@ export const useSessionStore = defineStore('conversation', () => {
           handleMsgDataShow(params, ev, conversationItem);
         },
       };
-
       if (params.user_selected_flow) {
         // 之前的对话历史记录
         await funcFetch.fetchHistory(streamUrl, params, pp, fetchParams);
@@ -610,7 +611,7 @@ export const useSessionStore = defineStore('conversation', () => {
     targetItem.message[0] += '暂停生成';
     targetItem.isFinish = true;
     cancel();
-    const resp = await api.stopGeneration();
+    const resp = await api.stopGeneration(currentMessage.value.taskId);
     if (resp?.[1]?.code === 200) {
       isAnswerGenerating.value = false;
     }
@@ -793,7 +794,7 @@ export const useSessionStore = defineStore('conversation', () => {
       ] as RobotConversationItem
     ).isFinish = true;
     cancel();
-    const resp = await api.stopGeneration();
+    const resp = await api.stopGeneration(currentMessage.value.taskId);
     if (resp?.[1]?.code === 200) {
       isAnswerGenerating.value = false;
     }
@@ -810,6 +811,7 @@ export const useSessionStore = defineStore('conversation', () => {
     dialogueRef,
     app,
     appList,
+    currentMessage,
     sendQuestion,
     pausedStream,
     stopDebug,
