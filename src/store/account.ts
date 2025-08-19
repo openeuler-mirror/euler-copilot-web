@@ -25,6 +25,7 @@ export const useAccountStore = defineStore('account', () => {
     organization: string;
     user_sub: string;
     is_admin?: boolean;
+    auto_execute?: boolean;
   }>({
     username: '',
     revsionNumber: null,
@@ -98,6 +99,7 @@ export const useAccountStore = defineStore('account', () => {
       userinfo.organization = organization;
       userinfo.revsionNumber = revision_number;
       userinfo.is_admin = res.result.is_admin;
+      userinfo.auto_execute = res.result.auto_execute;
       return true;
     }
     return false;

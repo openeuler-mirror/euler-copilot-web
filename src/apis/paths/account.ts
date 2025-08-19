@@ -24,6 +24,7 @@ export const authorizeUser = (): Promise<
           organization: string;
           revision_number: string | null;
           is_admin: boolean;
+          auto_execute?: boolean;
         }>
       | undefined
     ),
