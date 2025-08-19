@@ -961,7 +961,7 @@ const getFormatFileList = (ConversationItem,str)=>{
     <div v-if="showFileSource" class="dialogue-rightContainer__file-source">
       <div class="file-source__header">
         <div class="file-source__title">
-          <span>引用来源</span>
+          <span>{{$t('upload.reference_source')}}</span>
           <span>{{ curFileList.length || 0 }}</span>
         </div>
         <el-icon @click="closeShowFileSource">

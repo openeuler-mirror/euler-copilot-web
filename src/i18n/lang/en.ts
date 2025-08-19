@@ -232,6 +232,7 @@ export default {
     version: 'Version 0.10.0-Beta',
   },
   history: {
+    new_conversation: 'New Chat',
     new_chat: 'New Chat',
     latestConversation: 'This is the latest conversation.',
     recent_chats: 'Recent Chats',
@@ -350,6 +351,9 @@ export default {
     error_name_msg: 'Upload failed: Duplicate file name exits.',
     aside_session_file_count_front: '',
     aside_session_file_count_back: 'files',
+    quote_front: 'Quote',
+    quote_back: 'pieces of knowledge base materials',
+    reference_source: 'Reference source',
   },
   apikey: {
     save_apikey: 'This API key is displayed only once. Please copy and keep it secure.',

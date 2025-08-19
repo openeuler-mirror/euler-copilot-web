@@ -63,7 +63,7 @@ export interface ConversationRecord {
   content: Content;
   metadata: Metadata;
   comment: string;
-  created_at: string;
+  createdAt: string;
   document?: any[];
 }
 
