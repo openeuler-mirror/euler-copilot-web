@@ -667,7 +667,7 @@ const handleFileClick = () => {
       <div v-if="props.fileList?.length" class="dialogue-panel__robot-file" @click="handleFileClick">
         <div class="file-title">
           <img src="@/assets/svgs/files.svg" alt="">
-          <span>引用{{props.fileList?.length}}篇知识库资料</span>
+          <span>{{$t('upload.quote_front')}}{{props.fileList?.length}}{{$t('upload.quote_back')}}</span>
           <el-icon>
             <IconCaretRight />
           </el-icon>

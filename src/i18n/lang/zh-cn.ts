@@ -235,6 +235,7 @@ export default {
     version: '版本号0.10.0-内测版',
   },
   history: {
+    new_conversation: '新会话',
     new_chat: '新建对话',
     latestConversation: '已是最新对话',
     recent_chats: '历史记录',
@@ -380,6 +381,9 @@ export default {
     error_name_msg: '上传失败，存在重名文件。',
     aside_session_file_count_front: '共',
     aside_session_file_count_back: '个文档',
+    quote_front: '引用',
+    quote_back: '篇知识库资料',
+    reference_source: '引用来源',
   },
   apikey: {
     save_apikey: '此 API KEY 只展示一次，请复制后妥善保存',

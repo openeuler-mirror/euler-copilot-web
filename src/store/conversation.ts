@@ -254,7 +254,7 @@ export const useSessionStore = defineStore('conversation', () => {
         case 'init':
           //初始化获取 metadata
           conversationItem.metadata = message.metadata;
-          conversationItem.createdAt = message.content.created_at;
+          conversationItem.createdAt = message.content.createdAt;
           conversationItem.groupId = message.groupId;
           break;
         case 'flow.start':
@@ -733,7 +733,7 @@ export const useSessionStore = defineStore('conversation', () => {
             cid: conversationList.value.length + 1,
             belong: 'user',
             message: record.content.question,
-            createdAt: record.created_at,
+            createdAt: record.createdAt,
           },
           {
             cid: conversationList.value.length + 2,
