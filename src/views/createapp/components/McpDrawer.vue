@@ -50,22 +50,24 @@ const mcpList = ref<McpWithChecked[]>([]);
 
 const searchKeyword = ref();
 
+const mcpType = ref('all_select');
+const mcpIsActive = ref(<boolean | null> null);
 /**
  * 查询MCP服务
  */
 async function queryMcpList() {
   const [, res] = await api.getMcpList({
     keyword: searchKeyword.value,
+    isActive: mcpIsActive.value,
+    isInstall: true
   });
   if (res) {
-    mcpList.value = res.result.services
-      .filter((mcp) => mcp.isActive)
-      .map((item) => {
-        return {
-          ...item,
-          isChecked: false,
-        };
-      });
+    mcpList.value = res.result.services.map((item) => {
+      return {
+        ...item,
+        isChecked: false,
+      };
+    });
   }
 }
 
@@ -97,6 +99,22 @@ watch(
 onMounted(() => {
   queryMcpList();
 });
+
+const handleSearchMcpList = (
+  type: 'all_select' | 'active' | 'not_active',
+) => {
+  mcpType.value = type;
+  if (type === 'all_select') {
+    mcpIsActive.value = null;
+  } else {
+    if (type === 'active'){
+      mcpIsActive.value = true;
+    }else{
+      mcpIsActive.value = false;
+    }
+  }
+  queryMcpList();
+};
 </script>
 <template>
   <div class="prompt-drawer">
@@ -117,11 +135,31 @@ onMounted(() => {
             clearable
           ></el-input>
         </div>
-
+        <el-tabs
+          v-model="mcpType"
+          class="plugin-tabs"
+          @tab-click="(tab) => handleSearchMcpList(tab.props.name)"
+        >
+          <el-tab-pane
+            :label="$t('plugin_center.mcp.all_select')"
+            name="all_select"
+            :lazy="true"
+          ></el-tab-pane>
+          <el-tab-pane
+            :label="$t('plugin_center.mcp.active')"
+            name="active"
+            :lazy="true"
+          ></el-tab-pane>
+          <el-tab-pane
+            :label="$t('plugin_center.mcp.not_active')"
+            name="not_active"
+            :lazy="true"
+          ></el-tab-pane>
+        </el-tabs>
         <div class="mcp-list" v-if="mcpList.length">
           <template v-for="item in mcpList" :key="item.id">
             <div class="mcp-item" @click="onMcpItemClick(item)">
-              <el-checkbox v-model="item.isChecked" @click.stop />
+              <el-checkbox v-model="item.isChecked" :disabled="!item.isActive" @click.stop />
               <img :src="item.icon" alt="" />
               <div>
                 <p>{{ item.name }}</p>
@@ -222,5 +260,14 @@ onMounted(() => {
       }
     }
   }
+}
+</style>
+<style>
+.plugin-tabs {
+  padding-right: 8px;
+  --o-tabs-font-size: 14px;
+  --o-tabs-item-padding: 5px 16px 0 5px;
+  --o-tabs-line-height: 32px;
+  --o-tabs-color_active: rgb(99, 149, 253);
 }
 </style>
