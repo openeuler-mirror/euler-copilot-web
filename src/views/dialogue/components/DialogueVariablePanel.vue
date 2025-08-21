@@ -1024,8 +1024,8 @@ watch(
 
 <style lang="scss" scoped>
 .dialogue-variable-panel {
-  background: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-light);
+  background: var(--o-bg-color-base, #ffffff);
+  border: 1px solid var(--o-border-color-light, #dcdfe6);
   border-radius: 12px;
   margin-bottom: 16px;
   margin-top: 16px;
@@ -1033,7 +1033,7 @@ watch(
   transition: all 0.3s ease;
   width: 90%;
   max-width: 800px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--o-shadow-base, 0 4px 12px rgba(0, 0, 0, 0.08));
 
   &.panel-minimized {
     width: 60%;
@@ -1058,8 +1058,8 @@ watch(
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-color-primary-light-8));
-    border-bottom: 1px solid var(--el-border-color-lighter);
+    background: linear-gradient(135deg, var(--o-color-primary-light-9, #f2f6fc), var(--o-color-primary-light-8, #ecf2ff));
+    border-bottom: 1px solid var(--o-border-color-lighter, #e4e7ed);
 
     .header-left {
       display: flex;
@@ -1068,7 +1068,7 @@ watch(
 
       .variable-icon {
         font-size: 20px;
-        background: var(--el-color-primary-light-9);
+        background: var(--o-color-primary-light-9, #f2f6fc);
         padding: 8px;
         border-radius: 8px;
         display: flex;
@@ -1079,7 +1079,7 @@ watch(
       .header-title {
         font-size: 18px;
         font-weight: 700;
-        color: var(--el-text-color-primary);
+        color: var(--o-text-color-primary, #303133);
         letter-spacing: 0.5px;
       }
     }
@@ -1090,7 +1090,7 @@ watch(
         padding: 4px 8px;
         
         &:hover {
-          background: var(--el-color-primary-light-9);
+          background: var(--o-color-primary-light-9, #f2f6fc);
         }
       }
     }
@@ -1105,14 +1105,14 @@ watch(
       .variable-item {
         margin-bottom: 12px;
         padding: 12px;
-        background: var(--el-fill-color-extra-light);
+        background: var(--o-fill-color-extra-light, #f8f9fa);
         border-radius: 6px;
-        border: 1px solid var(--el-border-color-lighter);
+        border: 1px solid var(--o-border-color-lighter, #e4e7ed);
         transition: all 0.2s ease;
 
         &:hover {
-          border-color: var(--el-color-primary-light-7);
-          background: var(--el-color-primary-light-9);
+          border-color: var(--o-color-primary-light-7, #c6e2ff);
+          background: var(--o-color-primary-light-9, #f2f6fc);
         }
 
         &:last-child {
@@ -1132,7 +1132,7 @@ watch(
             flex: 0 0 140px;
 
             .variable-icon-small {
-              color: var(--el-color-primary);
+              color: var(--o-color-primary, #409eff);
               font-family: 'Monaco', 'Consolas', monospace;
               font-weight: bold;
               font-size: 12px;
@@ -1144,13 +1144,13 @@ watch(
               .variable-name {
                 font-size: 13px;
                 font-weight: 600;
-                color: var(--el-text-color-primary);
+                color: var(--o-text-color-primary, #303133);
                 line-height: 1.2;
               }
 
               .variable-type {
                 font-size: 11px;
-                color: var(--el-text-color-secondary);
+                color: var(--o-text-color-secondary, #606266);
                 line-height: 1.2;
               }
             }
@@ -1203,19 +1203,19 @@ watch(
             :deep(.el-input__inner),
             :deep(.el-textarea__inner) {
               border-radius: 6px;
-              border: 2px solid var(--el-border-color-light);
-              background: var(--el-bg-color);
+              border: 2px solid var(--o-border-color-light, #dcdfe6);
+              background: var(--o-bg-color-base, #ffffff);
               font-size: 14px;
               padding: 12px 16px;
               transition: all 0.2s ease;
               
               &:focus {
-                border-color: var(--el-color-primary);
-                box-shadow: 0 0 0 3px var(--el-color-primary-light-9);
+                border-color: var(--o-color-primary, #409eff);
+                box-shadow: 0 0 0 3px var(--o-color-primary-light-9, #f2f6fc);
               }
               
               &:hover {
-                border-color: var(--el-color-primary-light-7);
+                border-color: var(--o-color-primary-light-7, #c6e2ff);
               }
             }
           }
@@ -1237,19 +1237,19 @@ watch(
               :deep(.el-upload-dragger) {
                 width: 100%;
                 height: 120px;
-                border: 2px dashed var(--el-border-color);
+                border: 2px dashed var(--o-border-color, #dcdfe6);
                 border-radius: 8px;
-                background: var(--el-fill-color-extra-light);
+                background: var(--o-fill-color-extra-light, #f8f9fa);
                 transition: all 0.3s ease;
                 
                 &:hover {
-                  border-color: var(--el-color-primary);
-                  background: var(--el-color-primary-light-9);
+                  border-color: var(--o-color-primary, #409eff);
+                  background: var(--o-color-primary-light-9, #f2f6fc);
                 }
                 
                 &.is-dragover {
-                  border-color: var(--el-color-primary);
-                  background: var(--el-color-primary-light-8);
+                  border-color: var(--o-color-primary, #409eff);
+                  background: var(--o-color-primary-light-8, #ecf2ff);
                 }
               }
               
@@ -1263,7 +1263,7 @@ watch(
                 
                 .upload-icon {
                   font-size: 28px;
-                  color: var(--el-color-primary);
+                  color: var(--o-color-primary, #409eff);
                   margin-bottom: 8px;
                 }
                 
@@ -1273,13 +1273,13 @@ watch(
                   span {
                     display: block;
                     font-size: 14px;
-                    color: var(--el-text-color-primary);
+                    color: var(--o-text-color-primary, #303133);
                     margin-bottom: 4px;
                   }
                   
                   .upload-hint {
                     font-size: 12px;
-                    color: var(--el-text-color-secondary);
+                    color: var(--o-text-color-secondary, #606266);
                   }
                 }
               }
@@ -1287,7 +1287,7 @@ watch(
               .upload-tip {
               margin-top: 8px;
                 font-size: 12px;
-                color: var(--el-text-color-secondary);
+                color: var(--o-text-color-secondary, #606266);
                 text-align: center;
               }
             }
@@ -1300,15 +1300,15 @@ watch(
                 align-items: center;
                 justify-content: space-between;
                 padding: 8px 12px;
-                background: var(--el-fill-color-extra-light);
-                border: 1px solid var(--el-border-color-lighter);
+                background: var(--o-fill-color-extra-light, #f8f9fa);
+                border: 1px solid var(--o-border-color-lighter, #e4e7ed);
                 border-radius: 6px;
                 margin-bottom: 8px;
                 transition: all 0.2s ease;
                 
                 &:hover {
-                  background: var(--el-fill-color-light);
-                  border-color: var(--el-color-primary-light-7);
+                  background: var(--o-fill-color-light, #f5f7fa);
+                  border-color: var(--o-color-primary-light-7, #c6e2ff);
                 }
                 
                 &:last-child {
@@ -1323,14 +1323,14 @@ watch(
                   
                   .file-icon {
                     font-size: 16px;
-                    color: var(--el-color-primary);
+                    color: var(--o-color-primary, #409eff);
                     margin-right: 8px;
                     flex-shrink: 0;
                   }
                 
                   .file-name {
                     font-size: 13px;
-                    color: var(--el-text-color-primary);
+                    color: var(--o-text-color-primary, #303133);
                     flex: 1;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -1352,13 +1352,13 @@ watch(
                     }
                     
                     &.success {
-                      color: var(--el-color-success);
-                      background: var(--el-color-success-light-9);
+                      color: var(--o-color-success, #67c23a);
+                      background: var(--o-color-success-light-9, #f0f9ff);
                     }
                     
                     &.pending {
-                      color: var(--el-color-warning);
-                      background: var(--el-color-warning-light-9);
+                      color: var(--o-color-warning, #e6a23c);
+                      background: var(--o-color-warning-light-9, #fdf6ec);
                     }
                   }
                 }
@@ -1368,8 +1368,8 @@ watch(
                   margin-left: 8px;
                   
                   &:hover {
-                    color: var(--el-color-danger);
-                    background: var(--el-color-danger-light-9);
+                    color: var(--o-color-danger, #f56c6c);
+                    background: var(--o-color-danger-light-9, #fef0f0);
                   }
                 }
               }
@@ -1395,11 +1395,11 @@ watch(
       .empty-state {
         text-align: center;
         padding: 40px 20px;
-        color: var(--el-text-color-secondary);
+        color: var(--o-text-color-secondary, #606266);
 
         .empty-text {
           font-size: 16px;
-          color: var(--el-text-color-regular);
+          color: var(--o-text-color-regular, #909399);
           font-weight: 500;
         }
       }
@@ -1408,7 +1408,7 @@ watch(
     .start-conversation-btn {
       text-align: center;
       padding-top: 8px;
-      border-top: 1px solid var(--el-border-color-lighter);
+      border-top: 1px solid var(--o-border-color-lighter, #e4e7ed);
       
       .start-btn {
         width: 100%;
@@ -1416,14 +1416,14 @@ watch(
         border-radius: 8px;
         font-size: 16px;
         font-weight: 600;
-        background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
+        background: linear-gradient(135deg, var(--o-color-primary, #409eff), var(--o-color-primary-light-3, #79bbff));
         border: none;
-        box-shadow: 0 2px 8px var(--el-color-primary-light-8);
+        box-shadow: 0 2px 8px var(--o-color-primary-light-8, #ecf2ff);
         transition: all 0.2s ease;
         
         &:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px var(--el-color-primary-light-7);
+          box-shadow: 0 4px 12px var(--o-color-primary-light-7, #c6e2ff);
         }
         
         &:active {

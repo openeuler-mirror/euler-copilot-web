@@ -77,68 +77,68 @@ const formData = ref<FormData>({
 });
 
 // 操作符选项
-const operatorOptions = {
+const operatorOptions = computed(() => ({
   string: [
-    { label: '等于', value: 'eq' },
-    { label: '不等于', value: 'ne' },
-    { label: '包含', value: 'contains' },
-    { label: '不包含', value: 'not_contains' },
-    { label: '开始于', value: 'starts_with' },
-    { label: '结束于', value: 'ends_with' },
-    { label: '为空', value: 'is_empty' },
-    { label: '不为空', value: 'is_not_empty' },
+    { label: t('choiceBranch.operators.eq'), value: 'eq' },
+    { label: t('choiceBranch.operators.ne'), value: 'ne' },
+    { label: t('choiceBranch.operators.contains'), value: 'contains' },
+    { label: t('choiceBranch.operators.not_contains'), value: 'not_contains' },
+    { label: t('choiceBranch.operators.starts_with'), value: 'starts_with' },
+    { label: t('choiceBranch.operators.ends_with'), value: 'ends_with' },
+    { label: t('choiceBranch.operators.is_empty'), value: 'is_empty' },
+    { label: t('choiceBranch.operators.is_not_empty'), value: 'is_not_empty' },
   ],
   number: [
-    { label: '等于', value: 'eq' },
-    { label: '不等于', value: 'ne' },
-    { label: '大于', value: 'gt' },
-    { label: '大于等于', value: 'gte' },
-    { label: '小于', value: 'lt' },
-    { label: '小于等于', value: 'lte' },
+    { label: t('choiceBranch.operators.eq'), value: 'eq' },
+    { label: t('choiceBranch.operators.ne'), value: 'ne' },
+    { label: t('choiceBranch.operators.gt'), value: 'gt' },
+    { label: t('choiceBranch.operators.gte'), value: 'gte' },
+    { label: t('choiceBranch.operators.lt'), value: 'lt' },
+    { label: t('choiceBranch.operators.lte'), value: 'lte' },
   ],
   bool: [
-    { label: '等于', value: 'eq' },
-    { label: '不等于', value: 'ne' },
+    { label: t('choiceBranch.operators.eq'), value: 'eq' },
+    { label: t('choiceBranch.operators.ne'), value: 'ne' },
   ],
   list: [
-    { label: '包含', value: 'contains' },
-    { label: '不包含', value: 'not_contains' },
-    { label: '为空', value: 'is_empty' },
-    { label: '不为空', value: 'is_not_empty' },
-    { label: '长度等于', value: 'length_eq' },
-    { label: '长度大于', value: 'length_gt' },
-    { label: '长度小于', value: 'length_lt' },
+    { label: t('choiceBranch.operators.contains'), value: 'contains' },
+    { label: t('choiceBranch.operators.not_contains'), value: 'not_contains' },
+    { label: t('choiceBranch.operators.is_empty'), value: 'is_empty' },
+    { label: t('choiceBranch.operators.is_not_empty'), value: 'is_not_empty' },
+    { label: t('choiceBranch.operators.length_eq'), value: 'length_eq' },
+    { label: t('choiceBranch.operators.length_gt'), value: 'length_gt' },
+    { label: t('choiceBranch.operators.length_lt'), value: 'length_lt' },
   ],
   dict: [
-    { label: '包含键', value: 'has_key' },
-    { label: '不包含键', value: 'not_has_key' },
-    { label: '为空', value: 'is_empty' },
-    { label: '不为空', value: 'is_not_empty' },
+    { label: t('choiceBranch.operators.has_key'), value: 'has_key' },
+    { label: t('choiceBranch.operators.not_has_key'), value: 'not_has_key' },
+    { label: t('choiceBranch.operators.is_empty'), value: 'is_empty' },
+    { label: t('choiceBranch.operators.is_not_empty'), value: 'is_not_empty' },
   ],
-};
+}));
 
 // 值类型选项
-const valueTypeOptions = [
-  { label: '字符串', value: 'string' },
-  { label: '数字', value: 'number' },
-  { label: '布尔值', value: 'bool' },
-  { label: '列表', value: 'list' },
-  { label: '字典', value: 'dict' },
-  { label: '引用变量', value: 'reference' },
-];
+const valueTypeOptions = computed(() => [
+  { label: t('choiceBranch.data_types.string'), value: 'string' },
+  { label: t('choiceBranch.data_types.number'), value: 'number' },
+  { label: t('choiceBranch.data_types.bool'), value: 'bool' },
+  { label: t('choiceBranch.data_types.list'), value: 'list' },
+  { label: t('choiceBranch.data_types.dict'), value: 'dict' },
+  { label: t('choiceBranch.data_types.reference'), value: 'reference' },
+]);
 
 // 逻辑运算符选项
-const logicOptions = [
-  { label: '且 (AND)', value: 'and' },
-  { label: '或 (OR)', value: 'or' },
-];
+const logicOptions = computed(() => [
+  { label: t('choiceBranch.logic_operators.and'), value: 'and' },
+  { label: t('choiceBranch.logic_operators.or'), value: 'or' },
+]);
 
 // 初始化表单数据
 const initFormData = () => {
   if (props.nodeData) {
     const allChoices = JSON.parse(JSON.stringify(props.nodeData.parameters?.input_parameters?.choices || []));
     
-    console.log('[ChoiceBranchDrawer] 初始化表单数据 - 原始choices:', {
+    console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.init_form_data'), {
       allChoices,
       choicesCount: allChoices.length,
       nodeData: props.nodeData
@@ -148,7 +148,7 @@ const initFormData = () => {
     let defaultBranches = allChoices.filter(choice => choice.is_default);
     let nonDefaultChoices = allChoices.filter(choice => !choice.is_default);
     
-    console.log('[ChoiceBranchDrawer] 分支分离结果:', {
+    console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.branch_separation_result'), {
       defaultBranches,
       nonDefaultChoices,
       defaultCount: defaultBranches.length,
@@ -157,7 +157,7 @@ const initFormData = () => {
     
     // 详细打印每个非默认分支的条件信息
     nonDefaultChoices.forEach((choice, index) => {
-      console.log(`[ChoiceBranchDrawer] 非默认分支 ${index}:`, {
+      console.log(`[ChoiceBranchDrawer] ${t('choiceBranch.console.non_default_branch')} ${index}:`, {
         branch_id: choice.branch_id,
         name: choice.name,
         is_default: choice.is_default,
@@ -168,13 +168,13 @@ const initFormData = () => {
     
     // 验证默认分支数量
     if (defaultBranches.length > 1) {
-      console.warn('[ChoiceBranchDrawer] 发现多个默认分支，只保留第一个:', defaultBranches);
-      ElMessage.error('数据错误：不能有多个默认分支');
+      console.warn('[ChoiceBranchDrawer]', t('choiceBranch.console.found_multiple_default'), defaultBranches);
+      ElMessage.error(t('choiceBranch.validation.data_error_multiple_default'));
       defaultBranches = [defaultBranches[0]]; // 只保留第一个默认分支
     }
     
     formData.value = {
-      name: props.nodeData.name || '条件分支',
+      name: props.nodeData.name || t('choiceBranch.titles.condition_branch'),
       description: props.nodeData.description || '',
       choices: nonDefaultChoices,
       defaultBranch: defaultBranches.length > 0 ? defaultBranches[0] : null,
@@ -189,7 +189,7 @@ const initFormData = () => {
       })
       .map((choice, index) => ({
         branch_id: choice.branch_id || uuidv4(),
-        name: choice.name || `分支 ${index + 1}`,
+        name: choice.name || `${t('choiceBranch.status.branch_prefix')} ${index + 1}`,
         logic: choice.logic || 'and',
         conditions: (() => {
           // 处理条件数组
@@ -204,7 +204,7 @@ const initFormData = () => {
                 type: condition.right?.type || 'string',
                 value: condition.right?.value || '',
               },
-              operate: condition.operator || condition.operate || 'string_equal',
+              operate: condition.operate || 'string_equal',
               dataType: condition.dataType || 'string',
               isRightReference: condition.isRightReference !== undefined ? condition.isRightReference : false,
             }));
@@ -245,10 +245,10 @@ const initFormData = () => {
     
     // 更新非默认分支名称为 IF/ELIF（如果有有效分支）
     if (formData.value.choices.length > 0) {
-      console.log('[ChoiceBranchDrawer] 有非默认分支，更新名称');
+      console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.has_non_default_branch'));
       updateBranchNames();
     } else {
-      console.log('[ChoiceBranchDrawer] 没有非默认分支，创建一个空的IF分支');
+      console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.no_non_default_branch'));
       // 如果没有非默认分支，创建一个空的IF分支，这样用户就不需要手动点击+ELIF按钮
       formData.value.choices = [
         {
@@ -263,7 +263,7 @@ const initFormData = () => {
     
     // 如果没有默认分支，创建一个
     if (!formData.value.defaultBranch) {
-      console.log('[ChoiceBranchDrawer] 没有默认分支，创建ELSE分支');
+      console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.no_default_branch'));
       formData.value.defaultBranch = {
         branch_id: 'else_' + uuidv4(),
         name: 'ELSE',
@@ -272,10 +272,10 @@ const initFormData = () => {
         is_default: true,
       };
     } else {
-      console.log('[ChoiceBranchDrawer] 已有默认分支:', formData.value.defaultBranch);
+      console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.has_default_branch'), formData.value.defaultBranch);
     }
     
-    console.log('[ChoiceBranchDrawer] 最终formData:', {
+    console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.final_form_data'), {
       choices: formData.value.choices,
       defaultBranch: formData.value.defaultBranch,
       choicesCount: formData.value.choices.length
@@ -283,7 +283,7 @@ const initFormData = () => {
   } else {
     // 如果没有nodeData，创建空的表单数据，不自动创建IF分支
     formData.value = {
-      name: '条件分支',
+      name: t('choiceBranch.titles.condition_branch'),
       description: '',
       choices: [], // 不自动创建IF分支
       defaultBranch: {
@@ -409,13 +409,13 @@ const updateCondition = (choiceIndex, conditionIndex, condition) => {
 const validateForm = () => {
   // 验证基本信息
   if (!formData.value.name || formData.value.name.trim() === '') {
-    ElMessage.error('请填写节点名称');
+    ElMessage.error(t('choiceBranch.validation.enter_node_name'));
     return false;
   }
   
   // 验证是否至少有一个分支（默认分支）
   if (!formData.value.defaultBranch && formData.value.choices.length === 0) {
-    ElMessage.error('至少需要一个分支');
+    ElMessage.error(t('choiceBranch.validation.need_at_least_one_branch'));
     return false;
   }
   
@@ -435,15 +435,15 @@ const validateForm = () => {
     // 对于有条件的分支，验证条件完整性
     for (const condition of validConditions) {
       if (!condition.left.value || condition.left.value === '') {
-        ElMessage.error(`${choice.name} 分支存在未填写的左值变量`);
+        ElMessage.error(t('choiceBranch.validation.branch_missing_left_variable', { branchName: choice.name }));
         return false;
       }
       if (!condition.right.value || condition.right.value === '') {
-        ElMessage.error(`${choice.name} 分支存在未填写的右值`);
+        ElMessage.error(t('choiceBranch.validation.branch_missing_right_value', { branchName: choice.name }));
         return false;
       }
       if (!condition.operate) {
-        ElMessage.error(`${choice.name} 分支存在未选择的操作符`);
+        ElMessage.error(t('choiceBranch.validation.branch_missing_operator', { branchName: choice.name }));
         return false;
       }
     }
@@ -479,7 +479,7 @@ const saveNode = () => {
   
   // 如果没有任何有效的非默认分支，确保至少有默认分支
   if (allChoices.length === 0) {
-    ElMessage.error('至少需要一个有效的分支');
+    ElMessage.error(t('choiceBranch.validation.need_valid_branch'));
     return;
   }
   
@@ -523,13 +523,13 @@ const saveNode = () => {
       output_parameters: {
         branch_id: {
           type: 'string',
-          description: '选中的分支ID'
+          description: t('choiceBranch.titles.selected_branch_id')
         }
       },
     },
   };
   
-  console.log('[ChoiceBranchDrawer] 保存的最终数据:', {
+  console.log('[ChoiceBranchDrawer]', t('choiceBranch.console.save_final_data'), {
     processedChoices,
     validChoicesCount: validChoices.length,
     totalChoicesCount: allChoices.length
@@ -593,7 +593,7 @@ const formatValue = (value, type) => {
   <el-drawer
     :model-value="visible"
     @update:model-value="emit('update:visible', $event)"
-    title="配置条件分支"
+    :title="$t('choiceBranch.titles.config_condition_branch')"
     direction="rtl"
     size="50%"
     :before-close="handleClose"
@@ -602,17 +602,17 @@ const formatValue = (value, type) => {
     <div class="drawer-content">
       <!-- 基本信息 -->
       <div class="section">
-        <h3 class="section-title">基本信息</h3>
+        <h3 class="section-title">{{ $t('choiceBranch.basic_info') }}</h3>
         <el-form :model="formData" label-width="100px">
-          <el-form-item label="节点名称" required>
-            <el-input v-model="formData.name" placeholder="请输入节点名称" />
+          <el-form-item :label="$t('choiceBranch.node_name')" required>
+            <el-input v-model="formData.name" :placeholder="$t('choiceBranch.placeholders.enter_node_name')" />
           </el-form-item>
-          <el-form-item label="节点描述" label-width="100px">
+          <el-form-item :label="$t('choiceBranch.node_description')" label-width="100px">
             <el-input
               v-model="formData.description"
               type="textarea"
               :rows="2"
-              placeholder="请输入节点描述"
+              :placeholder="$t('choiceBranch.placeholders.enter_node_description')"
             />
           </el-form-item>
         </el-form>
@@ -621,7 +621,7 @@ const formatValue = (value, type) => {
       <!-- 分支配置 -->
       <div class="section">
         <div class="section-header">
-          <h3 class="section-title">分支配置</h3>
+          <h3 class="section-title">{{ $t('choiceBranch.branch_config') }}</h3>
         </div>
 
         <div class="branches-container">
@@ -648,7 +648,7 @@ const formatValue = (value, type) => {
           <div class="add-branch-container">
             <button class="add-branch-btn" @click="addBranch">
               <Plus />
-              ELIF
+              {{ $t('choiceBranch.buttons.add_elif') }}
             </button>
           </div>
 
@@ -658,7 +658,7 @@ const formatValue = (value, type) => {
           <!-- 默认分支 -->
           <div v-if="formData.defaultBranch" class="default-branch-section">
             <h3 class="else-title">ELSE</h3>
-            <p class="else-description">用于定义当IF/ELIF条件均不满足时执行的分支</p>
+            <p class="else-description">{{ $t('choiceBranch.tips.else_description') }}</p>
           </div>
         </div>
       </div>
@@ -667,8 +667,8 @@ const formatValue = (value, type) => {
     <!-- 操作按钮 -->
     <template #footer>
       <div class="drawer-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="saveNode">保存</el-button>
+        <el-button @click="handleClose">{{ $t('choiceBranch.buttons.cancel') }}</el-button>
+        <el-button type="primary" @click="saveNode">{{ $t('choiceBranch.buttons.save') }}</el-button>
       </div>
     </template>
   </el-drawer>
@@ -685,6 +685,11 @@ const formatValue = (value, type) => {
   height: 100%;
   overflow-y: auto;
   padding: 20px;
+  background: var(--el-bg-color);
+  
+  body[theme='dark'] & {
+    background: #1f2329;
+  }
 }
 
 .section {
@@ -693,8 +698,12 @@ const formatValue = (value, type) => {
   .section-title {
     font-size: 16px;
     font-weight: 600;
-    color: #303133;
+    color: var(--el-text-color-primary);
     margin: 0 0 16px 0;
+    
+    body[theme='dark'] & {
+      color: #e4e8ee;
+    }
   }
   
   .section-header {
@@ -712,8 +721,8 @@ const formatValue = (value, type) => {
     .add-branch-btn {
       width: calc(100% - 20px);
       padding: 12px 16px;
-      background-color: #f2f4f7;
-      color: black;
+      background-color: var(--el-fill-color-extra-light);
+      color: var(--el-text-color-primary);
       border: none;
       border-radius: 6px;
       font-size: 14px;
@@ -724,13 +733,24 @@ const formatValue = (value, type) => {
       gap: 6px;
       transition: all 0.2s;
       
+      body[theme='dark'] & {
+        background-color: #1f2329;
+        color: #e4e8ee;
+        border: 1px solid var(--el-border-color);
+      }
+      
       svg {
         width: 14px;
         height: 14px;
       }
       
       &:hover {
-        background-color: #e5e7eb;
+        background-color: var(--el-fill-color-light);
+        
+        body[theme='dark'] & {
+          background-color: var(--flow-node-default-over-color, #25303e);
+          border-color: var(--flow-node-boder-default-over, #314265);
+        }
       }
       
       &:active {
@@ -741,23 +761,35 @@ const formatValue = (value, type) => {
 
   .divider {
     height: 1px;
-    background: #e4e7ed;
+    background: var(--el-border-color-light);
     margin: 24px 0;
+    
+    body[theme='dark'] & {
+      background: var(--el-border-color);
+    }
   }
 
   .default-branch-section {    
     .else-title {
       font-size: 16px;
       font-weight: 600;
-      color: #303133;
+      color: var(--el-text-color-primary);
       margin: 0 0 8px 0;
+      
+      body[theme='dark'] & {
+        color: #e4e8ee;
+      }
     }
     
     .else-description {
       font-size: 14px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
       margin: 0;
       line-height: 1.5;
+      
+      body[theme='dark'] & {
+        color: #d3dce9;
+      }
     }
   }
 
@@ -766,28 +798,17 @@ const formatValue = (value, type) => {
 
 .drawer-footer {
   padding: 16px 20px;
-  border-top: 1px solid #e4e7ed;
-  background: #f8f9fa;
+  border-top: 1px solid var(--el-border-color-light);
+  background: var(--el-bg-color);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-// 深色主题支持
-.dark {
-  .choice-branch-drawer {
-    .drawer-content {
-      background: #1a1a1a;
-    }
-    
-    .section-title {
-      color: #e5e7eb;
-    }
-    
-    .drawer-footer {
-      background: #374151;
-      border-color: #4b5563;
-    }
+  
+  body[theme='dark'] & {
+    background: #1f2329;
+    border-top-color: var(--el-border-color);
   }
 }
+
+// 深色主题适配已集成到主样式中
 </style> 

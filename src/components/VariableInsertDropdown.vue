@@ -1,10 +1,10 @@
 <template>
   <div class="variable-insert-dropdown">
     <div class="dropdown-header">
-      <span class="dropdown-title">选择要插入的变量</span>
+      <span class="dropdown-title">{{ $t('variableInsertDropdown.select_variable_to_insert') }}</span>
       <el-input 
         v-model="searchText"
-        placeholder="搜索变量..."
+        :placeholder="$t('variableInsertDropdown.search_variables_placeholder')"
         size="small"
         clearable
         class="search-input"
@@ -40,7 +40,7 @@
         <el-icon class="loading-icon">
           <IconSearch />
         </el-icon>
-        <span>搜索中...</span>
+        <span>{{ $t('variableInsertDropdown.searching') }}</span>
       </div>
 
       <!-- 变量列表内容 -->
@@ -85,10 +85,10 @@
             </el-icon>
           </div>
           <div class="empty-text">
-            {{ searchText ? '未找到匹配的变量' : '暂无可用变量' }}
+            {{ searchText ? $t('variableInsertDropdown.no_variables_found') : $t('variableInsertDropdown.no_available_variables') }}
           </div>
           <div class="empty-tip" v-if="!searchText">
-            请确保相关作用域中已定义变量
+            {{ $t('variableInsertDropdown.ensure_variables_defined') }}
           </div>
         </div>
       </div>
@@ -98,6 +98,7 @@
 
 <script setup lang="ts">
 import { onMounted, watch, ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElInput, ElIcon } from 'element-plus'
 import { IconSearch, IconRemind } from '@computing/opendesign-icons'
 import { useVariables, type Variable } from '@/components/useVariables'
@@ -117,6 +118,8 @@ const emit = defineEmits<{
   'variable-selected': [variable: Variable]
   'variables-loaded': [variables: Variable[]]
 }>()
+
+const { t } = useI18n()
 
 // 使用变量管理composable
 const {

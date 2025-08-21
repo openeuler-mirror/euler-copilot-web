@@ -16,7 +16,7 @@
               <path fill="currentColor" d="M20 18a1 1 0 0 1-1 1h-4a3 3 0 0 0-3 3a3 3 0 0 0-3-3H5a1 1 0 0 1-1-1H2a3 3 0 0 0 3 3h4a2 2 0 0 1 2 2h2a2 2 0 0 1 2-2h4a3 3 0 0 0 3-3Zm0-12a1 1 0 0 0-1-1h-4a3 3 0 0 1-3-3a3 3 0 0 1-3 3H5a1 1 0 0 0-1 1H2a3 3 0 0 1 3-3h4a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2h4a3 3 0 0 1 3 3Zm-8 6L9 8H7v8h2v-4l3 4h2V8h-2zm9-4l-2 5.27L17 8h-2l3 8h2l3-8zM1 8v8h5v-2H3v-1h2v-2H3v-1h3V8z" />
             </svg>
           </div>
-          <div class="headerText">环境变量配置</div>
+          <div class="headerText">{{ $t('flow.env_config') }}</div>
         </div>
       </template>
       
@@ -25,13 +25,13 @@
           <!-- 说明文本 -->
           <div class="envDescription">
             <el-alert
-              title="环境变量说明"
+              :title="$t('flow.env_description_title')"
               type="info"
               :closable="false"
               show-icon
             >
               <template #default>
-                环境变量与当前工作流绑定，在流程运行期间只能读取，不能修改。适用于存储配置信息、密钥、常量等。
+                {{ $t('flow.env_description_content') }}
               </template>
             </el-alert>
           </div>
@@ -39,14 +39,14 @@
           <!-- 变量列表 -->
           <div class="variableSection">
             <div class="sectionHeader">
-              <h3>环境变量列表</h3>
+              <h3>{{ $t('flow.env_list') }}</h3>
               <el-button
                 type="primary"
                 :icon="Plus"
                 size="small"
                 @click="addEnvironmentVariable"
               >
-                添加变量
+                {{ $t('flow.add_variable') }}
               </el-button>
             </div>
 
@@ -80,8 +80,8 @@
               
               <!-- 空状态提示 -->
               <div v-if="environmentVariables.length === 0 && !variablesLoading" class="emptyState">
-                <div class="emptyText">暂无环境变量</div>
-                <div class="emptySubText">点击"添加变量"按钮创建你的第一个环境变量</div>
+                <div class="emptyText">{{ $t('flow.no_env_variables') }}</div>
+                <div class="emptySubText">{{ $t('flow.create_first_env_variable') }}</div>
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@
       
       <template #footer>
         <div class="drawerFooter">
-          <el-button @click="closeDrawer">关闭</el-button>
+          <el-button @click="closeDrawer">{{ $t('common.close') }}</el-button>
         </div>
       </template>
     </el-drawer>
@@ -98,7 +98,7 @@
     <!-- 变量编辑弹窗 -->
     <el-dialog
       v-model="showVariableDialog"
-      :title="isEditingVariable ? '编辑环境变量' : '添加环境变量'"
+      :title="isEditingVariable ? $t('flow.edit_env_variable') : $t('flow.add_env_variable')"
       width="500px"
       :close-on-click-modal="false"
     >
@@ -108,39 +108,39 @@
         :rules="variableRules"
         ref="variableFormRef"
       >
-        <el-form-item label="变量名" prop="name">
+        <el-form-item :label="$t('flow.variable_name')" prop="name">
           <el-input 
             v-model="editingVariable.name" 
-            placeholder="请输入变量名（支持字母、数字、下划线）"
+            :placeholder="$t('flow.variable_name_placeholder')"
             :disabled="isEditingVariable"
           />
         </el-form-item>
         
-        <el-form-item label="变量类型" prop="var_type">
-          <el-select v-model="editingVariable.var_type" placeholder="请选择变量类型">
-            <el-option label="字符串 (string)" value="string" />
-            <el-option label="数字 (number)" value="number" />
-            <el-option label="布尔值 (boolean)" value="boolean" />
-            <el-option label="JSON对象 (object)" value="object" />
+        <el-form-item :label="$t('flow.variable_type')" prop="var_type">
+          <el-select v-model="editingVariable.var_type" :placeholder="$t('flow.select_variable_type')">
+            <el-option :label="$t('flow.type_string_desc')" value="string" />
+            <el-option :label="$t('flow.type_number_desc')" value="number" />
+            <el-option :label="$t('flow.type_boolean_desc')" value="boolean" />
+            <el-option :label="$t('flow.type_object_desc')" value="object" />
           </el-select>
         </el-form-item>
         
-        <el-form-item label="变量值" prop="value">
+        <el-form-item :label="$t('flow.variable_value')" prop="value">
           <el-input 
             v-if="editingVariable.var_type === 'string'"
             v-model="editingVariable.value" 
-            placeholder="请输入字符串值" 
+            :placeholder="$t('flow.input_string_placeholder')" 
           />
           <el-input 
             v-else-if="editingVariable.var_type === 'number'"
             v-model.number="editingVariable.value" 
             type="number"
-            placeholder="请输入数字值" 
+            :placeholder="$t('flow.input_number_placeholder')" 
           />
           <el-select 
             v-else-if="editingVariable.var_type === 'boolean'"
             v-model="editingVariable.value"
-            placeholder="请选择布尔值"
+            :placeholder="$t('flow.select_boolean_placeholder')"
           >
             <el-option label="true" :value="true" />
             <el-option label="false" :value="false" />
@@ -150,33 +150,33 @@
             v-model="editingVariable.valueJson"
             type="textarea"
             :rows="4"
-            placeholder="请输入JSON格式的对象"
+            :placeholder="$t('flow.input_json_placeholder')"
           />
         </el-form-item>
         
-        <el-form-item label="描述">
+        <el-form-item :label="$t('flow.description')">
           <el-input 
             v-model="editingVariable.description" 
-            placeholder="请输入变量描述（可选）" 
+            :placeholder="$t('flow.variable_description_placeholder')" 
           />
         </el-form-item>
       </el-form>
       
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="handleVariableDialogClose">取消</el-button>
+          <el-button @click="handleVariableDialogClose">{{ $t('common.cancel') }}</el-button>
           <el-button 
             v-if="isEditingVariable"
             type="danger" 
             @click="deleteEnvironmentVariable(editingVariable)"
           >
-            删除
+            {{ $t('common.delete') }}
           </el-button>
           <el-button 
             type="primary" 
             @click="saveEnvironmentVariable"
           >
-            保存
+            {{ $t('common.save') }}
           </el-button>
         </div>
       </template>
@@ -237,14 +237,14 @@ const variableFormRef = ref()
 // 表单验证规则
 const variableRules = {
   name: [
-    { required: true, message: '请输入变量名', trigger: 'blur' },
-    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '变量名只能包含字母、数字和下划线，且不能以数字开头', trigger: 'blur' }
+    { required: true, message: t('flow.variable_name_required'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: t('flow.variable_name_pattern'), trigger: 'blur' }
   ],
   var_type: [
-    { required: true, message: '请选择变量类型', trigger: 'change' }
+    { required: true, message: t('flow.variable_type_required'), trigger: 'change' }
   ],
   value: [
-    { required: true, message: '请输入变量值', trigger: 'blur' }
+    { required: true, message: t('flow.variable_value_required'), trigger: 'blur' }
   ]
 }
 
@@ -268,7 +268,7 @@ const getVariableTypeDisplay = (type: string): string => {
 // 格式化变量值显示
 const formatVariableValue = (variable: Variable): string => {
   if (variable.value === null || variable.value === undefined) {
-    return '未设置'
+    return t('flow.not_set')
   }
   
   switch (variable.var_type) {
@@ -287,7 +287,7 @@ const formatVariableValue = (variable: Variable): string => {
         return '{ ... }'
       }
     case 'secret':
-      return '****** (隐藏)'
+      return '****** (' + t('flow.hidden') + ')'
     default:
       const defaultValue = String(variable.value)
       return defaultValue.length > 50 ? `${defaultValue.substring(0, 50)}...` : defaultValue
@@ -309,7 +309,7 @@ const getValueClass = (type: string): string => {
 // 加载环境变量列表
 const loadEnvironmentVariables = async () => {
   if (!props.flowId) {
-    console.warn('没有flowId，跳过环境变量加载')
+    console.warn('No flowId, skipping environment variable loading')
     return
   }
   
@@ -331,8 +331,8 @@ const loadEnvironmentVariables = async () => {
     environmentVariables.value = variables || []
     
   } catch (error) {
-    console.error('❌ 加载环境变量失败:', error)
-    ElMessage.error('加载环境变量失败')
+    console.error('❌ Loading environment variables failed:', error)
+    ElMessage.error(t('flow.load_env_variables_failed'))
     environmentVariables.value = []
   } finally {
     variablesLoading.value = false
@@ -375,7 +375,7 @@ const saveEnvironmentVariable = async () => {
       try {
         variableData.value = JSON.parse(variableData.valueJson || '{}')
       } catch (error) {
-        ElMessage.error('JSON格式不正确，请检查输入')
+        ElMessage.error(t('flow.json_format_error'))
         return
       }
     } else if (variableData.var_type === 'boolean') {
@@ -397,22 +397,22 @@ const saveEnvironmentVariable = async () => {
         },
         variableData
       )
-      ElMessage.success('环境变量更新成功')
+      ElMessage.success(t('flow.env_variable_update_success'))
     } else {
       // 创建变量
       await createVariable({
         ...variableData,
         flow_id: props.flowId
       })
-      ElMessage.success('环境变量创建成功')
+      ElMessage.success(t('flow.env_variable_create_success'))
     }
     
     showVariableDialog.value = false
     await loadEnvironmentVariables()
     
   } catch (error) {
-    console.error('保存环境变量失败:', error)
-    ElMessage.error(isEditingVariable.value ? '更新环境变量失败' : '创建环境变量失败')
+    console.error('Save environment variable failed:', error)
+    ElMessage.error(isEditingVariable.value ? t('flow.env_variable_update_failed') : t('flow.env_variable_create_failed'))
   }
 }
 
@@ -420,11 +420,11 @@ const saveEnvironmentVariable = async () => {
 const deleteEnvironmentVariable = async (variable: Variable) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除环境变量"${variable.name}"吗？此操作不可恢复。`,
-      '确认删除',
+      t('flow.confirm_delete_env_variable', { name: variable.name }),
+      t('flow.confirm_delete_title'),
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning',
       }
     )
@@ -435,14 +435,14 @@ const deleteEnvironmentVariable = async (variable: Variable) => {
       flow_id: props.flowId 
     })
     
-    ElMessage.success('环境变量删除成功')
+    ElMessage.success(t('flow.env_variable_delete_success'))
     showVariableDialog.value = false
     await loadEnvironmentVariables()
     
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除环境变量失败:', error)
-      ElMessage.error('删除环境变量失败')
+      console.error('Delete environment variable failed:', error)
+      ElMessage.error(t('flow.env_variable_delete_failed'))
     }
   }
 }
@@ -467,7 +467,7 @@ const closeDrawer = () => {
 }
 
 onMounted(() => {
-  console.log('🚀 EnvironmentVariableDrawer 已挂载')
+  console.log('🚀 EnvironmentVariableDrawer mounted')
   nextTick(() => {
     loadEnvironmentVariables()
   })

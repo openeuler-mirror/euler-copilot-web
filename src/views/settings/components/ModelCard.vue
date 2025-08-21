@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, CSSProperties } from 'vue';
+import { computed, CSSProperties, ref, onMounted, nextTick } from 'vue';
 
 interface ModelCard {
   name: string;
@@ -18,6 +18,9 @@ const props = withDefaults(defineProps<ModelCard>(), {
   size: 'medium',
 });
 
+const nameRef = ref<HTMLElement>();
+const isNameOverflow = ref(false);
+
 const cardStyles = computed<CSSProperties>(() => {
   return {
     height:
@@ -28,6 +31,18 @@ const cardStyles = computed<CSSProperties>(() => {
           : '256px',
   };
 });
+
+const checkNameOverflow = () => {
+  if (nameRef.value) {
+    isNameOverflow.value = nameRef.value.scrollWidth > nameRef.value.clientWidth;
+  }
+};
+
+onMounted(() => {
+  nextTick(() => {
+    checkNameOverflow();
+  });
+});
 </script>
 <template>
   <div class="model-card" :style="cardStyles">
@@ -36,7 +51,9 @@ const cardStyles = computed<CSSProperties>(() => {
         <div class="icon">
           <img :src="icon" alt="" />
         </div>
-        <span class="name">{{ name }}</span>
+        <el-tooltip :content="name" placement="top" :disabled="!isNameOverflow">
+          <span class="name" ref="nameRef">{{ name }}</span>
+        </el-tooltip>
       </div>
       <div>
         <slot name="headerRight"></slot>
@@ -85,6 +102,10 @@ const cardStyles = computed<CSSProperties>(() => {
         line-height: 24px;
         font-weight: 700;
         margin-left: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
       }
     }
   }

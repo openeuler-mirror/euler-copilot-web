@@ -38,6 +38,21 @@ import REFRESH from '@/assets/svgs/Refresh.svg';
 import STOP_FILLED from '@/assets/svgs/StopFilled.svg';
 // 引入图片--文件处理相关图标
 import DOCUMENT from '@/assets/svgs/document.svg';
+// 节点类型枚举
+export enum NodeType {
+  API = 'API',
+  LLM = 'LLM',
+  RAG = 'RAG',
+  MCP = 'MCP',
+  SQL = 'SQL',
+  Graph = 'Graph',
+  VariableAssign = 'VariableAssign',
+  FileExtract = 'FileExtract',
+  Choice = 'Choice',
+  Loop = 'Loop',
+  Code = 'Code',
+}
+
 // 工具类型
 export type LinkType = 'redirect' | 'action';
 

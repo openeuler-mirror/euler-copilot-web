@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { ElMessage, ElMessageBox, ElButton, ElSelect, ElOption, ElInput, ElSwitch } from 'element-plus';
 import { Plus, Delete, Refresh } from '@element-plus/icons-vue';
 import { v4 as uuidv4 } from 'uuid';
+import { useI18n } from 'vue-i18n';
 import VariableChooser from '@/components/VariableChooser.vue';
 
 // 类型定义
@@ -96,61 +97,63 @@ const props = defineProps({
 
 const emit = defineEmits(['removeBranch', 'addCondition', 'removeCondition', 'toggleLogic', 'updateCondition']);
 
+const { t } = useI18n();
+
 // 数据类型选项（基于后端schemas）
-const dataTypeOptions = [
-  { label: '字符串', value: 'string' },
-  { label: '数值', value: 'number' },
-  { label: '数组', value: 'list' },
-  { label: '布尔值', value: 'bool' },
-  { label: '对象', value: 'dict' },
-];
+const dataTypeOptions = computed(() => [
+  { label: t('choiceBranch.data_types.string'), value: 'string' },
+  { label: t('choiceBranch.data_types.number'), value: 'number' },
+  { label: t('choiceBranch.data_types.list'), value: 'list' },
+  { label: t('choiceBranch.data_types.bool'), value: 'bool' },
+  { label: t('choiceBranch.data_types.dict'), value: 'dict' },
+]);
 
 // 基于后端schemas的操作符配置
-const operatorOptionsByType = {
+const operatorOptionsByType = computed(() => ({
   string: [
-    { label: '等于', value: 'string_equal' },
-    { label: '不等于', value: 'string_not_equal' },
-    { label: '包含', value: 'string_contains' },
-    { label: '不包含', value: 'string_not_contains' },
-    { label: '开始于', value: 'string_starts_with' },
-    { label: '结束于', value: 'string_ends_with' },
-    { label: '长度等于', value: 'string_length_equal' },
-    { label: '长度大于', value: 'string_length_greater_than' },
-    { label: '长度大于等于', value: 'string_length_greater_than_or_equal' },
-    { label: '长度小于', value: 'string_length_less_than' },
-    { label: '长度小于等于', value: 'string_length_less_than_or_equal' },
-    { label: '正则匹配', value: 'string_regex_match' },
+    { label: t('choiceBranch.operators.string_equal'), value: 'string_equal' },
+    { label: t('choiceBranch.operators.string_not_equal'), value: 'string_not_equal' },
+    { label: t('choiceBranch.operators.string_contains'), value: 'string_contains' },
+    { label: t('choiceBranch.operators.string_not_contains'), value: 'string_not_contains' },
+    { label: t('choiceBranch.operators.string_starts_with'), value: 'string_starts_with' },
+    { label: t('choiceBranch.operators.string_ends_with'), value: 'string_ends_with' },
+    { label: t('choiceBranch.operators.string_length_equal'), value: 'string_length_equal' },
+    { label: t('choiceBranch.operators.string_length_greater_than'), value: 'string_length_greater_than' },
+    { label: t('choiceBranch.operators.string_length_greater_than_or_equal'), value: 'string_length_greater_than_or_equal' },
+    { label: t('choiceBranch.operators.string_length_less_than'), value: 'string_length_less_than' },
+    { label: t('choiceBranch.operators.string_length_less_than_or_equal'), value: 'string_length_less_than_or_equal' },
+    { label: t('choiceBranch.operators.string_regex_match'), value: 'string_regex_match' },
   ],
   number: [
-    { label: '等于', value: 'number_equal' },
-    { label: '不等于', value: 'number_not_equal' },
-    { label: '大于', value: 'number_greater_than' },
-    { label: '小于', value: 'number_less_than' },
-    { label: '大于等于', value: 'number_greater_than_or_equal' },
-    { label: '小于等于', value: 'number_less_than_or_equal' },
+    { label: t('choiceBranch.operators.number_equal'), value: 'number_equal' },
+    { label: t('choiceBranch.operators.number_not_equal'), value: 'number_not_equal' },
+    { label: t('choiceBranch.operators.number_greater_than'), value: 'number_greater_than' },
+    { label: t('choiceBranch.operators.number_less_than'), value: 'number_less_than' },
+    { label: t('choiceBranch.operators.number_greater_than_or_equal'), value: 'number_greater_than_or_equal' },
+    { label: t('choiceBranch.operators.number_less_than_or_equal'), value: 'number_less_than_or_equal' },
   ],
   list: [
-    { label: '等于', value: 'list_equal' },
-    { label: '不等于', value: 'list_not_equal' },
-    { label: '包含', value: 'list_contains' },
-    { label: '不包含', value: 'list_not_contains' },
-    { label: '长度等于', value: 'list_length_equal' },
-    { label: '长度大于', value: 'list_length_greater_than' },
-    { label: '长度大于等于', value: 'list_length_greater_than_or_equal' },
-    { label: '长度小于', value: 'list_length_less_than' },
-    { label: '长度小于等于', value: 'list_length_less_than_or_equal' },
+    { label: t('choiceBranch.operators.list_equal'), value: 'list_equal' },
+    { label: t('choiceBranch.operators.list_not_equal'), value: 'list_not_equal' },
+    { label: t('choiceBranch.operators.list_contains'), value: 'list_contains' },
+    { label: t('choiceBranch.operators.list_not_contains'), value: 'list_not_contains' },
+    { label: t('choiceBranch.operators.list_length_equal'), value: 'list_length_equal' },
+    { label: t('choiceBranch.operators.list_length_greater_than'), value: 'list_length_greater_than' },
+    { label: t('choiceBranch.operators.list_length_greater_than_or_equal'), value: 'list_length_greater_than_or_equal' },
+    { label: t('choiceBranch.operators.list_length_less_than'), value: 'list_length_less_than' },
+    { label: t('choiceBranch.operators.list_length_less_than_or_equal'), value: 'list_length_less_than_or_equal' },
   ],
   bool: [
-    { label: '等于', value: 'bool_equal' },
-    { label: '不等于', value: 'bool_not_equal' },
+    { label: t('choiceBranch.operators.bool_equal'), value: 'bool_equal' },
+    { label: t('choiceBranch.operators.bool_not_equal'), value: 'bool_not_equal' },
   ],
   dict: [
-    { label: '等于', value: 'dict_equal' },
-    { label: '不等于', value: 'dict_not_equal' },
-    { label: '包含键', value: 'dict_contains_key' },
-    { label: '不包含键', value: 'dict_not_contains_key' },
+    { label: t('choiceBranch.operators.dict_equal'), value: 'dict_equal' },
+    { label: t('choiceBranch.operators.dict_not_equal'), value: 'dict_not_equal' },
+    { label: t('choiceBranch.operators.dict_contains_key'), value: 'dict_contains_key' },
+    { label: t('choiceBranch.operators.dict_not_contains_key'), value: 'dict_not_contains_key' },
   ],
-};
+}));
 
 // 获取分支标题
 const getBranchTitle = computed(() => {
@@ -162,7 +165,7 @@ const getBranchTitle = computed(() => {
 
 // 获取 Case 编号
 const getCaseNumber = (index: number) => {
-  return `CASE ${index + 1}`;
+  return t('choiceBranch.titles.case_number', { number: index + 1 });
 };
 
 // 计算 conditions-bracket 的高度
@@ -198,7 +201,7 @@ const getConnectingLineHeight = computed(() => {
 
 // 获取操作符选项
 const getOperatorOptions = (dataType: string) => {
-  return operatorOptionsByType[dataType] || operatorOptionsByType.string;
+  return operatorOptionsByType.value[dataType] || operatorOptionsByType.value.string;
 };
 
 // 添加条件
@@ -211,12 +214,12 @@ const removeCondition = (conditionIndex: number) => {
   if (props.choice.conditions.length <= 1) {
     // 只有一个条件时，检查是否允许删除条件
     if (!props.showConditionDelete) {
-      ElMessage.warning('条件不可删除');
+      ElMessage.warning(t('choiceBranch.validation.condition_cannot_delete'));
       return;
     }
     // 如果can-delete为false且showConditionDelete为true，仍然不允许删除最后一个条件
     if (!props.canDelete) {
-      ElMessage.warning('每个分支至少需要一个条件');
+      ElMessage.warning(t('choiceBranch.validation.each_branch_need_condition'));
       return;
     }
   }
@@ -231,12 +234,12 @@ const toggleLogic = () => {
 // 删除分支
 const removeBranch = async () => {
   if (!props.canDelete) {
-    ElMessage.warning('至少需要保留一个条件分支');
+    ElMessage.warning(t('choiceBranch.validation.keep_at_least_one_branch'));
     return;
   }
   
   try {
-    await ElMessageBox.confirm('确定要删除这个分支吗？', '确认删除', {
+    await ElMessageBox.confirm(t('choiceBranch.validation.confirm_delete_branch'), t('choiceBranch.validation.confirm_delete_title'), {
       type: 'warning',
     });
     
@@ -372,7 +375,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                     :self-variables="selfVariables"
                     :self-scope-label="selfScopeLabel"
                     output-format="raw"
-                    selector-placeholder="选择左值变量"
+                    :selector-placeholder="t('choiceBranch.placeholders.select_left_variable')"
                     @variable-selected="(variable, reference) => handleLeftVariableSelected(conditionIndex, variable, reference)"
                   />
                 </div>
@@ -382,7 +385,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                   @update:model-value="handleDataTypeChange(conditionIndex, $event)"
                   size="small"
                   class="data-type-select"
-                  placeholder="类型"
+                  :placeholder="t('choiceBranch.placeholders.data_type')"
                 >
                   <el-option
                     v-for="option in dataTypeOptions"
@@ -398,7 +401,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                   @update:model-value="handleOperatorChange(conditionIndex, $event)"
                   size="small"
                   class="operator-select"
-                  placeholder="操作符"
+                  :placeholder="t('choiceBranch.placeholders.operator')"
                 >
                   <el-option
                     v-for="option in getOperatorOptions(condition.dataType || 'string')"
@@ -428,7 +431,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                       :self-variables="selfVariables"
                       :self-scope-label="selfScopeLabel"
                       output-format="raw"
-                      selector-placeholder="选择右值变量"
+                      :selector-placeholder="t('choiceBranch.placeholders.select_right_variable')"
                       @variable-selected="(variable, reference) => handleRightVariableSelected(conditionIndex, variable, reference)"
                     />
                   </div>
@@ -442,7 +445,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                       @update:model-value="handleRightValueChange(conditionIndex, $event)"
                       size="small"
                       style="flex: 1;"
-                      placeholder="选择布尔值"
+                      :placeholder="t('choiceBranch.placeholders.select_boolean')"
                     >
                       <el-option label="true" value="true" />
                       <el-option label="false" value="false" />
@@ -454,7 +457,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                       :model-value="condition.right.value"
                       @update:model-value="handleRightValueChange(conditionIndex, $event)"
                       size="small"
-                      :placeholder="`输入${dataTypeOptions.find(t => t.value === condition.dataType)?.label || '值'}`"
+                      :placeholder="t('choiceBranch.placeholders.enter_value', { type: dataTypeOptions.find(opt => opt.value === condition.dataType)?.label || t('choiceBranch.placeholders.enter_generic_value') })"
                       style="flex: 1;"
                     />
                   </div>
@@ -467,7 +470,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                     @click="handleRightReferenceToggle(conditionIndex, !condition.isRightReference)"
                     :icon="Refresh"
                   >
-                    {{ condition.isRightReference ? '变量引用' : '输入值' }}
+                    {{ condition.isRightReference ? t('choiceBranch.buttons.variable_reference') : t('choiceBranch.buttons.input_value') }}
                   </el-button>
                 </div>
               </div>
@@ -478,7 +481,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                 class="danger-button"
                 @click="removeCondition(conditionIndex)"
                 type="button"
-                title="删除条件"
+                :title="t('choiceBranch.titles.delete_condition')"
               >
                 <Delete />
               </button>
@@ -493,7 +496,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                 :icon="Plus"
                 @click="addCondition"
               >
-                  添加条件
+                {{ t('choiceBranch.buttons.add_condition') }}
               </el-button>
               <button
                 v-if="showBranchDelete"
@@ -502,7 +505,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                 @click="removeBranch"
               >
                 <Delete />
-                移除
+                {{ t('choiceBranch.buttons.delete_branch') }}
               </button>
           </div>
         </div>
@@ -515,17 +518,27 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
 .branch-card {
   border-radius: 8px;
   margin-bottom: 16px;
-  background: #ffffff;
+  background: var(--el-bg-color);
+  
+  body[theme='dark'] & {
+    background: #1f2329;
+    border-color: var(--el-border-color);
+  };
   
   &.default-branch {
-    border-color: #f56c6c;
-    background: #fef0f0;
+    border-color: var(--el-color-danger);
+    background: var(--el-color-danger-light-9);
   }
   
   .branch-header {
     padding: 16px;
-    border-bottom: 1px solid #e4e7ed;
-    background: #f8f9fa;
+    border-bottom: 1px solid var(--el-border-color-light);
+    background: var(--el-fill-color-extra-light);
+    
+    body[theme='dark'] & {
+      background: var(--o-bash-bg, #2a2f37);
+      border-bottom-color: var(--el-border-color);
+    };
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -538,11 +551,11 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
       .main-title {
         font-size: 18px;
         font-weight: 700;
-        color: #409eff;
+        color: var(--el-color-primary);
         padding: 6px 12px;
-        background: #ecf5ff;
+        background: var(--el-color-primary-light-9);
         border-radius: 6px;
-        border: 1px solid #d9ecff;
+        border: 1px solid var(--el-color-primary-light-7);
         min-width: 60px;
         text-align: center;
       }
@@ -550,7 +563,11 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
       .sub-title {
         font-size: 14px;
         font-weight: 600;
-        color: #606266;
+        color: var(--el-text-color-primary);
+        
+        body[theme='dark'] & {
+          color: #e4e8ee;
+        }
       }
     }
     
@@ -571,14 +588,22 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
       
       .conditions-title {
         font-weight: 600;
-        color: black;
+        color: var(--el-text-color-primary);
         font-size: 16px;
+        
+        body[theme='dark'] & {
+          color: #e4e8ee;
+        }
       }
 
       .conditions-subtitle {
         font-weight: 500;
-        color: #676f83;
+        color: var(--el-text-color-secondary);
         font-size: 12px;
+        
+        body[theme='dark'] & {
+          color: #d3dce9;
+        }
       }
     }
 
@@ -606,8 +631,15 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
           font-weight: 600;
           font-size: 10px;
           padding: 4px 8px;
-          background-color: white;
+          background-color: var(--el-bg-color);
+          color: var(--el-text-color-primary);
           z-index: 1;
+          
+          body[theme='dark'] & {
+            background-color: #1f2329;
+            color: #e4e8ee;
+            border-color: var(--el-border-color);
+          };
           
           // 调整图标大小
           :deep(.el-icon) {
@@ -652,8 +684,13 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
           .condition-setting-col {
             flex: 1;
             min-width: 0;
-            background: #f8f9fa;
-            border: 1px solid #e4e7ed;
+            background: var(--el-fill-color-extra-light);
+            border: 1px solid var(--el-border-color-light);
+            
+            body[theme='dark'] & {
+              background: var(--o-bash-bg, #2a2f37);
+              border-color: var(--el-border-color);
+            };
             border-radius: 8px;
             overflow: hidden;
             transition: background-color 0.2s ease;
@@ -684,7 +721,11 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
             .condition-number {
               font-size: 12px;
               font-weight: 600;
-              color: #909399;
+              color: var(--el-text-color-secondary);
+              
+              body[theme='dark'] & {
+                color: #d3dce9;
+              }
             }
           }
           
@@ -696,7 +737,11 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
             padding: 6px 0 6px 0;
             
             &:not(:last-child) {
-              border-bottom: 1px solid #e4e7ed;
+              border-bottom: 1px solid var(--el-border-color-light);
+              
+              body[theme='dark'] & {
+                border-bottom-color: var(--el-border-color);
+              };
               margin-left: 2px;
               margin-right: 2px;
               padding-left: 0;
@@ -708,13 +753,21 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
               
               .variable-section {
                 flex: 3; // VariableChooser 占3份空间
-                border-right: 1px solid #e4e7ed;
+                border-right: 1px solid var(--el-border-color-light);
+                
+                body[theme='dark'] & {
+                  border-right-color: var(--el-border-color);
+                };
                 padding-right: 12px;
               }
               
               .data-type-select {
                 flex: 0 0 25%;
-                border-right: 1px solid #e4e7ed;
+                border-right: 1px solid var(--el-border-color-light);
+                
+                body[theme='dark'] & {
+                  border-right-color: var(--el-border-color);
+                };
                 padding-right: 12px;
                 
                 :deep(.el-select__wrapper) {
@@ -746,7 +799,11 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
               .value-section {
                 flex: 1;
                 min-width: 0;
-                border-right: 1px solid #e4e7ed;
+                border-right: 1px solid var(--el-border-color-light);
+                
+                body[theme='dark'] & {
+                  border-right-color: var(--el-border-color);
+                };
                 padding-right: 12px;
                 
                 .reference-input,
@@ -767,7 +824,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
                 .el-button {
                   border: none;
                   background: transparent;
-                  color: #409eff;
+                  color: var(--el-color-primary);
                   font-size: 12px;
                   padding: 4px 8px;
                   border-radius: 0;
@@ -800,91 +857,7 @@ const handleRightValueChange = (conditionIndex: number, value: any) => {
   }
 }
 
-// 深色主题支持
-.dark {
-  .branch-card {
-    background: #374151;
-    border-color: #4b5563;
-    
-    &.default-branch {
-      border-color: #f87171;
-      background: #450a0a;
-    }
-    
-    .branch-header {
-      background: #4b5563;
-      border-color: #6b7280;
-      
-      .branch-title-section {
-        .main-title {
-          color: #3b82f6;
-          background: #1e3a8a;
-          border-color: #1e40af;
-        }
-        
-        .sub-title {
-          color: #e5e7eb;
-        }
-      }
-    }
-    
-    .conditions-container { 
-      .conditions-bracket {
-        .bracket-line {
-          background: #3b82f6;
-        }
-      }
-      
-      .conditions-list {
-        .condition-item {
-          background: #4b5563;
-          border-color: #6b7280;
-          
-          .condition-setting-col {
-            background: #4b5563;
-            border-color: #6b7280;
-            
-            .condition-row {
-              &:not(:last-child) {
-                border-bottom-color: #6b7280;
-              }
-              
-              &.variable-row {
-                .variable-section {
-                  border-right-color: #6b7280;
-                }
-                
-                .data-type-select {
-                  border-right-color: #6b7280;
-                }
-                
-                .operator-select :deep(.el-select__wrapper) {
-                  border-right-color: #6b7280;
-                }
-              }
-              
-              &.value-row {
-                .value-section {
-                  border-right-color: #6b7280;
-                }
-                
-                .toggle-section .el-button {
-                  color: #3b82f6;
-                  
-                  &:hover {
-                    background: rgba(59, 130, 246, 0.2);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    
-
-  }
-}
+// 深色主题适配已集成到主样式中
 
 // 确保VariableChooser组件样式适配
 :deep(.variable-chooser) {

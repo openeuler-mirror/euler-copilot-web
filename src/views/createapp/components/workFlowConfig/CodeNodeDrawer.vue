@@ -28,22 +28,22 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('basic') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>基本信息</span>
+                <span>{{ $t('flow.node_config.basic_info') }}</span>
               </template>
               <div class="basic-content">
                 <el-form :model="nodeConfig" label-position="left" label-width="120px">
-                  <el-form-item label="节点名称" required>
+                  <el-form-item :label="$t('flow.node_config.node_name')" required>
                     <el-input
                       v-model="nodeConfig.name"
-                      placeholder="请输入节点名称"
+                      :placeholder="$t('flow.node_config.node_name_placeholder')"
                       maxlength="50"
                       clearable
                     />
                   </el-form-item>
-                  <el-form-item label="安全等级">
-                    <el-select v-model="nodeConfig.securityLevel" placeholder="请选择安全等级">
-                      <el-option label="低安全级别（快速执行）" value="low" />
-                      <el-option label="高安全级别（完全隔离）" value="high" />
+                  <el-form-item :label="$t('flow.node_config.security_level')">
+                    <el-select v-model="nodeConfig.securityLevel" :placeholder="$t('flow.node_config.security_level_placeholder')">
+                      <el-option :label="$t('flow.node_config.security_level_low')" value="low" />
+                      <el-option :label="$t('flow.node_config.security_level_high')" value="high" />
                     </el-select>
                   </el-form-item>
                 </el-form>
@@ -56,18 +56,18 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('variables') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>变量管理</span>
+                <span>{{ $t('flow.node_config.variable_management') }}</span>
               </template>
               <div class="variables-content">
                 <el-tabs v-model="variableTab" class="variable-tabs">
                   <!-- 输入变量 -->
-                  <el-tab-pane label="输入变量" name="input">
+                  <el-tab-pane :label="$t('flow.node_config.input_variables')" name="input">
                     <div class="variable-section">
                       <div class="section-header">
-                        <span>选择工作流中的变量作为代码输入</span>
+                        <span>{{ $t('flow.node_config.input_variables_tip') }}</span>
                         <el-button type="primary" size="small" @click="addInputVariable">
                           <el-icon><Plus /></el-icon>
-                          添加变量
+                          {{ $t('flow.node_config.add_variable') }}
                         </el-button>
                       </div>
                       
@@ -89,28 +89,28 @@
                             :show-actions="true"
                             :show-variable-info="true"
                             output-format="wrapped"
-                            placeholder="输入节点内的变量名"
+                            :placeholder="$t('flow.node_config.variable_placeholder')"
                             @remove="removeInputVariable(index)"
                             @variable-selected="(selectedVar, reference) => handleInputVariableSelected(selectedVar, index)"
                           />
                         </div>
                         
                         <div v-if="inputVariables.length === 0" class="empty-variables">
-                          <p>暂无输入变量</p>
-                          <p class="tip">选择变量作为代码输入参数</p>
+                          <p>{{ $t('flow.node_config.no_input_variables') }}</p>
+                          <p class="tip">{{ $t('flow.node_config.input_variables_tip') }}</p>
                         </div>
                       </div>
                     </div>
                   </el-tab-pane>
 
                   <!-- 输出变量 -->
-                  <el-tab-pane label="输出变量" name="output">
+                  <el-tab-pane :label="$t('flow.node_config.output_variables')" name="output">
                     <div class="variable-section">
                       <div class="section-header">
-                        <span>定义节点的输出变量</span>
+                        <span>{{ $t('flow.node_config.output_variables_tip') }}</span>
                         <el-button type="primary" size="small" @click="addOutputVariable">
                           <el-icon><Plus /></el-icon>
-                          添加变量
+                          {{ $t('flow.node_config.add_variable') }}
                         </el-button>
                       </div>
                       
@@ -123,20 +123,20 @@
                           <div class="variable-header">
                             <el-input
                               v-model="variable.name"
-                              placeholder="变量名称"
+                              :placeholder="$t('flow.node_config.node_name')"
                               class="variable-name"
                               @change="validateVariableName(variable, 'output')"
                             />
                             <el-select
                               v-model="variable.type"
-                              placeholder="类型"
+                              :placeholder="$t('flow.node_config.select_type')"
                               class="variable-type"
                             >
-                              <el-option label="字符串" value="string" />
-                              <el-option label="数字" value="number" />
-                              <el-option label="布尔值" value="boolean" />
-                              <el-option label="数组" value="array" />
-                              <el-option label="对象" value="object" />
+                              <el-option :label="$t('flow.node_config.type_string')" value="string" />
+                              <el-option :label="$t('flow.node_config.type_number')" value="number" />
+                              <el-option :label="$t('flow.node_config.type_boolean')" value="boolean" />
+                              <el-option :label="$t('flow.node_config.type_list')" value="array" />
+                              <el-option :label="$t('flow.node_config.type_object')" value="object" />
                             </el-select>
                             <el-button 
                               type="danger" 
@@ -150,8 +150,8 @@
                         </div>
                         
                         <div v-if="outputVariables.length === 0" class="empty-variables">
-                          <p>暂无输出变量</p>
-                          <p class="tip">输出变量应在代码的返回值中定义</p>
+                          <p>{{ $t('flow.node_config.no_output_variables') }}</p>
+                          <p class="tip">{{ $t('flow.node_config.output_variables_tip_code') }}</p>
                         </div>
                       </div>
                     </div>
@@ -166,29 +166,29 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('execution') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>执行配置</span>
+                <span>{{ $t('flow.node_config.execution_config') }}</span>
               </template>
               <div class="execution-content">
                 <el-form :model="nodeConfig" label-position="left" label-width="120px">
-                  <el-form-item label="超时时间">
+                  <el-form-item :label="$t('flow.node_config.timeout_seconds')">
                     <el-input-number
                       v-model="nodeConfig.timeoutSeconds"
                       :min="5"
                       :max="300"
                       :step="5"
                     />
-                    <span class="unit-text">秒</span>
+                    <span class="unit-text">{{ $t('flow.node_config.seconds') }}</span>
                   </el-form-item>
-                  <el-form-item label="内存限制">
+                  <el-form-item :label="$t('flow.node_config.memory_limit')">
                     <el-input-number
                       v-model="nodeConfig.memoryLimitMb"
                       :min="64"
                       :max="2048"
                       :step="64"
                     />
-                    <span class="unit-text">MB</span>
+                    <span class="unit-text">{{ $t('flow.node_config.mb') }}</span>
                   </el-form-item>
-                  <el-form-item label="CPU限制">
+                  <el-form-item :label="$t('flow.node_config.cpu_limit')">
                     <el-input-number
                       v-model="nodeConfig.cpuLimit"
                       :min="0.1"
@@ -196,7 +196,7 @@
                       :step="0.1"
                       :precision="1"
                     />
-                    <span class="unit-text">核心</span>
+                    <span class="unit-text">{{ $t('flow.node_config.cores') }}</span>
                   </el-form-item>
                 </el-form>
               </div>
@@ -208,7 +208,7 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('code') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>代码编辑</span>
+                <span>{{ $t('flow.node_config.code_editor') }}</span>
               </template>
               <div class="code-content">
                 <!-- Monaco 代码编辑器 -->
@@ -230,9 +230,9 @@
 
       <template #footer>
         <div class="drawer-footer">
-          <el-button @click="closeDrawer">取消</el-button>
+          <el-button @click="closeDrawer">{{ $t('common.cancel') }}</el-button>
           <el-button type="primary" @click="saveNode" :loading="saving">
-            保存
+            {{ $t('common.confirm') }}
           </el-button>
         </div>
       </template>
@@ -929,12 +929,23 @@ watch(inputVariables, () => {
 .code-node-drawer {
   :deep(.el-drawer) {
     border-radius: 8px 0 0 8px;
+    background: var(--el-bg-color);
+    
+    body[theme='dark'] & {
+      background: #1f2329;
+    }
   }
 
   :deep(.el-drawer__header) {
     padding: 24px 24px 16px !important;
     margin-bottom: 0;
     border-bottom: 1px solid var(--el-border-color-lighter);
+    background: var(--el-bg-color);
+    
+    body[theme='dark'] & {
+      background: #1f2329;
+      border-bottom-color: var(--el-border-color);
+    }
   }
 
   :deep(.el-drawer__body) {
@@ -944,6 +955,12 @@ watch(inputVariables, () => {
   :deep(.el-drawer__footer) {
     padding: 16px 24px;
     border-top: 1px solid var(--el-border-color-lighter);
+    background: var(--el-bg-color);
+    
+    body[theme='dark'] & {
+      background: #1f2329;
+      border-top-color: var(--el-border-color);
+    }
   }
 
   .drawer-header {
@@ -953,6 +970,10 @@ watch(inputVariables, () => {
       font-size: 16px;
       font-weight: 500;
       color: var(--el-text-color-primary);
+      
+      body[theme='dark'] & {
+        color: #e4e8ee;
+      };
 
       .node-icon {
         width: 24px;
@@ -965,6 +986,11 @@ watch(inputVariables, () => {
   .drawer-body {
     height: 100%;
     overflow-y: auto;
+    background: var(--el-bg-color);
+    
+    body[theme='dark'] & {
+      background: #1f2329;
+    };
 
     .code-content {
       :deep(.el-collapse-item__header) {
@@ -972,6 +998,13 @@ watch(inputVariables, () => {
         font-weight: 500;
         background: var(--el-fill-color-extra-light);
         border-bottom: 1px solid var(--el-border-color-lighter);
+        color: var(--el-text-color-primary);
+        
+        body[theme='dark'] & {
+          background: var(--o-bash-bg, #2a2f37);
+          border-bottom-color: var(--el-border-color);
+          color: #e4e8ee;
+        }
       }
 
       :deep(.el-collapse-item__wrap) {
@@ -980,6 +1013,11 @@ watch(inputVariables, () => {
 
       :deep(.el-collapse-item__content) {
         padding: 20px 24px;
+        background: var(--el-bg-color);
+        
+        body[theme='dark'] & {
+          background: #1f2329;
+        }
       }
     }
   }
@@ -994,6 +1032,10 @@ watch(inputVariables, () => {
       margin-left: 8px;
       color: var(--el-text-color-secondary);
       font-size: 12px;
+      
+      body[theme='dark'] & {
+        color: #d3dce9;
+      }
     }
   }
 
@@ -1016,49 +1058,81 @@ watch(inputVariables, () => {
       
       // 确保工具栏在暗色主题下正确显示
       .editor-toolbar {
+        background: var(--el-fill-color-extra-light);
+        
+        body[theme='dark'] & {
+          background: var(--o-bash-bg, #2a2f37);
+        }
+        
         .toolbar-left {
           .language-selector {
             label {
-              color: #abb2bf;
+              color: var(--el-text-color-primary);
+              
+              body[theme='dark'] & {
+                color: #e4e8ee;
+              }
             }
           }
           
           .toolbar-actions {
             :deep(.el-button) {
-              color: #ffffff !important; // 使用白色文字确保清晰可见
-              font-size: 13px !important; // 稍微增大字体
-              font-weight: 500 !important; // 增加字体粗细
-              padding: 6px 12px !important; // 增加内边距提升点击体验
-              border-radius: 4px !important; // 添加圆角
-              transition: all 0.2s ease !important; // 添加过渡动画
-              border: 1px solid transparent !important; // 透明边框便于添加悬停效果
+              color: var(--el-text-color-primary) !important;
+              font-size: 13px !important;
+              font-weight: 500 !important;
+              padding: 6px 12px !important;
+              border-radius: 4px !important;
+              transition: all 0.2s ease !important;
+              border: 1px solid transparent !important;
               background: transparent !important;
               
+              body[theme='dark'] & {
+                color: #e4e8ee !important;
+              }
+              
               span {
-                color: #ffffff !important;
+                color: var(--el-text-color-primary) !important;
+                
+                body[theme='dark'] & {
+                  color: #e4e8ee !important;
+                }
               }
               
               &:hover {
-                color: #61afef !important; // 悬停时使用主题蓝色
-                background: rgba(97, 175, 239, 0.15) !important; // 稍微增加背景透明度
-                border-color: rgba(97, 175, 239, 0.3) !important; // 添加边框效果
-                transform: translateY(-1px) !important; // 轻微上移效果
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important; // 添加阴影
+                color: var(--el-color-primary) !important;
+                background: var(--el-color-primary-light-9) !important;
+                border-color: var(--el-color-primary-light-7) !important;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+                
+                body[theme='dark'] & {
+                  background: var(--flow-node-default-over-color, #25303e) !important;
+                  border-color: var(--flow-node-boder-default-over, #314265) !important;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+                }
                 
                 span {
-                  color: #61afef !important;
+                  color: var(--el-color-primary) !important;
                 }
               }
               
               &:active {
-                transform: translateY(0) !important; // 点击时回到原位
-                background: rgba(97, 175, 239, 0.25) !important;
+                transform: translateY(0) !important;
+                background: var(--el-color-primary-light-8) !important;
+                
+                body[theme='dark'] & {
+                  background: var(--flow-node-default-over-color, #25303e) !important;
+                }
               }
               
               &:focus {
                 outline: none !important;
-                border-color: #61afef !important;
-                box-shadow: 0 0 0 2px rgba(97, 175, 239, 0.2) !important;
+                border-color: var(--el-color-primary) !important;
+                box-shadow: 0 0 0 2px var(--el-color-primary-light-8) !important;
+                
+                body[theme='dark'] & {
+                  box-shadow: 0 0 0 2px var(--flow-node-boder-default-over, #314265) !important;
+                }
               }
             }
           }
@@ -1082,10 +1156,18 @@ watch(inputVariables, () => {
         margin-bottom: 16px;
         padding-bottom: 8px;
         border-bottom: 1px solid var(--el-border-color-lighter);
+        
+        body[theme='dark'] & {
+          border-bottom-color: var(--el-border-color);
+        }
 
         span {
           font-weight: 500;
           color: var(--el-text-color-primary);
+          
+          body[theme='dark'] & {
+            color: #e4e8ee;
+          }
         }
       }
 
@@ -1096,6 +1178,11 @@ watch(inputVariables, () => {
           background: var(--el-fill-color-extra-light);
           border-radius: 6px;
           border: 1px solid var(--el-border-color-lighter);
+          
+          body[theme='dark'] & {
+            background: var(--o-bash-bg, #2a2f37);
+            border-color: var(--el-border-color);
+          };
 
           .variable-header {
             display: flex;
@@ -1126,6 +1213,10 @@ watch(inputVariables, () => {
           text-align: center;
           padding: 40px 20px;
           color: var(--el-text-color-secondary);
+          
+          body[theme='dark'] & {
+            color: #d3dce9;
+          }
 
           p {
             margin: 0;
@@ -1135,6 +1226,10 @@ watch(inputVariables, () => {
             font-size: 12px;
             margin-top: 8px;
             color: var(--el-text-color-placeholder);
+            
+            body[theme='dark'] & {
+              color: #8d98aa;
+            }
           }
         }
       }

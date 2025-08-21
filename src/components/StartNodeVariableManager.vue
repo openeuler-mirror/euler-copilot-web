@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   ElTabs, ElTabPane, ElTable, ElTableColumn, ElButton, ElDialog, 
   ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElMessage,
@@ -29,6 +30,8 @@ const emit = defineEmits<{
   'variables-updated': []
 }>()
 
+const { t } = useI18n()
+
 // 响应式数据
 const activeTab = ref('system')
 const systemVariables = ref<Variable[]>([])
@@ -46,49 +49,49 @@ const newVariable = ref({
 })
 const addVariableForm = ref()
 
-// 系统变量说明
-const systemVariableDescriptions = {
-  query: '用户当前的查询内容',
-  files: '用户上传的文件列表',
-  dialogue_count: '当前对话轮数',
-  app_id: '当前应用ID',
-  flow_id: '当前工作流ID',
-  user_id: '当前用户ID',
-  session_id: '当前会话ID',
-  timestamp: '当前时间戳'
-}
-
-// 计算属性
-const typeLabels = computed(() => ({
-  string: '字符串',
-  number: '数字',
-  boolean: '布尔值',
-  object: '对象',
-  secret: '密钥',
-  group: '分组',
-  file: '文件',
-  'array[any]': '任意数组',
-  'array[string]': '字符串数组',
-  'array[number]': '数字数组',
-  'array[object]': '对象数组',
-  'array[file]': '文件数组',
-  'array[boolean]': '布尔数组',
-  'array[secret]': '密钥数组'
+// 系统变量说明 - 使用计算属性从i18n获取
+const systemVariableDescriptions = computed(() => ({
+  query: t('startNodeVariableManager.system_var_descriptions.query'),
+  files: t('startNodeVariableManager.system_var_descriptions.files'),
+  dialogue_count: t('startNodeVariableManager.system_var_descriptions.dialogue_count'),
+  app_id: t('startNodeVariableManager.system_var_descriptions.app_id'),
+  flow_id: t('startNodeVariableManager.system_var_descriptions.flow_id'),
+  user_id: t('startNodeVariableManager.system_var_descriptions.user_id'),
+  session_id: t('startNodeVariableManager.system_var_descriptions.session_id'),
+  timestamp: t('startNodeVariableManager.system_var_descriptions.timestamp')
 }))
 
-// 表单验证规则
-const addVariableRules = {
+// 计算属性 - 使用i18n获取变量类型标签
+const typeLabels = computed(() => ({
+  string: t('startNodeVariableManager.variable_types.string'),
+  number: t('startNodeVariableManager.variable_types.number'),
+  boolean: t('startNodeVariableManager.variable_types.boolean'),
+  object: t('startNodeVariableManager.variable_types.object'),
+  secret: t('startNodeVariableManager.variable_types.secret'),
+  group: t('startNodeVariableManager.variable_types.group'),
+  file: t('startNodeVariableManager.variable_types.file'),
+  'array[any]': t('startNodeVariableManager.variable_types.array[any]'),
+  'array[string]': t('startNodeVariableManager.variable_types.array[string]'),
+  'array[number]': t('startNodeVariableManager.variable_types.array[number]'),
+  'array[object]': t('startNodeVariableManager.variable_types.array[object]'),
+  'array[file]': t('startNodeVariableManager.variable_types.array[file]'),
+  'array[boolean]': t('startNodeVariableManager.variable_types.array[boolean]'),
+  'array[secret]': t('startNodeVariableManager.variable_types.array[secret]')
+}))
+
+// 表单验证规则 - 使用计算属性从i18n获取
+const addVariableRules = computed(() => ({
   name: [
-    { required: true, message: '请输入变量名称', trigger: 'blur' },
-    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '变量名只能包含字母、数字和下划线，且不能以数字开头', trigger: 'blur' }
+    { required: true, message: t('startNodeVariableManager.validation.name_required'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: t('startNodeVariableManager.validation.name_pattern'), trigger: 'blur' }
   ],
   var_type: [
-    { required: true, message: '请选择变量类型', trigger: 'change' }
+    { required: true, message: t('startNodeVariableManager.validation.type_required'), trigger: 'change' }
   ],
   value: [
-    { required: true, message: '请输入变量值', trigger: 'blur' }
+    { required: true, message: t('startNodeVariableManager.validation.value_required'), trigger: 'blur' }
   ]
-}
+}))
 
 // 方法
 const loadSystemVariables = async () => {
@@ -100,11 +103,9 @@ const loadSystemVariables = async () => {
     if (props.conversationId) {
       // 对话阶段：使用conversation_id查询实例
       params.conversation_id = props.conversationId
-      console.log('🔄 加载系统变量（对话阶段）, conversationId:', props.conversationId)
     } else if (props.flowId) {
       // 配置阶段：使用flow_id查询模板
       params.flow_id = props.flowId
-      console.log('🔄 加载系统变量（配置阶段）, flowId:', props.flowId)
     } else {
       console.warn('⚠️ 缺少conversationId和flowId，跳过系统变量加载')
       systemVariables.value = []
@@ -113,10 +114,9 @@ const loadSystemVariables = async () => {
     
     const response = await listVariables(params)
     systemVariables.value = response?.result?.variables || []
-    console.log('✅ 系统变量加载成功:', systemVariables.value.length, '个')
   } catch (error) {
-    console.error('加载系统变量失败:', error)
-    ElMessage.error('加载系统变量失败')
+    console.error(t('startNodeVariableManager.messages.load_system_variables_failed'), error)
+    ElMessage.error(t('startNodeVariableManager.messages.load_system_variables_failed'))
   } finally {
     loading.value = false
   }
@@ -133,8 +133,8 @@ const loadConversationVariables = async () => {
     })
     conversationVariables.value = response?.result?.variables || []
   } catch (error) {
-    console.error('加载对话变量失败:', error)
-    ElMessage.error('加载对话变量失败')
+    console.error(t('startNodeVariableManager.messages.load_conversation_variables_failed'), error)
+    ElMessage.error(t('startNodeVariableManager.messages.load_conversation_variables_failed'))
   } finally {
     loading.value = false
   }
@@ -145,7 +145,7 @@ const loadVariableTypes = async () => {
     const response = await getVariableTypes()
     variableTypes.value = response?.result || {types: [], scopes: []}
   } catch (error) {
-    console.error('加载变量类型失败:', error)
+    console.error(t('startNodeVariableManager.messages.load_variable_types_failed'), error)
   }
 }
 
@@ -173,7 +173,7 @@ const handleSaveVariable = async () => {
       case 'number':
         processedValue = processedValue === '' ? 0 : Number(processedValue)
         if (isNaN(processedValue)) {
-          ElMessage.error('请输入有效的数字')
+          ElMessage.error(t('startNodeVariableManager.messages.invalid_number'))
                     return
         }
         break
@@ -184,7 +184,7 @@ const handleSaveVariable = async () => {
         try {
           processedValue = JSON.parse(processedValue)
         } catch (error) {
-          ElMessage.error('请输入有效的JSON格式')
+          ElMessage.error(t('startNodeVariableManager.messages.invalid_json'))
           return
         }
         break
@@ -201,7 +201,7 @@ const handleSaveVariable = async () => {
               throw new Error('Invalid array')
             }
           } catch (error) {
-            ElMessage.error('请输入有效的数字数组，如：[1,2,3]')
+            ElMessage.error(t('startNodeVariableManager.messages.invalid_number_array'))
             return
           }
         }
@@ -214,7 +214,7 @@ const handleSaveVariable = async () => {
               throw new Error('Invalid array')
             }
           } catch (error) {
-            ElMessage.error('请输入有效的布尔数组，如：[true,false]')
+            ElMessage.error(t('startNodeVariableManager.messages.invalid_boolean_array'))
             return
           }
         }
@@ -227,7 +227,7 @@ const handleSaveVariable = async () => {
               throw new Error('Invalid array')
             }
           } catch (error) {
-            ElMessage.error('请输入有效的对象数组')
+            ElMessage.error(t('startNodeVariableManager.messages.invalid_object_array'))
             return
           }
         }
@@ -251,13 +251,13 @@ const handleSaveVariable = async () => {
     
     await createVariable(requestData)
     
-    ElMessage.success('变量创建成功')
+    ElMessage.success(t('startNodeVariableManager.messages.variable_created'))
     addVariableDialogVisible.value = false
     await loadConversationVariables()
     emit('variables-updated')
   } catch (error) {
-    console.error('创建变量失败:', error)
-    ElMessage.error('创建变量失败')
+    console.error(t('startNodeVariableManager.messages.create_variable_failed'), error)
+    ElMessage.error(t('startNodeVariableManager.messages.create_variable_failed'))
   }
 }
 
@@ -269,12 +269,12 @@ const handleDeleteVariable = async (variable: Variable) => {
       conversation_id: props.conversationId
     })
     
-    ElMessage.success('变量删除成功')
+    ElMessage.success(t('startNodeVariableManager.messages.variable_deleted'))
     await loadConversationVariables()
     emit('variables-updated')
   } catch (error) {
-    console.error('删除变量失败:', error)
-    ElMessage.error('删除变量失败')
+    console.error(t('startNodeVariableManager.messages.delete_variable_failed'), error)
+    ElMessage.error(t('startNodeVariableManager.messages.delete_variable_failed'))
   }
 }
 
@@ -320,39 +320,39 @@ onMounted(() => {
   <div class="start-node-variable-manager">
     <ElTabs v-model="activeTab" class="variable-tabs">
       <!-- 系统变量 -->
-      <ElTabPane label="系统变量" name="system">
+      <ElTabPane :label="t('startNodeVariableManager.system_variables')" name="system">
         <div class="tab-content">
           <div class="tab-header">
             <div class="tab-title">
               <ElIcon><InfoFilled /></ElIcon>
-              <span>系统变量 (只读)</span>
+              <span>{{ t('startNodeVariableManager.system_readonly') }}</span>
             </div>
             <div class="tab-description">
-              这些变量由系统自动提供，包含当前工作流执行的上下文信息
+              {{ t('startNodeVariableManager.system_description') }}
             </div>
           </div>
           
           <ElCollapse class="system-variables-collapse">
-            <ElCollapseItem title="可用的系统变量" name="system-vars">
+            <ElCollapseItem :title="t('startNodeVariableManager.available_system_variables')" name="system-vars">
               <ElTable :data="systemVariables" v-loading="loading">
-                <ElTableColumn prop="name" label="变量名" width="120">
+                <ElTableColumn prop="name" :label="t('startNodeVariableManager.variable_name')" width="120">
                   <template #default="{ row }">
                     <code class="variable-name">{{ row.name }}</code>
                   </template>
                 </ElTableColumn>
-                <ElTableColumn prop="var_type" label="类型" width="100">
+                <ElTableColumn prop="var_type" :label="t('startNodeVariableManager.type')" width="100">
                   <template #default="{ row }">
                     <ElTag size="small" type="primary">
                       {{ typeLabels[row.var_type] || row.var_type }}
                     </ElTag>
                   </template>
                 </ElTableColumn>
-                <ElTableColumn label="描述" min-width="200">
+                <ElTableColumn :label="t('startNodeVariableManager.description')" min-width="200">
                   <template #default="{ row }">
-                    {{ systemVariableDescriptions[row.name] || row.description || '系统变量' }}
+                    {{ systemVariableDescriptions[row.name] || row.description || t('startNodeVariableManager.system_var_descriptions.default') }}
                   </template>
                 </ElTableColumn>
-                <ElTableColumn label="引用语法" width="150">
+                <ElTableColumn :label="t('startNodeVariableManager.reference_syntax')" width="150">
                   <template #default="{ row }">
                     <code class="variable-reference">{{ formatVariableReference(row) }}</code>
                   </template>
@@ -364,49 +364,49 @@ onMounted(() => {
       </ElTabPane>
       
       <!-- 对话变量 -->
-      <ElTabPane label="对话变量" name="conversation">
+      <ElTabPane :label="t('startNodeVariableManager.conversation_variables')" name="conversation">
         <div class="tab-content">
           <div class="tab-header">
             <div class="tab-title">
               <ElIcon><Plus /></ElIcon>
-              <span>对话变量</span>
+              <span>{{ t('startNodeVariableManager.conversation_variables') }}</span>
             </div>
             <div class="tab-description">
-              这些变量在当前对话中有效，可以在工作流的各个步骤中使用
+              {{ t('startNodeVariableManager.conversation_description') }}
             </div>
             <ElButton type="primary" @click="handleAddVariable" :icon="Plus">
-              新增变量
+              {{ t('startNodeVariableManager.add_variable') }}
             </ElButton>
           </div>
           
           <ElTable :data="conversationVariables" v-loading="loading">
-            <ElTableColumn prop="name" label="变量名" width="120">
+            <ElTableColumn prop="name" :label="t('startNodeVariableManager.variable_name')" width="120">
               <template #default="{ row }">
                 <code class="variable-name">{{ row.name }}</code>
               </template>
             </ElTableColumn>
-            <ElTableColumn prop="var_type" label="类型" width="100">
+            <ElTableColumn prop="var_type" :label="t('startNodeVariableManager.type')" width="100">
               <template #default="{ row }">
                 <ElTag size="small" :type="row.var_type === 'secret' ? 'warning' : 'primary'">
                   {{ typeLabels[row.var_type] || row.var_type }}
                 </ElTag>
               </template>
             </ElTableColumn>
-            <ElTableColumn label="值" min-width="150">
+            <ElTableColumn :label="t('startNodeVariableManager.value')" min-width="150">
               <template #default="{ row }">
                 <span class="variable-value">{{ getVariableValuePreview(row) }}</span>
               </template>
             </ElTableColumn>
-            <ElTableColumn prop="description" label="描述" min-width="150" />
-            <ElTableColumn label="引用语法" width="180">
+            <ElTableColumn prop="description" :label="t('startNodeVariableManager.description')" min-width="150" />
+            <ElTableColumn :label="t('startNodeVariableManager.reference_syntax')" width="180">
               <template #default="{ row }">
                 <code class="variable-reference">{{ formatVariableReference(row) }}</code>
               </template>
             </ElTableColumn>
-            <ElTableColumn label="操作" width="80">
+            <ElTableColumn :label="t('startNodeVariableManager.operations')" width="80">
               <template #default="{ row }">
                 <ElPopconfirm
-                  title="确定要删除这个变量吗？"
+                  :title="t('startNodeVariableManager.confirm_delete')"
                   @confirm="handleDeleteVariable(row)"
                 >
                   <template #reference>
@@ -419,8 +419,8 @@ onMounted(() => {
           
           <!-- 空状态 -->
           <div v-if="conversationVariables.length === 0 && !loading" class="empty-state">
-            <div class="empty-text">暂无对话变量</div>
-            <div class="empty-hint">点击上方"新增变量"按钮创建第一个对话变量</div>
+            <div class="empty-text">{{ t('startNodeVariableManager.no_conversation_variables') }}</div>
+            <div class="empty-hint">{{ t('startNodeVariableManager.empty_hint') }}</div>
           </div>
         </div>
       </ElTabPane>
@@ -429,7 +429,7 @@ onMounted(() => {
     <!-- 新增变量对话框 -->
     <ElDialog
       v-model="addVariableDialogVisible"
-      title="新增对话变量"
+      :title="t('startNodeVariableManager.add_conversation_variable')"
       width="500px"
       :close-on-click-modal="false"
     >
@@ -439,15 +439,16 @@ onMounted(() => {
         :rules="addVariableRules"
         label-width="80px"
       >
-        <ElFormItem label="变量名" prop="name">
+        <ElFormItem :label="t('startNodeVariableManager.variable_name_label')" prop="name">
           <ElInput
             v-model="newVariable.name"
-            placeholder="请输入变量名（如：user_name）"
+            :placeholder="t('startNodeVariableManager.placeholders.variable_name')"
           />
         </ElFormItem>
         
-        <ElFormItem label="变量类型" prop="var_type">
-          <ElSelect v-model="newVariable.var_type" placeholder="请选择变量类型">
+        <ElFormItem :label="t('startNodeVariableManager.variable_type_label')" prop="var_type">
+          <ElSelect v-model="newVariable.var_type" :placeholder="t('startNodeVariableManager.placeholders.select_variable_type')"
+>
             <ElOption
               v-for="type in variableTypes.types"
               :key="type"
@@ -457,13 +458,13 @@ onMounted(() => {
           </ElSelect>
         </ElFormItem>
         
-        <ElFormItem label="变量值" prop="value">
+        <ElFormItem :label="t('startNodeVariableManager.variable_value_label')" prop="value">
           <!-- String, Number, Secret 类型 -->
           <ElInput
             v-if="['string', 'number', 'secret'].includes(newVariable.var_type)"
             v-model="newVariable.value"
             :type="getInputType(newVariable.var_type)"
-            placeholder="请输入变量值"
+            :placeholder="t('startNodeVariableManager.placeholders.variable_value')"
             :show-password="newVariable.var_type === 'secret'"
           />
           
@@ -471,7 +472,7 @@ onMounted(() => {
           <ElSelect
             v-else-if="newVariable.var_type === 'boolean'"
             v-model="newVariable.value"
-            placeholder="请选择布尔值"
+            :placeholder="t('startNodeVariableManager.placeholders.boolean_value')"
           >
             <ElOption label="true" value="true" />
             <ElOption label="false" value="false" />
@@ -483,14 +484,14 @@ onMounted(() => {
             v-model="newVariable.value"
             type="textarea"
             :rows="4"
-            placeholder="请输入JSON格式的对象"
+            :placeholder="t('startNodeVariableManager.placeholders.json_object')"
           />
           
           <!-- Array[String] 类型 -->
           <ElInput
             v-else-if="newVariable.var_type === 'array[string]'"
             v-model="newVariable.value"
-            placeholder="请输入逗号分隔的字符串，如：item1,item2,item3"
+            :placeholder="t('startNodeVariableManager.placeholders.string_array')"
           />
           
           <!-- File 和 Array[File] 类型提示 -->
@@ -499,14 +500,14 @@ onMounted(() => {
             class="file-type-tip"
           >
             <el-alert
-              title="文件类型变量将在调试时设置具体文件"
+              :title="t('startNodeVariableManager.file_type_tip')"
               type="info"
               :closable="false"
               show-icon
             />
             <ElInput
               v-model="newVariable.value"
-              placeholder="可选：输入默认值或描述"
+              :placeholder="t('startNodeVariableManager.placeholders.file_default')"
             />
           </div>
           
@@ -516,28 +517,28 @@ onMounted(() => {
             v-model="newVariable.value"
             type="textarea"
             :rows="3"
-            placeholder="请输入JSON数组格式，如：[1,2,3] 或 [{},{}]"
+            :placeholder="t('startNodeVariableManager.placeholders.json_array')"
           />
           
           <!-- 默认类型 -->
           <ElInput
             v-else
             v-model="newVariable.value"
-            placeholder="请输入变量值"
+            :placeholder="t('startNodeVariableManager.placeholders.variable_value')"
           />
         </ElFormItem>
         
-        <ElFormItem label="描述">
+        <ElFormItem :label="t('startNodeVariableManager.description_label')">
           <ElInput
             v-model="newVariable.description"
-            placeholder="请输入变量描述（可选）"
+            :placeholder="t('startNodeVariableManager.placeholders.description')"
           />
         </ElFormItem>
       </ElForm>
       
       <template #footer>
-        <ElButton @click="addVariableDialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="handleSaveVariable">保存</ElButton>
+        <ElButton @click="addVariableDialogVisible = false">{{ t('startNodeVariableManager.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSaveVariable">{{ t('startNodeVariableManager.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

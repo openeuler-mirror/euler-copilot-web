@@ -2,17 +2,17 @@
   <div class="variable-chooser">
     <div class="variable-row">
       <div class="variable-name-section" v-if="showVariableName">
-        <label class="field-label">变量名：</label>
+        <label class="field-label">{{ $t('variableChooser.variable_name_label') }}</label>
         <el-input
           v-model="localVariableName"
-          :placeholder="placeholder"
+          :placeholder="placeholder || $t('variableChooser.enter_variable_name')"
           size="small"
           @input="handleNameChange"
         />
       </div>
       
       <div class="variable-selector-section" :class="selectorClasses">
-        <label class="field-label" v-if="showLabel">选择变量：</label>
+        <label class="field-label" v-if="showLabel">{{ $t('variableChooser.select_variable_label') }}</label>
         
         <!-- 已选变量标签显示 -->
         <div v-if="selectedVariable" class="selected-variable-display" :class="selectorClasses">
@@ -36,7 +36,7 @@
                 class="clear-btn"
                 @click="clearVariable"
                 type="button"
-                title="清空变量选择"
+                :title="$t('variableChooser.clear_variable_selection')"
               >
                 <el-icon><Close /></el-icon>
               </button>
@@ -64,14 +64,14 @@
       </div>
       
       <div class="actions-section" v-if="showActions">
-        <el-button 
-          type="danger" 
-          size="small" 
-          :icon="Delete"
+        <button 
+          type="button"
           @click="handleRemove"
           class="remove-btn"
-          circle
-        />
+          :title="$t('variableChooser.remove_variable')"
+        >
+          <el-icon><Delete /></el-icon>
+        </button>
       </div>
     </div>
     
@@ -79,23 +79,23 @@
     <div class="variable-info" v-if="selectedVariable && showVariableInfo">
       <div class="info-grid">
         <div class="info-item">
-          <span class="info-label">源变量：</span>
+          <span class="info-label">{{ $t('variableChooser.source_variable_label') }}</span>
           <code class="info-value">{{ selectedVariable.name }}</code>
         </div>
         <div class="info-item">
-          <span class="info-label">类型：</span>
+          <span class="info-label">{{ $t('variableChooser.type_label') }}</span>
           <el-tag size="small" type="primary">
             {{ getVariableTypeDisplay(selectedVariable.var_type) }}
           </el-tag>
         </div>
         <div class="info-item">
-          <span class="info-label">作用域：</span>
+          <span class="info-label">{{ $t('variableChooser.scope_label') }}</span>
           <el-tag size="small" :type="getScopeTagType(selectedVariable.scope)">
             {{ getScopeDisplay(selectedVariable.scope) }}
           </el-tag>
         </div>
         <div class="info-item" v-if="selectedVariable.description">
-          <span class="info-label">描述：</span>
+          <span class="info-label">{{ $t('variableChooser.description_label') }}</span>
           <span class="info-value">{{ selectedVariable.description }}</span>
         </div>
       </div>
@@ -113,7 +113,8 @@
  */
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { ElInput, ElButton, ElTag, ElIcon } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import { ElInput, ElTag, ElIcon } from 'element-plus'
 import { Delete, Close } from '@element-plus/icons-vue'
 import VariableSelector from './VariableSelector.vue'
 import { listVariables } from '@/api/variable'
@@ -187,8 +188,8 @@ const props = withDefaults(defineProps<Props>(), {
   noBorderRadius: false,
   transparentBackground: false,
   customClass: '',
-  placeholder: '输入变量名称',
-  selectorPlaceholder: '选择变量',
+  placeholder: '',
+  selectorPlaceholder: '',
   prefixIcon: '',
   suffixLabel: ''
 })
@@ -202,6 +203,8 @@ const emit = defineEmits<{
   'name-changed': [name: string]
   'remove': []
 }>()
+
+const { t } = useI18n()
 
 const localVariableName = ref(props.variableName)
 const selectedVariable = ref<Variable | undefined>(props.selectedVariable)
@@ -244,7 +247,7 @@ const findVariableByReference = async (parsedRef: { scope: string; step_id?: str
           var_type: selfVar.type || 'string',
           scope: 'self',
           value: `{{self.${selfVar.name}}}`,
-          description: `当前节点变量: ${selfVar.name}`
+          description: t('variableChooser.current_node_variable', { name: selfVar.name })
         }
       }
       return undefined
@@ -285,7 +288,7 @@ const findVariableByReference = async (parsedRef: { scope: string; step_id?: str
     })
     
   } catch (error) {
-    console.error('查找变量失败:', error)
+    console.error(t('variableChooser.find_variable_failed'), error)
     return undefined
   }
 }
@@ -322,7 +325,7 @@ const createVariableFromReference = (parsedRef: { scope: string; step_id?: strin
       var_type: 'string', // 默认类型，实际类型在运行时确定
       scope: parsedRef.scope,
       value: `{{${parsedRef.scope}.${parsedRef.step_id}.${parsedRef.name}}}`,
-      description: `对话变量: ${parsedRef.name}`,
+      description: t('variableChooser.conversation_variable', { name: parsedRef.name }),
       step_id: parsedRef.step_id,
       step: parsedRef.step_id // 使用step_id作为step的默认值
     }
@@ -332,7 +335,7 @@ const createVariableFromReference = (parsedRef: { scope: string; step_id?: strin
       var_type: 'string', // 默认类型
       scope: parsedRef.scope,
       value: `{{${parsedRef.scope}.${parsedRef.name}}}`,
-      description: `${parsedRef.scope}变量: ${parsedRef.name}`
+      description: t('variableChooser.scope_variable', { scope: parsedRef.scope, name: parsedRef.name })
     }
   }
 }
@@ -358,7 +361,7 @@ const initializeSelectedVariable = async () => {
         }
       } catch (error) {
         // 如果API查询失败，保持使用快速创建的变量对象
-        console.debug('变量详细信息查询失败，使用默认信息:', error)
+        console.debug(t('variableChooser.variable_detail_query_failed'), error)
       }
     }
   }
@@ -392,7 +395,7 @@ watch(() => props.modelValue, async (newVal) => {
           emit('update:selectedVariable', foundVariable)
         }
       } catch (error) {
-        console.debug('变量详细信息查询失败，使用默认信息:', error)
+        console.debug(t('variableChooser.variable_detail_query_failed'), error)
       }
     }
   } else if (!newVal) {
@@ -422,7 +425,7 @@ watch(() => props.selfVariables, async () => {
           emit('update:selectedVariable', foundVariable)
         }
       } catch (error) {
-        console.debug('变量详细信息查询失败，使用默认信息:', error)
+        console.debug(t('variableChooser.variable_detail_query_failed'), error)
       }
     }
   }
@@ -480,33 +483,12 @@ const getFullVariableReference = (variable: Variable): string => {
 
 // 获取变量类型显示名称
 const getVariableTypeDisplay = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    string: '字符串',
-    number: '数字',
-    boolean: '布尔值',
-    object: '对象',
-    secret: '密钥',
-    file: '文件',
-    'array[any]': '数组',
-    'array[string]': '字符串数组',
-    'array[number]': '数字数组',
-    'array[object]': '对象数组',
-    'array[file]': '文件数组',
-    'array[boolean]': '布尔数组',
-    'array[secret]': '密钥数组'
-  }
-  return typeMap[type] || type
+  return t(`variableChooser.variable_types.${type}`, type)
 }
 
 // 获取作用域显示名称
 const getScopeDisplay = (scope: string): string => {
-  const scopeMap: Record<string, string> = {
-    system: '系统变量',
-    user: '用户变量',
-    env: '环境变量',
-    conversation: '对话变量'
-  }
-  return scopeMap[scope] || scope
+  return t(`variableChooser.scopes.${scope}`, scope)
 }
 
 // 获取作用域标签类型
@@ -522,7 +504,7 @@ const getScopeTagType = (scope: string): 'primary' | 'success' | 'info' | 'warni
 
 // 计算placeholder
 const computedPlaceholder = computed(() => {
-  let placeholder = props.selectorPlaceholder
+  let placeholder = props.selectorPlaceholder || t('variableChooser.select_variable')
   
   if (props.prefixIcon) {
     placeholder = `{${props.prefixIcon}} ${placeholder}`
@@ -575,6 +557,10 @@ const selectorClasses = computed(() => {
         margin-bottom: 4px;
         line-height: 16px;
         height: 16px;
+        
+        body[theme='dark'] & {
+          color: #d3dce9;
+        }
       }
     }
     
@@ -590,6 +576,10 @@ const selectorClasses = computed(() => {
         margin-bottom: 4px;
         line-height: 16px;
         height: 16px;
+        
+        body[theme='dark'] & {
+          color: #d3dce9;
+        }
       }
       
       // 确保变量选择器与输入框高度一致
@@ -642,6 +632,7 @@ const selectorClasses = computed(() => {
       align-items: center;
       
         .variable-tag {
+          max-width: 200px;
           display: flex !important;
           align-items: center !important;
           justify-content: space-between !important;
@@ -761,7 +752,7 @@ const selectorClasses = computed(() => {
       padding-bottom: 0;
       padding-top: 20px;
       
-              .remove-btn {
+        .remove-btn {
           width: 24px;
           height: 24px;
           border-radius: 50%;
@@ -773,15 +764,32 @@ const selectorClasses = computed(() => {
           background: var(--el-color-danger-light-9);
           color: var(--el-color-danger);
           transition: all 0.2s ease;
+          cursor: pointer;
+          outline: none;
+          
+          body[theme='dark'] & {
+            background: var(--el-color-danger-dark-2);
+            color: white;
+          }
           
           &:hover {
             background: var(--el-color-danger);
             color: #fff;
             transform: scale(1.1);
+            
+            body[theme='dark'] & {
+              background: var(--el-color-danger-light-3);
+              color: #fff;
+            }
           }
           
           &:active {
             transform: scale(0.95);
+          }
+          
+          &:focus {
+            outline: 2px solid var(--el-color-danger);
+            outline-offset: 2px;
           }
           
           :deep(.el-icon) {
@@ -798,6 +806,11 @@ const selectorClasses = computed(() => {
     border-radius: 6px;
     border: 1px solid var(--el-border-color-lighter);
     
+    body[theme='dark'] & {
+      background: #1f2329;
+      border-color: var(--el-border-color);
+    };
+    
     .info-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -813,11 +826,19 @@ const selectorClasses = computed(() => {
           color: var(--el-text-color-secondary);
           font-weight: 500;
           min-width: 60px;
+          
+          body[theme='dark'] & {
+            color: #d3dce9;
+          }
         }
         
         .info-value {
           font-size: 12px;
           color: var(--el-text-color-primary);
+          
+          body[theme='dark'] & {
+            color: #e4e8ee;
+          }
           
           &.code {
             background: var(--el-fill-color);
@@ -825,6 +846,10 @@ const selectorClasses = computed(() => {
             border-radius: 3px;
             font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
             color: var(--el-color-primary);
+            
+            body[theme='dark'] & {
+              background: var(--o-bash-bg, #2a2f37);
+            }
           }
         }
         
@@ -835,6 +860,10 @@ const selectorClasses = computed(() => {
           font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
           font-size: 12px;
           color: var(--el-color-primary);
+          
+          body[theme='dark'] & {
+            background: var(--o-bash-bg, #2a2f37);
+          }
         }
       }
     }

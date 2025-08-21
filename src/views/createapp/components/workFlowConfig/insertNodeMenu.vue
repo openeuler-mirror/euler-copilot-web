@@ -12,54 +12,30 @@
       @click.stop
     >
       <div class="menu-header">
-        <span>选择要插入的节点</span>
+        <span>{{ $t('common.search') }}{{ $t('flow.nodes') }}</span>
         <div class="close-btn" @click="handleClose">×</div>
       </div>
       
-      <!-- Tab切换 -->
-      <div class="menu-tabs">
-        <div 
-          class="tab-item" 
-          :class="{ active: activeTab === 'nodes' }"
-          @click="activeTab = 'nodes'"
-        >
-          节点
-        </div>
-        <div 
-          class="tab-item disabled"
-          :class="{ active: activeTab === 'apps' }"
-        >
-          应用
-        </div>
-      </div>
-      
+      <!-- 使用公共的节点选择器组件 -->
       <div class="menu-content">
-        <!-- 节点Tab Panel -->
-        <div v-if="activeTab === 'nodes'" class="tab-panel">
-          <NodeListPanel
-            :api-service-list="apiServiceList"
-            :exclude-node-types="excludeNodeTypes"
-            :extra-node-types="extraNodeTypes"
-            search-placeholder="搜索节点..."
-            :enable-drag="false"
-            @node-click="handleSelectNode"
-          />
-        </div>
-        
-        <!-- 应用Tab Panel (暂时禁用) -->
-        <div v-if="activeTab === 'apps'" class="tab-panel">
-          <div class="disabled-panel">
-            <div class="disabled-text">应用功能即将上线，敬请期待...</div>
-          </div>
-        </div>
+        <NodeSelector
+          :api-service-list="apiServiceList"
+          :exclude-node-types="excludeNodeTypes"
+          :extra-node-types="extraNodeTypes"
+          :search-placeholder="$t('common.search') + $t('flow.nodes') + '...'"
+          :enable-drag="false"
+          :reset-tab-on-show="visible"
+          @node-click="handleSelectNode"
+          @plugin-click="handleSelectPlugin"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import NodeListPanel from './NodeListPanel.vue';
+import { computed } from 'vue';
+import NodeSelector from './NodeSelector.vue';
 
 // Props
 interface Props {
@@ -84,12 +60,12 @@ const props = withDefaults(defineProps<Props>(), {
 interface Emits {
   (e: 'close'): void;
   (e: 'selectNode', node: any): void;
+  (e: 'selectPlugin', plugin: any): void;
 }
 
 const emit = defineEmits<Emits>();
 
-// 响应式数据
-const activeTab = ref('nodes');
+// 响应式数据已移动到NodeSelector组件中
 
 // 计算菜单样式，包含边界检测
 const menuStyle = computed(() => {
@@ -185,6 +161,11 @@ const handleClose = () => {
 const handleSelectNode = (node: any) => {
   emit('selectNode', node);
 };
+
+const handleSelectPlugin = (plugin: any) => {
+  // 插件选择时，统一通过selectNode事件处理，这样可以复用现有的节点插入逻辑
+  emit('selectNode', plugin);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -194,7 +175,7 @@ const handleSelectNode = (node: any) => {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 2000; /* 确保低于ElMessage等全局组件的z-index */
   background: rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(2px);
 }
@@ -207,9 +188,10 @@ const handleSelectNode = (node: any) => {
   border: 1px solid #e1e4e8;
   width: 400px;
   max-height: 80vh;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
   animation: menuSlideIn 0.2s ease-out;
-  z-index: 10000;
+  z-index: 2001; /* 确保菜单在overlay之上，但低于全局组件 */
   display: flex;
   flex-direction: column;
   
@@ -249,66 +231,12 @@ const handleSelectNode = (node: any) => {
     }
   }
   
-  .menu-tabs {
-    display: flex;
-    padding: 12px 20px;
-    border-bottom: 1px solid #e1e4e8;
-    background: #f8f9fa;
-    
-    .tab-item {
-      padding: 8px 16px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #586069;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-      
-      &.active {
-        color: #6395fd;
-        border-bottom-color: #6395fd;
-      }
-      
-      &.disabled {
-        color: #c0c4cc;
-        cursor: not-allowed;
-      }
-      
-      &:hover:not(.disabled) {
-        color: #6395fd;
-      }
-    }
-  }
-  
   .menu-content {
-    padding: 0;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
-    
-    .tab-panel {
-      padding: 0;
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    
-
-    
-    .disabled-panel {
-      text-align: center;
-      padding: 60px 20px;
-      color: #c0c4cc;
-      font-size: 14px;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
   }
 }
 
@@ -344,33 +272,25 @@ const handleSelectNode = (node: any) => {
     }
   }
   
-  .menu-tabs {
-    background: #374151;
-    border-bottom-color: #4a5568;
-    
-    .tab-item {
-      color: #a0aec0;
-      
-      &.active {
-        color: #6395fd;
-        border-bottom-color: #6395fd;
-      }
-      
-      &.disabled {
-        color: #718096;
-        cursor: not-allowed;
-      }
-      
-      &:hover:not(.disabled) {
-        color: #e2e8f0;
-      }
-    }
-  }
-  
-  .menu-content {
-    .disabled-panel {
-      color: #718096;
-    }
-  }
+}
+</style>
+
+<style>
+/* 确保 ElMessage 不受模糊效果影响 */
+.el-message {
+  z-index: 9999 !important;
+}
+
+/* 确保其他全局组件也不受影响 */
+.el-notification {
+  z-index: 9999 !important;
+}
+
+.el-loading-mask {
+  z-index: 9999 !important;
+}
+
+.el-dialog__wrapper {
+  z-index: 9999 !important;
 }
 </style> 

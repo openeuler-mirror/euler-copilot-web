@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { Position, Handle } from '@vue-flow/core';
-import { ref, computed, watch, onMounted, nextTick, readonly, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick, readonly, onUnmounted, Teleport } from 'vue';
 import { Delete, WarnTriangleFilled, CopyDocument, Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+import { IconPlusCircle } from '@computing/opendesign-icons';
 import { getSrcIcon, getNodeClass, nodeTypeToIcon } from '../types';
 import StopFilled from '@/assets/svgs/StopFilled.svg';
 import Refresh from '@/assets/svgs/Refresh.svg';
@@ -13,6 +14,7 @@ import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { getId, sanitizeNodeData, createNewNode } from './useDnD';
 import { useChangeThemeStore } from '@/store';
+import i18n from '@/i18n';
 
 const props = defineProps({
   id: {
@@ -55,7 +57,6 @@ const props = defineProps({
 
 const emits = defineEmits(['delNode', 'editYamlDrawer', 'updateConnectHandle', 'editLoopNode', 'editSubFlowNode', 'showInsertNodeMenu', 'insertNodeFromHandle', 'updateSubFlowId']);
 
-const { t } = useI18n();
 const themeStore = useChangeThemeStore();
 
 
@@ -64,7 +65,7 @@ const extraLoopNodeTypes = ref([
   {
     nodeId: 'continue',
     callId: 'continue',
-    name: '跳过本轮',
+    name: i18n.global.t('flow.node_names.skip_round'),
     description: '跳过当前循环轮次，继续下一轮',
     type: 'logic',
     icon: nodeTypeToIcon.continue,
@@ -73,7 +74,7 @@ const extraLoopNodeTypes = ref([
   {
     nodeId: 'break',
     callId: 'break', 
-    name: '退出循环',
+    name: i18n.global.t('flow.node_names.exit_loop'),
     description: '跳出整个循环，结束循环执行',
     type: 'logic',
     icon: nodeTypeToIcon.break,
@@ -127,50 +128,8 @@ const getDefaultBranch = (branches: any[]) => {
   return branches.find(branch => branch.isDefault);
 };
 
-// 操作符中文映射
-const operatorLabels = {
-  'string_equal': '等于',
-  'string_not_equal': '不等于',
-  'string_contains': '包含',
-  'string_not_contains': '不包含',
-  'string_starts_with': '开始于',
-  'string_ends_with': '结束于',
-  'string_length_equal': '长度等于',
-  'string_length_greater_than': '长度大于',
-  'string_length_greater_than_or_equal': '长度大于等于',
-  'string_length_less_than': '长度小于',
-  'string_length_less_than_or_equal': '长度小于等于',
-  'string_regex_match': '正则匹配',
-  'number_equal': '等于',
-  'number_not_equal': '不等于',
-  'number_greater_than': '大于',
-  'number_greater_than_or_equal': '大于等于',
-  'number_less_than': '小于',
-  'number_less_than_or_equal': '小于等于',
-  'bool_equal': '等于',
-  'bool_not_equal': '不等于',
-  'dict_equal': '等于',
-  'dict_not_equal': '不等于',
-  'dict_contains_key': '包含键',
-  'dict_not_contains_key': '不包含键',
-};
-
-// VariableAssign 操作类型中文映射
-const variableOperationLabels = {
-  'overwrite': '覆盖',
-  'clear': '清空',
-  'add': '加法',
-  'subtract': '减法',
-  'multiply': '乘法',
-  'divide': '除法',
-  'modulo': '求余',
-  'power': '乘幂',
-  'sqrt': '开方',
-  'append': '追加',
-  'extend': '扩展',
-  'pop_first': '移除首项',
-  'pop_last': '移除尾项'
-};
+// 使用国际化函数获取操作符标签
+const { t } = useI18n();
 
 // 获取VariableAssign节点的变量操作列表
 const getVariableOperations = (nodeData: any) => {
@@ -180,7 +139,7 @@ const getVariableOperations = (nodeData: any) => {
 
 // 获取操作类型的显示名称
 const getOperationDisplayName = (operation: string): string => {
-  return variableOperationLabels[operation] || operation;
+  return t(`opertion.${operation}`) || operation;
 };
 
 // 提取变量名的最后一部分（后缀）
@@ -269,10 +228,10 @@ const formatConditionsHtml = (conditions: any[], logic: string) => {
     
     // 获取操作符中文 - 添加操作符样式
     const operatorKey = condition.operator || condition.operate;
-    let operatorLabel = operatorLabels[operatorKey];
+    let operatorLabel = t(`opertion.${operatorKey}`);
     
     // 如果没有找到映射，提供简单的后备显示
-    if (!operatorLabel) {
+    if (!operatorLabel || operatorLabel === `opertion.${operatorKey}`) {
       console.warn(`[Loop显示] 未找到操作符映射: ${operatorKey}`);
       switch(operatorKey) {
         case 'number_less_than_or_equal':
@@ -673,7 +632,7 @@ const loadSubFlowData = async () => {
       
       // 更新loopSubFlow状态
       loopSubFlow.value = {
-        name: flowData.name || '循环子工作流',
+        name: flowData.name || i18n.global.t('flow.node_names.loop_subflow'),
         description: flowData.description || '',
         nodes: (flowData.nodes || []).filter((node: any) => node.callId !== 'Loop' && node.callId !== 'end'), // 过滤掉Loop节点和结束节点
         edges: flowData.edges || [],
@@ -797,7 +756,7 @@ const initializeEmptySubFlow = () => {
   const defaultNodes = [
     {
       stepId: 'start',
-      name: '开始',
+      name: i18n.global.t('flow.node_names.start'),
       description: '循环开始节点',
       callId: 'start',
       nodeId: 'Empty',
@@ -809,7 +768,7 @@ const initializeEmptySubFlow = () => {
   ];
 
   loopSubFlow.value = {
-    name: '循环子工作流',
+    name: i18n.global.t('flow.node_names.loop_subflow'),
     description: '描述循环内部的处理逻辑',
     nodes: defaultNodes,
     edges: [],
@@ -871,7 +830,7 @@ const saveSubFlow = async (): Promise<string> => {
       flow: {
         ...loopSubFlow.value,
         flowId: finalSubFlowId,
-        name: loopSubFlow.value.name || '循环子工作流',
+        name: loopSubFlow.value.name || i18n.global.t('flow.node_names.loop_subflow'),
         description: loopSubFlow.value.description || '',
         enable: true,
         editable: true,
@@ -1307,6 +1266,13 @@ const insertEdgeInfo = ref<{
   sourceNodeId: string;
   targetNodeId: string;
   midpoint: { x: number; y: number };
+} | null>(null);
+
+// 子画布右键菜单相关状态
+const subCanvasContextMenuVisible = ref(false);
+const subCanvasContextMenuPosition = ref({ x: 0, y: 0 });
+const subCanvasContextMenuData = ref<{
+  canvasPosition: { x: number; y: number };
 } | null>(null);
 
 
@@ -2505,6 +2471,14 @@ const getSubNodeClass = (data: any) => {
 
 
 
+// 全局点击事件处理，关闭子画布右键菜单
+const handleGlobalClick = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.sub-canvas-context-menu')) {
+    closeSubCanvasContextMenu();
+  }
+};
+
 onMounted(async () => {
   try {
     // 设置全局引用，供父组件调用
@@ -2521,6 +2495,9 @@ onMounted(async () => {
         loopSubFlow: readonly(loopSubFlow),
       };
     }
+    
+    // 添加全局点击事件监听器，用于关闭右键菜单
+    document.addEventListener('click', handleGlobalClick);
     
     // watch已经通过immediate: true处理了初始化，这里不需要重复调用
     if (!isInitialized.value) {
@@ -2556,6 +2533,9 @@ onUnmounted(() => {
   // 清理连接事件监听器
   document.removeEventListener('mousemove', handleConnectionDrag, { capture: true } as any);
   document.removeEventListener('mouseup', handleConnectionEnd, { capture: true } as any);
+  
+  // 清理全局点击事件监听器
+  document.removeEventListener('click', handleGlobalClick);
   
   // 清理插入节点状态
   insertEdgeInfo.value = null;
@@ -2596,6 +2576,9 @@ const insertNodeIntoSubFlow = (nodeData: any, edgeInfo: any) => {
   if (edgeInfo && edgeInfo.isFromNodeHandle) {
     // 从节点Handle插入的逻辑
     handleInsertNodeFromHandle(nodeData, edgeInfo);
+  } else if (edgeInfo && edgeInfo.isSubCanvasContextMenu) {
+    // 从子画布右键菜单插入的逻辑
+    handleInsertNodeFromSubCanvasContextMenu(nodeData, edgeInfo);
   } else {
     // 设置insertEdgeInfo，然后调用现有的handleInsertNodeSelect（用于边中点插入）
     insertEdgeInfo.value = edgeInfo;
@@ -2649,6 +2632,305 @@ const handleSubCanvasWheel = (event: WheelEvent) => {
   // 不阻止原始事件，让它自然传播到VueFlow
   // 这样VueFlow能接收到原始的事件进行处理
 };
+
+// 处理子画布的右键菜单事件
+const handleSubCanvasContextMenu = (event: MouseEvent) => {
+  // 阻止事件冒泡到父元素，防止触发主画布的右键菜单
+  event.stopPropagation();
+  
+  // 检查是否点击在节点上，如果是则不显示右键菜单
+  const target = event.target as HTMLElement;
+  
+  // 排除背景元素：背景网格、SVG背景等不算作节点
+  const isBackgroundElement = target.closest('.vue-flow__background') || 
+                              target.tagName === 'rect' || 
+                              target.tagName === 'svg' ||
+                              target.classList.contains('vue-flow__background-pattern');
+  
+  // 只有真正的节点容器才算作节点，排除背景元素
+  if (!isBackgroundElement && (target.closest('.vue-flow__node') || target.closest('.embeddedCustomNodeStyle'))) {
+    return;
+  }
+  
+  // 检查是否禁用状态
+  if (props.disabled) {
+    return;
+  }
+  
+  // 阻止默认右键菜单
+  event.preventDefault();
+  
+  // 获取外部VueFlow的缩放倍率
+  const vueFlowZoom = getVueFlowZoom();
+  
+  // 获取子画布元素
+  const canvasElement = document.querySelector(`#loop-${props.id}`);
+  if (!canvasElement) return;
+  
+  const canvasRect = canvasElement.getBoundingClientRect();
+  
+  // 计算鼠标在子画布内的相对位置（子画布坐标系）
+  const canvasX = (event.clientX - canvasRect.left) / vueFlowZoom;
+  const canvasY = (event.clientY - canvasRect.top) / vueFlowZoom;
+  
+  // 计算菜单位置，确保在合适的位置显示
+  let menuX = event.clientX;
+  let menuY = event.clientY;
+  
+  // 菜单尺寸
+  const menuWidth = 160;
+  const menuHeight = 60;
+  
+  // 确保菜单在视口内显示，优先显示在鼠标右下方
+  if (event.clientX + menuWidth > window.innerWidth) {
+    menuX = event.clientX - menuWidth;
+  }
+  
+  if (event.clientY + menuHeight > window.innerHeight) {
+    menuY = event.clientY - menuHeight;
+  }
+  
+  // 确保菜单不会超出视口边界
+  menuX = Math.max(10, Math.min(menuX, window.innerWidth - menuWidth - 10));
+  menuY = Math.max(10, Math.min(menuY, window.innerHeight - menuHeight - 10));
+  
+  // 保存右键菜单位置和画布坐标
+  subCanvasContextMenuPosition.value = {
+    x: menuX,
+    y: menuY
+  };
+  
+  subCanvasContextMenuData.value = {
+    canvasPosition: { x: canvasX, y: canvasY }
+  };
+  
+  // 显示子画布右键菜单
+  subCanvasContextMenuVisible.value = true;
+};
+
+// 处理SVG区域的右键菜单事件
+const handleSvgContextMenu = (event: MouseEvent) => {
+  // 检查是否点击在边线上，如果是则让CustomEdge处理
+  const target = event.target as HTMLElement;
+  
+  // 检查是否点击在CustomEdge路径上
+  if (target.tagName === 'path' && target.classList.contains('edge-path')) {
+    // 点击在边线上，不处理（让CustomEdge的@contextmenu.prevent处理）
+    return;
+  }
+  
+  // 检查是否点击在其他边相关元素上
+  if (target.closest('.flowEdge') || target.closest('[data-testid^="rf__edge"]')) {
+    // 点击在边相关元素上，不处理
+    return;
+  }
+  
+  // 点击在SVG空白区域，调用主要的右键菜单处理函数
+  handleSubCanvasContextMenu(event);
+};
+
+// 关闭子画布右键菜单
+const closeSubCanvasContextMenu = () => {
+  subCanvasContextMenuVisible.value = false;
+  subCanvasContextMenuData.value = null;
+};
+
+// 处理子画布右键菜单的"添加节点"选项
+const handleSubCanvasAddNode = () => {
+  if (!subCanvasContextMenuData.value) return;
+  
+  // 构造InsertNodeMenu数据
+  const insertMenuData = {
+    position: subCanvasContextMenuPosition.value,
+    direction: subCanvasContextMenuPosition.value.x > window.innerWidth / 2 ? 'left' : 'right',
+    loopNodeId: props.id,
+    subFlowId: loopSubFlow.value.flowId,
+    extraNodeTypes: extraLoopNodeTypes.value,
+    // 使用特殊的edgeInfo结构来标识这是子画布右键菜单
+    edgeInfo: {
+      isSubCanvasContextMenu: true,
+      insertPosition: subCanvasContextMenuData.value.canvasPosition,
+      loopNodeId: props.id
+    }
+  };
+  
+  // 关闭右键菜单
+  closeSubCanvasContextMenu();
+  
+  // 发射showInsertNodeMenu事件
+  emits('showInsertNodeMenu', insertMenuData);
+};
+
+// 处理子画布右键菜单的"调试工作流"选项
+const handleSubCanvasDebugWorkflow = () => {
+  closeSubCanvasContextMenu();
+  // 触发父组件的调试功能，传递LoopNode的信息
+  ElMessage.info('子工作流调试功能开发中...');
+  // TODO: 可以发射事件给父组件来触发调试
+  // emits('debugSubFlow', props.id);
+};
+
+// 处理子画布右键菜单的"导出YAML"选项
+const handleSubCanvasExportYAML = () => {
+  closeSubCanvasContextMenu();
+  // 导出子工作流的YAML
+  try {
+    const subFlowData = {
+      name: loopSubFlow.value.name || `LoopSubFlow_${props.id}`,
+      description: loopSubFlow.value.description || '',
+      nodes: loopSubFlow.value.nodes,
+      edges: loopSubFlow.value.edges,
+      flowId: loopSubFlow.value.flowId
+    };
+    
+    const yamlContent = `# 循环子工作流导出
+# 循环节点ID: ${props.id}
+# 导出时间: ${new Date().toISOString()}
+
+name: ${subFlowData.name}
+description: ${subFlowData.description}
+flowId: ${subFlowData.flowId}
+
+nodes:
+${subFlowData.nodes.map(node => `  - stepId: ${node.stepId}
+    name: ${node.name}
+    callId: ${node.callId}
+    position:
+      x: ${node.position.x}
+      y: ${node.position.y}`).join('\n')}
+
+edges:
+${subFlowData.edges.map(edge => `  - edgeId: ${edge.edgeId}
+    sourceNode: ${edge.sourceNode}
+    targetNode: ${edge.targetNode}
+    branchId: ${edge.branchId || ''}`).join('\n')}
+`;
+    
+    // 创建下载
+    const blob = new Blob([yamlContent], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${subFlowData.name || 'loop-subflow'}.yaml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    ElMessage.success('子工作流YAML导出成功');
+  } catch (error) {
+    console.error('导出子工作流YAML失败:', error);
+    ElMessage.error('导出子工作流YAML失败');
+  }
+};
+
+// 处理子画布右键菜单的"导入YAML"选项
+const handleSubCanvasImportYAML = () => {
+  closeSubCanvasContextMenu();
+  ElMessage.info('子工作流YAML导入功能开发中...');
+  // TODO: 实现子工作流的YAML导入功能
+  // 可以创建一个隐藏的文件输入框来选择YAML文件
+};
+
+/**
+ * 处理从子画布右键菜单插入节点
+ * @param nodeData 要插入的节点数据
+ * @param edgeInfo 边信息，包含插入位置
+ */
+const handleInsertNodeFromSubCanvasContextMenu = (nodeData: any, edgeInfo: any) => {
+  try {
+    // 安全检查：禁止在LoopNode内部插入Loop节点
+    if (nodeData.callId === 'Loop') {
+      ElMessage.error('禁止在循环节点内部插入嵌套循环节点');
+      return;
+    }
+
+    // 创建新节点ID
+    const newNodeId = getId();
+    
+    // 使用传入的插入位置，并稍作调整使节点居中
+    const insertPosition = edgeInfo.insertPosition;
+    const newNodePosition = {
+      x: Math.max(0, insertPosition.x - 160), // 节点宽度的一半，使节点中心对准点击位置
+      y: Math.max(0, insertPosition.y - 40)   // 节点高度的一半
+    };
+
+    // 使用公共函数创建标准化的节点数据
+    const standardizedNodeData = sanitizeNodeData(nodeData, newNodeId);
+    
+    const newNode = {
+      stepId: newNodeId,
+      name: standardizedNodeData.name || standardizedNodeData.callId,
+      description: standardizedNodeData.description || '',
+      callId: standardizedNodeData.callId,
+      nodeId: standardizedNodeData.nodeId,
+      serviceId: standardizedNodeData.serviceId,
+      position: newNodePosition,
+      enable: true,
+      editable: true,
+      parameters: standardizedNodeData.parameters,
+    };
+
+    // 添加到loopSubFlow
+    loopSubFlow.value.nodes.push(newNode);
+    loopSubFlow.value.hasUnsavedChanges = true;
+
+    // 添加到显示列表
+    const displayNode = {
+      id: newNode.stepId,
+      type: newNode.callId === 'Choice' ? 'Choice' : 
+            newNode.callId === 'Loop' ? 'Loop' :
+            newNode.callId === 'break' ? 'break' :
+            newNode.callId === 'continue' ? 'continue' :
+            newNode.callId === 'VariableAssign' ? 'VariableAssign' : 'custom',
+      data: {
+        name: standardizedNodeData.name,
+        description: standardizedNodeData.description,
+        parameters: standardizedNodeData.parameters,
+        nodeId: standardizedNodeData.nodeId,
+        callId: standardizedNodeData.callId,
+        serviceId: standardizedNodeData.serviceId,
+        // 对于Code节点，需要额外的字段
+        ...(standardizedNodeData.callId === 'Code' && {
+          code: standardizedNodeData.code,
+          codeType: standardizedNodeData.codeType,
+          securityLevel: standardizedNodeData.securityLevel,
+          timeoutSeconds: standardizedNodeData.timeoutSeconds,
+          memoryLimitMb: standardizedNodeData.memoryLimitMb,
+          cpuLimit: standardizedNodeData.cpuLimit
+        })
+      },
+      position: {
+        x: newNode.position.x,
+        y: newNode.position.y,
+      },
+      deletable: false,
+    };
+
+    subFlowNodes.value.push(displayNode);
+
+    // 触发边路径重新计算和状态更新
+    nextTick(() => {
+      updateEdgeStatus();
+      edgeUpdateTrigger.value++;
+      
+      // 多重延迟确保DOM完全渲染后再次计算
+      setTimeout(() => {
+        edgeUpdateTrigger.value++;
+      }, 50);
+      
+      setTimeout(() => {
+        edgeUpdateTrigger.value++;
+      }, 150);
+    });
+
+    ElMessage.success(`节点 "${nodeData.name || nodeData.callId}" 已添加到子工作流`);
+
+  } catch (error) {
+    console.error('[LoopNode子画布右键插入] 插入失败:', error);
+    ElMessage.error('添加节点失败');
+  }
+};
 </script>
 
 <!-- 注册组件 -->
@@ -2689,7 +2971,7 @@ export default {
                 <path fill="currentColor" d="M12 4V1l4 4-4 4V6c-3.31 0-6 2.69-6 6c0 1.01.25 1.97.7 2.8l-1.46 1.46C4.45 15.26 4 13.68 4 12c0-4.42 3.58-8 8-8zm7.7 9.2l1.46-1.46C21.55 12.74 22 14.32 22 16c0 4.42-3.58 8-8 8v3l-4-4l4-4v3c3.31 0 6-2.69 6-6c0-1.01-.25-1.97-.7-2.8z"/>
               </svg>
             </div>
-            <div class="label">{{ props.data.name || '循环' }}</div>
+            <div class="label">{{ props.data.name || $t('flow.node_names.loop') }}</div>
           </div>
         </div>
 
@@ -2701,12 +2983,13 @@ export default {
           @click="handleSubCanvasClick"
           @dblclick="handleSubCanvasClick"
           @wheel="handleSubCanvasWheel"
+          @contextmenu="handleSubCanvasContextMenu"
         >      
           <div class="flowCanvasWrapper" v-loading="subFlowLoading">
-            <div class="vue-flow-like-canvas">
+            <div class="vue-flow-like-canvas" @contextmenu="handleSubCanvasContextMenu">
               <!-- 背景网格 -->
-              <div class="vue-flow__background">
-                <svg class="vue-flow__background-pattern" style="width: 100%; height: 100%;">
+              <div class="vue-flow__background" @contextmenu="handleSubCanvasContextMenu">
+                <svg class="vue-flow__background-pattern" style="width: 100%; height: 100%;" @contextmenu="handleSubCanvasContextMenu">
                   <defs>
                     <pattern 
                       :id="`pattern-dots-${props.id}`" 
@@ -3045,7 +3328,7 @@ export default {
               </div>
               
               <!-- 边连接线 - 使用CustomEdge组件 -->
-              <svg class="vue-flow__edges">
+              <svg class="vue-flow__edges" @contextmenu="handleSvgContextMenu">
                 <defs>
                   <!-- 临时连接线箭头 -->
                   <marker :id="`temp-arrowhead-${props.id}`" markerWidth="10" markerHeight="7" 
@@ -3065,7 +3348,7 @@ export default {
                 </defs>
                 
                 <!-- 现有边连接 - 使用CustomEdge组件 -->
-                <g @mousedown.stop @click.stop @contextmenu.stop>
+                <g @mousedown.stop @click.stop>
                   <CustomEdge
                     v-for="edge in processedEdges" 
                     :key="edge.id"
@@ -3168,6 +3451,41 @@ export default {
       :inputAndOutput="inputAndOutput"
       style="display: block"
     />
+    
+    <!-- 子画布右键菜单 -->
+    <Teleport to="body">
+      <div
+        v-if="subCanvasContextMenuVisible"
+        :style="{
+          position: 'fixed',
+          left: subCanvasContextMenuPosition.x + 'px',
+          top: subCanvasContextMenuPosition.y + 'px',
+          zIndex: 9999
+        }"
+        class="sub-canvas-context-menu"
+        :data-debug="`LoopNode-${id}-ContextMenu`"
+      >
+        <div class="custom-context-menu">
+          <div class="context-menu-item" @click="handleSubCanvasAddNode">
+            <el-icon><IconPlusCircle /></el-icon>
+            <span>{{ $t('contextMenu.add_node') || '添加节点' }}</span>
+          </div>
+          <div class="context-menu-item" @click="handleSubCanvasDebugWorkflow">
+            <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a9 9 0 0 0-9 9v1a1 1 0 0 0 2 0v-1a7 7 0 0 1 14 0v1a1 1 0 0 0 2 0v-1a9 9 0 0 0-9-9Z"/><path fill="currentColor" d="M8 10a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Zm8 0a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/><path fill="currentColor" d="M12 15a3 3 0 0 1-3-3H7a5 5 0 0 0 10 0h-2a3 3 0 0 1-3 3Z"/></svg></el-icon>
+            <span>{{ $t('contextMenu.debug_workflow') || '调试工作流' }}</span>
+          </div>
+          <div class="context-menu-divider"></div>
+          <div class="context-menu-item" @click="handleSubCanvasExportYAML">
+            <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 7V3.5L18.5 9z"/></svg></el-icon>
+            <span>{{ $t('contextMenu.export_yaml') || '导出YAML' }}</span>
+          </div>
+          <div class="context-menu-item" @click="handleSubCanvasImportYAML">
+            <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 7V3.5L18.5 9z"/><path fill="currentColor" d="M12 11.5L9.5 14H11v4h2v-4h1.5z"/></svg></el-icon>
+            <span>{{ $t('contextMenu.import_yaml') || '导入YAML' }}</span>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 
 </template>
@@ -4200,7 +4518,7 @@ export default {
 
 /* 深色主题支持 - 使用用户指定的颜色规范 */
 .dark .loopNodeStyle {
-  background: #26262a !important;
+  background: #353f58 !important;
   border: 2px solid rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -4213,7 +4531,7 @@ export default {
 }
 
 .dark .loopInfo {
-  background: #26262a !important;
+  background: #353f58 !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -4222,13 +4540,13 @@ export default {
 }
 
 .dark .infoValue {
-  background: #26262a !important;
+  background: #353f58 !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
   color: #ffffff !important;
 }
 
 .dark .embeddedFlowCanvas {
-  background: #26262a !important;
+  background: #353f58 !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -4251,11 +4569,11 @@ export default {
 
 /* 深色主题下的子画布节点样式 */
 .dark .embeddedCustomNodeStyle {
-  background: #26262a !important;
+  background: #353f58 !important;
   border: 2px solid rgba(255, 255, 255, 0.08) !important;
   
   .nodeBox {
-    background: #26262a !important;
+    background: #353f58 !important;
   }
   
   .title .label {
@@ -4285,11 +4603,11 @@ export default {
 .dark .embeddedCustomNodeStyle.vue-flow__node-end,
 .dark .embeddedCustomNodeStyle.vue-flow__node-break,
 .dark .embeddedCustomNodeStyle.vue-flow__node-continue {
-  background: #26262a !important;
+  background: #353f58 !important;
   border: 2px solid rgba(255, 255, 255, 0.08) !important;
   
   .nodeSaEBorderBox {
-    background: #26262a !important;
+    background: #353f58 !important;
   }
   
   .saEText {
@@ -4299,7 +4617,7 @@ export default {
 
 /* 深色主题下的Choice节点样式 */
 .dark .choiceBranchNodeStyle {
-  background: #26262a !important;
+  background: #353f58 !important;
   border: 2px solid rgba(255, 255, 255, 0.08) !important;
   
   .title .label {
@@ -4307,7 +4625,7 @@ export default {
   }
   
   .branchItem {
-    background: #26262a !important;
+    background: #353f58 !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
     
     .caseLabel {
@@ -4324,7 +4642,7 @@ export default {
   }
   
   .emptyBranches {
-    background: #26262a !important;
+    background: #353f58 !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
     
     .emptyText {
@@ -4889,5 +5207,64 @@ export default {
   background-clip: padding-box;
   transition: border-color 0.2s ease;
   cursor: pointer;
+}
+
+/* 子画布右键菜单样式 - 与主画布保持一致 */
+.sub-canvas-context-menu {
+  pointer-events: auto;
+}
+
+.sub-canvas-context-menu .custom-context-menu {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 4px 0;
+  min-width: 160px;
+}
+
+.sub-canvas-context-menu .context-menu-item {
+  padding: 8px 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #606266;
+}
+
+.sub-canvas-context-menu .context-menu-item:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
+.sub-canvas-context-menu .context-menu-item el-icon {
+  color: inherit;
+}
+
+.sub-canvas-context-menu .context-menu-divider {
+  height: 1px;
+  background-color: #e1e4e8;
+  margin: 4px 0;
+}
+
+/* 深色主题支持 - 与主画布保持一致 */
+.dark .sub-canvas-context-menu .custom-context-menu {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+.dark .sub-canvas-context-menu .context-menu-item {
+  color: #e2e8f0;
+}
+
+.dark .sub-canvas-context-menu .context-menu-item:hover {
+  background-color: #4a5568;
+  color: #409eff;
+}
+
+.dark .sub-canvas-context-menu .context-menu-divider {
+  background-color: #4a5568;
 }
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   ElDrawer, ElTabs, ElTabPane, ElForm, ElFormItem, ElInput, 
   ElButton, ElMessage, ElDivider, ElIcon
@@ -31,6 +32,8 @@ const emit = defineEmits<{
   'save': [params: StartNodeParams, description: string, conversationVariables?: any]
   'close': []
 }>()
+
+const { t } = useI18n()
 
 // 响应式数据 - 使用更安全的初始化
 const activeTab = ref('basic')
@@ -81,7 +84,7 @@ const safeInitFormData = () => {
     formData.value = newFormData
     isInitialized.value = true
   } catch (error) {
-    console.error('初始化表单数据失败:', error)
+    console.error(t('startNodeEditor.messages.init_form_failed'), error)
     // 使用默认值
     formData.value = {
       description: '',
@@ -125,8 +128,8 @@ const safeLoadConversationVariables = async () => {
       conversationVariables.value = {}
     }
   } catch (error) {
-    console.error('加载对话变量失败:', error)
-    ElMessage.error('加载对话变量失败')
+    console.error(t('startNodeEditor.messages.load_variables_failed'), error)
+    ElMessage.error(t('startNodeEditor.messages.load_variables_failed'))
     conversationVariables.value = {}
   } finally {
     variablesLoading.value = false
@@ -136,7 +139,7 @@ const safeLoadConversationVariables = async () => {
 // 安全的保存方法
 const handleSave = async () => {
   if (!isInitialized.value) {
-    ElMessage.warning('编辑器未完全初始化，请稍后再试')
+    ElMessage.warning(t('startNodeEditor.messages.editor_not_initialized'))
     return
   }
   
@@ -153,10 +156,10 @@ const handleSave = async () => {
     
     // 安全地传递数据
     emit('save', params, formData.value.description, { ...conversationVariables.value })
-    ElMessage.success('保存成功')
+    ElMessage.success(t('startNodeEditor.messages.save_success'))
   } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error('保存失败，请检查输入内容')
+    console.error(t('startNodeEditor.messages.save_failed'), error)
+    ElMessage.error(t('startNodeEditor.messages.save_failed'))
   }
 }
 
@@ -167,9 +170,9 @@ const handleClose = () => {
 const handleVariablesUpdated = async () => {
   try {
     await safeLoadConversationVariables()
-    ElMessage.success('变量已更新')
+    ElMessage.success(t('startNodeEditor.messages.variables_updated'))
   } catch (error) {
-    console.error('更新变量失败:', error)
+    console.error(t('startNodeEditor.messages.update_variables_failed'), error)
   }
 }
 
@@ -204,7 +207,7 @@ watch(() => props.visible, async (newVisible) => {
       safeInitFormData()
       await safeLoadConversationVariables()
     } catch (error) {
-      console.error('初始化编辑器失败:', error)
+      console.error(t('startNodeEditor.messages.init_editor_failed'), error)
     }
   } else {
     // 重置状态
@@ -218,7 +221,7 @@ watch(() => [props.nodeParams, props.nodeDescription], async () => {
       await nextTick()
       safeInitFormData()
     } catch (error) {
-      console.error('更新表单数据失败:', error)
+      console.error(t('startNodeEditor.messages.update_form_failed'), error)
     }
   }
 }, { deep: true })
@@ -231,7 +234,7 @@ onMounted(async () => {
       await safeLoadConversationVariables()
     }
   } catch (error) {
-    console.error('组件初始化失败:', error)
+    console.error(t('startNodeEditor.messages.component_init_failed'), error)
   }
 })
 
@@ -244,7 +247,7 @@ onBeforeUnmount(() => {
 <template>
   <ElDrawer
     v-model="drawerVisible"
-    title="编辑开始节点"
+    :title="t('startNodeEditor.title')"
     :size="800"
     direction="rtl"
     :close-on-click-modal="false"
@@ -254,7 +257,7 @@ onBeforeUnmount(() => {
     <template #header>
       <div class="drawer-header">
         <ElIcon><Setting /></ElIcon>
-        <span>编辑开始节点</span>
+        <span>{{ t('startNodeEditor.title') }}</span>
         <div class="node-info">
           <span class="node-name">{{ nodeName }}</span>
         </div>
@@ -264,18 +267,18 @@ onBeforeUnmount(() => {
     <div class="drawer-content" v-if="isInitialized">
       <ElTabs v-model="activeTab">
         <!-- 基本配置 -->
-        <ElTabPane label="基本配置" name="basic">
+        <ElTabPane :label="t('startNodeEditor.basic_config')" name="basic">
           <ElForm ref="form" :model="formData" label-width="100px">
-            <ElFormItem label="节点描述">
+            <ElFormItem :label="t('startNodeEditor.node_description')">
               <ElInput
                 v-model="formData.description"
                 type="textarea"
                 :rows="3"
-                placeholder="请输入节点描述"
+                :placeholder="t('startNodeEditor.node_description_placeholder')"
               />
             </ElFormItem>
             
-            <ElDivider content-position="left">输入参数</ElDivider>
+            <ElDivider content-position="left">{{ t('startNodeEditor.input_parameters') }}</ElDivider>
             
             <div class="parameter-section">
               <div 
@@ -287,25 +290,25 @@ onBeforeUnmount(() => {
                   <div class="parameter-row">
                     <ElInput
                       v-model="formData.input_parameters[key]"
-                      placeholder="请输入参数值"
+                      :placeholder="t('startNodeEditor.parameter_value_placeholder')"
                     />
                     <ElButton 
                       type="danger" 
                       size="small" 
                       @click="removeInputParameter(String(key))"
                     >
-                      删除
+                      {{ t('startNodeEditor.delete') }}
                     </ElButton>
                   </div>
                 </ElFormItem>
               </div>
               
               <ElButton type="primary" size="small" @click="addInputParameter">
-                添加输入参数
+                {{ t('startNodeEditor.add_input_parameter') }}
               </ElButton>
             </div>
             
-            <ElDivider content-position="left">输出参数</ElDivider>
+            <ElDivider content-position="left">{{ t('startNodeEditor.output_parameters') }}</ElDivider>
             
             <div class="parameter-section">
               <div 
@@ -317,28 +320,28 @@ onBeforeUnmount(() => {
                   <div class="parameter-row">
                     <ElInput
                       v-model="formData.output_parameters[key]"
-                      placeholder="请输入参数值"
+                      :placeholder="t('startNodeEditor.parameter_value_placeholder')"
                     />
                     <ElButton 
                       type="danger" 
                       size="small" 
                       @click="removeOutputParameter(String(key))"
                     >
-                      删除
+                      {{ t('startNodeEditor.delete') }}
                     </ElButton>
                   </div>
                 </ElFormItem>
               </div>
               
               <ElButton type="primary" size="small" @click="addOutputParameter">
-                添加输出参数
+                {{ t('startNodeEditor.add_output_parameter') }}
               </ElButton>
             </div>
           </ElForm>
         </ElTabPane>
         
         <!-- 变量管理 -->
-        <ElTabPane label="变量管理" name="variables">
+        <ElTabPane :label="t('startNodeEditor.variable_management')" name="variables">
           <StartNodeVariableManager
             v-if="conversationId"
             :conversation-id="conversationId"
@@ -346,7 +349,7 @@ onBeforeUnmount(() => {
             @variables-updated="handleVariablesUpdated"
           />
           <div v-else class="no-conversation">
-            <p>需要会话ID才能管理变量</p>
+            <p>{{ t('startNodeEditor.no_conversation') }}</p>
           </div>
         </ElTabPane>
       </ElTabs>
@@ -354,18 +357,18 @@ onBeforeUnmount(() => {
     
     <div v-else class="loading-state">
       <ElIcon class="is-loading"><Setting /></ElIcon>
-      <span>正在初始化...</span>
+      <span>{{ t('startNodeEditor.loading') }}</span>
     </div>
     
     <template #footer>
       <div class="drawer-footer">
-        <ElButton @click="handleClose">取消</ElButton>
+        <ElButton @click="handleClose">{{ t('startNodeEditor.cancel') }}</ElButton>
         <ElButton 
           type="primary" 
           @click="handleSave"
           :disabled="!isInitialized"
         >
-          保存
+          {{ t('startNodeEditor.save') }}
         </ElButton>
       </div>
     </template>

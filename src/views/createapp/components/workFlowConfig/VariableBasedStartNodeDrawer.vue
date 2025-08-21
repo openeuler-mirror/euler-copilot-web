@@ -13,7 +13,7 @@
           <div class="headerIcon">
             <div class="startIcon"></div>
           </div>
-          <div class="headerText">开始</div>
+          <div class="headerText">{{ $t('flow.node_names.start') }}</div>
         </div>
       </template>
       
@@ -22,7 +22,7 @@
           <!-- 描述输入 - 移到最上方 -->
           <div class="descriptionSection">
             <div v-if="!isEditingDesc && (!nodeDescription || !nodeDescription.trim())" class="descPlaceholder" @click="startEditDesc">
-              开始节点
+              {{ $t('flow.node_names.start') }}
             </div>
             <div v-else-if="!isEditingDesc" class="descDisplay" @click="startEditDesc">
               {{ nodeDescription }}
@@ -31,7 +31,7 @@
               v-else
               v-model="nodeDescription"
               type="textarea"
-              placeholder="开始节点"
+              :placeholder="$t('flow.node_names.start')"
               :rows="3"
               maxlength="200"
               show-word-limit
@@ -45,15 +45,15 @@
           <!-- Tab切换 -->
           <div class="tabContainer">
             <div class="tabHeader">
-              <div class="tabItem active">设置</div>
+              <div class="tabItem active">{{ $t('common.setting') }}</div>
             </div>
 
             <!-- 输入字段区域 -->
             <div class="inputFieldsSection">
               <div class="inputFieldsHeader">
                 <div class="inputFieldsLeft">
-                  <div class="inputFieldsLabel">输入字段</div>
-                  <div class="inputFieldsHint">设置的输入可在工作流程中使用</div>
+                  <div class="inputFieldsLabel">{{ $t('startNodeVariableManager.input_fields') }}</div>
+                  <div class="inputFieldsHint">{{ $t('startNodeVariableManager.input_fields_hint') }}</div>
                 </div>
                 <el-button 
                   type="text" 
@@ -97,7 +97,7 @@
                 
                 <!-- 空状态提示 -->
                 <div v-if="conversationVariables.length === 0 && systemVariables.length === 0 && !variablesLoading" class="emptyState">
-                  <div class="emptyText">暂无变量</div>
+                  <div class="emptyText">{{ $t('startNodeVariableManager.no_variables') }}</div>
                 </div>
               </div>
             </div>
@@ -121,44 +121,44 @@
     <!-- 对话变量编辑弹窗 -->
     <el-dialog
       v-model="showVariableDialog"
-      :title="isEditingVariable ? '编辑变量' : '添加变量'"
+      :title="isEditingVariable ? $t('startNodeVariableManager.edit_variable') : $t('startNodeVariableManager.add_variable_dialog')"
       width="600px"
       :close-on-click-modal="false"
       @close="handleVariableDialogClose"
       class="variable-dialog"
     >
       <el-form v-if="editingVariable" :model="editingVariable" label-width="100px" :rules="variableFormRules" ref="variableFormRef">
-          <el-form-item label="变量名称" prop="name" required>
+          <el-form-item :label="$t('startNodeVariableManager.variable_name_label')" prop="name" required>
             <el-input 
               v-model="editingVariable.name" 
-              placeholder="请输入变量名称" 
+              :placeholder="$t('startNodeVariableManager.enter_variable_name')" 
               :disabled="isEditingVariable"
             />
           </el-form-item>
           
-          <el-form-item label="变量类型" prop="var_type">
-            <el-select v-model="editingVariable.var_type" placeholder="选择变量类型" @change="onVariableTypeChange">
-              <el-option-group label="基础类型">
-                <el-option label="字符串" value="string" />
-                <el-option label="数字" value="number" />
-                <el-option label="布尔值" value="boolean" />
-                <el-option label="对象" value="object" />
-                <el-option label="密钥" value="secret" />
-                <el-option label="文件" value="file" />
+          <el-form-item :label="$t('startNodeVariableManager.variable_type_label')" prop="var_type">
+            <el-select v-model="editingVariable.var_type" :placeholder="$t('startNodeVariableManager.select_variable_type')" @change="onVariableTypeChange">
+              <el-option-group :label="$t('startNodeVariableManager.basic_types')">
+                <el-option :label="$t('startNodeVariableManager.string_type')" value="string" />
+                <el-option :label="$t('startNodeVariableManager.number_type')" value="number" />
+                <el-option :label="$t('startNodeVariableManager.boolean_type')" value="boolean" />
+                <el-option :label="$t('startNodeVariableManager.object_type')" value="object" />
+                <el-option :label="$t('startNodeVariableManager.secret_type')" value="secret" />
+                <el-option :label="$t('startNodeVariableManager.file_type')" value="file" />
               </el-option-group>
-              <el-option-group label="数组类型">
-                <el-option label="数组[任意]" value="array[any]" />
-                <el-option label="数组[字符串]" value="array[string]" />
-                <el-option label="数组[数字]" value="array[number]" />
-                <el-option label="数组[对象]" value="array[object]" />
-                <el-option label="数组[文件]" value="array[file]" />
-                <el-option label="数组[布尔值]" value="array[boolean]" />
-                <el-option label="数组[密钥]" value="array[secret]" />
+              <el-option-group :label="$t('startNodeVariableManager.array_types')">
+                <el-option :label="$t('startNodeVariableManager.array_any')" value="array[any]" />
+                <el-option :label="$t('startNodeVariableManager.array_string')" value="array[string]" />
+                <el-option :label="$t('startNodeVariableManager.array_number')" value="array[number]" />
+                <el-option :label="$t('startNodeVariableManager.array_object')" value="array[object]" />
+                <el-option :label="$t('startNodeVariableManager.array_file')" value="array[file]" />
+                <el-option :label="$t('startNodeVariableManager.array_boolean')" value="array[boolean]" />
+                <el-option :label="$t('startNodeVariableManager.array_secret')" value="array[secret]" />
               </el-option-group>
             </el-select>
           </el-form-item>
           
-          <el-form-item label="支持的文件类型" v-if="isFileType(editingVariable.var_type)">
+          <el-form-item :label="$t('startNodeVariableManager.supported_file_types_label')" v-if="isFileType(editingVariable.var_type)">
             <div class="file-config-container">
               <div class="supported-file-types">
                 <div class="file-category">
@@ -167,7 +167,7 @@
                       <img :src="DocumentIcon" alt="文档" />
                     </div>
                     <div class="category-info">
-                      <div class="category-title">文档</div>
+                      <div class="category-title">{{ $t('startNodeVariableManager.document_category') }}</div>
                       <div class="category-types">TXT, MD, MDX, MARKDOWN, PDF, HTML, XLSX, XLS, DOC, DOCX, CSV, EML, MSG, PPTX, PPT, XML, EPUB</div>
                     </div>
                     <el-checkbox v-model="editingVariable.supportedTypes!.document" @click.stop />
@@ -180,7 +180,7 @@
                       <img :src="ImageIcon" alt="图片" />
                     </div>
                     <div class="category-info">
-                      <div class="category-title">图片</div>
+                      <div class="category-title">{{ $t('startNodeVariableManager.image_category') }}</div>
                       <div class="category-types">JPG, JPEG, PNG, GIF, WEBP, SVG</div>
                     </div>
                     <el-checkbox v-model="editingVariable.supportedTypes!.image" @click.stop />
@@ -193,7 +193,7 @@
                       <img :src="AudioIcon" alt="音频" />
                     </div>
                     <div class="category-info">
-                      <div class="category-title">音频</div>
+                      <div class="category-title">{{ $t('startNodeVariableManager.audio_category') }}</div>
                       <div class="category-types">MP3, M4A, WAV, AMR, MPGA</div>
                     </div>
                     <el-checkbox v-model="editingVariable.supportedTypes!.audio" @click.stop />
@@ -206,7 +206,7 @@
                       <img :src="VideoIcon" alt="视频" />
                     </div>
                     <div class="category-info">
-                      <div class="category-title">视频</div>
+                      <div class="category-title">{{ $t('startNodeVariableManager.video_category') }}</div>
                       <div class="category-types">MP4, MOV, MPEG, WEBM</div>
                     </div>
                     <el-checkbox v-model="editingVariable.supportedTypes!.video" @click.stop />
@@ -219,11 +219,11 @@
                       <img :src="OtherFileIcon" alt="其他文件类型" />
                     </div>
                     <div class="category-info">
-                      <div class="category-title">其他文件类型</div>
+                      <div class="category-title">{{ $t('startNodeVariableManager.other_file_types') }}</div>
                       <div class="category-input">
                         <el-input 
                           v-model="editingVariable.customFileExtensions"
-                          placeholder="+ + 文件扩展名，例如 .doc"
+                          :placeholder="$t('startNodeVariableManager.file_extension_placeholder')"
                           @click.stop
                         />
                       </div>
@@ -234,27 +234,27 @@
               </div>
               
               <div class="upload-method-section">
-                <div class="section-title">上传文件类型</div>
+                <div class="section-title">{{ $t('startNodeVariableManager.upload_file_types') }}</div>
                 <div class="upload-method-tabs">
                   <div 
                     :class="['method-tab', { active: editingVariable.uploadMethods?.includes('manual') }]"
                     @click="toggleUploadMethod('manual')"
                   >
-                    本地上传
+                    {{ $t('startNodeVariableManager.local_upload') }}
                   </div>
                   <div 
                     :class="['method-tab', { active: editingVariable.uploadMethods?.includes('url') }]"
                     @click="toggleUploadMethod('url')"
                   >
-                    URL上传
+                    {{ $t('startNodeVariableManager.url_upload') }}
                   </div>
                 </div>
               </div>
               
               <div class="upload-limits">
-                <div class="section-title">文件上传限制</div>
+                <div class="section-title">{{ $t('startNodeVariableManager.file_upload_limits') }}</div>
                 <div class="upload-limit-item">
-                  <label class="limit-label">最大文件数：</label>
+                  <label class="limit-label">{{ $t('startNodeVariableManager.max_files') }}</label>
                   <el-input-number 
                     v-model="editingVariable.maxFiles" 
                     :min="1" 
@@ -264,11 +264,11 @@
                     style="width: 120px"
                   />
                   <span v-if="editingVariable.var_type === 'file'" class="file-type-note">
-                    文件类型固定为1个文件
+                    {{ $t('startNodeVariableManager.file_type_fixed') }}
                   </span>
                 </div>
                 <div class="upload-limit-item">
-                  <label class="limit-label">单个文件最大大小：</label>
+                  <label class="limit-label">{{ $t('startNodeVariableManager.max_file_size') }}</label>
                   <el-input-number 
                     v-model="editingVariable.maxFileSize" 
                     :min="1" 
@@ -276,34 +276,34 @@
                     size="small"
                     style="width: 120px"
                   />
-                  <span class="unit-label">MB</span>
+                  <span class="unit-label">{{ $t('startNodeVariableManager.mb_unit') }}</span>
                 </div>
                 
                 <div class="upload-limit-item">
-                  <label class="limit-label">必填文件：</label>
+                  <label class="limit-label">{{ $t('startNodeVariableManager.required_file') }}</label>
                   <el-checkbox 
                     v-model="editingVariable.required"
                     size="small"
                   />
-                  <span class="checkbox-note">选中后，用户在对话时必须上传文件</span>
+                  <span class="checkbox-note">{{ $t('startNodeVariableManager.required_file_note') }}</span>
                 </div>
               </div>
             </div>
           </el-form-item>
           
-          <el-form-item label="变量值" prop="value">
+          <el-form-item :label="$t('startNodeVariableManager.variable_value_label')" prop="value">
             <!-- 字符串类型 -->
             <el-input 
               v-if="editingVariable.var_type === 'string'"
               v-model="editingVariable.value" 
-              placeholder="请输入字符串值" 
+              :placeholder="$t('startNodeVariableManager.enter_string_value')" 
             />
             
             <!-- 数字类型 -->
             <el-input-number 
               v-else-if="editingVariable.var_type === 'number'"
               v-model="editingVariable.value" 
-              placeholder="请输入数字值"
+              :placeholder="$t('startNodeVariableManager.enter_number_value')"
               :precision="2"
               style="width: 100%"
             />
@@ -312,7 +312,7 @@
             <el-select 
               v-else-if="editingVariable.var_type === 'boolean'"
               v-model="editingVariable.value" 
-              placeholder="选择布尔值"
+              :placeholder="$t('startNodeVariableManager.select_boolean_value')"
             >
               <el-option label="true" :value="true" />
               <el-option label="false" :value="false" />
@@ -323,7 +323,7 @@
               v-else-if="editingVariable.var_type === 'secret'"
               v-model="editingVariable.value" 
               type="password"
-              placeholder="请输入密钥值"
+              :placeholder="$t('startNodeVariableManager.enter_secret_value')"
               show-password
             />
             
@@ -333,14 +333,14 @@
               v-model="editingVariable.valueJson" 
               type="textarea"
               :rows="4"
-              placeholder="请输入JSON格式的对象值" 
+              :placeholder="$t('startNodeVariableManager.enter_json_object')" 
             />
             
             <!-- 文件类型 -->
             <div v-else-if="editingVariable.var_type === 'file'" class="file-input-section">
               <div class="file-type-note">
                 <el-icon><IconDocument /></el-icon>
-                <span>文件类型变量将在对话时由用户上传</span>
+                <span>{{ $t('startNodeVariableManager.file_type_tip') }}</span>
               </div>
             </div>
             
@@ -348,7 +348,7 @@
             <div v-else-if="editingVariable.var_type === 'array[string]'" class="array-input-section">
               <div class="array-type-note">
                 <el-icon><IconList /></el-icon>
-                <span>字符串数组变量将在对话时由用户输入，默认为空数组</span>
+                <span>{{ $t('startNodeVariableManager.string_array_tip') }}</span>
               </div>
             </div>
             
@@ -356,7 +356,7 @@
             <div v-else-if="editingVariable.var_type === 'array[number]'" class="array-input-section">
               <div class="array-type-note">
                 <el-icon><IconList /></el-icon>
-                <span>数字数组变量将在对话时由用户输入，默认为空数组</span>
+                <span>{{ $t('startNodeVariableManager.number_array_tip') }}</span>
               </div>
             </div>
             
@@ -364,7 +364,7 @@
             <div v-else-if="editingVariable.var_type === 'array[boolean]'" class="array-input-section">
               <div class="array-type-note">
                 <el-icon><IconList /></el-icon>
-                <span>布尔值数组变量将在对话时由用户选择，默认为空数组</span>
+                <span>{{ $t('startNodeVariableManager.boolean_array_tip') }}</span>
               </div>
                          </div>
              
@@ -372,7 +372,7 @@
              <div v-else-if="editingVariable.var_type === 'array[file]'" class="file-array-section">
                <div class="file-type-note">
                  <el-icon><IconDocument /></el-icon>
-                 <span>文件列表类型变量将在对话时由用户上传，默认为空数组</span>
+                 <span>{{ $t('startNodeVariableManager.file_array_tip') }}</span>
                </div>
              </div>
              
@@ -380,7 +380,7 @@
             <div v-else-if="editingVariable.var_type === 'array[object]'" class="array-input-section">
               <div class="array-type-note">
                 <el-icon><IconList /></el-icon>
-                <span>对象数组变量将在对话时由用户输入JSON格式数据，默认为空数组</span>
+                <span>{{ $t('startNodeVariableManager.object_array_tip') }}</span>
               </div>
             </div>
             
@@ -388,7 +388,7 @@
             <div v-else-if="editingVariable.var_type === 'array[secret]'" class="array-input-section">
               <div class="array-type-note">
                 <el-icon><IconList /></el-icon>
-                <span>密钥数组变量将在对话时由用户输入，默认为空数组</span>
+                <span>{{ $t('startNodeVariableManager.secret_array_tip') }}</span>
               </div>
             </div>
             
@@ -396,36 +396,36 @@
             <div v-else-if="editingVariable.var_type === 'array[any]'" class="array-input-section">
               <div class="array-type-note">
                 <el-icon><IconList /></el-icon>
-                <span>任意类型数组变量将在对话时由用户输入，默认为空数组</span>
+                <span>{{ $t('startNodeVariableManager.any_array_tip') }}</span>
               </div>
             </div>
           </el-form-item>
           
-          <el-form-item label="描述">
+          <el-form-item :label="$t('startNodeVariableManager.description_label')">
             <el-input 
               v-model="editingVariable.description" 
               type="textarea"
               :rows="2"
-              placeholder="请输入变量描述（可选）" 
+              :placeholder="$t('startNodeVariableManager.enter_variable_description')" 
             />
           </el-form-item>
         </el-form>
         
         <template #footer>
           <div class="dialog-footer">
-            <el-button @click="handleVariableDialogClose">取消</el-button>
+            <el-button @click="handleVariableDialogClose">{{ $t('startNodeVariableManager.cancel') }}</el-button>
             <el-button 
               v-if="isEditingVariable"
               type="danger" 
               @click="deleteConversationVariable"
             >
-              删除
+              {{ $t('startNodeVariableManager.delete') }}
             </el-button>
             <el-button 
               type="primary" 
               @click="saveConversationVariable"
             >
-              保存
+              {{ $t('startNodeVariableManager.save') }}
             </el-button>
           </div>
         </template>
@@ -506,11 +506,11 @@ const variableFormRef = ref()
 // 表单验证规则
 const variableFormRules = {
   name: [
-    { required: true, message: '请输入变量名称', trigger: 'blur' },
-    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '变量名只能包含字母、数字和下划线，且必须以字母或下划线开头', trigger: 'blur' }
+    { required: true, message: t('startNodeVariableManager.enter_variable_name_validation'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: t('startNodeVariableManager.variable_name_pattern_validation'), trigger: 'blur' }
   ],
   var_type: [
-    { required: true, message: '请选择变量类型', trigger: 'change' }
+    { required: true, message: t('startNodeVariableManager.select_variable_type_validation'), trigger: 'change' }
   ]
 }
 
@@ -593,7 +593,7 @@ const loadAllVariables = async () => {
     
   } catch (error) {
     console.error('❌ 变量加载过程发生未知错误:', error)
-    ElMessage.error('变量加载失败')
+    ElMessage.error(t('startNodeVariableManager.load_variables_failed'))
   } finally {
     variablesLoading.value = false
   }
@@ -632,7 +632,7 @@ onUnmounted(() => {
 
 // 获取变量显示值
 const getVariableDisplayValue = (value: any): string => {
-  if (value === null || value === undefined) return '(未设置)'
+  if (value === null || value === undefined) return t('startNodeVariableManager.not_set')
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
 }
@@ -704,9 +704,9 @@ const finishEditDesc = async () => {
       description: nodeDescription.value
     })
     
-    ElMessage.success('描述保存成功')
+    ElMessage.success(t('startNodeVariableManager.description_save_success'))
   } catch (error) {
-    ElMessage.error('描述保存失败')
+    ElMessage.error(t('startNodeVariableManager.description_save_failed'))
   }
 }
 
@@ -835,22 +835,22 @@ const editConversationVariable = (variable: Variable) => {
 const saveConversationVariable = async () => {
   // 详细的参数验证
   if (!editingVariable.value) {
-    ElMessage.error('缺少变量数据')
+    ElMessage.error(t('startNodeVariableManager.missing_variable_data'))
     return
   }
   
   if (!props.flowId) {
-    ElMessage.error('缺少工作流ID (flowId)，无法保存对话变量')
+    ElMessage.error(t('startNodeVariableManager.missing_flow_id'))
     return
   }
   
   if (!editingVariable.value.name || !editingVariable.value.name.trim()) {
-    ElMessage.error('变量名不能为空')
+    ElMessage.error(t('startNodeVariableManager.variable_name_empty'))
     return
   }
   
   if (!editingVariable.value.var_type) {
-    ElMessage.error('请选择变量类型')
+    ElMessage.error(t('startNodeVariableManager.select_variable_type_required'))
     return
   }
 
@@ -867,7 +867,7 @@ const saveConversationVariable = async () => {
         if (editingVariable.value.value !== null && editingVariable.value.value !== undefined) {
           value = Number(editingVariable.value.value)
           if (isNaN(value)) {
-            ElMessage.error('请输入有效的数字')
+            ElMessage.error(t('startNodeVariableManager.enter_valid_number'))
             return
           }
         } else {
@@ -888,7 +888,7 @@ const saveConversationVariable = async () => {
           try {
             value = JSON.parse(editingVariable.value.valueJson)
           } catch (error) {
-            ElMessage.error('JSON格式不正确，请检查对象值的语法')
+            ElMessage.error(t('startNodeVariableManager.json_format_incorrect'))
             return
           }
         } else {
@@ -959,11 +959,11 @@ const saveConversationVariable = async () => {
       }
       
       const updateResult = await updateVariable(updateParams, updateData)
-      ElMessage.success('变量更新成功')
+      ElMessage.success(t('startNodeVariableManager.variable_update_success'))
     } else {
       // 创建变量
       const createResult = await createVariable(variableData)
-      ElMessage.success('变量创建成功')
+      ElMessage.success(t('startNodeVariableManager.variable_create_success'))
     }
 
     handleVariableDialogClose()
@@ -1020,7 +1020,7 @@ const deleteConversationVariable = async () => {
       flow_id: props.flowId
     })
     
-    ElMessage.success('变量删除成功')
+    ElMessage.success(t('startNodeVariableManager.variable_delete_success'))
     
     // 在关闭对话框前先保存变量名（避免引用失效）
     const deletedVariableName = editingVariable.value.name
@@ -1039,7 +1039,7 @@ const deleteConversationVariable = async () => {
     emits('variablesUpdated')
   } catch (error) {
     console.error('❌ 删除变量失败:', error)
-    ElMessage.error('删除变量失败')
+    ElMessage.error(t('startNodeVariableManager.delete_variable_failed'))
   }
 }
 
@@ -1076,7 +1076,7 @@ const saveStartNodeConfig = () => {
   }
     
   emits('saveStartNode', nodeParams, props.nodeYamlId, nodeName.value, nodeDescription.value)
-  ElMessage.success('保存成功')
+  ElMessage.success(t('startNodeVariableManager.save_success'))
   closeDrawer()
 }
 
@@ -1244,11 +1244,16 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       padding: 16px 24px;
       border-bottom: 1px solid var(--o-border-color-light);
       margin-bottom: 0;
+      background: var(--el-bg-color);
     }
     
     .el-drawer__body {
       padding: 0;
+      background: var(--el-bg-color);
     }
+    
+    // 深色主题适配
+    background: var(--el-bg-color);
   }
 
   .drawerHeader {
@@ -1268,12 +1273,18 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     .headerText {
       font-size: 16px;
       font-weight: 600;
-      color: var(--o-text-color-primary);
+      color: var(--el-text-color-primary);
+      
+      // 深色主题下确保文字可读
+      body[theme='dark'] & {
+        color: #e4e8ee;
+      }
     }
   }
 
   .drawerBody {
     padding: 0;
+    background: var(--el-bg-color);
     
     .descriptionSection {
       margin: 20px 24px;
@@ -1287,11 +1298,22 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
         text-align: center;
         font-size: 14px;
         transition: all 0.2s;
+        background: var(--el-fill-color-extra-light);
+        
+        body[theme='dark'] & {
+          background: var(--flow-bg-color, #343a43);
+          border-color: var(--el-border-color);
+        }
         
         &:hover {
           border-color: var(--el-color-primary);
           color: var(--el-color-primary);
           background: var(--el-color-primary-light-9);
+          
+          body[theme='dark'] & {
+            background: var(--flow-node-default-over-color, #25303e);
+            border-color: var(--flow-node-boder-default-over, #314265);
+          }
         }
       }
       
@@ -1304,24 +1326,51 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
         font-size: 14px;
         line-height: 1.4;
         transition: all 0.2s;
+        color: var(--el-text-color-primary);
+        
+        body[theme='dark'] & {
+          background: var(--flow-bg-color, #343a43);
+          border-color: var(--el-border-color);
+          color: #e4e8ee;
+        }
         
         &:hover {
           border-color: var(--el-color-primary);
           background: var(--el-color-primary-light-9);
+          
+          body[theme='dark'] & {
+            background: var(--flow-node-default-over-color, #25303e);
+            border-color: var(--flow-node-boder-default-over, #314265);
+          }
         }
       }
       
       .descInput {
         margin-top: 8px;
+        
+        body[theme='dark'] & {
+          :deep(.el-textarea__inner) {
+            background: var(--flow-bg-color, #343a43) !important;
+            border-color: var(--el-border-color) !important;
+            color: #e4e8ee !important;
+            
+            &::placeholder {
+              color: var(--el-text-color-placeholder) !important;
+            }
+          }
+        }
       }
     }
     
     .tabContainer {
+      background: var(--el-bg-color);
+      
       .tabHeader {
         display: flex;
         border-bottom: 1px solid var(--el-border-color-light);
         padding: 0 24px;
         margin-bottom: 20px;
+        background: var(--el-bg-color);
         
         .tabItem {
           padding: 14px 16px;
@@ -1345,6 +1394,7 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       
       .inputFieldsSection {
         padding: 0 24px 24px;
+        background: var(--el-bg-color);
         
         .inputFieldsHeader {
           display: flex;
@@ -1359,6 +1409,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
               font-weight: 600;
               color: var(--el-text-color-primary);
               margin-bottom: 6px;
+              
+              body[theme='dark'] & {
+                color: #e4e8ee;
+              }
             }
             
             .inputFieldsHint {
@@ -1384,16 +1438,22 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
               color: var(--el-color-primary);
               background: var(--el-color-primary-light-9);
               transform: scale(1.1);
+              
+              body[theme='dark'] & {
+                background: var(--flow-node-default-over-color, #25303e);
+              }
             }
             
             &:active {
               transform: scale(0.95);
             }
+            
           }
         }
         
         .variableList {
           min-height: 100px;
+          background: var(--el-bg-color);
           
           .variableItem {
             display: flex;
@@ -1405,18 +1465,34 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
             background: var(--el-fill-color-extra-light);
             transition: all 0.2s;
             
+            // 深色主题优化
+            body[theme='dark'] & {
+              background: var(--flow-bg-color, #343a43);
+              border-color: var(--el-border-color);
+            }
+            
             &.editable {
               cursor: pointer;
               
               &:hover {
                 background: var(--el-color-primary-light-9);
                 border-color: var(--el-color-primary-light-7);
+                
+                body[theme='dark'] & {
+                  background: var(--flow-node-default-over-color, #25303e);
+                  border-color: var(--flow-node-boder-default-over, #314265);
+                }
               }
             }
             
             &.readonly {
               opacity: 0.8;
               background: var(--el-fill-color-lighter);
+              
+              body[theme='dark'] & {
+                background: var(--o-bash-bg, #2a2f37);
+                opacity: 0.7;
+              }
             }
             
             .variableIcon {
@@ -1438,6 +1514,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
                 font-family: 'Monaco', 'Consolas', monospace;
                 line-height: 1.4;
                 margin-bottom: 4px;
+                
+                body[theme='dark'] & {
+                  color: #e4e8ee;
+                }
               }
               
               .variableType {
@@ -1447,6 +1527,11 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
                 padding: 2px 6px;
                 border-radius: 4px;
                 display: inline-block;
+                
+                body[theme='dark'] & {
+                  background: var(--o-bash-bg, #2a2f37);
+                  color: var(--el-text-color-secondary);
+                }
               }
             }
           }
@@ -1455,6 +1540,7 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
             text-align: center;
             padding: 40px 20px;
             color: var(--el-text-color-secondary);
+            background: var(--el-bg-color);
             
             .emptyText {
               font-size: 14px;
@@ -1472,7 +1558,8 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid var(--o-border-color-light);
+  border-top: 1px solid var(--el-border-color-light);
+  background: var(--el-bg-color);
 }
 
 // 透明遮罩样式
@@ -1544,9 +1631,19 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       transition: all 0.2s;
       cursor: pointer;
       
+      body[theme='dark'] & {
+        background: var(--flow-bg-color, #343a43);
+        border-color: var(--el-border-color);
+      }
+      
       &:hover {
         border-color: var(--el-color-primary-light-7);
         background: var(--el-color-primary-light-9);
+        
+        body[theme='dark'] & {
+          background: var(--flow-node-default-over-color, #25303e);
+          border-color: var(--flow-node-boder-default-over, #314265);
+        }
       }
       
       &:active {
@@ -1582,6 +1679,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
           font-weight: 600;
           color: var(--el-text-color-primary);
           margin-bottom: 4px;
+          
+          body[theme='dark'] & {
+            color: #e4e8ee;
+          }
         }
         
         .category-types {
@@ -1595,6 +1696,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
           
           .el-input {
             font-size: 12px;
+            
+            :deep(.el-input__wrapper) {
+              background: var(--el-bg-color);
+            }
           }
         }
       }
@@ -1611,6 +1716,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     font-weight: 600;
     color: var(--el-text-color-primary);
     margin-bottom: 12px;
+    
+    body[theme='dark'] & {
+      color: #e4e8ee;
+    }
   }
   
   .upload-method-tabs {
@@ -1626,7 +1735,12 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       cursor: pointer;
       font-size: 13px;
       transition: all 0.2s;
-      background: white;
+      background: var(--el-bg-color);
+      color: var(--el-text-color-primary);
+      
+      body[theme='dark'] & {
+        color: #e4e8ee;
+      }
       
       &.active {
         border-color: var(--el-color-primary);
@@ -1637,6 +1751,11 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       &:hover:not(.active) {
         border-color: var(--el-color-primary-light-7);
         background: var(--el-color-primary-light-9);
+        
+        body[theme='dark'] & {
+          background: var(--flow-node-default-over-color, #25303e);
+          border-color: var(--flow-node-boder-default-over, #314265);
+        }
       }
     }
   }
@@ -1649,6 +1768,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     font-weight: 600;
     color: var(--el-text-color-primary);
     margin-bottom: 8px;
+    
+    body[theme='dark'] & {
+      color: #e4e8ee;
+    }
   }
   
   .upload-limit-item {
@@ -1662,6 +1785,10 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       color: var(--el-text-color-primary);
       font-weight: 500;
       min-width: 120px;
+      
+      body[theme='dark'] & {
+        color: #e4e8ee;
+      }
   }
   
     .unit-label {
@@ -1696,6 +1823,11 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     margin-bottom: 12px;
     color: var(--el-text-color-secondary);
     font-size: 13px;
+    
+    body[theme='dark'] & {
+      background: var(--o-bash-bg, #2a2f37);
+      border-color: var(--el-border-color);
+    }
   }
 }
 
@@ -1712,9 +1844,12 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     margin-bottom: 12px;
     color: var(--el-text-color-secondary);
     font-size: 13px;
+    
+    body[theme='dark'] & {
+      background: var(--o-bash-bg, #2a2f37);
+      border-color: var(--el-border-color);
+    }
   }
-  
-
 }
 
 // 数组输入区域
@@ -1730,15 +1865,32 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     margin-bottom: 12px;
     color: var(--el-text-color-secondary);
     font-size: 13px;
+    
+    body[theme='dark'] & {
+      background: var(--o-bash-bg, #2a2f37);
+      border-color: var(--el-border-color);
+    }
   }
 }
 
 // 变量对话框样式增强
 :deep(.el-dialog) {
+  background: var(--el-bg-color);
+  
+  .el-dialog__header {
+    background: var(--el-bg-color);
+    border-bottom: 1px solid var(--el-border-color-light);
+    
+    .el-dialog__title {
+      color: var(--el-text-color-primary);
+    }
+  }
+  
   .el-dialog__body {
     padding: 20px 24px;
     max-height: 70vh;
     overflow-y: auto;
+    background: var(--el-bg-color);
   }
   
   .el-form-item {
@@ -1747,11 +1899,16 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     .el-form-item__label {
       font-weight: 600;
       color: var(--el-text-color-primary);
+      
+      body[theme='dark'] & {
+        color: #e4e8ee !important;
+      }
     }
     
     .el-form-item__content {
       .el-input__wrapper {
         transition: all 0.2s;
+        background: var(--el-bg-color);
         
         &:hover {
           box-shadow: 0 0 0 1px var(--el-color-primary-light-7);
@@ -1760,13 +1917,24 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
       
       .el-select {
         width: 100%;
+        
+        .el-select__wrapper {
+          background: var(--el-bg-color);
+        }
       }
       
       .el-textarea__inner {
         transition: all 0.2s;
+        background: var(--el-bg-color);
         
         &:hover {
           border-color: var(--el-color-primary-light-7);
+        }
+      }
+      
+      .el-input-number {
+        .el-input__wrapper {
+          background: var(--el-bg-color);
         }
       }
     }
@@ -1776,10 +1944,16 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
     .el-button {
       border-style: dashed;
       transition: all 0.2s;
+      background: var(--el-bg-color);
       
       &:hover {
         border-color: var(--el-color-primary);
         color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+        
+        body[theme='dark'] & {
+          background: var(--flow-node-default-over-color, #25303e);
+        }
       }
     }
   }
@@ -1789,18 +1963,22 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
 .variable-dialog {
   :deep(.el-dialog) {
     max-height: 90vh;
+    background: var(--el-bg-color);
     
     .el-dialog__header {
       border-bottom: 1px solid var(--el-border-color-light);
+      background: var(--el-bg-color);
     }
     
     .el-dialog__body {
       max-height: 70vh;
       overflow-y: auto;
+      background: var(--el-bg-color);
     }
     
     .el-dialog__footer {
       border-top: 1px solid var(--el-border-color-light);
+      background: var(--el-bg-color);
     }
   }
 }
@@ -1814,6 +1992,11 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
   padding: 16px;
   background: var(--el-fill-color-extra-light);
   
+  body[theme='dark'] & {
+    background: var(--flow-bg-color, #343a43);
+    border-color: var(--el-border-color);
+  }
+  
   // 自定义滚动条样式
   &::-webkit-scrollbar {
     width: 6px;
@@ -1822,10 +2005,14 @@ const toggleUploadMethod = (method: 'manual' | 'url') => {
   &::-webkit-scrollbar-track {
     background: var(--el-fill-color-light);
     border-radius: 3px;
+    
+    body[theme='dark'] & {
+      background: var(--o-bash-bg, #2a2f37);
+    }
   }
   
   &::-webkit-scrollbar-thumb {
-    background: var(--el-border-color);
+    background: var(--o-scrollbar-thumb, var(--el-border-color));
     border-radius: 3px;
     
     &:hover {

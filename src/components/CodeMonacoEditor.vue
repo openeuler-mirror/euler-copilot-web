@@ -4,7 +4,7 @@
     <div class="editor-toolbar">
       <div class="toolbar-left">
         <div class="language-selector">
-          <label>语言：</label>
+          <label>{{ $t('flow.language') }}:</label>
           <el-select 
             v-model="currentLanguage" 
             @change="handleLanguageChange"
@@ -18,22 +18,22 @@
         </div>
                  <div class="toolbar-actions">
            <el-button size="small" type="text" @click="insertTemplate">
-             插入模板
+             {{ $t('flow.insert_template') }}
            </el-button>
            <el-button size="small" type="text" @click="formatCode">
-             格式化
+             {{ $t('flow.format_code') }}
            </el-button>
            <el-button size="small" type="text" @click="copyCode" :icon="CopyDocument">
-             复制
+             {{ $t('common.copy') }}
            </el-button>
            <el-button 
              size="small" 
              type="text" 
              @click="toggleFullScreen"
              :icon="isFullScreen ? Minus : FullScreen"
-             :title="isFullScreen ? '退出全屏' : '全屏'"
+             :title="isFullScreen ? $t('flow.exit_fullscreen') : $t('flow.fullscreen')"
            >
-             {{ isFullScreen ? '退出全屏' : '全屏' }}
+             {{ isFullScreen ? $t('flow.exit_fullscreen') : $t('flow.fullscreen') }}
            </el-button>
          </div>
       </div>
@@ -45,7 +45,7 @@
             v-model="selectedSymbol" 
             @change="navigateToSymbol"
             size="small"
-            placeholder="跳转到..."
+            :placeholder="$t('flow.navigate_to')"
             style="width: 200px"
             clearable
             filterable
@@ -79,6 +79,7 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
 import { ElSelect, ElOption, ElButton, ElMessage } from 'element-plus'
 import { CopyDocument, FullScreen, Minus } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import * as monaco from 'monaco-editor'
 
 interface Props {
@@ -96,7 +97,7 @@ const props = withDefaults(defineProps<Props>(), {
   language: 'python',
   minHeight: 200,
   maxHeight: 600,
-  placeholder: '请输入代码...',
+  placeholder: 'Please enter code...',
   disabled: false,
   customTemplate: undefined
 })
@@ -107,6 +108,7 @@ const emit = defineEmits<{
   'language-change': [language: string]
 }>()
 
+const { t } = useI18n()
 const editorContainer = ref<HTMLElement>()
 const currentLanguage = ref(props.language)
 const selectedSymbol = ref('')
@@ -138,23 +140,23 @@ const containerHeight = computed(() => {
 })
 
 // 代码模板
-const codeTemplates = {
+const codeTemplates = computed(() => ({
   python: `def main(**kwargs):
     """
-    代码执行主函数
+    ${t('flow.code_main_function')}
     
     Args:
-        **kwargs: 输入变量字典
+        **kwargs: ${t('flow.input_variables_dict')}
         
     Returns:
-        dict: 输出变量字典
+        dict: ${t('flow.output_variables_dict')}
     """
-    # 获取输入变量
-    # 示例：value = kwargs.get('input_variable_name', default_value)
+    # ${t('flow.get_input_variables')}
+    # ${t('flow.example_get_variable')}
     
-    # 在这里编写您的 Python 代码
+    # ${t('flow.write_python_code_here')}
     result = {
-        # 定义输出变量
+        # ${t('flow.define_output_variables')}
         # 'output_variable_name': value
     }
     
@@ -162,18 +164,18 @@ const codeTemplates = {
     
   javascript: `function main(variables = {}) {
     /**
-     * 代码执行主函数
+     * ${t('flow.code_main_function')}
      * 
-     * @param {Object} variables - 输入变量对象
-     * @returns {Object} 输出变量对象
+     * @param {Object} variables - ${t('flow.input_variables_object')}
+     * @returns {Object} ${t('flow.output_variables_object')}
      */
     
-    // 获取输入变量
-    // 示例：const value = variables.input_variable_name || default_value;
+    // ${t('flow.get_input_variables')}
+    // ${t('flow.example_js_get_variable')}
     
-    // 在这里编写您的 JavaScript 代码
+    // ${t('flow.write_js_code_here')}
     const result = {
-        // 定义输出变量
+        // ${t('flow.define_output_variables')}
         // output_variable_name: value
     };
     
@@ -182,17 +184,17 @@ const codeTemplates = {
     
   shell: `#!/bin/bash
 
-# 代码执行主函数
-# 输入变量通过环境变量传递：INPUT_VARIABLE_NAME
-# 输出变量以JSON格式打印到stdout
+# ${t('flow.code_main_function')}
+# ${t('flow.shell_input_env_vars')}
+# ${t('flow.shell_output_json')}
 
 main() {
-    # 获取输入变量
-    # 示例：local value="\${INPUT_VARIABLE_NAME:-default_value}"
+    # ${t('flow.get_input_variables')}
+    # ${t('flow.example_shell_get_variable')}
     
-    # 在这里编写您的 Bash 代码
+    # ${t('flow.write_bash_code_here')}
     
-    # 输出JSON格式结果
+    # ${t('flow.output_json_result')}
     cat << EOF
 {
     "output_variable_name": "value"
@@ -200,9 +202,9 @@ main() {
 EOF
 }
 
-# 调用主函数
+# ${t('flow.call_main_function')}
 main`
-}
+}))
 
 // 初始化Monaco Editor
 const initMonacoEditor = async () => {
@@ -261,7 +263,7 @@ const initMonacoEditor = async () => {
 
   // 创建编辑器
   editor = monaco.editor.create(editorContainer.value, {
-    value: props.modelValue || codeTemplates[currentLanguage.value] || '',
+    value: props.modelValue || codeTemplates.value[currentLanguage.value] || '',
     language: currentLanguage.value,
     theme: 'atom-one-dark-pro',
     automaticLayout: true,
@@ -381,7 +383,7 @@ const updateSymbols = async () => {
     
     symbols.value = foundSymbols
   } catch (error) {
-    console.warn('获取文档符号失败:', error)
+    console.warn('Failed to get document symbols:', error)
     symbols.value = []
   }
 }
@@ -441,11 +443,11 @@ const handleLanguageChange = (newLanguage: string) => {
 // 插入模板
 const insertTemplate = () => {
   // 优先使用传入的自定义模板，否则使用默认模板
-  const template = props.customTemplate || codeTemplates[currentLanguage.value]
+  const template = props.customTemplate || codeTemplates.value[currentLanguage.value]
   if (editor && template) {
     editor.setValue(template)
     emit('update:modelValue', template)
-    ElMessage.success('模板已插入')
+    ElMessage.success(t('flow.template_inserted'))
   }
 }
 
@@ -453,7 +455,7 @@ const insertTemplate = () => {
 const formatCode = () => {
   if (editor) {
     editor.getAction('editor.action.formatDocument')?.run()
-    ElMessage.success('代码已格式化')
+    ElMessage.success(t('flow.code_formatted'))
   }
 }
 
@@ -463,10 +465,10 @@ const copyCode = async () => {
     const code = editor.getValue()
     try {
       await navigator.clipboard.writeText(code)
-      ElMessage.success('代码已复制到剪贴板')
+      ElMessage.success(t('flow.code_copied'))
     } catch (err) {
-      console.error('复制失败:', err)
-      ElMessage.error('复制失败，请手动复制')
+      console.error('Copy failed:', err)
+      ElMessage.error(t('flow.copy_failed'))
     }
   }
 }
@@ -477,7 +479,7 @@ const toggleFullScreen = () => {
   
   if (isFullScreen.value) {
     // 进入全屏模式 - 立即应用所有样式避免动画过程
-    ElMessage.info('按 ESC 或 F11 键退出全屏模式')
+    ElMessage.info(t('flow.fullscreen_exit_tip'))
     
     // 先应用全屏样式，再添加类名，确保无缝切换
     addFullscreenStyles()

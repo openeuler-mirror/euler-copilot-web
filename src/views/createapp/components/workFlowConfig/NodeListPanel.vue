@@ -13,7 +13,7 @@
         v-if="searchKeyword.trim()"
         class="clear-icon"
         @click="resetSearch"
-        title="清空搜索"
+        :title="$t('common.clear_search')"
       >
         ✕
       </div>
@@ -55,7 +55,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getSrcIcon } from '../types';
+
+const { t } = useI18n();
 
 // Props
 interface Props {
@@ -87,13 +90,7 @@ const emit = defineEmits<Emits>();
 // 响应式数据
 const searchKeyword = ref('');
 
-// Node type名称映射字典
-const nodeTypeNameMap: Record<string, string> = {
-  'tool': '工具',
-  'transform': '转换',
-  'logic': '逻辑',
-  'default': 'default'
-};
+// 删除硬编码的映射字典，使用国际化函数
 
 // 计算属性：获取service类型的节点数据
 const serviceNodes = computed(() => {
@@ -200,9 +197,19 @@ const handleSearch = () => {
   // 搜索逻辑已经在computed中处理
 };
 
-// 获取type的显示名称
+// 获取type的显示名称 - 使用国际化
 const getTypeDisplayName = (type: string): string => {
-  return nodeTypeNameMap[type] || type;
+  // 首先尝试从国际化翻译中获取
+  const translationKey = `flow.node_groups.${type}`;
+  const translated = t(translationKey);
+  
+  // 如果翻译键存在且不等于键本身，返回翻译结果
+  if (translated && translated !== translationKey) {
+    return translated;
+  }
+  
+  // 否则返回原始type值
+  return type;
 };
 
 // 重置搜索关键词的方法
@@ -221,6 +228,8 @@ defineExpose({
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  flex: 1;
   
   .search-bar {
     display: flex;
@@ -266,7 +275,7 @@ defineExpose({
   
   .nodes-list {
     flex: 1;
-    overflow-y: auto;
+    overflow: visible;
     min-height: 0;
     
     .node-group {

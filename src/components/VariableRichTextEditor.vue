@@ -4,47 +4,56 @@
     <div class="editor-container">
       <!-- 工具栏 -->
       <div class="editor-toolbar">
-        <span class="toolbar-title">回复</span>
+        <span class="toolbar-title">{{ $t('common.reply') }}</span>
         <div class="toolbar-actions">
           <el-tooltip content="输入 / 或 &#123;&#123; 插入变量" placement="top">
-            <div class="variable-button-container" ref="variableButtonRef" @click.stop>
-                <el-button 
-                size="small" 
-                type="text" 
+            <div
+              class="variable-button-container"
+              ref="variableButtonRef"
+              @click.stop
+            >
+              <el-button
+                size="small"
+                type="text"
                 @click.stop="toggleVariableDropdown"
                 @mousedown.stop
                 @mouseup.stop
-                :class="{ 'active': showVariableDropdown }"
+                :class="{ active: showVariableDropdown }"
                 class="toolbar-btn"
-                >
+              >
                 {x}
-                </el-button>
-                
-                <!-- 变量插入下拉框 -->
-                <teleport to="body">
-                <div 
-                    v-if="showVariableDropdown" 
-                    class="variable-dropdown-wrapper"
-                    :style="dropdownPosition"
-                    @click.stop
-                    @mousedown.stop.prevent
-                    @mouseup.stop
+              </el-button>
+
+              <!-- 变量插入下拉框 -->
+              <teleport to="body">
+                <div
+                  v-if="showVariableDropdown"
+                  class="variable-dropdown-wrapper"
+                  :style="dropdownPosition"
+                  @click.stop
+                  @mousedown.stop.prevent
+                  @mouseup.stop
                 >
-                    <VariableInsertDropdown
-                    :supported-scopes="['conversation', 'system', 'env', 'user']"
+                  <VariableInsertDropdown
+                    :supported-scopes="[
+                      'conversation',
+                      'system',
+                      'env',
+                      'user',
+                    ]"
                     :flow-id="flowId"
                     :current-step-id="currentStepId"
                     @variable-selected="handleVariableSelection"
                     @variables-loaded="handleVariablesLoaded"
-                    />
+                  />
                 </div>
-                </teleport>
+              </teleport>
             </div>
           </el-tooltip>
           <el-tooltip content="复制内容" placement="top">
-            <el-button 
-              size="small" 
-              type="text" 
+            <el-button
+              size="small"
+              type="text"
               @click="copyContent"
               class="toolbar-btn"
             >
@@ -53,10 +62,10 @@
           </el-tooltip>
         </div>
       </div>
-      
+
       <!-- Tag模式编辑器 -->
       <div v-if="displayMode === 'tag'" class="tag-editor">
-        <div 
+        <div
           ref="tagEditorRef"
           class="editor-content"
           contenteditable="true"
@@ -72,7 +81,7 @@
           @compositionend="handleCompositionEnd"
         ></div>
       </div>
-      
+
       <!-- Text模式编辑器 -->
       <div v-else class="text-editor">
         <el-input
@@ -87,259 +96,278 @@
         />
       </div>
     </div>
-
-    
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { ElInput, ElMessage } from 'element-plus'
-import { IconCopy } from '@computing/opendesign-icons'
-import VariableInsertDropdown from '@/components/VariableInsertDropdown.vue'
-import { type Variable } from '@/components/useVariables'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { ElInput, ElMessage } from 'element-plus';
+import { IconCopy } from '@computing/opendesign-icons';
+import VariableInsertDropdown from '@/components/VariableInsertDropdown.vue';
+import { type Variable } from '@/components/useVariables';
 
 interface Props {
-  modelValue: string
-  flowId?: string
-  currentStepId?: string
-  placeholder?: string
+  modelValue: string;
+  flowId?: string;
+  currentStepId?: string;
+  placeholder?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
-  placeholder: '请输入内容...'
-})
+  placeholder: '请输入内容...',
+});
 
-const emit = defineEmits(['update:modelValue', 'variable-inserted', 'toggle-variable-selector', 'toggle-display-mode', 'copy-content'])
+const emit = defineEmits([
+  'update:modelValue',
+  'variable-inserted',
+  'toggle-variable-selector',
+  'toggle-display-mode',
+  'copy-content',
+]);
 
 // 可用变量列表（从 VariableInsertDropdown 组件传递过来）
-const availableVariables = ref<Variable[]>([])
+const availableVariables = ref<Variable[]>([]);
 
 // 响应式数据
-const tagEditorRef = ref<HTMLElement>()
-const textEditorRef = ref()
-const variableButtonRef = ref<HTMLElement>()
-const textContent = ref('')
-const showVariableDropdown = ref(false)
-const isComposing = ref(false)
-const displayMode = ref<'tag' | 'text'>('tag')
-const isUpdatingTagEditor = ref(false)
-const isEnterKeyPressed = ref(false)
+const tagEditorRef = ref<HTMLElement>();
+const textEditorRef = ref();
+const variableButtonRef = ref<HTMLElement>();
+const textContent = ref('');
+const showVariableDropdown = ref(false);
+const isComposing = ref(false);
+const displayMode = ref<'tag' | 'text'>('tag');
+const isUpdatingTagEditor = ref(false);
+const isEnterKeyPressed = ref(false);
 
 // 工具函数
 const getVariableDisplayName = (variable: Variable): string => {
   if (variable.scope === 'system') {
     const nameMap = {
-      'query': 'system.query',
-      'files': 'system.files',
-      'dialogue_count': 'system.dialogue_count',
-      'app_id': 'system.app_id',
-      'flow_id': 'system.flow_id',
-      'user_id': 'system.user_id',
-      'session_id': 'system.session_id',
-      'timestamp': 'system.timestamp'
-    }
-    return nameMap[variable.name] || `system.${variable.name}`
+      query: 'system.query',
+      files: 'system.files',
+      dialogue_count: 'system.dialogue_count',
+      app_id: 'system.app_id',
+      flow_id: 'system.flow_id',
+      user_id: 'system.user_id',
+      session_id: 'system.session_id',
+      timestamp: 'system.timestamp',
+    };
+    return nameMap[variable.name] || `system.${variable.name}`;
   }
-  
+
   // 特殊处理具备step_id的conversation变量
   if (variable.scope === 'conversation' && variable.step_id && variable.step) {
-    return `${variable.step}.${variable.name}`
+    return `${variable.step}.${variable.name}`;
   }
-  
-  return `${variable.scope}.${variable.name}`
-}
+
+  return `${variable.scope}.${variable.name}`;
+};
 
 // 生成插入用的变量名格式
 const getVariableInsertName = (variable: Variable): string => {
   if (variable.scope === 'system') {
     const nameMap = {
-      'query': 'system.query',
-      'files': 'system.files',
-      'dialogue_count': 'system.dialogue_count',
-      'app_id': 'system.app_id',
-      'flow_id': 'system.flow_id',
-      'user_id': 'system.user_id',
-      'session_id': 'system.session_id',
-      'timestamp': 'system.timestamp'
-    }
-    return nameMap[variable.name] || `system.${variable.name}`
+      query: 'system.query',
+      files: 'system.files',
+      dialogue_count: 'system.dialogue_count',
+      app_id: 'system.app_id',
+      flow_id: 'system.flow_id',
+      user_id: 'system.user_id',
+      session_id: 'system.session_id',
+      timestamp: 'system.timestamp',
+    };
+    return nameMap[variable.name] || `system.${variable.name}`;
   }
-  
+
   // 特殊处理具备step_id的conversation变量
   if (variable.scope === 'conversation' && variable.step_id) {
-    return `conversation.${variable.step_id}.${variable.name}`
+    return `conversation.${variable.step_id}.${variable.name}`;
   }
-  
-  return `${variable.scope}.${variable.name}`
-}
+
+  return `${variable.scope}.${variable.name}`;
+};
 
 // 根据插入格式的变量名获取显示文本
 const getDisplayTextFromInsertName = (insertName: string): string => {
   if (!availableVariables.value || availableVariables.value.length === 0) {
-    return insertName
+    return insertName;
   }
-  
+
   // 查找匹配的变量对象
-  const matchedVariable = availableVariables.value.find(variable => {
-    const expectedInsertName = getVariableInsertName(variable)
-    return expectedInsertName === insertName
-  })
-  
+  const matchedVariable = availableVariables.value.find((variable) => {
+    const expectedInsertName = getVariableInsertName(variable);
+    return expectedInsertName === insertName;
+  });
+
   if (matchedVariable) {
-    return getVariableDisplayName(matchedVariable)
+    return getVariableDisplayName(matchedVariable);
   }
-  
+
   // 如果找不到匹配的变量，尝试解析conversation.step_id.variable_name格式
   if (insertName.includes('.')) {
-    const parts = insertName.split('.')
-    
+    const parts = insertName.split('.');
+
     // 处理conversation.step_id.variable_name格式
     if (parts.length === 3 && parts[0] === 'conversation') {
-      const [scope, stepId, varName] = parts
-      const conversationVariable = availableVariables.value.find(variable => 
-        variable.scope === scope && variable.step_id === stepId && variable.name === varName
-      )
-      
+      const [scope, stepId, varName] = parts;
+      const conversationVariable = availableVariables.value.find(
+        (variable) =>
+          variable.scope === scope &&
+          variable.step_id === stepId &&
+          variable.name === varName,
+      );
+
       if (conversationVariable && conversationVariable.step) {
-        return `${conversationVariable.step}.${conversationVariable.name}`
+        return `${conversationVariable.step}.${conversationVariable.name}`;
       }
     }
   }
-  
+
   // fallback：返回原始名称
-  return insertName
-}
+  return insertName;
+};
 
 // 检查变量是否在可用变量列表中
 const isVariableValid = (variableName: string): boolean => {
   if (!availableVariables.value || availableVariables.value.length === 0) {
-    return true
+    return true;
   }
-  
-  return availableVariables.value.some(variable => {
+
+  return availableVariables.value.some((variable) => {
     // 检查插入格式是否匹配
-    const expectedInsertName = getVariableInsertName(variable)
+    const expectedInsertName = getVariableInsertName(variable);
     if (expectedInsertName === variableName) {
-      return true
+      return true;
     }
-    
+
     // 检查显示格式是否匹配（为了兼容性）
-    const expectedDisplayName = getVariableDisplayName(variable)
+    const expectedDisplayName = getVariableDisplayName(variable);
     if (expectedDisplayName === variableName) {
-      return true
+      return true;
     }
-    
+
     // 特殊处理conversation.step_id.variable_name格式
     if (variableName.includes('.')) {
-      const parts = variableName.split('.')
-      
+      const parts = variableName.split('.');
+
       // 处理conversation.step_id.variable_name格式
       if (parts.length === 3 && parts[0] === 'conversation') {
-        const [scope, stepId, varName] = parts
-        if (variable.scope === scope && variable.step_id === stepId && variable.name === varName) {
-          return true
+        const [scope, stepId, varName] = parts;
+        if (
+          variable.scope === scope &&
+          variable.step_id === stepId &&
+          variable.name === varName
+        ) {
+          return true;
         }
       }
-      
+
       // 处理scope.variable_name格式
       if (parts.length === 2) {
-        const [scope, varName] = parts
+        const [scope, varName] = parts;
         if (variable.scope === scope && variable.name === varName) {
-          return true
+          return true;
         }
       }
     } else {
       // 没有scope的情况，仅通过变量名匹配
       if (variable.name === variableName) {
-        return true
+        return true;
       }
     }
-    
-    return false
-  })
-}
+
+    return false;
+  });
+};
 
 // 更新tag编辑器内容
 const updateTagEditor = (content: string) => {
-  if (!tagEditorRef.value) return
-  
+  if (!tagEditorRef.value) return;
+
   if (isUpdatingTagEditor.value) {
-    return
+    return;
   }
-  
+
   try {
-    isUpdatingTagEditor.value = true
-    
+    isUpdatingTagEditor.value = true;
+
     // 将 {{variable}} 格式转换为带样式的span标签
-    const htmlContent = content.replace(/\{\{([^}]+)\}\}/g, (match, variableName) => {
-      const escapedVariableName = variableName.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-      
-      const isValid = isVariableValid(variableName)
-      
-      const tagClass = isValid ? 'variable-tag' : 'variable-tag variable-tag-invalid'
-      const backgroundStyle = isValid 
-        ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;'
-        : 'background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;'
-      
-      const titleAttribute = isValid ? '' : `title="变量 ${variableName} 不存在"`
-      
-      return `<span class="${tagClass}" contenteditable="false" data-variable="${escapedVariableName}" data-original-name="${escapedVariableName}" data-valid="${isValid}" ${titleAttribute} style="display: inline-block !important; padding: 2px 8px !important; margin: 0 2px !important; ${backgroundStyle} color: white !important; border-radius: 4px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; user-select: none !important; vertical-align: middle !important; direction: ltr !important; unicode-bidi: normal !important; text-align: center !important; writing-mode: horizontal-tb !important;">${getDisplayTextFromInsertName(variableName)}</span>`
-    })
-    
-    tagEditorRef.value.innerHTML = htmlContent
-    
+    const htmlContent = content.replace(
+      /\{\{([^}]+)\}\}/g,
+      (match, variableName) => {
+        const escapedVariableName = variableName
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+
+        const isValid = isVariableValid(variableName);
+
+        const tagClass = isValid
+          ? 'variable-tag'
+          : 'variable-tag variable-tag-invalid';
+        const backgroundStyle = isValid
+          ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;'
+          : 'background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;';
+
+        const titleAttribute = isValid
+          ? ''
+          : `title="变量 ${variableName} 不存在"`;
+
+        return `<span class="${tagClass}" contenteditable="false" data-variable="${escapedVariableName}" data-original-name="${escapedVariableName}" data-valid="${isValid}" ${titleAttribute} style="display: inline-block !important; padding: 2px 8px !important; margin: 0 2px !important; ${backgroundStyle} color: white !important; border-radius: 4px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; user-select: none !important; vertical-align: middle !important; direction: ltr !important; unicode-bidi: normal !important; text-align: center !important; writing-mode: horizontal-tb !important;">${getDisplayTextFromInsertName(variableName)}</span>`;
+      },
+    );
+
+    tagEditorRef.value.innerHTML = htmlContent;
+
     setTimeout(() => {
-      isUpdatingTagEditor.value = false
-    }, 50)
-    
+      isUpdatingTagEditor.value = false;
+    }, 50);
   } catch (error) {
-    isUpdatingTagEditor.value = false
+    isUpdatingTagEditor.value = false;
   }
-}
+};
 
 const closeVariableDropdown = () => {
   if (isInsertingTriggerChar.value) {
-    return
+    return;
   }
-  
+
   if (showVariableDropdown.value) {
-    showVariableDropdown.value = false
-    
+    showVariableDropdown.value = false;
+
     setTimeout(() => {
       if (availableVariables.value.length > 0 && displayMode.value === 'tag') {
-        const cursorPos = saveCursorPosition()
-        const currentContent = props.modelValue
-        updateTagEditor(currentContent)
-        
+        const cursorPos = saveCursorPosition();
+        const currentContent = props.modelValue;
+        updateTagEditor(currentContent);
+
         if (cursorPos !== null) {
           nextTick(() => {
-            restoreCursorPosition(cursorPos)
-          })
+            restoreCursorPosition(cursorPos);
+          });
         }
       }
-    }, 50)
+    }, 50);
   }
-}
+};
 
 // 处理变量列表加载完成
 const handleVariablesLoaded = (variables: Variable[]) => {
-  availableVariables.value = variables
-  
+  availableVariables.value = variables;
+
   if (isUpdatingTagEditor.value) {
-    return
+    return;
   }
-  
+
   if (showVariableDropdown.value) {
-    return
+    return;
   }
-  
+
   if (displayMode.value === 'tag') {
-    const currentContent = props.modelValue
-    updateTagEditor(currentContent)
+    const currentContent = props.modelValue;
+    updateTagEditor(currentContent);
   }
-}
+};
 
 const handleVariableSelection = (variable: Variable) => {
   isSelectingVariable.value = true
@@ -779,38 +807,42 @@ const handleDocumentClick = (event: MouseEvent) => {
 }
 
 // 监听器
-watch(() => props.modelValue, (newVal) => {
-  if (isUpdatingTagEditor.value) {
-    return
-  }
-  
-  if (displayMode.value === 'text') {
-    textContent.value = newVal
-  } else {
-    updateTagEditor(newVal)
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (isUpdatingTagEditor.value) {
+      return;
+    }
+
+    if (displayMode.value === 'text') {
+      textContent.value = newVal;
+    } else {
+      updateTagEditor(newVal);
+    }
+  },
+  { immediate: true },
+);
 
 watch(showVariableDropdown, (newValue) => {
   if (newValue) {
     nextTick(() => {
-      updateDropdownPosition()
-    })
+      updateDropdownPosition();
+    });
   }
-})
+});
 
 watch(displayMode, (newMode) => {
   if (newMode === 'text') {
-    const currentContent = getTagEditorContent()
-    textContent.value = currentContent
-    emit('update:modelValue', currentContent)
+    const currentContent = getTagEditorContent();
+    textContent.value = currentContent;
+    emit('update:modelValue', currentContent);
   } else {
     nextTick(() => {
-      updateTagEditor(textContent.value)
-      emit('update:modelValue', textContent.value)
-    })
+      updateTagEditor(textContent.value);
+      emit('update:modelValue', textContent.value);
+    });
   }
-})
+});
 
 watch(availableVariables, () => {
   if (isUpdatingTagEditor.value) {
@@ -2011,8 +2043,8 @@ const insertVariable = (variableName: string, variable: Variable) => {
 
 // 暴露方法给父组件
 defineExpose({
-  insertVariable
-})
+  insertVariable,
+});
 
 // 保存和恢复光标位置
 const saveCursorPosition = () => {
@@ -2152,24 +2184,23 @@ const restoreCursorPositionByOffset = (savedPosition: number) => {
 // 生命周期
 onMounted(() => {
   if (displayMode.value === 'tag') {
-    updateTagEditor(props.modelValue)
+    updateTagEditor(props.modelValue);
   } else {
-    textContent.value = props.modelValue
+    textContent.value = props.modelValue;
   }
-  
-  nextTick(() => {
-  })
-  
-  document.addEventListener('click', handleDocumentClick)
-  window.addEventListener('scroll', handleScroll, true)
-  window.addEventListener('resize', handleResize)
-})
+
+  nextTick(() => {});
+
+  document.addEventListener('click', handleDocumentClick);
+  window.addEventListener('scroll', handleScroll, true);
+  window.addEventListener('resize', handleResize);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleDocumentClick)
-  window.removeEventListener('scroll', handleScroll, true)
-  window.removeEventListener('resize', handleResize)
-})
+  document.removeEventListener('click', handleDocumentClick);
+  window.removeEventListener('scroll', handleScroll, true);
+  window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <style scoped lang="scss">
@@ -2177,18 +2208,23 @@ onUnmounted(() => {
   position: relative;
 
   .editor-container {
-    border: 1px solid #dcdfe6;
+    border: 1px solid var(--el-border-color-light);
     border-radius: 4px;
-    background-color: #fafbfc;
+    background-color: var(--el-bg-color);
     overflow: hidden;
     transition: border-color 0.2s ease;
     
+    body[theme='dark'] & {
+      background-color: #1f2329;
+      border-color: var(--el-border-color);
+    }
+    
     &:focus-within {
-      border-color: #409eff;
+      border-color: var(--el-color-primary);
     }
     
     &:hover {
-      border-color: #c0c4cc;
+      border-color: var(--el-border-color);
     }
 
     .editor-toolbar {
@@ -2196,12 +2232,20 @@ onUnmounted(() => {
       justify-content: space-between;
       align-items: center;
       padding: 8px 12px;
-      background-color: #fafbfc;
+      background-color: var(--el-fill-color-extra-light);
+      
+      body[theme='dark'] & {
+        background-color: #1f2329;
+      };
 
       .toolbar-title {
         font-size: 14px;
         font-weight: 500;
-        color: #303133;
+        color: var(--el-text-color-primary);
+        
+        body[theme='dark'] & {
+          color: #e4e8ee;
+        }
       }
 
       .toolbar-actions {
@@ -2213,20 +2257,32 @@ onUnmounted(() => {
       .toolbar-btn {
         padding: 4px 8px;
         width: 30px;
-        color: #606266;
+        color: var(--el-text-color-secondary);
         background-color: transparent;
         border: none;
         border-radius: 3px;
         font-size: 12px;
         
+        body[theme='dark'] & {
+          color: #d3dce9;
+        }
+        
         &:hover {
-          background-color: #e6f7ff;
-          color: #409eff;
+          background-color: var(--el-color-primary-light-9);
+          color: var(--el-color-primary);
+          
+          body[theme='dark'] & {
+            background-color: var(--flow-node-default-over-color, #25303e);
+          }
         }
 
         &.active {
-          background-color: #e6f7ff;
-          color: #409eff;
+          background-color: var(--el-color-primary-light-9);
+          color: var(--el-color-primary);
+          
+          body[theme='dark'] & {
+            background-color: var(--flow-node-default-over-color, #25303e);
+          }
         }
 
         .el-icon {
@@ -2243,12 +2299,18 @@ onUnmounted(() => {
         padding: 12px;
         line-height: 1.5;
         font-size: 14px;
-        background-color: #fafbfc;
+        background-color: var(--el-bg-color);
+        color: var(--el-text-color-primary);
         cursor: text;
         border: none;
         box-sizing: border-box;
         width: 100%;
         resize: none;
+        
+        body[theme='dark'] & {
+          background-color: #1f2329;
+          color: #e4e8ee;
+        };
         
         /* 确保正确的文本方向 */
         direction: ltr !important;
@@ -2260,16 +2322,20 @@ onUnmounted(() => {
 
         &[contenteditable]:empty:before {
           content: attr(placeholder);
-          color: #c0c4cc;
+          color: var(--el-text-color-placeholder);
           direction: ltr !important;
           text-align: left !important;
+          
+          body[theme='dark'] & {
+            color: #8d98aa;
+          }
         }
 
         :deep(.variable-tag) {
           display: inline-block !important;
           padding: 2px 8px !important;
           margin: 0 2px !important;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-dark-2) 100%) !important;
           color: white !important;
           border-radius: 4px !important;
           font-size: 12px !important;
@@ -2279,17 +2345,25 @@ onUnmounted(() => {
           vertical-align: middle !important;
           pointer-events: auto !important; // 确保可以响应hover事件
           
+          body[theme='dark'] & {
+            background: linear-gradient(135deg, var(--el-color-primary-light-3) 0%, var(--el-color-primary) 100%) !important;
+          }
+          
           &:hover {
             opacity: 0.8 !important;
           }
           
           // 无效变量的警告样式
           &.variable-tag-invalid {
-            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+            background: linear-gradient(135deg, var(--el-color-danger) 0%, var(--el-color-danger-dark-2) 100%) !important;
             position: relative;
             cursor: help !important; // 使用help光标提示有tooltip
             pointer-events: all !important; // 强制允许所有指针事件
             user-select: auto !important; // 允许选择以支持tooltip
+            
+            body[theme='dark'] & {
+              background: linear-gradient(135deg, var(--el-color-danger-light-3) 0%, var(--el-color-danger) 100%) !important;
+            }
             
             &:hover {
               opacity: 0.9 !important;
@@ -2316,11 +2390,17 @@ onUnmounted(() => {
           border-radius: 0;
           box-shadow: none;
           padding: 12px;
-          background-color: #fafbfc;
+          background-color: var(--el-bg-color);
+          color: var(--el-text-color-primary);
           min-height: 120px;
           max-height: 300px;
           resize: none;
           box-sizing: border-box;
+          
+          body[theme='dark'] & {
+            background-color: #1f2329;
+            color: #e4e8ee;
+          }
           
           /* 修复文本方向问题 */
           direction: ltr !important;
@@ -2331,7 +2411,11 @@ onUnmounted(() => {
           &:focus {
             border-color: transparent;
             box-shadow: none;
-            background-color: #fafbfc;
+            background-color: var(--el-bg-color);
+            
+            body[theme='dark'] & {
+              background-color: #1f2329;
+            }
           }
         }
       }
@@ -2351,11 +2435,17 @@ onUnmounted(() => {
       justify-content: space-between;
       margin-top: 8px;
       padding: 8px;
-      background-color: #e6f7ff;
-      border: 1px solid #91d5ff;
+      background-color: var(--el-color-info-light-9);
+      border: 1px solid var(--el-color-info-light-7);
       border-radius: 4px;
       font-size: 12px;
-      color: #0066cc;
+      color: var(--el-color-info);
+      
+      body[theme='dark'] & {
+        background-color: var(--flow-node-default-over-color, #25303e);
+        border-color: var(--el-border-color);
+        color: #d3dce9;
+      }
     }
   }
 
@@ -2373,6 +2463,11 @@ onUnmounted(() => {
 .variable-dropdown-wrapper {
   /* 确保在最顶层显示 */
   z-index: 9999 !important;
+  
+  body[theme='dark'] & {
+    /* 下拉框深色主题样式由 VariableInsertDropdown 组件处理 */
+    color: inherit;
+  }
 }
 
 /* 简化的全局变量标签样式 */
@@ -2380,7 +2475,7 @@ onUnmounted(() => {
   display: inline-block !important;
   padding: 2px 8px !important;
   margin: 0 2px !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-dark-2) 100%) !important;
   color: white !important;
   border-radius: 4px !important;
   font-size: 12px !important;
@@ -2390,17 +2485,25 @@ onUnmounted(() => {
   vertical-align: middle !important;
   pointer-events: auto !important; // 确保可以响应hover事件
   
+  body[theme='dark'] & {
+    background: linear-gradient(135deg, var(--el-color-primary-light-3) 0%, var(--el-color-primary) 100%) !important;
+  }
+  
   &:hover {
     opacity: 0.8 !important;
   }
   
   // 无效变量的警告样式
   &.variable-tag-invalid {
-    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+    background: linear-gradient(135deg, var(--el-color-danger) 0%, var(--el-color-danger-dark-2) 100%) !important;
     position: relative;
     cursor: help !important; // 使用help光标提示有tooltip
     pointer-events: all !important; // 强制允许所有指针事件
     user-select: auto !important; // 允许选择以支持tooltip
+    
+    body[theme='dark'] & {
+      background: linear-gradient(135deg, var(--el-color-danger-light-3) 0%, var(--el-color-danger) 100%) !important;
+    }
     
     &:hover {
       opacity: 0.9 !important;

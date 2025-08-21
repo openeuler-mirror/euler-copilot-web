@@ -383,7 +383,6 @@
           align-items: center;
         }
         .label {
-          max-width: 64px !important;
           flex: 1;
           height: 24px;
           line-height: 24px;
@@ -672,7 +671,7 @@
 
 // 深色主题变量 - 使用用户指定的颜色
 [data-theme="dark"], .dark {
-  --flow-node-bg: #26262a;
+  --flow-node-bg: #353f58;
   --flow-node-border: rgba(255, 255, 255, 0.08);
   --flow-node-border-selected: #63b3ed;
   --flow-node-border-hover: rgba(255, 255, 255, 0.16);

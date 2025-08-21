@@ -4,6 +4,7 @@ import { ElDrawer, ElButton, ElInput, ElForm, ElFormItem, ElMessage } from 'elem
 import { Plus } from '@element-plus/icons-vue';
 import { v4 as uuidv4 } from 'uuid';
 import VariableAssignCard from './VariableAssignCard.vue';
+import i18n from '@/i18n';
 
 // 类型定义
 interface VariableOperation {
@@ -59,7 +60,7 @@ const localNodeData = ref<NodeData>({
 // 表单验证规则
 const rules = {
   name: [
-    { required: true, message: '请输入节点名称', trigger: 'blur' }
+    { required: true, message: i18n.global.t('flow.node_config.node_name_placeholder'), trigger: 'blur' }
   ]
 };
 
@@ -79,7 +80,7 @@ watch(
   ([visible, nodeData]) => {
     if (visible && nodeData && typeof nodeData === 'object') {
       localNodeData.value = {
-        name: nodeData.name || '变量赋值',
+        name: nodeData.name || i18n.global.t('flow.node_names.variable_assign'),
         description: nodeData.description || '',
         callId: nodeData.callId || 'VariableAssign',
         parameters: {
@@ -113,7 +114,7 @@ const addOperation = () => {
 // 删除操作
 const removeOperation = (operationIndex: number) => {
   if (operations.value.length <= 1) {
-    ElMessage.warning('至少需要保留一个变量操作');
+    ElMessage.warning(i18n.global.t('flow.node_config.at_least_one_operation'));
     return;
   }
   
@@ -129,7 +130,7 @@ const updateOperation = (operationIndex: number, updatedOperation: VariableOpera
 const validateData = (): boolean => {
   // 检查节点名称
   if (!localNodeData.value.name.trim()) {
-    ElMessage.error('请输入节点名称');
+    ElMessage.error(i18n.global.t('flow.node_config.node_name_placeholder'));
     return false;
   }
   
@@ -138,19 +139,19 @@ const validateData = (): boolean => {
     const operation = operations.value[i];
     
     if (!operation.variable_name.trim()) {
-      ElMessage.error(`第 ${i + 1} 个操作：请选择变量`);
+      ElMessage.error(i18n.global.t('flow.node_config.operation_select_variable', { index: i + 1 }));
       return false;
     }
     
     if (!operation.operation) {
-      ElMessage.error(`第 ${i + 1} 个操作：请选择操作类型`);
+      ElMessage.error(i18n.global.t('flow.node_config.operation_select_type', { index: i + 1 }));
       return false;
     }
     
     // 检查需要值的操作是否提供了值
     const operationsWithoutValue = ['clear', 'sqrt', 'pop_first', 'pop_last'];
     if (!operationsWithoutValue.includes(operation.operation) && !operation.value) {
-      ElMessage.error(`第 ${i + 1} 个操作：请输入操作值`);
+      ElMessage.error(i18n.global.t('flow.node_config.operation_input_value', { index: i + 1 }));
       return false;
     }
   }
@@ -201,7 +202,7 @@ const conversationId = computed(() => {
   <el-drawer
     :model-value="visible"
     @update:model-value="closeDrawer"
-    title="变量赋值节点配置"
+    :title="$t('flow.node_config.variable_assign_config')"
     :size="800"
     :before-close="closeDrawer"
   >
@@ -213,20 +214,20 @@ const conversationId = computed(() => {
         label-width="80px"
         class="node-form"
       >
-        <el-form-item label="节点名称" prop="name">
+        <el-form-item :label="$t('flow.node_config.node_name')" prop="name">
           <el-input
             v-model="localNodeData.name"
-            placeholder="请输入节点名称"
+            :placeholder="$t('flow.node_config.node_name_placeholder')"
             clearable
           />
         </el-form-item>
         
-        <el-form-item label="节点描述">
+        <el-form-item :label="$t('flow.node_config.node_description')">
           <el-input
             v-model="localNodeData.description"
             type="textarea"
             :rows="2"
-            placeholder="请输入节点描述（可选）"
+            :placeholder="$t('flow.node_config.node_description_placeholder')"
             clearable
           />
         </el-form-item>
@@ -235,14 +236,14 @@ const conversationId = computed(() => {
       <!-- 变量操作配置 -->
       <div class="operations-section">
         <div class="section-header">
-          <h3 class="section-title">变量操作</h3>
+          <h3 class="section-title">{{ $t('flow.node_config.variable_operations') }}</h3>
           <el-button
             type="primary"
             size="small"
             :icon="Plus"
             @click="addOperation"
           >
-            添加操作
+            {{ $t('flow.node_config.add_operation') }}
           </el-button>
         </div>
 
@@ -266,8 +267,8 @@ const conversationId = computed(() => {
 
       <!-- 操作按钮 -->
       <div class="drawer-footer">
-        <el-button @click="closeDrawer">取消</el-button>
-        <el-button type="primary" @click="saveNode">保存</el-button>
+        <el-button @click="closeDrawer">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="saveNode">{{ $t('common.confirm') }}</el-button>
       </div>
     </div>
   </el-drawer>

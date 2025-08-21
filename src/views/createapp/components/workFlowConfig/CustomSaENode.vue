@@ -2,6 +2,9 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, onMounted, watch, nextTick, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const props = defineProps({
   id: {
     type: String,
@@ -59,7 +62,7 @@ const setConnectStatus = (type) => {
 
 // 处理开始节点点击编辑
 const handleStartNodeClick = () => {
-  const isStartNode = props.data.name === '开始' || props.data.name === 'start';
+  const isStartNode = props.data.name === '开始' || props.data.name === 'start' || props.data.name === t('flow.node_names.start');
   if (isStartNode) {
     // 使用nextTick确保DOM更新完成
     nextTick(() => {
@@ -119,12 +122,12 @@ const conversationVariables = computed(() => {
 
 // 判断是否为开始节点
 const isStartNode = computed(() => {
-  return props.data.name === '开始' || props.data.name === 'start';
+  return props.data.name === '开始' || props.data.name === 'start' || props.data.name === t('flow.node_names.start');
 });
 
 // 判断是否为结束节点 
 const isEndNode = computed(() => {
-  return props.data.name === '结束' || props.data.name === 'end';
+  return props.data.name === '结束' || props.data.name === 'end' || props.data.name === t('flow.node_names.end');
 });
 
 // 获取变量类型的显示名称
@@ -206,19 +209,19 @@ watch(
         <div class="saEContent">
           <div class="saEHeader">
             <div
-              v-if="props.data.name === '开始' || props.data.name === 'start'"
+              v-if="isStartNode"
               class="saEIcon startIcon"
             ></div>
             <div
-              v-else-if="props.data.name === '结束' || props.data.name === 'end'"
+              v-else-if="isEndNode"
               class="saEIcon endIcon"
             ></div>
-            <div class="saEText" v-if="props.data.name === '开始'|| props.data.name === 'start'">{{ $t('main.start') }}</div>
-            <div class="saEText" v-else-if="props.data.name === '结束'|| props.data.name === 'end'">{{ $t('main.end') }}</div>
+            <div class="saEText" v-if="isStartNode">{{ $t('main.start') }}</div>
+            <div class="saEText" v-else-if="isEndNode">{{ $t('main.end') }}</div>
           </div>
           
           <!-- 开始节点显示对话级变量 -->
-          <div v-if="(props.data.name === '开始' || props.data.name === 'start') && conversationVariables.length > 0" class="conversationVariables">
+          <div v-if="isStartNode && conversationVariables.length > 0" class="conversationVariables">
             <div class="variableSection">
               <!-- 垂直排列所有conversation变量，每个在独立框中 -->
                           <div class="variableItem" v-for="(variable, index) in conversationVariables" :key="variable.name || index">
@@ -457,11 +460,11 @@ watch(
 
 /* 黑夜模式支持 - 使用用户指定的颜色规范 */
 .dark .nodeSaEBorder {
-  background: #26262a !important;
+  background: #353f58 !important;
   border: 2px solid rgba(255, 255, 255, 0.08) !important;
   
   .nodeSaEBorderBox {
-    background: #26262a !important;
+    background: #353f58 !important;
   }
   
   .saEText {
@@ -492,12 +495,12 @@ watch(
   
   .handle-plus-button .plus-icon {
     color: #63b3ed;
-    background: #26262a;
+    background: #353f58;
     border-color: #63b3ed;
     
     &:hover {
       background: #63b3ed;
-      color: #26262a;
+      color: #353f58;
     }
   }
 }

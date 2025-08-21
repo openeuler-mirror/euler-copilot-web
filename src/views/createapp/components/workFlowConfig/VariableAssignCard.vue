@@ -436,7 +436,7 @@ const handleValueChange = (value: any) => {
 // 深色主题支持
 .dark {
   .variable-assign-card {
-    background: #374151;
+    background: #1f2329;
     
     .operation-container {
       .operation-setting-col {

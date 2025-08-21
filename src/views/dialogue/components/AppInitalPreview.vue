@@ -61,7 +61,7 @@ watch(
   background-color: var(--o-bg-color-base);
   border-radius: 8px;
   bottom: 0px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--o-shadow-base);
   margin: 12px 88px;
 }
 
@@ -77,10 +77,10 @@ watch(
     float: right;
     text-align: center;
     margin-right: 98px;
-    color: #8d98aa;
+    color: var(--o-text-color-secondary);
 
     .red-word {
-      color: #e02020;
+      color: var(--o-color-danger);
     }
   }
 
