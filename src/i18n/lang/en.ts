@@ -263,6 +263,7 @@ export default {
     no_chat_history: 'No chat history available.',
     expand: 'Expand',
     myApp: 'My Apps',
+    auto_execute: 'Auto Execute',
   },
   feedback: {
     noCopyMessage: 'No information to copy.',

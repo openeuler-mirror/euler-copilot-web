@@ -266,6 +266,7 @@ export default {
     no_chat_history: '暂无历史对话',
     expand: '展开',
     myApp: '我的应用',
+    auto_execute: '自动执行',
   },
   feedback: {
     noCopyMessage: '无可复制的信息',
