@@ -223,15 +223,18 @@
                           v-if="
                             (userinfo.user_sub === item.author &&
                               pluginType === 'semantic_interface') ||
-                            (userinfo.is_admin && pluginType === 'mcp')
+                            pluginType === 'mcp'
                           "
                           class="deleteAndEdit"
                         >
                           <!-- 未安装、安装失败：安装 -->
                           <el-button
                             v-if="
+                              userinfo.is_admin &&
                               pluginType === 'mcp' &&
-                              ['init', 'cancelled', 'failed'].includes(item.status)
+                              ['init', 'cancelled', 'failed'].includes(
+                                item.status,
+                              )
                             "
                             text
                             @click.stop="
@@ -247,9 +250,7 @@
                               ['ready'].includes(item.status)
                             "
                             text
-                            @click.stop="
-                              onActiveService(item.serviceId, item.isActive)
-                            "
+                            @click.stop="showActive(item)"
                           >
                             {{
                               item.isActive
@@ -260,7 +261,10 @@
                           <!-- 未安装、安装成功、安装失败：编辑 -->
                           <el-button
                             text
-                            v-if="!['installing'].includes(item.status)"
+                            v-if="
+                              userinfo.is_admin &&
+                              !['installing'].includes(item.status)
+                            "
                             @click.stop="
                               openSidebar('edit', item.serviceId, pluginType)
                             "
@@ -270,13 +274,17 @@
                           <!-- 安装中：取消 -->
                           <el-button
                             text
-                            v-if="['installing'].includes(item.status)"
-                            @click.stop="onActiveService(item.serviceId, false)"
+                            v-if="
+                              userinfo.is_admin &&
+                              ['installing'].includes(item.status)
+                            "
+                            @click.stop="onActiveService(item.serviceId, true)"
                           >
                             {{ $t('semantic.cancel') }}
                           </el-button>
                           <!-- 删除 -->
                           <el-button
+                            v-if="userinfo.is_admin"
                             text
                             @click.stop="handleDelPlugin(item.serviceId)"
                           >
@@ -355,6 +363,12 @@
       @change="handleChangePage"
     />
   </div>
+  <ActiveModel
+    v-model:visible="activeModelVisible"
+    :item="activeModelItem"
+    :title="$t('plugin_center.mcp.active_mcp_service')"
+    @do-active="doActive"
+  />
 </template>
 <script setup lang="ts">
 import { IconError } from '@computing/opendesign-icons';
@@ -375,6 +389,8 @@ import CustomLoading from '../customLoading/index.vue';
 import McpDrawer from './components/McpDrawer.vue';
 import McpServiceDetailDrawer from './components/McpServiceDetail.vue';
 import { writeText } from '@/utils';
+import ActiveModel from './components/ActiveModel.vue';
+import { ElMessage } from 'element-plus';
 
 const { t } = i18n.global;
 
@@ -382,6 +398,9 @@ const createPopover = ref();
 
 const mcpDrawerVisible = ref(false);
 const mcpDetailDrawerVisible = ref(false);
+
+const activeModelVisible = ref(false);
+const activeModelItem = ref({});
 
 function onOpenMcpDrawer(id?: string) {
   if (id) {
@@ -442,8 +461,10 @@ const currentPageSize = ref(pagination.value.pageSizes[0]);
 const loading = ref(false);
 
 const mcpType = ref('all_select');
-const mcpIsActive = ref(<boolean | null> null);
-const mcpIsInstall = ref(<boolean | null> (userinfo.value.is_admin ? null : true));
+const mcpIsActive = ref(<boolean | null>null);
+const mcpIsInstall = ref(
+  <boolean | null>(userinfo.value.is_admin ? null : true),
+);
 
 const handleChangePage = (pageNum: number, pageSize: number) => {
   currentPage.value = pageNum;
@@ -669,10 +690,33 @@ const handleDelPlugin = async (id: string) => {
   });
 };
 
-async function onActiveService(serviceId: string, active: boolean = true) {
-  const [, res] = await api.activeMcpService(serviceId, !active);
+async function showActive(item: any) {
+  if (item.isActive) {
+    onActiveService(item.serviceId, item.isActive);
+  } else {
+    const [, res] = await api.getMcpServiceDetail(item.serviceId, true);
+    if (res) {
+      activeModelVisible.value = true;
+      activeModelItem.value = res.result;
+    }
+  }
+}
+
+function doActive(form: any) {
+  onActiveService(activeModelItem.value.serviceId, false, form);
+}
+
+async function onActiveService(
+  serviceId: string,
+  active: boolean = true,
+  mcpEnv?: any,
+) {
+  loading.value = true;
+  const [, res] = await api.activeMcpService(serviceId, !active, mcpEnv);
   if (res) {
     queryList(pluginType.value);
+    ElMessage.success('Success');
+    loading.value = false;
   }
 }
 

@@ -113,6 +113,7 @@ export default {
       installed: '已安装',
       not_active: '未激活', 
       active: '已激活',
+      active_mcp_service: '激活MCP服务',
     },
     upload_icon: '上传图标',
     please_upload_icon: '请上传图标',
