@@ -84,8 +84,9 @@ const deleteMcpService = (id: string) => {
   return del<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`);
 };
 
-const activeMcpService = (id: string, active: boolean) => {
-  return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`, { active });
+const activeMcpService = (id: string, active: boolean, mcpEnv?: any) => {
+  return post<{ serviceId: string }>(`${MCP_BASE_URL}/${id}`, { active, mcpEnv },
+    { 'Content-Type': 'multipart/form-data' },);
 };
 
 const installMcpService = (id: string) => {

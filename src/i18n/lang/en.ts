@@ -113,6 +113,7 @@ export default {
       installed: 'Installed',
       not_active: 'Not Active', 
       active: 'Active',
+      active_mcp_service: 'Active MCP Service',
     },
     upload_icon: 'Upload Icon',
     please_upload_icon: 'Upload an icon.',

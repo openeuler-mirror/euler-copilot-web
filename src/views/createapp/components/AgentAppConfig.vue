@@ -103,7 +103,7 @@ async function queryAgentConfig() {
     createAppForm.icon = icon || '';
     createAppForm.name = name;
     createAppForm.description = description;
-    createAppForm.mcps = mcpService || [];
+    createAppForm.mcps = mcpService?.map((item) => item.id) || [];
     createAppForm.dialogRounds = dialogRounds || 3;
     createAppForm.permission = permission || createAppForm.permission;
   }

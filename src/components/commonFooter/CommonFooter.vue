@@ -8,12 +8,33 @@ const agreeDialogVisiable = ref(false);
 // 协议内容
 const agreement = ref<string>('');
 const policy = ref<string>('');
+
+/**
+ * 获取当前语言
+ */
+const getLocale = () => {
+  const localLang = localStorage.getItem('copilot_language');
+  let locale = 'zh'; // 默认值
+
+  if (localLang) {
+    try {
+      const parsed = JSON.parse(localLang);
+      // 处理可能的 language 值：zh, zh_cn, zh-tw 等
+      if (parsed.language) {
+        locale = parsed.language.startsWith('zh') ? 'zh' : parsed.language;
+      }
+    } catch (e) {
+      console.error('解析语言设置失败:', e);
+    }
+  }
+  return locale;
+};
+
 /**
  * 读取协议
  */
 const readAgreement = async () => {
-  const localLang = localStorage.getItem('copilot_language');
-  const locale = (localLang && JSON.parse(localLang).language) || 'zh';
+  const locale = getLocale();
   const response =
     locale === 'en'
       ? await import('src/conf/agreement-en.md?raw')
@@ -23,8 +44,7 @@ const readAgreement = async () => {
 };
 
 const readPolicy = async () => {
-  const localLang = localStorage.getItem('copilot_language');
-  const locale = (localLang && JSON.parse(localLang).language) || 'zh';
+  const locale = getLocale();
   const response =
     locale === 'en'
       ? await import('src/conf/policy-en.md?raw')
