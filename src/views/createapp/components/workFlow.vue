@@ -35,6 +35,7 @@ import CodeNodeDrawer from './workFlowConfig/CodeNodeDrawer.vue';
 import DirectReplyDrawer from './workFlowConfig/DirectReplyDrawer.vue';
 import ChoiceBranchDrawer from './workFlowConfig/ChoiceBranchDrawer.vue';
 import VariableAssignNodeDrawer from './workFlowConfig/VariableAssignNodeDrawer.vue';
+import FileExtractorDrawer from './workFlowConfig/FileExtractorDrawer.vue';
 import InsertNodeMenu from './workFlowConfig/insertNodeMenu.vue';
 import { api } from 'src/apis';
 // 导入变量API
@@ -66,6 +67,7 @@ const isEditChoiceBranchNode = ref(false);
 const isEditVariableAssignNode = ref(false);
 const isEditLoopNode = ref(false);
 const isEditEnvironmentVariables = ref(false);
+const isEditFileExtractorNode = ref(false);
 const nodeName = ref('');
 const nodeDesc = ref('');
 const currentCodeNodeData = ref({});
@@ -73,6 +75,7 @@ const currentDirectReplyNodeData = ref({});
 const currentChoiceBranchNodeData = ref({});
 const currentVariableAssignNodeData = ref({});
 const currentLoopNodeData = ref({});
+const currentFileExtractorNodeData = ref({});
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const apiServiceList = ref([]);
@@ -129,6 +132,18 @@ const insertMenuData = ref<{
   handleInfo: null,
   direction: 'right'
 });
+
+// 额外的内置节点类型
+const extraNodeTypes = ref([
+  {
+    nodeId: 'FileExtract',
+    callId: 'FileExtract',
+    name: '文件提取器',
+    description: '从文件中提取文本内容，支持多种文件格式',
+    type: 'transform',
+    serviceId: 'system'
+  }
+]);
 
 const hanleAsideVisible = () => {
   if (!copilotAside.value) return;
@@ -324,6 +339,7 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
   isEditChoiceBranchNode.value = false;
   isEditVariableAssignNode.value = false;
   isEditLoopNode.value = false;
+  isEditFileExtractorNode.value = false;
   
   // 查找当前节点
   const currentNode = findNode(nodeId);
@@ -363,7 +379,8 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
       callId: currentNode.data.callId,
       parameters: {
         input_parameters: {
-          answer: currentNode.data.parameters?.input_parameters?.answer || ''
+          answer: currentNode.data.parameters?.input_parameters?.answer || '',
+          attachment: currentNode.data.parameters?.input_parameters?.attachment || {}
         },
         output_parameters: currentNode.data.parameters?.output_parameters || {}
       }
@@ -412,6 +429,32 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditVariableAssignNode.value = true;
+    
+    // 编辑时，需要debug 后才可发布
+    emits('updateFlowsDebug', false);
+    return;
+  } else if (currentNode && currentNode.data.callId === 'FileExtract') {
+    // 打开文件提取器节点编辑器
+    currentFileExtractorNodeData.value = {
+      name: currentNode.data.name,
+      description: currentNode.data.description,
+      callId: currentNode.data.callId,
+      parameters: {
+        input_parameters: currentNode.data.parameters?.input_parameters || { 
+          parse_method: '',
+          input_file: '' 
+        },
+        output_parameters: currentNode.data.parameters?.output_parameters || {
+          text: {
+            type: 'string',
+            description: '提取的文本内容'
+          }
+        }
+      }
+    };
+    nodeYamlId.value = nodeId;
+    selectedNodeId.value = nodeId;
+    isEditFileExtractorNode.value = true;
     
     // 编辑时，需要debug 后才可发布
     emits('updateFlowsDebug', false);
@@ -527,6 +570,16 @@ const closeVariableAssignDrawer = () => {
   currentLoopNodeId.value = '';
 };
 
+// 关闭文件提取器节点抽屉
+const closeFileExtractorDrawer = () => {
+  isEditFileExtractorNode.value = false;
+  selectedNodeId.value = '';
+  currentFileExtractorNodeData.value = {};
+  // 清除子工作流节点标识
+  isEditingSubFlowNode.value = false;
+  currentLoopNodeId.value = '';
+};
+
 // 保存条件分支节点
 const saveChoiceBranchNode = (nodeData, nodeId) => {
   if (isEditingSubFlowNode.value) {
@@ -568,6 +621,28 @@ const saveVariableAssignNode = (nodeData, nodeId) => {
     closeVariableAssignDrawer();
     
     ElMessage.success('变量赋值节点保存成功');
+  }
+};
+
+// 保存文件提取器节点
+const saveFileExtractorNode = (nodeData, nodeId) => {
+  if (isEditingSubFlowNode.value) {
+    // 如果是子工作流节点，使用LoopNode的保存方法
+    saveSubFlowNode(nodeData, nodeId);
+  } else {
+    // 外部节点，使用原有逻辑
+    const updateNodeParameter = {
+      id: nodeId,
+      ...nodeData,
+    };
+    
+    // 调用保存接口
+    saveFlow(updateNodeParameter);
+    
+    // 关闭抽屉
+    closeFileExtractorDrawer();
+    
+    ElMessage.success('文件提取器节点保存成功');
   }
 };
 
@@ -673,6 +748,8 @@ const saveSubFlowNode = async (nodeData, nodeId) => {
         closeChoiceBranchDrawer();
       } else if (isEditVariableAssignNode.value) {
         closeVariableAssignDrawer();
+      } else if (isEditFileExtractorNode.value) {
+        closeFileExtractorDrawer();
       } else if (isEditLoopNode.value) {
         closeLoopNodeDrawer();
       } else if (isEditYaml.value) {
@@ -701,6 +778,8 @@ const editSubFlowNode = (nodeName, nodeDesc, nodeParameters, nodeId, loopNodeId)
   isEditCodeNode.value = false;
   isEditDirectReplyNode.value = false;
   isEditChoiceBranchNode.value = false;
+  isEditVariableAssignNode.value = false;
+  isEditFileExtractorNode.value = false;
   isEditLoopNode.value = false;
   
   switch (callId) {
@@ -736,7 +815,8 @@ const editSubFlowNode = (nodeName, nodeDesc, nodeParameters, nodeId, loopNodeId)
         callId: callId,
         parameters: {
           input_parameters: {
-            answer: nodeParameters?.input_parameters?.answer || ''
+            answer: nodeParameters?.input_parameters?.answer || '',
+            attachment: nodeParameters?.input_parameters?.attachment || {}
           },
           output_parameters: nodeParameters?.output_parameters || {}
         }
@@ -781,6 +861,30 @@ const editSubFlowNode = (nodeName, nodeDesc, nodeParameters, nodeId, loopNodeId)
         nodeYamlId.value = nodeId;
         selectedNodeId.value = nodeId;
         isEditVariableAssignNode.value = true;
+        break;
+      
+      case 'FileExtract':
+        // 打开文件提取器节点编辑器
+        currentFileExtractorNodeData.value = {
+          name: nodeName,
+          description: nodeDesc,
+          callId: callId,
+          parameters: {
+            input_parameters: nodeParameters?.input_parameters || { 
+              parse_method: '',
+              input_file: '' 
+            },
+            output_parameters: nodeParameters?.output_parameters || {
+              text: {
+                type: 'string',
+                description: '提取的文本内容'
+              }
+            }
+          }
+        };
+        nodeYamlId.value = nodeId;
+        selectedNodeId.value = nodeId;
+        isEditFileExtractorNode.value = true;
         break;
       
     case 'Loop':
@@ -1959,6 +2063,13 @@ const saveFlow = async (updateNodeParameter?, debug?) => {
             }
             item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
             item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters || {};
+          } else if (item.callId === 'FileExtract') {
+            // 文件提取器节点
+            if (!item.parameters) {
+              item.parameters = {};
+            }
+            item.parameters.input_parameters = updateNodeParameter.parameters.input_parameters;
+            item.parameters.output_parameters = updateNodeParameter.parameters.output_parameters;
           } else if (item.type === 'start') {
             item.variables == updateNodeParameter.variables;
           } else if (item.type === 'Loop') {
@@ -2099,6 +2210,7 @@ defineExpose({
               :search-placeholder="$t('semantic.interface_search')"
               :enable-drag="true"
               :on-drag-start="handleNodeDragStart"
+              :extra-node-types="extraNodeTypes"
             />
           </div>
         </div>
@@ -2453,6 +2565,19 @@ defineExpose({
     :loopNodeId="currentLoopNodeId"
     @update:visible="closeVariableAssignDrawer"
     @saveNode="saveVariableAssignNode"
+  />
+  
+  <!-- 文件提取器节点编辑器 -->
+  <FileExtractorDrawer
+    :visible="isEditFileExtractorNode"
+    :nodeData="currentFileExtractorNodeData"
+    :nodeId="nodeYamlId"
+    :flowId="flowObj?.flowId"
+    :conversationId="conversationId"
+    :isSubFlowNode="isEditingSubFlowNode"
+    :loopNodeId="currentLoopNodeId"
+    @update:visible="closeFileExtractorDrawer"
+    @saveNode="saveFileExtractorNode"
   />
   
   <!-- 循环节点编辑器 -->

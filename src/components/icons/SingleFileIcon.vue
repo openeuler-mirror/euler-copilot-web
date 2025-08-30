@@ -1,0 +1,31 @@
+<template>
+  <svg width="16.000000" height="16.000000" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+      <clipPath id="single-file-clip">
+        <rect width="16.000000" height="16.000000" fill="white" fill-opacity="0"/>
+      </clipPath>
+      <linearGradient x1="1.063380" y1="3.596241" x2="14.425048" y2="16.000114" id="single-file-gradient-1" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#6D75FA"/>
+        <stop offset="1.000000" stop-color="#5AB3FF"/>
+      </linearGradient>
+      <linearGradient x1="10.226416" y1="1.089998" x2="14.666415" y2="5.630780" id="single-file-gradient-2" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#FFFFFF"/>
+        <stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.054902"/>
+        <stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.000000"/>
+      </linearGradient>
+    </defs>
+    <g clip-path="url(#single-file-clip)">
+      <rect width="16.000000" height="16.000000" fill="#FFFFFF" fill-opacity="0"/>
+      <path d="M14.66 4.64L14.66 13.75C14.66 14.99 13.65 16 12.41 16L3.58 16C2.33 16 1.33 14.99 1.33 13.75L1.33 2.25C1.33 1 2.33 0 3.58 0L9.91 -0.01C10.1 -0.01 10.3 0.07 10.43 0.2L14.43 4.11C14.58 4.25 14.66 4.44 14.66 4.64Z" fill="url(#single-file-gradient-1)" fill-opacity="0.600000" fill-rule="evenodd"/>
+      <g opacity="0.600000">
+        <path d="M10.22 0L14.66 4.33L11.72 4.33C10.89 4.33 10.22 3.66 10.22 2.83L10.22 0Z" fill="url(#single-file-gradient-2)" fill-opacity="1.000000" fill-rule="evenodd"/>
+      </g>
+      <path id="直线 20 (边框)" d="M4 6.5C3.72 6.5 3.5 6.72 3.5 7C3.5 7.27 3.72 7.5 4 7.5L9 7.5C9.27 7.5 9.5 7.27 9.5 7C9.5 6.72 9.27 6.5 9 6.5L4 6.5Z" fill="#FDFEFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+      <path id="直线 21 (边框)" d="M4 9.5C3.72 9.5 3.5 9.72 3.5 10C3.5 10.27 3.72 10.5 4 10.5L12 10.5C12.27 10.5 12.5 10.27 12.5 10C12.5 9.72 12.27 9.5 12 9.5L4 9.5Z" fill="#FDFEFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+    </g>
+  </svg>
+</template>
+
+<script setup lang="ts">
+// 单文件图标组件
+</script> 

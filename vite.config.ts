@@ -92,6 +92,14 @@ export default ({ mode }): UserConfigExport => {
           ws: false,
           rewrite: (path: string) => path,
           cookieDomainRewrite: '.euler-copilot-master.test.osinfra.cn',
+        },
+        '/witchainD': {
+          target: env.VITE_WITCHAIND_PROXY_URL,
+          changeOrigin: true,
+          secure: false,
+          ws: false,
+          rewrite: (path: string) => path.replace(/^\/witchainD/, ''),
+          cookieDomainRewrite: '.euler-copilot-master.test.osinfra.cn',
         }
       },
     },

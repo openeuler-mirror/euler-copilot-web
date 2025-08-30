@@ -344,6 +344,127 @@ const handleVariablesLoaded = (variables: Variable[]) => {
 const handleVariableSelection = (variable: Variable) => {
   isSelectingVariable.value = true
   
+  // 检查是否为文件类型变量
+  if (variable.var_type === 'file' || variable.var_type === 'array[file]') {
+    // 对于文件类型变量，需要删除触发字符，然后发送特殊事件给父组件
+    
+    // 删除触发字符的逻辑
+    let triggerDeleted = false
+    
+    // 优先使用triggerCursorPosition（实时位置）
+    if (displayMode.value === 'tag' && triggerCursorPosition && tagEditorRef.value) {
+      try {
+        if (triggerCursorPosition.node.parentNode) {
+          const nodeText = triggerCursorPosition.node.textContent || ''
+          const beforeOffset = nodeText.substring(0, triggerCursorPosition.offset)
+          
+          if (beforeOffset.endsWith(triggerCursorPosition.triggerChar)) {
+            const range = document.createRange()
+            const triggerLength = triggerCursorPosition.triggerChar.length
+            
+            range.setStart(triggerCursorPosition.node, triggerCursorPosition.offset - triggerLength)
+            range.setEnd(triggerCursorPosition.node, triggerCursorPosition.offset)
+            range.deleteContents()
+            
+            // 设置光标位置
+            const selection = window.getSelection()
+            if (selection) {
+              selection.removeAllRanges()
+              selection.addRange(range)
+            }
+            
+            triggerDeleted = true
+          }
+        }
+      } catch (error) {
+        console.error('删除触发字符失败:', error)
+      }
+    }
+    
+    // 如果triggerCursorPosition删除失败，尝试使用blurCursorPosition
+    if (!triggerDeleted && displayMode.value === 'tag' && blurCursorPosition !== null && tagEditorRef.value) {
+      try {
+        // 恢复到blur时的位置
+        restoreCursorPosition(blurCursorPosition)
+        
+        const selection = window.getSelection()
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0)
+          const startContainer = range.startContainer
+          
+          if (startContainer.nodeType === Node.TEXT_NODE) {
+            const nodeText = startContainer.textContent || ''
+            const beforeOffset = nodeText.substring(0, range.startOffset)
+            
+            // 检查是否以触发字符结尾
+            if (beforeOffset.endsWith('/') || beforeOffset.endsWith('{{')) {
+              const triggerChar = beforeOffset.endsWith('{{') ? '{{' : '/'
+              const triggerLength = triggerChar.length
+              
+              const deleteRange = document.createRange()
+              deleteRange.setStart(startContainer, range.startOffset - triggerLength)
+              deleteRange.setEnd(startContainer, range.startOffset)
+              deleteRange.deleteContents()
+              
+              // 重新设置光标位置
+              const newRange = document.createRange()
+              newRange.setStart(startContainer, range.startOffset - triggerLength)
+              newRange.setEnd(startContainer, range.startOffset - triggerLength)
+              selection.removeAllRanges()
+              selection.addRange(newRange)
+              
+              triggerDeleted = true
+            }
+          }
+        }
+      } catch (error) {
+        console.error('使用保存位置删除触发字符失败:', error)
+      }
+    }
+    
+    // 处理文本模式
+    if (!triggerDeleted && displayMode.value === 'text' && textEditorRef.value) {
+      try {
+        const textarea = textEditorRef.value.$refs?.textarea
+        if (textarea) {
+          const cursorPos = textarea.selectionStart
+          const text = textContent.value
+          const beforeCursor = text.substring(0, cursorPos)
+          
+          // 检查是否以触发字符结尾
+          if (beforeCursor.endsWith('/') || beforeCursor.endsWith('{{')) {
+            const triggerLength = beforeCursor.endsWith('{{') ? 2 : 1
+            const newText = text.substring(0, cursorPos - triggerLength) + text.substring(cursorPos)
+            textContent.value = newText
+            emit('update:modelValue', newText)
+            
+            // 重新设置光标位置
+            setTimeout(() => {
+              textarea.setSelectionRange(cursorPos - triggerLength, cursorPos - triggerLength)
+            }, 0)
+            triggerDeleted = true
+          }
+        }
+      } catch (error) {
+        console.error('删除文本模式触发字符失败:', error)
+      }
+    }
+    
+    // 立即更新modelValue以确保删除生效
+    if (triggerDeleted && displayMode.value === 'tag') {
+      const updatedContent = getTagEditorContent()
+      emit('update:modelValue', updatedContent)
+    }
+    
+    emit('variable-inserted', variable)
+    showVariableDropdown.value = false
+    triggerCursorPosition = null
+    blurCursorPosition = null
+    isSelectingVariable.value = false
+    ElMessage.success(`文件变量 ${variable.name} 已添加为附件`)
+    return
+  }
+  
   const variableName = getVariableInsertName(variable)
   
   try {
@@ -762,7 +883,7 @@ const getTagEditorContent = (): string => {
 }
 
 const handleTagInput = () => {
-  if (isComposing.value) return
+  if (isComposing.value || isSelectingVariable.value) return
   
   const triggerInfo = checkAndSaveVariableTrigger()
   const cursorPos = saveCursorPosition()

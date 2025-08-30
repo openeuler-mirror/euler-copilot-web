@@ -30,6 +30,8 @@
                 </el-icon>
                 {{ modelValue || getVariableDisplayName(selectedVariable) }}
               </span>
+              <!-- 显示变量实际类型 -->
+              <span class="type-suffix">{{ getVariableTypeDisplay(selectedVariable.var_type) }}</span>
               <button 
                 class="clear-btn"
                 @click="clearVariable"
@@ -46,7 +48,7 @@
         <div v-else class="variable-selector">
           <VariableSelector
             model-value=""
-            :placeholder="selectorPlaceholder"
+            :placeholder="computedPlaceholder"
             :supported-scopes="supportedScopes"
             :flow-id="flowId"
             :conversation-id="conversationId"
@@ -54,6 +56,8 @@
             :self-variables="selfVariables"
             :self-scope-label="selfScopeLabel"
             :show-variable-reference="showVariableReference"
+            :type-filter="typeFilter"
+            :suffix-tags="computedSuffixTags"
             @variable-selected="handleVariableSelected"
           />
         </div>
@@ -137,6 +141,7 @@ interface Props {
   currentStepId?: string          // 当前步骤ID
   selfVariables?: any[]           // 当前节点定义的变量列表
   selfScopeLabel?: string         // 当前节点变量分组的标签
+  typeFilter?: string[]           // 变量类型过滤器
   
   // 显示控制
   showVariableName?: boolean      // 是否显示变量名输入
@@ -154,9 +159,11 @@ interface Props {
   transparentBackground?: boolean // 是否使用透明背景
   customClass?: string           // 自定义CSS类名
   
-  // 占位符
+  // 占位符和标签
   placeholder?: string           // 变量名输入框占位符
   selectorPlaceholder?: string   // 变量选择器占位符
+  prefixIcon?: string            // 前缀图标
+  suffixLabel?: string          // 后缀标签
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -169,6 +176,7 @@ const props = withDefaults(defineProps<Props>(), {
   currentStepId: '',
   selfVariables: () => [],
   selfScopeLabel: '',
+  typeFilter: () => [],
   showVariableName: false,
   showLabel: true,
   showActions: true,
@@ -180,7 +188,9 @@ const props = withDefaults(defineProps<Props>(), {
   transparentBackground: false,
   customClass: '',
   placeholder: '输入变量名称',
-  selectorPlaceholder: '选择变量'
+  selectorPlaceholder: '选择变量',
+  prefixIcon: '',
+  suffixLabel: ''
 })
 
 const emit = defineEmits<{
@@ -510,6 +520,25 @@ const getScopeTagType = (scope: string): 'primary' | 'success' | 'info' | 'warni
   return typeMap[scope] || 'primary'
 }
 
+// 计算placeholder
+const computedPlaceholder = computed(() => {
+  let placeholder = props.selectorPlaceholder
+  
+  if (props.prefixIcon) {
+    placeholder = `{${props.prefixIcon}} ${placeholder}`
+  }
+  
+  return placeholder
+})
+
+// 计算后缀标签数组
+const computedSuffixTags = computed(() => {
+  if (props.suffixLabel) {
+    return props.suffixLabel.split(' | ')
+  }
+  return []
+})
+
 // 计算样式类
 const selectorClasses = computed(() => {
   const classes: Record<string, boolean> = {
@@ -613,11 +642,11 @@ const selectorClasses = computed(() => {
       align-items: center;
       
         .variable-tag {
-          display: inline-flex !important;
+          display: flex !important;
           align-items: center !important;
           justify-content: space-between !important;
           height: 22px;
-          width: 140px;
+          width: 100%;
           padding: 2px 6px 2px 10px;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
@@ -627,7 +656,6 @@ const selectorClasses = computed(() => {
           cursor: default;
           user-select: none;
           vertical-align: middle;
-          max-width: 100%;
           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           transition: all 0.2s ease;
           white-space: nowrap;
@@ -636,13 +664,31 @@ const selectorClasses = computed(() => {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-right: 6px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.2;
-            max-width: calc(100% - 24px); // 为按钮留出空间
-            flex-shrink: 1;
+            flex: 1;
+            min-width: 0;
+          }
+          
+          .type-suffix {
+            font-size: 10px;
+            font-weight: 400;
+            white-space: nowrap;
+            margin-left: auto;
+            margin-right: 8px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 10px;
+            height: 16px;
+            line-height: 12px;
+            display: flex;
+            align-items: center;
           }
           
           .clear-btn {
@@ -654,12 +700,14 @@ const selectorClasses = computed(() => {
             margin: 0;
             width: 16px;
             height: 16px;
-            display: inline-flex !important;
+            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             border-radius: 2px;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
             
             .el-icon {
               font-size: 12px;

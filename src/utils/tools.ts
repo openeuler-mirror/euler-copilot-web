@@ -127,3 +127,31 @@ export async function getBaseUrl(): Promise<string> {
   const viteProxyUrl = import.meta.env.VITE_BASE_PROXY_URL;
   return typeof viteProxyUrl === 'string' && viteProxyUrl ? viteProxyUrl : '';
 }
+
+/**
+ * 获取 WitchainD 服务的代理URL
+ */
+export async function getWitchainDProxyUrl(): Promise<string> {
+  // Electron 生产环境（file:协议）读取配置
+  if (window.eulercopilot && window.location.protocol === 'file:') {
+    try {
+      if (typeof window.eulercopilot.config?.get === 'function') {
+        const config = await window.eulercopilot.config.get();
+        if (config?.witchaind_url) {
+          return config.witchaind_url;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get WitchainD URL from config:', error);
+    }
+  }
+  
+  // 本地开发环境（localhost:3000），直接返回空字符串，确保 axios 只拼接 path
+  if (window.location.hostname === 'localhost') {
+    return '';
+  }
+  
+  // 生产环境直接使用配置的代理URL
+  const witchainDUrl = import.meta.env.WITCHAIND_PROXY_URL;
+  return typeof witchainDUrl === 'string' && witchainDUrl ? witchainDUrl : '';
+}

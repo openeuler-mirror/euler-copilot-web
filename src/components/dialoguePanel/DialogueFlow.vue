@@ -191,7 +191,13 @@ watch(
                   class="o-collapse-content"
                 >
                   <div class="code-bar">
-                    <FlowCode :code="debugCode(desc, String(index))" :title="String(index)" :disabled="true" />
+                    <FlowCode 
+                      :code="debugCode(desc, String(index))" 
+                      :title="String(index)" 
+                      :disabled="true"
+                      :stepStatus="secItem.status"
+                      :error="secItem.error || secItem.message"
+                    />
                   </div>
                 </div>
               </el-collapse-item>

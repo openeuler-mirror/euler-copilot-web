@@ -49,6 +49,7 @@
           :is-against="getItem(item, 'isAgainst')"
           :metadata="getItem(item, 'metadata')"
           :flowdata="getItem(item, 'flowdata')"
+          :files="getItem(item, 'files')"
           :created-at="item.createdAt"
           :current-selected="item.currentInd"
           :user-selected-app="user_selected_app"
@@ -107,6 +108,7 @@ import { storeToRefs } from 'pinia';
 import { api } from '@/apis';
 import { onBeforeRouteLeave } from 'vue-router';
 import { listVariables } from '@/api/variable';
+import { ElMessage } from 'element-plus';
 
 interface ConversationVariable {
   name: string;
@@ -275,13 +277,39 @@ const handleSendMessage = async (
     const res = await generateSessionDebug({ debug: true });
     tmpConversationId.value = res || 1;
   }
+  
+  // 🔑 设置全局对话ID，供其他组件使用
+  (window as any).currentConversationId = tmpConversationId.value;
+  sessionStorage.setItem('currentConversationId', tmpConversationId.value);
 
   // 先更新所有变量到后端（使用用户在面板中输入的值），再发送消息
   if (tmpConversationId.value) {
-    await updateAllVariablesToBackend(tmpConversationId.value);
+    const updateSuccess = await updateAllVariablesToBackend(tmpConversationId.value);
     
-    // 变量更新完成后，重新加载以确保状态同步
-    await loadConversationVariables();
+        if (!updateSuccess) {
+      // 变量更新失败（特别是文件上传失败），不继续发送消息
+      // 注意：具体的错误信息已经在变量更新过程中显示了，这里不重复显示
+      
+      // 清理可能已创建的无效会话
+      if (tmpConversationId.value) {
+        try {
+          await api.deleteSession({ conversationList: [tmpConversationId.value] });
+          tmpConversationId.value = '';
+        } catch (cleanupError) {
+          // 清理失败，静默处理
+        }
+      }
+      return;
+    }
+    
+    // 🔑 重要修复：移除重新加载逻辑，避免覆盖前端本地状态
+    // 前端变量面板应该保持用户输入的状态，不应该被后端数据覆盖
+    // await loadConversationVariables();
+    
+    // 🔑 新增：自动折叠变量配置面板，让用户专注于对话内容
+    if (variablePanelVisible.value) {
+      variablePanelVisible.value = false;
+    }
   }
 
   // 设置安全超时：如果30秒后还在生成状态，强制停止
@@ -347,6 +375,22 @@ const handleCloseDebugDialog = () => {
   // 清理变量状态
   conversationVariables.value = [];
   tmpConversationId.value = '';
+  
+  // 🔑 清理所有附件收集器
+  if ((window as any).currentConversationAttachments) {
+    (window as any).currentConversationAttachments.value = [];
+  }
+  if ((window as any).flowCodeAttachments) {
+    (window as any).flowCodeAttachments = [];
+  }
+  
+  // 🔑 清理按DialoguePanel分组的附件收集器
+  if ((window as any).flowCodeAttachmentsByPanel) {
+    (window as any).flowCodeAttachmentsByPanel = {};
+  }
+  
+  // 🔑 移除保护标记，允许下次清理
+  (window as any).flowCodeAttachmentsProtected = false;
   
   props.handleDebugDialogOps!(false);
 };
