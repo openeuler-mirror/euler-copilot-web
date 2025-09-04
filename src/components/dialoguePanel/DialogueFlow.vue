@@ -2,8 +2,12 @@
 import { ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
 import { StatusInfoTitle } from '@/views/createapp/components/types';
-import { IconSuccess, IconError } from '@computing/opendesign-icons';
+import { getCookie } from '@/apis/tools';
+import { useSessionStore } from '@/store';
+import i18n from 'src/i18n';
+const { t } = i18n.global;
 
+const { sendQuestion } = useSessionStore();
 const props = withDefaults(
   defineProps<{
     flowdata: any;
@@ -13,14 +17,47 @@ const props = withDefaults(
   {},
 );
 const contents = ref();
+const exData = ref(<any>[]);
+const taskId = ref();
 const totalTime = ref(0);
 if (props.flowdata) {
   contents.value = [props.flowdata];
+
+  if (props.flowdata.data[0]) {
+    for (const item of props.flowdata.data[0]) {
+      if (item && item?.data.exData) {
+        exData.value.push(item.data.exData);
+      }
+    }
+  }
 }
 
 const activeNames = ref([contents.value[0].id]);
 const secondCollapseActiveName = ref<number[]>([]);
+function getRiskType(risk) {
+  const mapping = {
+    low: 'warning',
+  };
+  return mapping[risk] || 'warning';
+}
 
+const doFlow = async (type) => {
+  if (taskId) {
+    taskId.value = null;
+    let content = '';
+    await sendQuestion(
+      undefined,
+      content,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { params: type },
+      null,
+      'wait',
+    );
+  }
+};
 watch(
   () => props,
   () => {
@@ -31,6 +68,10 @@ watch(
         totalTime.value += item.costTime || 0;
       });
     }
+    if (props.flowdata?.taskId) {
+      exData.value.push(props.flowdata?.data.exData);
+      taskId.value = props.flowdata?.taskId;
+    }
   },
   { deep: true, immediate: true },
 );
@@ -40,9 +81,10 @@ watch(
   <div
     class="demo-collapse"
     :class="{
-      'border-blue': props.flowdata.status === 'running',
+      'border-blue': ['running', 'waiting'].includes(props.flowdata.status),
       'border-green': props.flowdata.status === 'success',
       'border-red': props.flowdata.status === 'error',
+      'border-grey': props.flowdata.status === 'cancelled',
     }"
   >
     <section>
@@ -56,7 +98,7 @@ watch(
           <template #title>
             <div class="loading">
               <img
-                v-if="props.flowdata.status === 'running'"
+                v-if="['running', 'waiting'].includes(props.flowdata.status)"
                 src="@/assets/images/loading.png"
                 alt=""
                 class="loading-animeIcon"
@@ -69,12 +111,11 @@ watch(
                   <IconSuccess />
                 </el-icon>
               </div>
-              <!-- <img
-                v-if="props.flowdata.status === 'error'"
-                src="@/assets/images/flow_fail.png"
+              <img
+                v-if="props.flowdata.status === 'cancelled'"
+                src="@/assets/svgs/warning.svg"
                 alt=""
-                class="loading-icon"
-              /> -->
+              />
               <div class="loading-icon-box">
                 <el-icon
                   class="loading-title-icon"
@@ -138,7 +179,7 @@ watch(
                 <template #title>
                   <div class="loading">
                     <img
-                      v-if="secItem.status === 'running'"
+                      v-if="['running', 'waiting'].includes(secItem.status)"
                       src="@/assets/images/loading.png"
                       alt=""
                       class="loading-animeIcon"
@@ -193,6 +234,22 @@ watch(
           </template>
         </el-collapse-item>
       </el-collapse>
+      <div>
+        <el-alert
+          class="wait-div"
+          v-for="(item, index) in exData"
+          :key="index"
+          :title="t('flow.flow_risk')"
+          :type="getRiskType(item.risk)"
+          :description="item.reason"
+          show-icon
+          :closable="false"
+        />
+        <div class="flow-button" v-if="taskId">
+          <el-button @click="doFlow(false)">{{t('common.cancel')}}</el-button>
+          <el-button type="primary" @click="doFlow(true)">{{t('common.confirm')}}</el-button>
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -203,6 +260,14 @@ watch(
 </style>
 
 <style lang="scss" scope>
+.wait-div {
+  margin-top: 16px;
+}
+.flow-button {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
 .el-collapse-item:last-child {
   margin-bottom: 0px;
 }
@@ -216,6 +281,10 @@ watch(
 }
 .demo-collapse.border-green .title .el-collapse-item__header:first-child {
   background-color: rgb(194, 231, 199);
+  border-radius: 0px !important;
+}
+.demo-collapse.border-grey .title .el-collapse-item__header:first-child {
+  background-color: rgb(208, 211, 216);
   border-radius: 0px !important;
 }
 .o-collapse-icon {
@@ -288,7 +357,7 @@ watch(
       height: 14px;
     }
   }
-  .loading-title-icon{
+  .loading-title-icon {
     width: 24px;
     height: 24px;
     display: block;
@@ -298,6 +367,10 @@ watch(
       height: 21px;
     }
   }
+}
+
+.border-grey {
+  border: 1px solid #d0d3d8;
 }
 
 .border-red {
@@ -311,8 +384,7 @@ watch(
 .border-blue {
   border: 1px solid transparent;
   border-radius: 4px;
-  background:
-    linear-gradient(white, white) padding-box,
+  background: linear-gradient(white, white) padding-box,
     linear-gradient(180deg, #6c77fa, #6db9f9) border-box;
 }
 .demo-collapse {
@@ -401,5 +473,8 @@ watch(
 }
 .totalTime.errorBg {
   background-color: rgba(227, 32, 32, 0.2);
+}
+.totalTime.cancelledBg {
+  background-color: rgba(208, 211, 216, 0.2);
 }
 </style>

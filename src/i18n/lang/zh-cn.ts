@@ -405,6 +405,8 @@ export default {
   flow: {
     flow_start: '工作流进行中',
     flow_end: '工作流结束',
+    flow_cancel: '取消运行',
+    flow_risk: '风险提示',
     flow_params_error: '缺少参数',
     flow_pause: '工作流暂停',
     edit_flow: '编辑工作流',

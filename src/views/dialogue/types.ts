@@ -61,6 +61,7 @@ export interface FlowType {
   display: boolean;
   progress: string;
   flowId?: string;
+  taskId?: string;
 }
 
 export interface FlowDataType {
