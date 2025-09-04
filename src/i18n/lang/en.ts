@@ -372,8 +372,10 @@ export default {
     fiveKnowledge: 'Select up to 5 knowledge bases.',
   },
   flow: {
-    //flow_start: 'Workflow in progress',
-    //flow_end: 'Workflow completed.',
+    flow_start: 'Workflow in progress',
+    flow_end: 'Workflow completed.',
+    flow_cancel: 'Cancel running',
+    flow_risk: 'Risk statement',
     flow_params_error: 'Parameter missing',
     flow_pause: 'Workflow paused',
     edit_flow: 'Edit',
