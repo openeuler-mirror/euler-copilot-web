@@ -98,6 +98,11 @@ const handleKnowledgeList = async () => {
 // 移除标签
 const removeTag = (index) => {
   selectedTags.value.splice(index, 1);
+  // 触发父组件的updateValue事件
+  emit(
+    'updateValue',
+    selectedTags.value.map((item) => item.kbId),
+  );
 };
 
 // 检查标签是否已被选中
