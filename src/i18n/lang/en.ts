@@ -399,6 +399,8 @@ export default {
     output: 'Output',
     params: 'Parameters',
     supplementaryParameters: 'Additional Parameters',
+    parameterConfiguration: 'Parameter Configuration',
+    additionalNotes: 'Additional notes',
   },
   pagination: {
     prev: 'Previous',

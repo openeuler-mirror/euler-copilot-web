@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import FlowCode from './FlowCode.vue';
+import ParamsModel from './ParamsModel.vue';
 import { StatusInfoTitle } from '@/views/createapp/components/types';
 import { getCookie } from '@/apis/tools';
 import { useSessionStore } from '@/store';
@@ -18,15 +19,26 @@ const props = withDefaults(
 );
 const contents = ref();
 const exData = ref(<any>[]);
+const exParam = ref(<any>[]);
+const dataStatus = ref(false);
+const paramIndex = ref(0);
 const taskId = ref();
 const totalTime = ref(0);
+const paramsModelVisible = ref(false);
 if (props.flowdata) {
   contents.value = [props.flowdata];
 
   if (props.flowdata.data[0]) {
     for (const item of props.flowdata.data[0]) {
       if (item && item?.data.exData) {
-        exData.value.push(item.data.exData);
+        if (item.data.exData.reason) {
+          exData.value.push(item.data.exData);
+        } else if (item.data.exData.message) {
+          exParam.value.push(item.data.exData);
+        }
+      }
+      if (item && item?.data.exParam) {
+        exParam.value.push(item.data.exParam);
       }
     }
   }
@@ -56,8 +68,36 @@ const doFlow = async (type) => {
       null,
       'wait',
     );
+    dataStatus.value = true;
   }
 };
+
+const showParams = (index) => {
+  paramsModelVisible.value = true;
+  paramIndex.value = index;
+};
+const doParams = async (params) => {
+  let description = params.description;
+  delete params.description;
+  let newParams = { content: params, description: description };
+  if (taskId) {
+    taskId.value = null;
+    let content = '';
+    await sendQuestion(
+      undefined,
+      content,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      newParams,
+      null,
+      'params',
+    );
+    exParam.value[paramIndex.value].status = true;
+  }
+};
+
 watch(
   () => props,
   () => {
@@ -69,7 +109,12 @@ watch(
       });
     }
     if (props.flowdata?.taskId) {
-      exData.value.push(props.flowdata?.data.exData);
+      if (props.flowdata?.data.exParam) {
+        exParam.value.push(props.flowdata?.data.exParam);
+      } else {
+        dataStatus.value = false;
+        exData.value.push(props.flowdata?.data.exData);
+      }
       taskId.value = props.flowdata?.taskId;
     }
   },
@@ -240,16 +285,36 @@ watch(
           v-for="(item, index) in exData"
           :key="index"
           :title="t('flow.flow_risk')"
-          :type="getRiskType(item.risk)"
-          :description="item.reason"
+          :type="getRiskType(item?.risk)"
+          :description="item?.reason"
           show-icon
           :closable="false"
         />
-        <div class="flow-button" v-if="taskId">
-          <el-button @click="doFlow(false)">{{t('common.cancel')}}</el-button>
-          <el-button type="primary" @click="doFlow(true)">{{t('common.confirm')}}</el-button>
+        <div class="flow-button" v-if="taskId && exData && !dataStatus">
+          <el-button @click="doFlow(false)">
+            {{ t('common.cancel') }}
+          </el-button>
+          <el-button type="primary" @click="doFlow(true)">
+            {{ t('common.confirm') }}
+          </el-button>
         </div>
       </div>
+      <div class="flow-paramas">
+        <el-text v-for="(item, index) in exParam" :key="index">
+          {{ item.message }}
+          <span v-if="taskId && exParam && !item?.status">
+            <el-button @click="showParams(index)" text>
+              {{ t('flow.parameterConfiguration') }}
+            </el-button>
+          </span>
+        </el-text>
+      </div>
+      <ParamsModel
+        v-model:visible="paramsModelVisible"
+        :item="exParam[0]"
+        :title="$t('flow.parameterConfiguration')"
+        @do-params="doParams"
+      />
     </section>
   </div>
 </template>
@@ -260,6 +325,10 @@ watch(
 </style>
 
 <style lang="scss" scope>
+.flow-paramas {
+  display: grid;
+  margin: 8px;
+}
 .wait-div {
   margin-top: 16px;
 }

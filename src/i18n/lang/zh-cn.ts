@@ -430,6 +430,8 @@ export default {
     output: '输出',
     params: '参数',
     supplementaryParameters: '补充参数',
+    parameterConfiguration: '参数配置',
+    additionalNotes: '补充说明',
   },
   pagination: {
     prev: 'Previous',
