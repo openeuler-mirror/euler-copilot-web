@@ -230,6 +230,26 @@ export const useSessionStore = defineStore('conversation', () => {
         conversationItem.flowdata.status = flow.stepStatus;
       }
     },
+    waitingForParam: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+    ) => {
+      const flow = (message.flow || {}) as Record<string, string>;
+      const content = (message.content || {}) as Record<string, string>;
+      conversationItem.flowdata = {
+        id: flow.stepId,
+        title: flow.stepName,
+        status: flow.stepStatus,
+        taskId: currentTaskId,
+        data: {
+          exParam: content,
+        },
+      };
+      if (conversationItem.flowdata) {
+        conversationItem.flowdata.progress = flow.stepProgress;
+        conversationItem.flowdata.status = flow.stepStatus;
+      }
+    },
     flowCancel: (
       conversationItem: RobotConversationItem,
       message: Record<string, unknown>,
@@ -316,6 +336,10 @@ export const useSessionStore = defineStore('conversation', () => {
         case 'step.waiting_for_start':
           // 事件流等待开始
           dataTransfers.waitingForStart(conversationItem, message);
+          break;
+        case 'step.waiting_for_param':
+          // 事件流等待参数
+          dataTransfers.waitingForParam(conversationItem, message);
           break;
         case 'flow.cancel':
           // 事件流取消
@@ -439,7 +463,7 @@ export const useSessionStore = defineStore('conversation', () => {
     ) => {
       await fetchEventSource(url, {
         ...fetchParams,
-        body: JSON.stringify({ taskId: currentTaskId.value, params: params.params }),
+        body: JSON.stringify({ taskId: currentTaskId.value, params: params }),
         openWhenHidden: true,
       });
     },
@@ -527,7 +551,11 @@ export const useSessionStore = defineStore('conversation', () => {
         // 新的工作流调试记录
         await funcFetch.fetchAppNew(streamUrl, params, pp, fetchParams);
       } else if (waitType) {
-        await funcFetch.fetchWait(streamUrl, params, pp, fetchParams);
+        if (waitType === 'params') {
+          await funcFetch.fetchWait(streamUrl, params, pp, fetchParams);
+        } else {
+          await funcFetch.fetchWait(streamUrl, params.params, pp, fetchParams);
+        }
       } else {
         await funcFetch.fetchDefault(streamUrl, params, pp, fetchParams);
       }
@@ -851,7 +879,7 @@ export const useSessionStore = defineStore('conversation', () => {
         data: {
           input: record.steps[i].input,
           output: record.steps[i].output,
-          exData: record.steps[i].exData,
+          ...(record.steps[i].exData && { exData: record.steps[i].exData }),
         },
       });
       if (record.steps[i].stepStatus === 'cancelled') {
