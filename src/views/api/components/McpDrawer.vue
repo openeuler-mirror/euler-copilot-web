@@ -32,25 +32,20 @@ const COMMAND_TEMPLATE = {
   command: '',
   args: [],
   env: {},
-  autoApprove: [],
-  autoInstall: true,
-  disabled: false,
 };
 const URL_TEMPLATE = {
+  headers: '',
   url: '',
-  env: {},
-  autoApprove: [],
-  autoInstall: true,
-  disabled: false,
 };
+const STREAM = {};
 
 const loading = ref(false);
 
-const mcpConfigTemplate = {
+const mcpConfigTemplate = ref({
   stdio: COMMAND_TEMPLATE,
   sse: URL_TEMPLATE,
-  stream: URL_TEMPLATE,
-};
+  stream: STREAM,
+});
 
 const form = reactive<McpDetail>({
   icon: '',
@@ -178,7 +173,6 @@ async function onConfirm(formEl: FormInstance | undefined) {
     jsonEditorRef.value.setJsonValue('{\n  \n}');
     emits('success');
     loading.value = false;
-
   } catch (error) {
     console.error('Create or update MCP service failed:', error);
     ElMessage({
@@ -200,13 +194,23 @@ async function getMcpServiceDetail(serviceId: string) {
     form.description = description;
     form.type = mcpType;
     form.mcpConfig = data;
-    jsonEditorRef.value.setJsonValue(form.mcpConfig);
+    let json = {};
+    if (mcpType === 'stdio') {
+      json.command = data.command;
+      json.args = data.args;
+      json.env = data.env;
+    } else if (mcpType === 'sse') {
+      json.headers = data.headers;
+      json.url = data.url;
+    }
+    jsonEditorRef.value.setJsonValue(JSON.stringify(json, null, 2));
+    mcpConfigTemplate.value[mcpType] = json;
   }
 }
 
 async function setMcpConfig(type: string) {
   jsonEditorRef.value.setJsonValue(
-    JSON.stringify(mcpConfigTemplate[type], null, 2),
+    JSON.stringify(mcpConfigTemplate.value[type], null, 2),
   );
 }
 
@@ -222,6 +226,12 @@ watch(
       }
       getMcpServiceDetail(props.serviceId);
     } else {
+      // 初始化
+      mcpConfigTemplate.value = {
+        stdio: COMMAND_TEMPLATE,
+        sse: URL_TEMPLATE,
+        stream: STREAM,
+      };
       if (formRef.value) formRef.value.resetFields();
       setMcpConfig(form.type);
     }
@@ -240,7 +250,7 @@ watch(
       :model-value="visible"
       @close="emits('update:visible', false)"
     >
-    <CustomLoading :loading="loading"></CustomLoading>
+      <CustomLoading :loading="loading"></CustomLoading>
       <div class="wrapper">
         <div class="content">
           <el-form

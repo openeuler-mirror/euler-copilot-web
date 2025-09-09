@@ -561,6 +561,7 @@ const getProviderLLM = async () => {
 const autoExecuteChange = (value) => {
   autoExecuteRef.value = value;
   api.updateUserInfo({ autoExecute: value });
+  api.getPartAppConfgUser();
 };
 
 onMounted(() => {
