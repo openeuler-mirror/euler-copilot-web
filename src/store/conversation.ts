@@ -147,7 +147,7 @@ export const useSessionStore = defineStore('conversation', () => {
       );
       if (target) {
         target.data.output = message.content;
-        target.status = flow.stepStatus;
+        target.status = 'success';
         // 工作流添加每阶段的时间耗时
         target['costTime'] = metadata.timeCost;
         if (flow.step_status === 'error' && conversationItem.flowdata) {
@@ -268,6 +268,23 @@ export const useSessionStore = defineStore('conversation', () => {
         data: conversationItem?.flowdata?.data,
       };
     },
+    flowSuccess: (
+      conversationItem: RobotConversationItem,
+      message: Record<string, unknown>,
+      isFlowDebug: boolean,
+    ) => {
+      const content = (message.content || {}) as Record<string, unknown>;
+      const contentFlow = (content.flow || {}) as Record<string, string>;
+      const messageFlow = (message.flow || {}) as Record<string, string>;
+      conversationItem.flowdata = {
+        id: contentFlow.stepId,
+        title: i18n.global.t('flow.flow_end'),
+        progress: contentFlow.stepProgress,
+        status: 'success',
+        display: true,
+        data: conversationItem?.flowdata?.data,
+      };
+    },
   };
 
   // chat message回调
@@ -348,6 +365,10 @@ export const useSessionStore = defineStore('conversation', () => {
         case 'flow.stop':
           //时间流结束
           dataTransfers.flowStop(conversationItem, message, !!params.type);
+          break;
+        case 'flow.success':
+          //时间流结束
+          dataTransfers.flowSuccess(conversationItem, message, !!params.type);
           break;
         default:
           break;
@@ -863,8 +884,8 @@ export const useSessionStore = defineStore('conversation', () => {
   const generateFlowData = (record: any): FlowDataType => {
     const flowData = {
       id: record.recordId,
-      title: record.id,
-      status: 'success',
+      title: record.flowName,
+      status: record.flowStatus,
       display: true,
       flowId: record.flowId,
       data: [[]] as any[],
@@ -874,7 +895,7 @@ export const useSessionStore = defineStore('conversation', () => {
     for (let i = 0; i < record.steps.length; i++) {
       flowData.data[0].push({
         id: record.steps[i].stepId,
-        title: record.steps[i].stepId,
+        title: record.steps[i].stepName,
         status: record.steps[i].stepStatus,
         data: {
           input: record.steps[i].input,

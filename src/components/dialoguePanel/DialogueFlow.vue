@@ -20,7 +20,6 @@ const props = withDefaults(
 const contents = ref();
 const exData = ref(<any>[]);
 const exParam = ref(<any>[]);
-const dataStatus = ref(false);
 const paramIndex = ref(0);
 const taskId = ref();
 const totalTime = ref(0);
@@ -32,7 +31,6 @@ if (props.flowdata) {
     for (const item of props.flowdata.data[0]) {
       if (item && item?.data.exData) {
         if (item.data.exData.reason) {
-          exData.value.push(item.data.exData);
         } else if (item.data.exData.message) {
           exParam.value.push(item.data.exData);
         }
@@ -55,6 +53,7 @@ function getRiskType(risk) {
 
 const doFlow = async (type) => {
   if (taskId) {
+    exData.value.pop();
     taskId.value = null;
     let content = '';
     await sendQuestion(
@@ -68,7 +67,6 @@ const doFlow = async (type) => {
       null,
       'wait',
     );
-    dataStatus.value = true;
   }
 };
 
@@ -112,10 +110,25 @@ watch(
       if (props.flowdata?.data.exParam) {
         exParam.value.push(props.flowdata?.data.exParam);
       } else {
-        dataStatus.value = false;
         exData.value.push(props.flowdata?.data.exData);
       }
       taskId.value = props.flowdata?.taskId;
+    } else {
+      let newContentList = props.flowdata?.data;
+      for (const newContent of newContentList) {
+        if (!(newContent instanceof Array)) {
+          continue;
+        }
+        for (const item of newContent) {
+          let input = item.data.input;
+          const isDuplicate = contents.value[0].data[0].some(
+            (it) => it.id === item.id,
+          );
+          if (!isDuplicate && input) {
+            contents.value[0].data[0].push(item);
+          }
+        }
+      }
     }
   },
   { deep: true, immediate: true },
@@ -133,7 +146,7 @@ watch(
     }"
   >
     <section>
-      <el-collapse v-model="activeNames" class="o-hpc-collapse">
+      <el-collapse v-model="activeNames" class="o-hpc-collapse" accordion>
         <el-collapse-item
           v-for="item in contents"
           class="title"
@@ -202,11 +215,7 @@ watch(
               />
             </el-icon>
           </template>
-          <template
-            v-for="(p, $index) in item.data"
-            :key="$index"
-            class="6645ds"
-          >
+          <template v-for="(p, $index) in item.data" :key="p.id">
             <div v-if="!Array.isArray(p)" class="o-collapse-content">
               {{ p }}
             </div>
@@ -219,6 +228,7 @@ watch(
                 class="o-collapse-item normal"
                 v-for="secItem in p"
                 :key="secItem.id"
+                :title="secItem.title"
                 :name="secItem.id"
               >
                 <template #title>
@@ -279,7 +289,7 @@ watch(
           </template>
         </el-collapse-item>
       </el-collapse>
-      <div>
+      <div style="margin 0px 16px;">
         <el-alert
           class="wait-div"
           v-for="(item, index) in exData"
@@ -289,8 +299,9 @@ watch(
           :description="item?.reason"
           show-icon
           :closable="false"
+          style="background: #FBF6E5;"
         />
-        <div class="flow-button" v-if="taskId && exData && !dataStatus">
+        <div class="flow-button" v-if="taskId && exData">
           <el-button @click="doFlow(false)">
             {{ t('common.cancel') }}
           </el-button>
