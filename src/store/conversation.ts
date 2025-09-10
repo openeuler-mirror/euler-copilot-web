@@ -431,6 +431,7 @@ export const useSessionStore = defineStore('conversation', () => {
       params: Record<string, unknown>,
       innerParams: Record<string, unknown>,
       fetchParams: Record<string, unknown>,
+      isDebug: boolean,
     ) => {
       await fetchEventSource(url, {
         ...fetchParams,
@@ -441,6 +442,7 @@ export const useSessionStore = defineStore('conversation', () => {
             flowId: '',
             params: innerParams || {},
           },
+          ...(isDebug && { debug: isDebug }),
           conversationId: params.conversationId,
           features: features,
           language: langStore.language,
@@ -520,6 +522,7 @@ export const useSessionStore = defineStore('conversation', () => {
     },
     ind?: number,
     waitType?: string,
+    isDebug?: boolean,
   ): Promise<void> => {
     const { currentSelectedSession } = useHistorySessionStore();
     params.conversationId = currentSelectedSession;
@@ -565,7 +568,9 @@ export const useSessionStore = defineStore('conversation', () => {
           handleMsgDataShow(params, ev, conversationItem);
         },
       };
-      if (params.user_selected_flow) {
+      if(isDebug){
+        await funcFetch.fetchAppNew(streamUrl, params, pp, fetchParams, isDebug);
+      } else if (params.user_selected_flow) {
         // 之前的对话历史记录
         await funcFetch.fetchHistory(streamUrl, params, pp, fetchParams);
       } else if (params.user_selected_app) {
@@ -627,6 +632,7 @@ export const useSessionStore = defineStore('conversation', () => {
    * @param params
    * @param type
    * @param waitType
+   * @param isDebug
    */
   const sendQuestion = async (
     groupId: string | undefined,
@@ -638,6 +644,7 @@ export const useSessionStore = defineStore('conversation', () => {
     params?: any,
     type?: any,
     waitType?: string,
+    isDebug?: boolean,
   ): Promise<void> => {
     const { updateSessionTitle, currentSelectedSession } =
       useHistorySessionStore();
@@ -713,7 +720,7 @@ export const useSessionStore = defineStore('conversation', () => {
     if (waitType) {
       getStreamParams = params;
     }
-    await getStream(getStreamParams, regenerateInd ?? undefined, waitType);
+    await getStream(getStreamParams, regenerateInd ?? undefined, waitType, isDebug);
   };
 
   /**

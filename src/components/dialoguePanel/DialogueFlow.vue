@@ -289,7 +289,7 @@ watch(
           </template>
         </el-collapse-item>
       </el-collapse>
-      <div style="margin 0px 16px;">
+      <div style="margin: 0px 16px;">
         <el-alert
           class="wait-div"
           v-for="(item, index) in exData"

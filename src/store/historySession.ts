@@ -217,7 +217,8 @@ export const useHistorySessionStore = defineStore(
      * 创建一个新的会话
      */
     const generateSession = async (): Promise<void> => {
-      const [_, res] = await api.createSession(user_selected_app.value);
+      const appId = user_selected_app.value ?? '';
+      const [_, res] = await api.createSession(appId);
       if (!_ && res) {
         currentSelectedSession.value = res.result.conversationId;
         await getHistorySession();

@@ -31,6 +31,7 @@ export const useAccountStore = defineStore('account', () => {
     revsionNumber: null,
     organization: '',
     user_sub: '', // 用户唯一标识
+    auto_execute: false,
   });
 
   /**

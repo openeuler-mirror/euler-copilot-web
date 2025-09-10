@@ -20,7 +20,14 @@ import { fetchStream } from '@/utils/fetchStream';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
 import dayjs from 'dayjs';
 import { useRoute } from 'vue-router';
+import i18n from 'src/i18n';
+import DialoguePanel from 'src/components/dialoguePanel/DialoguePanel.vue';
+import type {
+  ConversationItem,
+  RobotConversationItem,
+} from 'src/views/dialogue/types';
 
+const { t } = i18n.global;
 let isDebugSuccess = false;
 
 interface DebugConfig {
@@ -59,17 +66,20 @@ const { currentSelectedSession, historySession } = storeToRefs(
 const { generateSession, getHistorySession } = useHistorySessionStore();
 
 async function initDebugSession() {
-  const { conversationList } = useSessionStore();
-  if (conversationList.length === 0) return;
   await generateSession();
   await getHistorySession();
   currentSelectedSession.value = historySession.value[0].conversationId;
 }
 
-async function deleteSession(id: string) {
+/**
+ * 删除会话
+ */
+async function toDeleteSession(id: string) {
+  // 先停止生成
+  stopStream();
   const [, res] = await api.deleteSession({ conversationList: [id] });
   if (res) {
-    conversations.value = [];
+    currentSelectedSession.value = '';
   }
 }
 
@@ -90,207 +100,105 @@ const chatContainerRef = ref<HTMLElement | null>(null);
 const { scrollToBottom } = useScrollBottom(chatContainerRef, {
   threshold: 15,
 });
+const { pausedStream } = useSessionStore();
+const isStreaming = ref(false);
+const stopStream = async () => {
+  pausedStream(Number(conversationList.value.length));
+};
+// 对话列表
+const { sendQuestion } = useSessionStore();
+const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(
+  useSessionStore(),
+);
 
-const { conversations, setConversations } = useConversations();
+/**
+ * 获取指定字段值
+ * @param item
+ */
+const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
+  if (field in item) {
+    return (item as RobotConversationItem)[field] as T;
+  }
+  return undefined;
+};
 
-const { isStreaming, queryStream, stopStream } = useStream();
-
-function useStream() {
-  const isStreaming = ref(false);
-
-  let controller: AbortController;
-
-  const queryStream = async (
-    q: string,
-    sessionId: string,
-    lang: 'zh' | 'en' = 'zh',
-    cId?: string,
-  ) => {
-    isStreaming.value = true;
-
-    const headers = {};
-    headers['Content-Type'] = 'application/json; charset=UTF-8';
-    const token = localStorage.getItem('ECSESSION');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    controller = new AbortController();
-
-    const body = {
-      question: q,
-      conversationId: sessionId,
-      app: {
-        appId: route.query.appId as string,
-        flowId: '',
-        params: {},
-      },
-      language: lang,
-      features: {
-        context_num: 2,
-        max_tokens: 2048,
-      },
-    };
-    try {
-      const resp = await fetch('/api/chat', {
-        signal: controller.signal,
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers,
+/**
+ * @description 处理并过滤文件列表，将文件列表中的字段名统一为指定格式
+ * @param {ConversationItem} ConversationItem - 对话项对象
+ * @param {string} str - 字段名
+ * @returns {Array} 格式化后的文件列表
+ */
+const getFormatFileList = (ConversationItem, str) => {
+  let fileList: any = getItem(ConversationItem, str);
+  if (!fileList || fileList?.length === 0) return;
+  let newFileList: any = [];
+  fileList?.forEach((file) => {
+    if (file.associated === 'answer') {
+      newFileList.push({
+        documentId: file._id,
+        documentName: file.name,
+        documentAbstract: file.abstract,
+        documentType: file.type,
+        documentSize: file.size,
+        sourceUrl: file.sourceUrl,
+        documentOrder: file.order,
+        createdAt: file.created_at,
+        documentAuthor: file.author,
       });
-      if (!resp.ok) {
-        isStreaming.value = false;
-        conversations.value.push({
-          id: '',
-          question: q,
-          answer: [
-            {
-              content: '系统错误，请稍后再试',
-            },
-          ],
-          answerIndex: 0,
-          role: 'assistant',
-        });
-        return;
-      }
-
-      for await (const chunk of fetchStream({
-        readableStream: resp.body!,
-      })) {
-        if (!chunk.data) {
-          break;
-        }
-        if (chunk.data.trim() === '[ERROR]') {
-          isStreaming.value = false;
-          const conversation =
-            conversations.value[conversations.value.length - 1];
-          conversation.answer[conversation.answerIndex].content =
-            '系统错误，请稍后再试';
-          break;
-        }
-        if (chunk.data.trim() === '[DONE]') {
-          isStreaming.value = false;
-          setTimeout(() => {
-            scrollToBottom(true);
-          }, 100);
-          break;
-        }
-
-        let conversation = conversations.value.find((item) => item.id === cId);
-
-        setConversations(chunk.data, q, conversation);
-      }
-    } catch (error) {
-      console.log(error);
     }
-  };
-
-  const stopStream = async () => {
-    const [, res] = await api.stopGeneration();
-    if (res) {
-      isStreaming.value = false;
-      controller.abort();
-      const conversation = conversations.value[conversations.value.length - 1];
-      if (conversation.answer[conversation.answerIndex].content === '') {
-        conversation.answer[conversation.answerIndex].content = '对话已终止';
-        return;
-      }
-      scrollToBottom(true);
-    }
-  };
-
-  return { isStreaming, queryStream, stopStream };
-}
-
-function useConversations() {
-  interface Conversation {
-    id: string;
-    question: string;
-    answer: {
-      content: string;
-      metadata?: StreamMetadata;
-    }[];
-    answerIndex: number;
-    role: 'user' | 'assistant';
-    createdAt?: Date | number;
-  }
-
-  type StreamEvent = 'text.add' | 'init' | 'input';
-  interface StreamMetadata {
-    inputTokens: number;
-
-    outputTokens: number;
-
-    timeCost: number;
-  }
-
-  interface StreamChunk {
-    content: {
-      text: string;
-    };
-    conversationId: string;
-    event: StreamEvent;
-    groupId: string;
-    id: string;
-    metadata: StreamMetadata;
-    taskId: string;
-  }
-
-  const conversations = ref<Conversation[]>([]);
-
-  const setConversations = (
-    data: string,
-    question: string,
-    conversation?: Conversation,
-  ) => {
-    const { id, event, content, metadata } = JSON.parse(data) as StreamChunk;
-
-    if (event === 'init') {
-      if (conversation) {
-        conversation.answer.push({
-          content: '',
-        });
-        conversation.answerIndex = conversation.answer.length - 1;
-      } else {
-        conversations.value.push({
-          id: id,
-          question,
-          answer: [
-            {
-              content: '',
-            },
-          ],
-          answerIndex: 0,
-          role: 'assistant',
-        });
-      }
-    }
-    if (event === 'text.add') {
-      if (!isDebugSuccess) {
-        isDebugSuccess = true;
-        emits('success', true);
-      }
-      const c = conversations.value[conversations.value.length - 1];
-      c.answer[c.answerIndex].content += content.text;
-      c.answer[c.answerIndex].metadata = metadata;
-    }
-    scrollToBottom();
-  };
-
-  return { conversations, setConversations };
-}
-
-function onSend(q: string) {
-  if (isStreaming.value) return;
-  conversations.value.push({
-    id: `user-${(conversations.value.length % 2) + 1}`,
-    question: q,
-    answer: [],
-    answerIndex: 0,
-    role: 'user',
   });
-  scrollToBottom(true);
-  queryStream(q, currentSelectedSession.value, language.value as 'zh' | 'en');
+  return newFileList;
+};
+
+const clearSuggestion = (index: number): void => {
+  if ('search_suggestions' in conversationList.value[index]) {
+    conversationList.value[index].search_suggestions = undefined;
+  }
+};
+
+const showFileSource = ref(false);
+const curFileList = ref<Array<any>>([]);
+const closeShowFileSource = () => {
+  showFileSource.value = false;
+};
+const openShowFileSource = (fileList: Array<any>) => {
+  showFileSource.value = true;
+  curFileList.value = fileList;
+};
+
+/**
+ * 发送消息
+ */
+const handleSendMessage = async (
+  groupId: string | undefined,
+  question: string,
+  user_selected_flow?: string,
+) => {
+  if (isAnswerGenerating.value) return;
+  const len = conversationList.value.length;
+  if (
+    len > 0 &&
+    !(conversationList.value[len - 1] as RobotConversationItem).isFinish
+  )
+    return;
   dialogueInput.value = '';
-}
+  if (!currentSelectedSession.value) {
+    await generateSession();
+  }
+
+  await sendQuestion(
+    undefined,
+    question,
+    route.query.appId as string,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    true,
+  );
+};
 
 /**
  * 处理鼠标事件
@@ -300,7 +208,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     if (dialogueInput.value !== '') {
-      onSend(dialogueInput.value);
+      handleSendMessage(undefined, dialogueInput.value);
     }
   }
 };
@@ -335,8 +243,10 @@ watch(
   () => props.visible,
   () => {
     if (!props.visible) {
-      deleteSession(currentSelectedSession.value);
+      toDeleteSession(currentSelectedSession.value);
       return;
+    } else {
+      conversationList.value = [];
     }
     initDebugSession();
   },
@@ -348,7 +258,7 @@ watch(
       class="mcp-debug-dialog"
       :visible="visible"
       :model-value="visible"
-      title="调试"
+      :title="i18n.global.t('flow.debug')"
       @close="emits('update:visible', false)"
       align-center
       destroy-on-close
@@ -361,7 +271,7 @@ watch(
           </div>
 
           <div class="mcp-info" v-if="config.mcps.length">
-            <span>MCP 服务</span>
+            <span>{{ $t('semantic.mcp_service') }}</span>
             <div class="mcp-list">
               <img
                 v-for="mcp in config.mcps"
@@ -374,10 +284,10 @@ watch(
         </div>
 
         <div class="chat-container" ref="chatContainerRef">
-          <div v-if="!conversations.length">
+          <div v-if="!conversationList.length">
             <Bubble
               class="bubble-item"
-              :avatar="config.icon?config.icon:DefaultAgentIcon"
+              :avatar="config.icon ? config.icon : DefaultAgentIcon"
               :styles="{
                 content: {
                   width: '100%',
@@ -388,9 +298,9 @@ watch(
             >
               <template #content>
                 <div class="custom-content">
-                  你好，我是
+                  {{ $t('main.describe1') }}
                   <div class="gradient-text">{{ config.name }}</div>
-                  ，很高兴为您服务
+                  {{ $t('main.describe2') }}
                 </div>
               </template>
               <template #footer>
@@ -398,101 +308,38 @@ watch(
               </template>
             </Bubble>
           </div>
-          <Bubble
-            v-else
-            v-for="(
-              { id, role, question, answer, answerIndex, createdAt }, idx
-            ) in conversations"
-            :key="id"
-            :avatar="role === 'user' ? userAvatar : (config.icon?config.icon:robotAvatar)"
-            :content="
-              role === 'assistant'
-                ? markedContent(answer[answerIndex].content)
-                : question
+          <DialoguePanel
+            v-for="(item, index) in conversationList"
+            :cid="item.cid"
+            :key="index"
+            :groupId="getItem(item, 'groupId')"
+            :type="item.belong"
+            :inputParams="item.params"
+            :content="item.message"
+            :echartsObj="getItem(item, 'echartsObj')"
+            :recordList="
+              item.belong === 'robot' ? item.messageList.getRecordIdList() : ''
             "
-            :content-render="role === 'assistant' ? renderMarkdown : undefined"
-            :date="
-              role === 'user'
-                ? dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss')
-                : undefined
+            :isCommentList="
+              item.belong === 'robot' ? item.messageList.getCommentList() : ''
             "
-            :loading="
-              role === 'assistant' &&
-              answer[answerIndex].content.length === 0 &&
-              idx === conversations.length - 1
-            "
-            class="bubble-item"
-            :styles="bubbleStyles(role)"
-          >
-            <template
-              v-if="
-                (role === 'assistant' && !isStreaming) ||
-                (role === 'assistant' && idx !== conversations.length - 1)
-              "
-              #footer
-            >
-              <div class="bubble-footer">
-                <div class="action-toolbar">
-                  <div class="left">
-                    <div>
-                      tokens:
-                      {{ answer[answerIndex].metadata?.inputTokens || 0 }}↑ |
-                      {{ answer[answerIndex].metadata?.outputTokens || 0 }}↓ |
-                      {{
-                        answer[answerIndex].metadata?.timeCost
-                          ? Number(
-                              answer[answerIndex].metadata?.timeCost,
-                            ).toFixed(2)
-                          : '0.00'
-                      }}
-                    </div>
-
-                    <!-- <div class="pagination">
-                      <img
-                        class="pagination-arror mr-8"
-                        src="@/assets/svgs/arror_left.svg"
-                      />
-                      <span class="pagination-cur">{{ answerIndex + 1 }}</span>
-                      <span class="pagination-total">
-                        {{ `/${answer.length}` }}
-                      </span>
-                      <img
-                        class="pagination-arror ml-8"
-                        src="@/assets/svgs/arror_right.svg"
-                      />
-                    </div> -->
-
-                    <div
-                      class="regenerate"
-                      v-if="idx == conversations.length - 1"
-                      @click="onRegenerateClick(id, question)"
-                    >
-                      <img
-                        v-if="theme === 'dark'"
-                        src="@/assets/svgs/dark_regenerate.svg"
-                        alt=""
-                      />
-                      <img
-                        v-else
-                        src="@/assets/svgs/light_regenerate.svg"
-                        alt=""
-                      />
-                      <span>重新生成</span>
-                    </div>
-                  </div>
-                  <div class="button-group">
-                    <el-tooltip
-                      placement="top"
-                      :content="$t('feedback.copy')"
-                      effect="light"
-                    >
-                      <img src="@/assets/svgs/dark_copy.svg" />
-                    </el-tooltip>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </Bubble>
+            :messageArray="item.belong === 'robot' ? item.messageList : ''"
+            :is-finish="getItem(item, 'isFinish')"
+            :test="getItem(item, 'test')"
+            :metadata="getItem(item, 'metadata')"
+            :flowdata="getItem(item, 'flowdata')"
+            :created-at="item.createdAt"
+            :current-selected="item.currentInd"
+            :need-regernerate="item.cid === conversationList.slice(-1)[0].cid"
+            :user-selected-app="user_selected_app"
+            :search_suggestions="getItem(item, 'search_suggestions')"
+            :paramsList="getItem(item, 'paramsList')"
+            :fileList="item.files ?? getFormatFileList(item, 'document')"
+            @handleReport="handleReport"
+            @handleSendMessage="handleSendMessage"
+            @clearSuggestion="clearSuggestion(index)"
+            @openShowFileSource="openShowFileSource"
+          />
         </div>
 
         <div v-if="isStreaming" class="stop-button" @click="stopStream">
@@ -501,7 +348,7 @@ watch(
             {{ $t('feedback.stop') }}
           </div>
         </div>
-
+        <!-- 调试发送窗口 -->
         <div class="sender">
           <textarea
             ref="inputRef"
@@ -515,10 +362,8 @@ watch(
               <img src="@/assets/svgs/upload_light.svg" alt="" />
             </div>
             <div class="send-button">
-               <img
-                v-if="
-                  dialogueInput.length <= 0
-                "
+              <img
+                v-if="dialogueInput.length <= 0"
                 src="@/assets/svgs/send_disabled.svg"
                 alt=""
               />
@@ -526,7 +371,7 @@ watch(
                 v-else
                 :src="isStreaming ? SendDisabledIcon : SendEnableIcon"
                 alt=""
-                @click="onSend(dialogueInput)"
+                @click="handleSendMessage(undefined, dialogueInput)"
               />
             </div>
           </div>
@@ -539,7 +384,7 @@ watch(
       <template #footer>
         <div class="dialog-footer">
           <el-button type="primary" @click="emits('update:visible', false)">
-            关闭
+            {{ $t('common.close') }}
           </el-button>
         </div>
       </template>
@@ -756,19 +601,9 @@ watch(
         color: var(--o-text-color-primary);
         font-size: 16px;
         background-color: var(--o-bg-color-base);
-        font-family:
-          HarmonyOS_Sans_SC_Regular,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          Roboto,
-          Oxygen,
-          Ubuntu,
-          Cantarell,
-          'Open Sans',
-          'Helvetica Neue',
-          sans-serif;
+        font-family: HarmonyOS_Sans_SC_Regular, system-ui, -apple-system,
+          BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+          'Open Sans', 'Helvetica Neue', sans-serif;
 
         &:focus {
           outline: none;
