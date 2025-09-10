@@ -31,6 +31,7 @@ import yamlSvg from '@/assets/svgs/yaml.svg';
 import zipSvg from '@/assets/svgs/zip.svg';
 import { ElMessage } from 'element-plus';
 import { useAccountStore } from 'src/store';
+import { nextTick } from 'vue';
 const autoExecuteRef = ref(<boolean | undefined>false);
 const { userinfo } = storeToRefs(useAccountStore());
 
@@ -558,10 +559,11 @@ const getProviderLLM = async () => {
   }
 };
 
-const autoExecuteChange = (value) => {
+const autoExecuteChange = async (value) => {
   autoExecuteRef.value = value;
+  await nextTick();
+  Object.assign(userinfo.value, { auto_execute: value });
   api.updateUserInfo({ autoExecute: value });
-  api.getPartAppConfgUser();
 };
 
 onMounted(() => {
@@ -661,7 +663,7 @@ watch(
 watch(
   () => app,
   (val) => {
-    if (app.value) {
+    if (app.value.appId) {
       user_selected_app.value = app.value.appId;
     }
   },
