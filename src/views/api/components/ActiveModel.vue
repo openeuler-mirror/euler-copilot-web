@@ -38,15 +38,27 @@ const form = reactive({});
 const formRef = ref<FormInstance>();
 const rules = computed<FormRules<typeof form>>(() => {
   const rulesObj = {};
-  Object.keys(props.item.data.env).forEach((key) => {
-    rulesObj[key] = [
-      {
-        required: true,
-        message: t('semantic.pleaseEnter'), // 使用统一的提示信息
-        trigger: 'blur',
-      },
-    ];
-  });
+  if (props.item.data.env) {
+    Object.keys(props.item.data.env).forEach((key) => {
+      rulesObj[key] = [
+        {
+          required: true,
+          message: t('semantic.pleaseEnter'), // 使用统一的提示信息
+          trigger: 'blur',
+        },
+      ];
+    });
+  } else if (props.item.data.headers) {
+    Object.keys(props.item.data.headers).forEach((key) => {
+      rulesObj[key] = [
+        {
+          required: true,
+          message: t('semantic.pleaseEnter'), // 使用统一的提示信息
+          trigger: 'blur',
+        },
+      ];
+    });
+  }
 
   return rulesObj;
 });
@@ -78,7 +90,16 @@ async function onConfirm(formEl: FormInstance | undefined) {
         <div class="text">
           {{ props.item.description }}
         </div>
-        <template v-for="(value, key) in item.data.env" :key="key">
+        <template v-for="(value, key) in item.data?.env" :key="key">
+          <el-form-item :label="key" :prop="key">
+            <el-input
+              v-model="form[key]"
+              clearable
+              :placeholder="t('semantic.pleaseEnter')"
+            />
+          </el-form-item>
+        </template>
+        <template v-for="(value, key) in item.data?.headers" :key="key">
           <el-form-item :label="key" :prop="key">
             <el-input
               v-model="form[key]"

@@ -34,7 +34,7 @@ const COMMAND_TEMPLATE = {
   env: {},
 };
 const URL_TEMPLATE = {
-  headers: '',
+  headers: {},
   url: '',
 };
 const STREAM = {};
