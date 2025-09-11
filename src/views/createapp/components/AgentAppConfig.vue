@@ -36,6 +36,7 @@ const props = withDefaults(
   defineProps<{
     handleValidateContent: (val: any) => void;
     onDebug: (status: boolean) => void;
+    saveConfig: () => void;
   }>(),
   {},
 );
@@ -115,6 +116,8 @@ function onMcpServiceSelected(mcps: Mcp[]) {
     createAppForm.mcps = mcps.map((item) => item.mcpserviceId);
     isMcpDrawerVisible.value = false;
   }
+  
+  props.saveConfig();
 }
 
 function onDeleteMcp(mcp: any) {

@@ -66,7 +66,7 @@ const { currentSelectedSession, historySession } = storeToRefs(
 const { generateSession, getHistorySession } = useHistorySessionStore();
 
 async function initDebugSession() {
-  await generateSession();
+  await generateSession(true);
   await getHistorySession();
   currentSelectedSession.value = historySession.value[0].conversationId;
 }
