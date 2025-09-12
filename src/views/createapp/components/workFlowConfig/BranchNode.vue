@@ -3,6 +3,9 @@ import { Position, Handle } from '@vue-flow/core';
 import { ref, watch } from 'vue';
 import { getSrcIcon, opertionListMap } from '../types';
 import NodeMirrorText from '../codeMirror/nodeMirrorText.vue';
+import i18n from 'src/i18n';
+
+const { t } = i18n.global;
 const props = defineProps({
   id: {
     type: String,
@@ -177,25 +180,25 @@ const getHandleStyle = (index, total) => {
         <div class="choiceContent" v-for="(item, index) in [...props.data.parameters?.input_parameters?.choices]?.reverse()" :key="index">   
           <div class="choiceLabel">
             <div v-if="item.is_default" >
-              否则
+              {{$t('yaml.else')}}
             </div>
             <div v-else>
               <div v-if="index === 0">
-                如果
+                {{$t('yaml.if')}}
               </div>
               <div v-else>
-                否则如果
+                {{$t('yaml.else_if')}}
               </div>
             </div>
           </div>
           <div class="choice">
             <div v-for="(condition, cIndex) in item.conditions" :key="cIndex" class="choiceCondition">
-              <el-tooltip :content="condition.left.value" placement="top">
-                <div class="choiceLeft" v-if="condition.left.value"> {{ condition.left.value }}</div>
+              <el-tooltip :content="condition.left.name" placement="top">
+                <div class="choiceLeft" v-if="condition.left.name"> {{ condition.left.name }}</div>
               </el-tooltip>
               <span class="choiceOperate" v-if="condition.operate">{{ opertionListMap.get(condition.operate)?.str || opertionListMap.get(condition.operate)?.label }}</span>
-              <el-tooltip :content="condition.right.value" placement="top">
-                <div class="choiceRight" v-if="condition.right.value">{{ condition.right.value }}</div>
+              <el-tooltip :content="condition.right.name" placement="top">
+                <div class="choiceRight" v-if="condition.right.name">{{ condition.right.name }}</div>
               </el-tooltip>
             </div>
           </div>

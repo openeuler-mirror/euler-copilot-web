@@ -99,7 +99,7 @@ async function queryAgentConfig() {
   createAppFormRef.value?.clearValidate();
 
   if (res) {
-    const { name, description, permission, icon, mcpService, dialogRounds } =
+    const { name, description, permission, icon, mcpService, dialogRounds, llm } =
       res.result;
     createAppForm.icon = icon || '';
     createAppForm.name = name;
@@ -107,6 +107,8 @@ async function queryAgentConfig() {
     createAppForm.mcps = mcpService?.map((item) => item.id) || [];
     createAppForm.dialogRounds = dialogRounds || 3;
     createAppForm.permission = permission || createAppForm.permission;
+    // 如果有模型
+    createAppForm.model = llm?.llmId;
   }
   loading.value = false;
 }

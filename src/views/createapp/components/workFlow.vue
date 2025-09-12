@@ -345,7 +345,7 @@ const nodesChange = (nodes) => {
     removeSelectedNodes([getSelectedNodes.value[0]]);
   }
   if (nodes?.[0]?.type === 'remove') {
-    delNode(nodes[0].id);
+    // delNode(nodes[0].id);
     // 节点增加删除时直接将工作流debug状态置为false
     emits('updateFlowsDebug', false);
     nodeAndLineConnection();
