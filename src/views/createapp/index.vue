@@ -39,6 +39,10 @@ onMounted(() => {
   if (currentAppType) {
     createAppType.value = currentAppType;
   }
+  // 如果是agent直接可以发布
+  if(appType.value === 'agent') {
+    publishValidate.value = true;
+  }
 });
 
 onUnmounted(() => {
