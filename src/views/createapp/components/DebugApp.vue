@@ -464,7 +464,7 @@ watch(
 
     .chat-container {
       width: 100%;
-      height: 57%;
+      height: 76%;
       min-height: 340px;
       overflow: auto;
 
