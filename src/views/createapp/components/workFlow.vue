@@ -607,6 +607,9 @@ const updateNodeFunc = (id, status, constTime, content?, resultData?) => {
     changeTargetEdges.forEach((item) => {
       if (branchId === item.branchId) {
         updateEdgeData(item.id, { targetStatus: status });
+      } else if (item.data.sourceStatus === 'success') {
+        // end的情况
+        updateEdgeData(item.id, { targetStatus: item.data.sourceStatus });
       }
     });
   } else {
