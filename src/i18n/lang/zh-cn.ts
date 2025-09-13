@@ -90,6 +90,7 @@ export default {
     publish: '发布',
     copyFailed: '复制失败',
     checkFormat: '请检查格式',
+    check_connect: '请检查连接线',
   },
   plugin_center: {
     plugin_name: '插件名称',
