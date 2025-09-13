@@ -90,6 +90,7 @@ export default {
     publish: 'Publish',
     copyFailed: 'Copy failed.',
     checkFormat: 'Check the format.',
+    check_connect: 'Please check the connecting cable.',
   },
   plugin_center: {
     plugin_name: 'Plugin Name',

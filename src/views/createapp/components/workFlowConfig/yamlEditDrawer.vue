@@ -504,7 +504,7 @@ const onSelectOption = (option: any, index: number, cIndex: number) => {
   api
     .queryParameterOperate({ ParamType: curOption.paramType })
     .then((res) => {
-      if (paramoperateList.value[index].length < cIndex) {
+      if (paramoperateList.value[index].length > cIndex) {
         paramoperateList.value[index][cIndex] = res?.[1]?.result;
       } else {
         paramoperateList.value[index].push(res?.[1]?.result);

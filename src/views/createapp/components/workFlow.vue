@@ -97,7 +97,7 @@ const {
   setEdges,
   removeSelectedNodes,
   getSelectedNodes,
-  removeEdges
+  removeEdges,
 } = useVueFlow();
 const { layout } = useLayout();
 
@@ -138,15 +138,16 @@ onConnect((e) => {
   // 边的起点和终点节点的两个状态
   const sourceItem = findNode(e.source);
   const targetItem = findNode(e.target);
+
   // 获取当前状态
   const sourceStatus = sourceItem?.data?.status || 'default';
   const targetStatus = targetItem?.data?.status || 'default';
-  
+
   // 如果没有提供sourceHandle，但节点有activeSourceHandle，则使用它
   if (!e.sourceHandle && sourceItem?.data?.activeSourceHandle) {
     e.sourceHandle = sourceItem.data.activeSourceHandle;
   }
-  
+
   addEdges({
     ...e,
     data: {
@@ -392,12 +393,9 @@ const queryFlow = (deal: string) => {
             }
           }
           const flowDataList = res?.[1]?.result?.workflows || [];
-          console.log(nodes.value,'nodes')
           // 更新当前publish状态
           emits('updateFlowsDebug', '', flowDataList);
-          console.log('----------')
           updateFlowsDebugStatus.value = true;
-          console.log(nodes.value,'nodes')
         }
         loading.value = false;
       });
@@ -499,7 +497,7 @@ const redrageFlow = (nodesList, edgesList) => {
     // 线分支条件需后续添加
     return newEdge;
   });
-  console.log(newNodeList)
+  console.log(newNodeList);
   setNodes(newNodeList);
   setEdges(newEdgeList);
   // 回显节点和边后，判断各节点连接状态
@@ -542,6 +540,7 @@ $bus.on('getNodesStatue', (item: any) => {
             params: newLines.data?.content,
             type: 'output',
           },
+          newLines.data,
         );
       } else {
         updateNodeFunc(
@@ -552,6 +551,7 @@ $bus.on('getNodesStatue', (item: any) => {
             params: newLines.data?.content,
             type: 'input',
           },
+          newLines.data,
         );
       }
     } else if (newLines?.data?.event === 'flow.stop') {
@@ -575,7 +575,7 @@ $bus.on('debugChatEnd', () => {
 });
 
 // 更新节点状态--调试到对应节点id，根据id设置节点与边状态
-const updateNodeFunc = (id, status, constTime, content?) => {
+const updateNodeFunc = (id, status, constTime, content?, resultData?) => {
   // 获取到当前的nodeId,更新状态
   const node = findNode(id);
   // 这里node的data也需要转换下
@@ -589,14 +589,32 @@ const updateNodeFunc = (id, status, constTime, content?) => {
   const changeTargetEdges = [
     ...getEdges.value.filter((item) => item.target === id),
   ];
-  // 分别遍历相应的以该节点为起源的边-并更新它们的状态为最新状态
-  changeSourceEdges.forEach((item) => {
-    updateEdgeData(item.id, { sourceStatus: status });
-  });
-  // 分别遍历相应相应的以该节点为目标的边-并更新它们的状态为最新状态
-  changeTargetEdges.forEach((item) => {
-    updateEdgeData(item.id, { targetStatus: status });
-  });
+  if (changeSourceEdges.length > 1) {
+    let branchId = resultData.content?.branch_id;
+    changeSourceEdges.forEach((item) => {
+      if (branchId === item.branchId) {
+        updateEdgeData(item.id, { sourceStatus: status, targetStatus: status });
+      }
+    });
+  } else {
+    // 分别遍历相应的以该节点为起源的边-并更新它们的状态为最新状态
+    changeSourceEdges.forEach((item) => {
+      updateEdgeData(item.id, { sourceStatus: status });
+    });
+  }
+  if (changeTargetEdges.length > 1) {
+    let branchId = resultData.content?.branch_id;
+    changeTargetEdges.forEach((item) => {
+      if (branchId === item.branchId) {
+        updateEdgeData(item.id, { targetStatus: status });
+      }
+    });
+  } else {
+    // 分别遍历相应相应的以该节点为目标的边-并更新它们的状态为最新状态
+    changeTargetEdges.forEach((item) => {
+      updateEdgeData(item.id, { targetStatus: status });
+    });
+  }
 };
 
 // 保存当前handle拖拽的nodeid和sourceHandle--以便于拖拽结束时，设置该节点handle恢复默认状态
@@ -607,7 +625,9 @@ const updateConnectHandle = (nodeId, sourceHandleId?) => {
     // 可以在这里保存sourceHandleId，例如添加到节点数据中
     const node = findNode(nodeId);
     if (node) {
-      updateNode(nodeId, { data: { ...node.data, activeSourceHandle: sourceHandleId } });
+      updateNode(nodeId, {
+        data: { ...node.data, activeSourceHandle: sourceHandleId },
+      });
     }
   }
 };
@@ -632,7 +652,6 @@ const cancelConnectStatus = () => {
 };
 
 const saveFlow = (updateNodeParameter?, debug?) => {
-  console.log(getNodes.value)
   loading.value = true;
   const appId = route.query?.appId;
   if (!flowObj.value.flowId) {
@@ -640,10 +659,10 @@ const saveFlow = (updateNodeParameter?, debug?) => {
   }
   // 将对应的节点和边存储格式改造
   let updateNodes = getNodes.value.map((item) => {
-    console.log('node：',item)
+    console.log('node：', item);
 
     const { ...otherItem } = item.data;
-    console.log(item)
+    console.log(item);
     let newItem = {
       enable: true,
       editable: false,
@@ -726,7 +745,10 @@ const saveFlow = (updateNodeParameter?, debug?) => {
       if (res[1]?.result) {
         queryFlow('update');
         const updatedCurFlow = res[1].result.flow;
-        isNodeConnect.value = res[1].result.connectivity;
+        isNodeConnect.value = res[1].result.flow.connectivity;
+        if (!isNodeConnect.value) {
+          ElMessage.error(i18n.global.t('semantic.check_connect'));
+        }
         redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
       }
       loading.value = false;
@@ -817,15 +839,16 @@ defineExpose({
                     "
                   >
                     <el-tooltip
-                    :disabled="true"
-                    class="popper-class"
-                    placement="top"
-                    :content="node.name">
-                        <div class="stancesName">
-                    <img class="nodeIcon" :src="getSrcIcon(node)" />
+                      :disabled="true"
+                      class="popper-class"
+                      placement="top"
+                      :content="node.name"
+                    >
+                      <div class="stancesName">
+                        <img class="nodeIcon" :src="getSrcIcon(node)" />
 
-                          {{ node.name }}
-                        </div>
+                        {{ node.name }}
+                      </div>
                     </el-tooltip>
                   </div>
                 </el-collapse-item>
@@ -978,7 +1001,7 @@ defineExpose({
         <el-tooltip
           v-if="!isNodeAndLineConnect && !isNodeConnect"
           effect="dark"
-          :content="$t('semantic.publish_condition')"
+          :content="$t('semantic.check_connect')"
           placement="top"
         >
           <div class="debugBtn isDebugDis"></div>
@@ -993,7 +1016,9 @@ defineExpose({
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
           <div class="icon" :class="`${debugStatus}Icon`"></div>
-          <div class="resultText">{{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}</div>
+          <div class="resultText">
+            {{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}
+          </div>
           <span
             class="time"
             :class="`${debugStatus}Bg`"
