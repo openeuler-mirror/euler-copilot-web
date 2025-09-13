@@ -714,7 +714,7 @@ onMounted(async () => {
       font-size: 16px;
       font-weight: 700;
       color: #000;
-      height: 24px;
+      // height: 24px;
     }
     .el-collapse-item__content {
       margin: 0;

@@ -63,6 +63,11 @@ http {
         server_name localhost;
         charset utf-8;
 
+        add_header 'Access-Control-Allow-Origin' '*'; # 允许所有源
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE'; # 允许的HTTP方法
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization'; # 允许的请求头
+        add_header 'Access-Control-Expose-Headers' 'Content-Length, Content-Range'; # 允许前端访问的响应头
+
         add_header X-XSS-Protection "1; mode=block";
         add_header X-Content-Type-Options nosniff;
         add_header Referrer-Policy "no-referrer";

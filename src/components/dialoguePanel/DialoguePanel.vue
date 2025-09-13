@@ -124,7 +124,7 @@ const generateContent = (content: string) => {
   let result = '';
   props.fileList?.forEach((file)=>{
     if (file.documentOrder === Number(content)) {
-      result += `<img src="${typeSvgMap[file?.documentType]}" alt="">`;
+      result += `<img src="${typeSvgMap[file?.documentType]}" crossOrigin="anonymous" alt="">`;
       result += `<div class="tooltip-name">${file?.documentName || ''}</div>`;
       result = `<div class="tooltip-title">${result}</div>`;
       result += `<div class="tooltip-abstract">${file?.documentAbstract || ''}</div>`;
