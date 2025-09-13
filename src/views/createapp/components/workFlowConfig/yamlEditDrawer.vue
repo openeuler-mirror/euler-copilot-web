@@ -620,34 +620,37 @@ watch(
     );
     yamlExpress.value[2].yamlCode = props.yamlContent.output_parameters;
 
-    // 获取需要处理的 choices（倒序、过滤掉 is_default 为 true 的、只保留有条件的）
-    const processedChoices = props.yamlContent.input_parameters.choices
-      .slice()
-      .reverse()
-      .filter((choice) => !choice.is_default && choice.conditions.length > 0);
+    let inputParameters = props.yamlContent.input_parameters;
+    if (inputParameters.choices) {
+      // 获取需要处理的 choices（倒序、过滤掉 is_default 为 true 的、只保留有条件的）
+      const processedChoices = inputParameters.choices
+        .slice()
+        .reverse()
+        .filter((choice) => !choice.is_default && choice.conditions.length > 0);
 
-    // 初始化 paramoperateList.value，为每个需要处理的 choice 预先创建一个空数组
-    //    这样后续异步回调中就能通过索引安全地访问和 push
-    paramoperateList.value = processedChoices.map(() => []);
+      // 初始化 paramoperateList.value，为每个需要处理的 choice 预先创建一个空数组
+      //    这样后续异步回调中就能通过索引安全地访问和 push
+      paramoperateList.value = processedChoices.map(() => []);
 
-    // 如果input_parameters有值，则初始化 左值,paramoperateList选择项添加
-    processedChoices.forEach((item, index) => {
-      if (!item.is_default) {
-        if (item.conditions.length > 0) {
-          item.conditions.forEach((conditionItem, conditionIndex) => {
-            let paramType = conditionItem.left.type;
-            if (paramType) {
-              api
-                .queryParameterOperate({ ParamType: paramType })
-                .then((res) => {
-                  paramoperateList.value[index].push(res?.[1]?.result);
-                })
-                .catch((err) => [console.error(err)]);
-            }
-          });
+      // 如果input_parameters有值，则初始化 左值,paramoperateList选择项添加
+      processedChoices.forEach((item, index) => {
+        if (!item.is_default) {
+          if (item.conditions.length > 0) {
+            item.conditions.forEach((conditionItem, conditionIndex) => {
+              let paramType = conditionItem.left.type;
+              if (paramType) {
+                api
+                  .queryParameterOperate({ ParamType: paramType })
+                  .then((res) => {
+                    paramoperateList.value[index].push(res?.[1]?.result);
+                  })
+                  .catch((err) => [console.error(err)]);
+              }
+            });
+          }
         }
-      }
-    });
+      });
+    }
   },
   { deep: true, immediate: true },
 );
