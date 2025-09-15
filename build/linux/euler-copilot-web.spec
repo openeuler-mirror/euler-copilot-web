@@ -315,7 +315,7 @@ fi
 
 
 %changelog
-# Mon Sep 15 2025 openEuler <contact@openeuler.org> - 0.10.0-1
+* Mon Sep 15 2025 openEuler <contact@openeuler.org> - 0.10.0-1
 - 升级至 0.10.0 版本
 
 * Mon Jun 16 2025 openEuler <contact@openeuler.org> - 0.9.6-6
