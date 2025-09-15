@@ -11,7 +11,9 @@ import {
 import { computed, CSSProperties, ref, onMounted } from 'vue';
 import { electronProcess, ipcRenderer } from '@/utils/electron';
 import { getBaseUrl } from 'src/utils/tools';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const { language } = storeToRefs(useLangStore());
 const { changeLanguage } = useLangStore();
 const themeStore = useChangeThemeStore();
@@ -22,10 +24,14 @@ const iframeTarget = ref('');
 onMounted(async () => {
   const baseUrl = await getBaseUrl();
   const origin = window.location.origin;
-  const isElectron = window.navigator.userAgent.includes('Electron');
-  iframeTarget.value = isElectron
-    ? `${baseUrl}/witchaind`
-    : `${origin}/witchaind`;
+  const isElectron = window.navigator.userAgent.includes('Electron'); 
+  let pathname = router.currentRoute.value.name?.toLowerCase();
+  let target = '';
+  if (pathname === 'witchaind') { 
+    iframeTarget.value = isElectron ? `${baseUrl}/witchaind` : `${origin}/witchaind`; 
+  } else if (pathname === 'deepinsight') { 
+    iframeTarget.value = isElectron ? `${baseUrl}/deepinsight` : `${origin}/deepinsight`; 
+  }  
 });
 
 const changeLanguagefun = (lang: 'zh_cn' | 'en') => {

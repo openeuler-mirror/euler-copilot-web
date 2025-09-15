@@ -23,7 +23,7 @@ RUN apk add --no-cache git openssh-client ca-certificates \
 # 第二阶段：部署到nginx
 FROM hub.oepkgs.net/openeuler/openeuler:24.03-lts-sp2
 
-ENV TZ Asia/Shanghai
+ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone
 

@@ -80,7 +80,7 @@ export default ({ mode }): UserConfigExport => {
       },
       proxy: {
         '/api': {
-          target: env.VITE_BASE_PROXY_URL,
+          target: "http://deepinsight-web-service.{{ .Release.Namespace }}.svc.cluster.local:9222",
           changeOrigin: true,
           secure: false,
           ws: false,
