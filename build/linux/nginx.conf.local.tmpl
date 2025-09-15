@@ -6,12 +6,16 @@ server {
     client_body_buffer_size 5120M;
     client_max_body_size 5120M;
 
+    add_header 'Access-Control-Allow-Origin' '*'; # 允许所有源
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE'; # 允许的HTTP方法
+    add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization'; # 允许的请求头
+    add_header 'Access-Control-Expose-Headers' 'Content-Length, Content-Range'; # 允许前端访问的响应头
     add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options nosniff;
     add_header Referrer-Policy "no-referrer";
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; always";
     add_header Cache-Control "no-cache";
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: base64;";
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src * data: base64;";
 
     resolver 8.8.8.8 8.8.4.4 valid=60s;
     resolver_timeout 5s;
