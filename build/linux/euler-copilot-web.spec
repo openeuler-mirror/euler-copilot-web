@@ -16,7 +16,7 @@
 BuildArch:        aarch64 x86_64
 Name:             euler-copilot-web
 Version:          0.10.0
-Release:          6%{?dist}
+Release:          1%{?dist}
 License:          MulanPSL-2.0
 Summary:          openEuler 智能化解决方案 Web 前端
 Source0:          %{name}-%{version}.tar.gz
@@ -315,6 +315,9 @@ fi
 
 
 %changelog
+# Mon Sep 15 2025 openEuler <contact@openeuler.org> - 0.10.0-1
+- 升级至 0.10.0 版本
+
 * Mon Jun 16 2025 openEuler <contact@openeuler.org> - 0.9.6-6
 - 优化 RPM 打包配置：启用自动 provide 并过滤 Electron 内部库
 
