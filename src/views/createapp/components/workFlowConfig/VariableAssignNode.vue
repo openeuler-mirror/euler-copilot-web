@@ -2,7 +2,10 @@
 import { Position, Handle } from '@vue-flow/core';
 import { ref, computed, watch } from 'vue';
 import { Plus, Delete } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 import { getSrcIcon, getNodeClass } from '../types';
+
+const { t } = useI18n();
 
 const props = defineProps({
   id: {
@@ -117,19 +120,19 @@ const variableOperations = computed(() => {
 // 获取操作类型的显示名称
 const getOperationDisplayName = (operation: string): string => {
   const operationMap: Record<string, string> = {
-    'overwrite': '覆盖',
-    'clear': '清空',
-    'add': '加法',
-    'subtract': '减法',
-    'multiply': '乘法',
-    'divide': '除法',
-    'modulo': '求余',
-    'power': '乘幂',
-    'sqrt': '开方',
-    'append': '追加',
-    'extend': '扩展',
-    'pop_first': '移除首项',
-    'pop_last': '移除尾项'
+    'overwrite': t('flow.node_config.operation_overwrite'),
+    'clear': t('flow.node_config.operation_clear'),
+    'add': t('flow.node_config.operation_add'),
+    'subtract': t('flow.node_config.operation_subtract'),
+    'multiply': t('flow.node_config.operation_multiply'),
+    'divide': t('flow.node_config.operation_divide'),
+    'modulo': t('flow.node_config.operation_modulo'),
+    'power': t('flow.node_config.operation_power'),
+    'sqrt': t('flow.node_config.operation_sqrt'),
+    'append': t('flow.node_config.operation_append'),
+    'extend': t('flow.node_config.operation_extend'),
+    'pop_first': t('flow.node_config.operation_pop_first'),
+    'pop_last': t('flow.node_config.operation_pop_last')
   };
   return operationMap[operation] || operation;
 };
@@ -184,7 +187,7 @@ watch(
               class="iconStyle"
               :src="getSrcIcon(props.data)"
             />
-            <div class="label">{{ data.name || '变量赋值' }}</div>
+            <div class="label">{{ data.name || t('flow.node_names.variable_assign') }}</div>
           </div>
         </div>
         
@@ -204,7 +207,7 @@ watch(
 
         <!-- 无操作时的提示 -->
         <div v-else class="no-operations">
-          <span class="placeholder-text">点击配置变量操作</span>
+          <span class="placeholder-text">{{ t('flow.node_config.click_to_configure_operations') }}</span>
         </div>
       </div>
       
@@ -222,14 +225,14 @@ watch(
         <button
           class="deleteButton"
           @click="deleteNode"
-          title="删除节点"
+          :title="t('semantic.interface_delete')"
           @mouseenter="showDeleteText = true"
           @mouseleave="showDeleteText = false"
         >
           <el-icon class="delete-icon">
             <Delete />
           </el-icon>
-          <span class="delete-text" v-show="showDeleteText">删除</span>
+          <span class="delete-text" v-show="showDeleteText">{{ t('semantic.interface_delete') }}</span>
         </button>
       </div>
     </div>
@@ -268,11 +271,11 @@ watch(
     border-radius: 8px;
     min-width: 200px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   
   &.node-selected .nodeContainer {
-    border-color: #409eff;  
+    border-color: #409eff;
     box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
     
     &:hover {
@@ -568,46 +571,25 @@ watch(
 
 
 
-// 深色主题支持
+// 深色主题支持 - 使用与其他Node一致的样式规范
 .dark {
-  .variable-assign-border {
-    background: #2d3748;
-    border-color: #4a5568;
-    
-    &:hover {
-      border-color: #3182ce;
+  .customNodeStyle {
+    .nodeContainer {
+      background: #353f58 !important;
+      border: 2px solid rgba(255, 255, 255, 0.08) !important;
+      
+      &:hover {
+        border-color: #3182ce;
+      }
     }
     
-    &.node-selected {
+    &.node-selected .nodeContainer {
       border-color: #3182ce;
       box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
     }
     
-    &.running {
-      border-color: #3182ce;
-      background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-    }
-    
-    &.success {
-      border-color: #68d391;
-      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    }
-    
-    &.error {
-      border-color: #fc8181;
-      background: linear-gradient(135deg, #2d1b1b 0%, #3d2626 100%);
-    }
-  }
-  
-  .node-content {
-    .node-header {
-      .node-icon {
-        color: #63b3ed;
-      }
-      
-      .node-title {
-        color: #e2e8f0;
-      }
+    .label {
+      color: #ffffff !important;
     }
     
     .operations-list {
@@ -633,6 +615,15 @@ watch(
         color: #718096;
       }
     }
+    
+    .nodeFooter {
+      background: rgba(45, 55, 72, 0.8);
+      border-top-color: rgba(255, 255, 255, 0.1);
+      
+      .nodeIdText {
+        color: #a0aec0;
+      }
+    }
   }
   
   .vue-flow__handle {
@@ -655,6 +646,21 @@ watch(
         background: #63b3ed;
         color: #2d3748;
       }
+    }
+  }
+  
+  .deleteButton {
+    background-color: #e53e3e;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+    
+    &:hover {
+      background-color: #e53e3e;
+      box-shadow: 0 6px 20px rgba(229, 62, 62, 0.5);
+    }
+    
+    &:active {
+      background-color: #c53030;
     }
   }
 }

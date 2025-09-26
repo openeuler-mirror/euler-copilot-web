@@ -32,7 +32,15 @@ export const getConvKnowledgeList = (params: {
   return get('/api/knowledge', params);
 };
 
+export const getTeamKnowledgeList = (params?: {
+  kbId?: string;
+  kbName?: string;
+}): Promise<[any, FcResponse<{}> | undefined]> => {
+  return get('/api/knowledge/team', params);
+};
+
 export const knowledgeApi = {
   updateKnowledgeList,
   getConvKnowledgeList,
+  getTeamKnowledgeList,
 };

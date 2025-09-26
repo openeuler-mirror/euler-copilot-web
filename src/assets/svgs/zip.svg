@@ -1,0 +1,28 @@
+<svg width="16.000000" height="16.000000" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip124_13927">
+			<rect id="zip" width="16.000000" height="16.000000" fill="white" fill-opacity="0"/>
+		</clipPath>
+		<linearGradient x1="8.000781" y1="0.500000" x2="8.000781" y2="15.214617" id="paint_linear_124_13923_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#FFE274"/>
+			<stop offset="1.000000" stop-color="#F6C301"/>
+		</linearGradient>
+		<linearGradient x1="10.090561" y1="1.526557" x2="14.253059" y2="5.783542" id="paint_linear_124_13924_0" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#FFFFFF"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.054902"/>
+			<stop offset="1.000000" stop-color="#FFFFFF" stop-opacity="0.000000"/>
+		</linearGradient>
+	</defs>
+	<g clip-path="url(#clip124_13927)">
+		<rect id="文档" width="16.000000" height="16.000000" fill="#FFFFFF" fill-opacity="0"/>
+		<path id="path5" d="M14.25 4.85L14.25 13.39C14.25 14.55 13.3 15.5 12.14 15.5L3.85 15.5C2.69 15.5 1.75 14.55 1.75 13.39L1.75 2.61C1.75 1.44 2.69 0.5 3.85 0.5L9.79 0.5C9.98 0.5 10.15 0.57 10.29 0.7L14.04 4.35C14.17 4.48 14.25 4.67 14.25 4.85Z" fill="url(#paint_linear_124_13923_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		<path id="path5" d="" fill="#979797" fill-opacity="0" fill-rule="evenodd"/>
+		<g opacity="0.600000">
+			<path id="path6" d="M10.08 0.5L14.25 4.56L11.49 4.56C10.71 4.56 10.08 3.93 10.08 3.15L10.08 0.5Z" fill="url(#paint_linear_124_13924_0)" fill-opacity="1.000000" fill-rule="evenodd"/>
+		</g>
+		<path id="zip" d="M7.63 6.95C7.52 6.95 7.42 6.91 7.34 6.83Q7.27 6.75 7.24 6.67Q7.22 6.6 7.22 6.53Q7.22 6.44 7.25 6.36Q7.28 6.29 7.34 6.23C7.42 6.15 7.51 6.11 7.63 6.11C7.74 6.11 7.84 6.15 7.92 6.23Q7.99 6.31 8.02 6.4Q8.05 6.46 8.05 6.53Q8.05 6.6 8.03 6.66Q8 6.75 7.92 6.83C7.84 6.91 7.74 6.95 7.63 6.95ZM10.69 7.38C10.51 7.27 10.32 7.22 10.11 7.22C9.93 7.22 9.77 7.26 9.63 7.33C9.48 7.41 9.37 7.52 9.28 7.67C9.27 7.64 9.26 7.6 9.26 7.56C9.26 7.52 9.25 7.49 9.25 7.46L9.24 7.28L8.63 7.28L8.63 11.03L9.32 11.03L9.32 9.55C9.41 9.68 9.52 9.78 9.66 9.84C9.8 9.9 9.95 9.93 10.11 9.93Q10.28 9.93 10.43 9.89Q10.56 9.85 10.69 9.77C10.87 9.67 11.01 9.51 11.11 9.31Q11.27 9 11.27 8.58Q11.27 8.16 11.11 7.85Q10.98 7.59 10.77 7.43Q10.73 7.4 10.69 7.38ZM7.98 9.87L7.29 9.87L7.29 7.28L7.98 7.28L7.98 9.87ZM6.76 7.29L6.76 7.69L5.58 9.32L6.84 9.32L6.84 9.87L4.68 9.87L4.68 9.47L5.86 7.84L4.77 7.84L4.77 7.29L6.76 7.29ZM10.38 9.12C10.27 9.25 10.13 9.32 9.95 9.32C9.77 9.32 9.62 9.26 9.5 9.14C9.38 9.02 9.32 8.83 9.32 8.58Q9.32 8.2 9.5 8.01C9.62 7.88 9.77 7.81 9.95 7.81Q10.1 7.81 10.22 7.88Q10.31 7.93 10.39 8.02Q10.55 8.22 10.55 8.58C10.55 8.81 10.49 8.99 10.38 9.12Z" fill="#FFFFFF" fill-opacity="1.000000" fill-rule="evenodd"/>
+	</g>
+</svg>

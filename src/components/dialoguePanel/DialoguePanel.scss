@@ -290,7 +290,6 @@
       display: flex;
       border-radius: 8px !important;
       border-top-left-radius: 0px !important;
-      border-radius: 8px !important;
       border-top-left-radius: 0px !important;
 
       @keyframes rotate-img {
@@ -301,11 +300,6 @@
         to {
           transform: rotate(360deg);
         }
-      }
-
-
-      &-icon {
-        animation: rotate-img 1s infinite linear;
       }
 
       &-text {

@@ -23,10 +23,6 @@
   background-color: var(--o-scrollbar-thumb) !important;
   /* 鼠标悬停时的滚动条按钮颜色 */
 }
-div{
-  // 全局 div 默认光标
-  cursor: default !important;
-}
 textarea::-webkit-input-placeholder {
     color: var(--o-think-header-text);
     font-size: 14px;  

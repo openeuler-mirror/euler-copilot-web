@@ -72,10 +72,10 @@ export default ({ mode }): UserConfigExport => {
     },
 
     server: {
-      host: '10.211.55.10',
+      host: 'localhost',
       hmr: true,
       port: 8080,
-      origin: 'http://10.211.55.10:8080',
+      origin: 'http://localhost:8080',
       headers: {
         'Access-Control-Allow-Origin': '*',
       },

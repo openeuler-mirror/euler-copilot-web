@@ -333,17 +333,22 @@
   .customNodeStyle {
     width: 320px;
     height: fit-content;
-    border-radius: 4px;
-    background: white;
-    border: 2px solid transparent;
-    position: relative;
     border-radius: 10px;
+    background: var(--flow-node-bg, white);
+    border: 2px solid var(--flow-node-border, transparent);
+    position: relative;
     background-clip: padding-box;
+    
+    // 选中状态样式
+    &.node-selected {
+      border-color: var(--flow-node-border-selected, #6395fd);
+      box-shadow: 0 0 0 1px var(--flow-node-border-selected, #6395fd);
+    }
     .nodeBox {
       min-height: 80px;
       padding: 16px;
       display: flex;
-      background: white;
+      background: var(--flow-node-bg, white);
       flex-direction: column;
       gap: 8px;
       border-radius: 8px;
@@ -351,7 +356,7 @@
         display: flex;
         height: 24px;
         font-size: 16px;
-        color: var(--o-text-color-primary);
+        color: var(--flow-node-text-color, var(--o-text-color-primary));
         border: 2px solid transparent;
         align-items: center;
         gap: 8px;
@@ -378,13 +383,13 @@
           align-items: center;
         }
         .label {
-          max-width: 64px !important;
           flex: 1;
           height: 24px;
           line-height: 24px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          color: var(--flow-node-text-color, var(--o-text-color-primary));
         }
         .moreTip {
           margin-left: auto;
@@ -608,7 +613,7 @@
   
   .nodeBox {
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     flex: 1;
     
     &:hover {
@@ -648,6 +653,133 @@
     &:hover {
       opacity: 1;
       color: var(--o-text-color-secondary);
+    }
+  }
+}
+
+// 黑夜模式样式支持
+:root {
+  // 亮色主题变量（默认）
+  --flow-node-bg: #ffffff;
+  --flow-node-border: #e1e5e9;
+  --flow-node-border-selected: #6395fd;
+  --flow-node-border-hover: #a8c8fd;
+  --flow-node-shadow: rgba(0, 0, 0, 0.1);
+  --flow-node-shadow-hover: rgba(0, 0, 0, 0.15);
+  --flow-node-icon-bg: rgba(109, 117, 250, 0.15);
+}
+
+// 深色主题变量 - 使用用户指定的颜色
+[data-theme="dark"], .dark {
+  --flow-node-bg: #353f58;
+  --flow-node-border: rgba(255, 255, 255, 0.08);
+  --flow-node-border-selected: #63b3ed;
+  --flow-node-border-hover: rgba(255, 255, 255, 0.16);
+  --flow-node-shadow: rgba(0, 0, 0, 0.3);
+  --flow-node-shadow-hover: rgba(0, 0, 0, 0.4);
+  --flow-node-icon-bg: rgba(99, 179, 237, 0.2);
+  --flow-node-text-color: #ffffff;
+  
+  // 黑夜模式节点样式
+  .vue-flow__node {
+    .customNodeStyle {
+      background: var(--flow-node-bg) !important;
+      border: 2px solid var(--flow-node-border) !important;
+      box-shadow: 0 2px 8px var(--flow-node-shadow) !important;
+      
+      &:hover {
+        box-shadow: 0 4px 12px var(--flow-node-shadow-hover) !important;
+        border-color: var(--flow-node-border-hover) !important;
+      }
+      
+      &.node-selected {
+        border-color: var(--flow-node-border-selected) !important;
+        box-shadow: 0 0 0 1px var(--flow-node-border-selected) !important;
+      }
+      
+      .nodeBox {
+        background: var(--flow-node-bg) !important;
+        
+        .title {
+          color: var(--flow-node-text-color) !important;
+          
+          .iconStyle {
+            background: var(--flow-node-icon-bg) !important;
+          }
+          
+          .label {
+            color: var(--flow-node-text-color) !important;
+          }
+        }
+      }
+      
+      .nodeFooter {
+        background: var(--o-fill-color-darker) !important;
+        border-top-color: var(--o-border-color) !important;
+      }
+    }
+    
+    // 状态颜色在深色主题下的调整
+    .customNodeStyle.success {
+      border-color: #48bb78;
+      .vue-flow__handle-left::after,
+      .vue-flow__handle-right::after {
+        background: #48bb78;
+      }
+    }
+    
+    .customNodeStyle.error {
+      border-color: #f56565;
+      .vue-flow__handle-left::after,
+      .vue-flow__handle-right::after {
+        background: #f56565;
+      }
+    }
+    
+    .customNodeStyle.running {
+      border-color: #ed8936;
+      .vue-flow__handle-left::after,
+      .vue-flow__handle-right::after {
+        background: #ed8936;
+      }
+    }
+  }
+  
+  // VueFlow 主画布深色背景
+  .vue-flow__renderer {
+    background: #262626 !important;
+  }
+  
+  // LoopNode 深色主题支持
+  .loopNodeStyle {
+    background: var(--flow-node-bg) !important;
+    border: 2px solid var(--flow-node-border) !important;
+    box-shadow: 0 2px 8px var(--flow-node-shadow) !important;
+    
+    &:hover {
+      box-shadow: 0 4px 12px var(--flow-node-shadow-hover) !important;
+      border-color: var(--flow-node-border-hover) !important;
+    }
+    
+    &.node-selected {
+      border-color: var(--flow-node-border-selected) !important;
+      box-shadow: 0 0 0 1px var(--flow-node-border-selected) !important;
+    }
+    
+    .nodeBox {
+      background: var(--flow-node-bg) !important;
+      
+      .title {
+        color: var(--flow-node-text-color) !important;
+        
+        .iconStyle {
+          background: var(--flow-node-icon-bg) !important;
+        }
+        
+        .label {
+          color: var(--flow-node-text-color) !important;
+        }
+      }
     }
   }
 }

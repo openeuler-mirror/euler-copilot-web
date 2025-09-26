@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton,
   ElCard, ElCollapse, ElCollapseItem, ElIcon, ElTooltip
@@ -20,7 +21,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: '变量配置'
+  title: ''
 })
 
 const emit = defineEmits<{
@@ -29,105 +30,107 @@ const emit = defineEmits<{
 }>()
 
 // 节点类型特定的配置模板
-const nodeTypeConfigs = {
+const { t } = useI18n()
+
+const nodeTypeConfigs = computed(() => ({
   llm: {
     system_prompt: {
-      label: '系统提示词',
+      label: t('nodeVariableConfig.llm.system_prompt_label'),
       type: 'textarea',
-      placeholder: '请输入系统提示词，可使用变量如 {{system.query}}',
+      placeholder: t('nodeVariableConfig.llm.system_prompt_placeholder'),
       supportedScopes: ['conversation', 'system', 'user', 'env'],
-      tooltip: '定义AI助手的角色和行为，支持使用变量引用'
+      tooltip: t('nodeVariableConfig.llm.system_prompt_tooltip')
     },
     user_prompt: {
-      label: '用户提示词',
+      label: t('nodeVariableConfig.llm.user_prompt_label'),
       type: 'textarea', 
-      placeholder: '请输入用户提示词模板',
+      placeholder: t('nodeVariableConfig.llm.user_prompt_placeholder'),
       supportedScopes: ['conversation', 'system', 'user', 'env'],
-      tooltip: '用户输入的模板，通常包含用户查询变量'
+      tooltip: t('nodeVariableConfig.llm.user_prompt_tooltip')
     },
     api_key: {
-      label: 'API密钥',
+      label: t('nodeVariableConfig.llm.api_key_label'),
       type: 'variable',
-      placeholder: '选择API密钥变量',
+      placeholder: t('nodeVariableConfig.llm.api_key_placeholder'),
       supportedScopes: ['user', 'env'],
-      tooltip: '用于调用LLM服务的API密钥'
+      tooltip: t('nodeVariableConfig.llm.api_key_tooltip')
     },
     temperature: {
-      label: '温度参数',
+      label: t('nodeVariableConfig.llm.temperature_label'),
       type: 'input',
-      placeholder: '0.7',
+      placeholder: t('nodeVariableConfig.llm.temperature_placeholder'),
       supportedScopes: ['env', 'conversation'],
-      tooltip: '控制生成文本的随机性，范围0-1'
+      tooltip: t('nodeVariableConfig.llm.temperature_tooltip')
     },
     max_tokens: {
-      label: '最大Token数',
+      label: t('nodeVariableConfig.llm.max_tokens_label'),
       type: 'input',
-      placeholder: '2048',
+      placeholder: t('nodeVariableConfig.llm.max_tokens_placeholder'),
       supportedScopes: ['env', 'conversation'],
-      tooltip: '限制生成内容的最大长度'
+      tooltip: t('nodeVariableConfig.llm.max_tokens_tooltip')
     }
   },
   condition: {
     condition_expression: {
-      label: '条件表达式',
+      label: t('nodeVariableConfig.condition.condition_expression_label'),
       type: 'textarea',
-      placeholder: '如: {{score}} > 0.8',
+      placeholder: t('nodeVariableConfig.condition.condition_expression_placeholder'),
       supportedScopes: ['conversation', 'system', 'user', 'env'],
-      tooltip: '支持JavaScript表达式，可使用变量进行条件判断'
+      tooltip: t('nodeVariableConfig.condition.condition_expression_tooltip')
     },
     true_branch: {
-      label: '条件为真时',
+      label: t('nodeVariableConfig.condition.true_branch_label'),
       type: 'input',
-      placeholder: '下一个节点ID',
+      placeholder: t('nodeVariableConfig.condition.true_branch_placeholder'),
       supportedScopes: [],
-      tooltip: '条件为真时跳转的节点'
+      tooltip: t('nodeVariableConfig.condition.true_branch_tooltip')
     },
     false_branch: {
-      label: '条件为假时',
+      label: t('nodeVariableConfig.condition.false_branch_label'),
       type: 'input',
-      placeholder: '下一个节点ID',
+      placeholder: t('nodeVariableConfig.condition.false_branch_placeholder'),
       supportedScopes: [],
-      tooltip: '条件为假时跳转的节点'
+      tooltip: t('nodeVariableConfig.condition.false_branch_tooltip')
     }
   },
   variable_assignment: {
     target_variable: {
-      label: '目标变量',
+      label: t('nodeVariableConfig.variable_assignment.target_variable_label'),
       type: 'input',
-      placeholder: '变量名',
+      placeholder: t('nodeVariableConfig.variable_assignment.target_variable_placeholder'),
       supportedScopes: ['conversation'],
-      tooltip: '要赋值的变量名'
+      tooltip: t('nodeVariableConfig.variable_assignment.target_variable_tooltip')
     },
     source_expression: {
-      label: '赋值表达式',
+      label: t('nodeVariableConfig.variable_assignment.source_expression_label'),
       type: 'textarea',
-      placeholder: '{{system.query}} + " processed"',
+      placeholder: t('nodeVariableConfig.variable_assignment.source_expression_placeholder'),
       supportedScopes: ['conversation', 'system', 'user', 'env'],
-      tooltip: '支持变量引用和简单表达式'
+      tooltip: t('nodeVariableConfig.variable_assignment.source_expression_tooltip')
     },
     variable_type: {
-      label: '变量类型',
+      label: t('nodeVariableConfig.variable_assignment.variable_type_label'),
       type: 'select',
       options: [
-        { label: '字符串', value: 'string' },
-        { label: '数字', value: 'number' },
-        { label: '布尔值', value: 'boolean' },
-        { label: '对象', value: 'object' }
+        { label: t('nodeVariableConfig.variable_assignment.type_string'), value: 'string' },
+        { label: t('nodeVariableConfig.variable_assignment.type_number'), value: 'number' },
+        { label: t('nodeVariableConfig.variable_assignment.type_boolean'), value: 'boolean' },
+        { label: t('nodeVariableConfig.variable_assignment.type_object'), value: 'object' }
       ],
       supportedScopes: [],
-      tooltip: '新变量的数据类型'
+      tooltip: t('nodeVariableConfig.variable_assignment.variable_type_tooltip')
     }
   },
   http_request: {
     url: {
-      label: '请求URL',
+      label: t('nodeVariableConfig.http_request.url_label'),
       type: 'input',
-      placeholder: 'https://api.example.com/data',
+      placeholder: t('nodeVariableConfig.http_request.url_placeholder'),
       supportedScopes: ['user', 'env', 'conversation'],
-      tooltip: 'HTTP请求的目标地址'
+      tooltip: t('nodeVariableConfig.http_request.url_tooltip')
     },
     method: {
-      label: '请求方法',
+      label: t('nodeVariableConfig.http_request.method_label'),
       type: 'select',
       options: [
         { label: 'GET', value: 'GET' },
@@ -136,24 +139,24 @@ const nodeTypeConfigs = {
         { label: 'DELETE', value: 'DELETE' }
       ],
       supportedScopes: [],
-      tooltip: 'HTTP请求方法'
+      tooltip: t('nodeVariableConfig.http_request.method_tooltip')
     },
     headers: {
-      label: '请求头',
+      label: t('nodeVariableConfig.http_request.headers_label'),
       type: 'object',
-      placeholder: '{"Content-Type": "application/json"}',
+      placeholder: t('nodeVariableConfig.http_request.headers_placeholder'),
       supportedScopes: ['user', 'env', 'conversation'],
-      tooltip: 'HTTP请求头，支持变量引用'
+      tooltip: t('nodeVariableConfig.http_request.headers_tooltip')
     },
     body: {
-      label: '请求体',
+      label: t('nodeVariableConfig.http_request.body_label'),
       type: 'textarea',
-      placeholder: '{"query": "{{system.query}}"}',
+      placeholder: t('nodeVariableConfig.http_request.body_placeholder'),
       supportedScopes: ['conversation', 'system', 'user', 'env'],
-      tooltip: '请求体内容，支持变量引用'
+      tooltip: t('nodeVariableConfig.http_request.body_tooltip')
     }
   }
-}
+}))
 
 // 响应式数据
 const formData = ref<VariableConfig>({})
@@ -161,7 +164,7 @@ const customFields = ref<Array<{key: string, value: string}>>([])
 
 // 计算属性
 const currentNodeConfig = computed(() => {
-  return nodeTypeConfigs[props.nodeType] || {}
+  return nodeTypeConfigs.value[props.nodeType] || {}
 })
 
 const configKeys = computed(() => {
@@ -226,8 +229,8 @@ watch(customFields, () => {
     <ElCard>
       <template #header>
         <div class="card-header">
-          <span>{{ title }}</span>
-          <ElTooltip content="使用变量语法如 {{system.query}} 来引用变量">
+          <span>{{ title || $t('nodeVariableConfig.variable_config') }}</span>
+          <ElTooltip :content="$t('nodeVariableConfig.variable_syntax_tooltip')">
             <ElIcon><QuestionFilled /></ElIcon>
           </ElTooltip>
         </div>
@@ -313,7 +316,7 @@ watch(customFields, () => {
         
         <!-- 自定义字段 -->
         <ElCollapse class="custom-fields-collapse">
-          <ElCollapseItem title="自定义字段" name="custom">
+          <ElCollapseItem :title="$t('nodeVariableConfig.custom_fields')" name="custom">
             <div class="custom-fields">
               <div 
                 v-for="(field, index) in customFields" 
@@ -324,14 +327,14 @@ watch(customFields, () => {
                   <template #label>
                     <ElInput
                       v-model="field.key"
-                      placeholder="字段名"
+                      :placeholder="$t('nodeVariableConfig.field_name_placeholder')"
                       class="field-key-input"
                     />
                   </template>
                   <div class="custom-field-value">
                     <VariableSelector
                       v-model="field.value"
-                      placeholder="字段值（支持变量引用）"
+                      :placeholder="$t('nodeVariableConfig.field_value_placeholder')"
                       :flow-id="flowId"
                       :conversation-id="conversationId"
                     />
@@ -351,7 +354,7 @@ watch(customFields, () => {
                 :icon="Plus"
                 @click="addCustomField"
               >
-                添加自定义字段
+                {{ $t('nodeVariableConfig.add_custom_field') }}
               </ElButton>
             </div>
           </ElCollapseItem>

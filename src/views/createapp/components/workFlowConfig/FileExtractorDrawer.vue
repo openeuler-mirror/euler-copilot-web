@@ -2,40 +2,40 @@
   <el-drawer
     :model-value="visible"
     @update:model-value="emit('update:visible', $event)"
-    title="配置文件提取器"
+    :title="t('flow.file_extractor.title')"
     direction="rtl"
     size="600px"
     :before-close="handleClose"
     class="file-extractor-drawer"
   >
     <div class="drawer-content">
-      <!-- 基本信息 -->
+      <!-- Basic Information -->
       <div class="section">
-        <h3 class="section-title">基本信息</h3>
+        <h3 class="section-title">{{ t('flow.file_extractor.basic_info') }}</h3>
         <el-form :model="formData" label-width="120px">
-          <el-form-item label="节点名称" required>
-            <el-input v-model="formData.name" placeholder="请输入节点名称" />
+          <el-form-item :label="t('flow.file_extractor.node_name')" required>
+            <el-input v-model="formData.name" :placeholder="t('flow.file_extractor.node_name_placeholder')" />
           </el-form-item>
-          <el-form-item label="节点描述">
+          <el-form-item :label="t('flow.file_extractor.node_description')">
             <el-input
               v-model="formData.description"
               type="textarea"
               :rows="2"
-              placeholder="请输入节点描述"
+              :placeholder="t('flow.file_extractor.node_description_placeholder')"
             />
           </el-form-item>
         </el-form>
       </div>
 
-      <!-- 输入变量配置 -->
+      <!-- Input Variable Configuration -->
       <div class="section">
-        <h3 class="section-title">输入变量</h3>
+        <h3 class="section-title">{{ t('flow.file_extractor.input_variables') }}</h3>
         <div class="input-variable-section">
           <el-form :model="formData" label-width="120px">
-            <el-form-item label="解析方法" required>
+            <el-form-item :label="t('flow.file_extractor.parse_method')" required>
               <el-select 
                 v-model="formData.parseMethod" 
-                placeholder="请选择文件解析方法"
+                :placeholder="t('flow.file_extractor.parse_method_placeholder')"
                 :loading="parseMethodLoading"
                 style="width: 100%"
               >
@@ -57,9 +57,9 @@
             <el-form-item required>
               <template #label>
                 <div class="label-with-tooltip">
-                  <span>输入文件</span>
+                  <span>{{ t('flow.file_extractor.input_file') }}</span>
                   <el-tooltip 
-                    :content="`支持的文件类型：${supportedFileTypes.join(', ')}`"
+                    :content="t('flow.file_extractor.supported_file_types', { types: supportedFileTypes.join(', ') })"
                     placement="top"
                   >
                     <el-icon class="help-icon">
@@ -73,8 +73,8 @@
                 :flow-id="flowId"
                 :conversation-id="conversationId"
                 :current-step-id="nodeId"
-                placeholder="选择文件变量"
-                selector-placeholder="选择文件或文件数组变量"
+                :placeholder="t('flow.file_extractor.select_file_variable')"
+                :selector-placeholder="t('flow.file_extractor.select_file_or_array_variable')"
                 :show-variable-name="false"
                 :show-label="false"
                 :show-actions="false"
@@ -91,52 +91,52 @@
         </div>
       </div>
 
-      <!-- 输出变量 -->
+      <!-- Output Variables -->
       <div class="section">
-        <h3 class="section-title">输出变量</h3>
+        <h3 class="section-title">{{ t('flow.file_extractor.output_variables') }}</h3>
         <div class="output-variable-section">
           <div class="output-info">
             <div class="output-item">
-              <div class="output-label">变量名</div>
+              <div class="output-label">{{ t('flow.file_extractor.variable_name') }}</div>
               <div class="output-value">text</div>
             </div>
             <div class="output-item">
-              <div class="output-label">类型</div>
+              <div class="output-label">{{ t('flow.file_extractor.type') }}</div>
               <div class="output-value">
-                <el-tag type="primary">字符串</el-tag>
+                <el-tag type="primary">{{ t('flow.file_extractor.string_type') }}</el-tag>
               </div>
             </div>
             <div class="output-item">
-              <div class="output-label">描述</div>
-              <div class="output-value">提取的文本内容</div>
+              <div class="output-label">{{ t('flow.file_extractor.description') }}</div>
+              <div class="output-value">{{ t('flow.file_extractor.text_output_description') }}</div>
             </div>
           </div>
           
           <div class="output-info" style="margin-top: 12px;">
             <div class="output-item">
-              <div class="output-label">变量名</div>
+              <div class="output-label">{{ t('flow.file_extractor.variable_name') }}</div>
               <div class="output-value">error</div>
             </div>
             <div class="output-item">
-              <div class="output-label">类型</div>
+              <div class="output-label">{{ t('flow.file_extractor.type') }}</div>
               <div class="output-value">
-                <el-tag type="warning">字符串</el-tag>
+                <el-tag type="warning">{{ t('flow.file_extractor.string_type') }}</el-tag>
               </div>
             </div>
             <div class="output-item">
-              <div class="output-label">描述</div>
-              <div class="output-value">错误信息（如果有的话）</div>
+              <div class="output-label">{{ t('flow.file_extractor.description') }}</div>
+              <div class="output-value">{{ t('flow.file_extractor.error_output_description') }}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 操作按钮 -->
+    <!-- Action Buttons -->
     <template #footer>
       <div class="drawer-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="saveNode">保存</el-button>
+        <el-button @click="handleClose">{{ t('flow.file_extractor.cancel') }}</el-button>
+        <el-button type="primary" @click="saveNode">{{ t('flow.file_extractor.save') }}</el-button>
       </div>
     </template>
   </el-drawer>
@@ -148,6 +148,10 @@ import { ElMessage } from 'element-plus';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import VariableChooser from '@/components/VariableChooser.vue';
 import { api } from 'src/apis';
+import i18n from '@/i18n';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
   visible: {
@@ -182,13 +186,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'saveNode']);
 
-// 支持的文件类型列表
+// Supported file types list
 const supportedFileTypes = [
   'txt', 'markdown', 'pdf', 'html', 'xlsx', 'xls', 
   'doc', 'docx', 'csv', 'pptx', 'xml', 'ppt', 'md'
 ];
 
-// 表单数据
+// Form data
 const formData = ref({
   name: '',
   description: '',
@@ -196,22 +200,22 @@ const formData = ref({
   target: '',
 });
 
-// 解析方法选项
+// Parse method options
 const parseMethodOptions = ref<Array<{value: string, label: string, description?: string}>>([]);
 const parseMethodLoading = ref(false);
 
-// 初始化表单数据
+// Initialize form data
 const initFormData = () => {
   if (props.nodeData) {
     formData.value = {
-      name: props.nodeData.name || '文件提取器',
+      name: props.nodeData.name || i18n.global.t('flow.node_names.file_extractor'),
       description: props.nodeData.description || '',
       parseMethod: props.nodeData.parameters?.input_parameters?.parse_method || '',
       target: props.nodeData.parameters?.input_parameters?.target || '',
     };
   } else {
     formData.value = {
-      name: '文件提取器',
+      name: i18n.global.t('flow.node_names.file_extractor'),
       description: '',
       parseMethod: '',
       target: '',
@@ -219,14 +223,14 @@ const initFormData = () => {
   }
 };
 
-// 加载解析方法列表
+// Load parse method list
 const loadParseMethodList = async () => {
   parseMethodLoading.value = true;
   try {
     const [error, response] = await api.getParseMethodList();
     if (error) {
-      console.error('获取解析方法列表失败:', error);
-      ElMessage.error('获取解析方法列表失败');
+      console.error('Failed to load parse method list:', error);
+      ElMessage.error(t('flow.file_extractor.load_parse_methods_failed'));
       return;
     }
     
@@ -234,43 +238,43 @@ const loadParseMethodList = async () => {
       parseMethodOptions.value = response.result.map(method => ({
         value: method,
         label: method,
-        description: `从文件中提取文本内容，支持多种文件格式的解析`
+        description: t('flow.file_extractor.parse_method_description')
       }));
     }
   } catch (error) {
-    console.error('获取解析方法列表失败:', error);
-    ElMessage.error('获取解析方法列表失败');
+    console.error('Failed to load parse method list:', error);
+    ElMessage.error(t('flow.file_extractor.load_parse_methods_failed'));
   } finally {
     parseMethodLoading.value = false;
   }
 };
 
-// 处理目标文件选择
+// Handle target file selection
 const handleTargetSelected = (variable, reference) => {
   formData.value.target = reference;
 };
 
-// 表单验证
+// Form validation
 const validateForm = () => {
   if (!formData.value.name || formData.value.name.trim() === '') {
-    ElMessage.error('请填写节点名称');
+    ElMessage.error(t('flow.file_extractor.node_name_required'));
     return false;
   }
   
   if (!formData.value.parseMethod || formData.value.parseMethod.trim() === '') {
-    ElMessage.error('请选择文件解析方法');
+    ElMessage.error(t('flow.file_extractor.parse_method_required'));
     return false;
   }
   
   if (!formData.value.target || formData.value.target.trim() === '') {
-    ElMessage.error('请选择输入文件变量');
+    ElMessage.error(t('flow.file_extractor.input_file_required'));
     return false;
   }
   
   return true;
 };
 
-// 保存节点
+// Save node
 const saveNode = () => {
   if (!validateForm()) {
     return;
@@ -288,11 +292,11 @@ const saveNode = () => {
       output_parameters: {
         text: {
           type: 'string',
-          description: '提取的文本内容'
+          description: t('flow.file_extractor.text_output_description')
         },
         error: {
           type: 'string',
-          description: '错误信息（如果有的话）'
+          description: t('flow.file_extractor.error_output_description')
         }
       },
     },
@@ -302,22 +306,22 @@ const saveNode = () => {
   handleClose();
 };
 
-// 关闭抽屉
+// Close drawer
 const handleClose = () => {
   emit('update:visible', false);
 };
 
-// 组件挂载时加载解析方法列表 - 移除，改为在抽屉打开时加载
+// Load parse method list when component mounts - removed, changed to load when drawer opens
 // onMounted(() => {
 //   loadParseMethodList();
 // });
 
-// 监听visible变化
+// Watch visible changes
 watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
-      // 抽屉打开时加载解析方法列表和初始化表单数据
+      // Load parse method list and initialize form data when drawer opens
       nextTick(() => {
         initFormData();
         loadParseMethodList();
@@ -428,11 +432,11 @@ watch(
   gap: 12px;
 }
 
-// 深色主题支持
+// Dark theme support
 .dark {
   .file-extractor-drawer {
     .drawer-content {
-      background: #1a1a1a;
+      background: #1f2329;
     }
     
     .section-title {
@@ -463,7 +467,7 @@ watch(
     }
     
     .drawer-footer {
-      background: #374151;
+      background: #1f2329;
       border-color: #4b5563;
     }
   }

@@ -13,8 +13,9 @@ import {
 export const queryAllFlowService = (params: {
   page: number;
   pageSize: number;
+  language?: string | undefined;
 }): Promise<[any, FcResponse<unknown> | undefined]> => {
-  return get('/api/flow/service');
+  return get(`/api/flow/service?language=${params.language}`);
 };
 
 /**

@@ -11,16 +11,20 @@ import { get, put, post, del } from 'src/apis/server';
 
 import type { FcResponse } from 'src/apis/server';
 import { ConversationRecordList, ConversationList } from './type';
+import i18n from 'src/i18n';
+
 const BASE_URL = '/api/conversation';
+const { t } = i18n.global;
 
 /**
  * 停止生成
  * @returns
  */
-export const stopGeneration = (): Promise<
+export const stopGeneration = (taskId: string): Promise<
   [any, FcResponse<object> | undefined]
 > => {
-  return post(`/api/stop`);
+  const url = taskId === undefined ? '/api/stop' : `/api/stop?taskId=${taskId}`;
+  return post(url);
 };
 
 /**
@@ -41,11 +45,13 @@ export const createSession = ({
   appId,
   debug = false,
   llm_id = '',
+  title = t('history.new_conversation'),
   kb_ids = [],
 }: {
   appId: string;
   debug?: boolean;
   llm_id?: string;
+  title?: string;
   kb_ids?: string[];
 }): Promise<
   [
@@ -58,7 +64,7 @@ export const createSession = ({
     ),
   ]
 > => {
-  return post(BASE_URL, { appId, debug }, { llm_id, kb_ids });
+  return post(BASE_URL, { appId, debug }, { llm_id, kb_ids, title });
 };
 
 /**

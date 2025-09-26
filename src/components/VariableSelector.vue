@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElSelect, ElOption, ElInput, ElTag, ElButton, ElPopover, ElIcon } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
 import { listVariables, getVariableTypes } from '@/api/variable'
@@ -31,7 +32,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
-  placeholder: '选择变量',
+  placeholder: '',
   allowMultiple: false,
   supportedScopes: () => ['conversation', 'system', 'env', 'user'],
   showVariableReference: true,
@@ -45,6 +46,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
   'variable-selected': [variable: Variable]
 }>()
+
+const { t } = useI18n()
 
 // 响应式数据
 const searchText = ref('')
@@ -158,12 +161,8 @@ const groupedVariables = computed(() => {
   return result
 })
 
-const scopeLabels: Record<string, string> = {
-  self: '当前节点变量',
-  system: '系统变量',
-  user: '用户变量', 
-  env: '环境变量',
-  conversation: '对话变量'
+const getScopeDefaultLabel = (scope: string): string => {
+  return t(`variableSelector.scopes.${scope}`, scope)
 }
 
 const getScopeLabel = (scope: string, nodeId?: string | null, nodeName?: string | null): string => {
@@ -171,25 +170,13 @@ const getScopeLabel = (scope: string, nodeId?: string | null, nodeName?: string 
     return props.selfScopeLabel
   }
   if (scope.startsWith('conversation_node_') && nodeName) {
-    return `节点 ${nodeName} 输出`
+    return t('variableSelector.node_output', { nodeName })
   }
-  return scopeLabels[scope] || scope
+  return getScopeDefaultLabel(scope)
 }
 
-const typeLabels = {
-  string: '字符串',
-  number: '数字',
-  boolean: '布尔值',
-  object: '对象',
-  secret: '密钥',
-  file: '文件',
-  'array[any]': '数组',
-  'array[string]': '字符串数组',
-  'array[number]': '数字数组',
-  'array[object]': '对象数组',
-  'array[file]': '文件数组',
-  'array[boolean]': '布尔数组',
-  'array[secret]': '密钥数组'
+const getTypeLabel = (type: string): string => {
+  return t(`variableSelector.variable_types.${type}`, type)
 }
 
 // 方法
@@ -231,7 +218,7 @@ const groupConversationVariablesByNode = (variables: Variable[]) => {
 const loadVariables = async () => {
   loading.value = true
   try {
-    console.log('🔄 VariableSelector开始加载变量，当前参数:', {
+    console.log('🔄', t('variableSelector.loading_variables'), {
       supportedScopes: props.supportedScopes,
       flowId: props.flowId,
       conversationId: props.conversationId,
@@ -249,7 +236,7 @@ const loadVariables = async () => {
       // 只有对话变量需要传current_step_id以获取前置节点变量
       if (scope === 'conversation' && props.currentStepId) {
         params.current_step_id = props.currentStepId
-        console.log('🎯 对话变量查询带有current_step_id:', props.currentStepId)
+        console.log('🎯', t('variableSelector.conversation_variables_query'), props.currentStepId)
       }
       
       return listVariables(params).then(response => {
@@ -268,10 +255,10 @@ const loadVariables = async () => {
           variables = responseAny
         }
         
-        console.log(`📋 ${scope}变量加载结果:`, variables.length, '个')
+        console.log(`📋 ${scope}`, t('variableSelector.variables_loaded_result'), variables.length)
         return {scope, variables: Array.isArray(variables) ? variables : []}
       }).catch(error => {
-        console.error(`❌ ${scope}变量加载失败:`, error)
+        console.error(`❌ ${scope}`, t('variableSelector.variables_load_failed'), error)
         return {scope, variables: []}
       })
     })
@@ -310,22 +297,22 @@ const loadVariables = async () => {
       ...conversationVariables.value
     ]
     
-    console.log('✅ VariableSelector变量加载完成:', {
-      总数: variables.value.length,
-      系统变量: systemVariables.value.length,
-      用户变量: userVariables.value.length,
-      环境变量: envVariables.value.length,
-      对话变量: conversationVariables.value.length,
-      前置节点变量: conversationVariables.value.filter(v => v.name.includes('.') && !v.name.startsWith('system.')).length
+    console.log('✅', t('variableSelector.variables_loading_complete'), {
+      [t('variableSelector.total_count')]: variables.value.length,
+      [t('variableSelector.system_variables_count')]: systemVariables.value.length,
+      [t('variableSelector.user_variables_count')]: userVariables.value.length,
+      [t('variableSelector.env_variables_count')]: envVariables.value.length,
+      [t('variableSelector.conversation_variables_count')]: conversationVariables.value.length,
+      [t('variableSelector.predecessor_variables_count')]: conversationVariables.value.filter(v => v.name.includes('.') && !v.name.startsWith('system.')).length
     })
   } catch (error) {
-    console.error('❌ 变量加载失败:', error)
+    console.error('❌', t('variableSelector.variables_load_error'), error)
     // 显示更友好的错误提示
     const errorMessage = error instanceof Error ? error.message : String(error)
     if (errorMessage.includes('404')) {
-      console.error('💡 建议检查: API路径是否正确，后端服务是否启动')
+      console.error('💡', t('variableSelector.api_path_check'))
     } else if (errorMessage.includes('flowId')) {
-      console.error('💡 建议检查: flowId参数是否正确传递')
+      console.error('💡', t('variableSelector.flow_id_check'))
     }
   } finally {
     loading.value = false
@@ -337,7 +324,7 @@ const loadVariableTypes = async () => {
     const response = await getVariableTypes()
     variableTypes.value = response?.result || {types: [], scopes: []}
   } catch (error) {
-    console.error('加载变量类型失败:', error)
+    console.error(t('variableSelector.load_variable_types_failed'), error)
   }
 }
 
@@ -397,7 +384,7 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
       <template #reference>
         <ElInput
           :model-value="modelValue"
-          :placeholder="placeholder"
+          :placeholder="placeholder || $t('variableSelector.select_variable')"
           readonly
           clearable
         >
@@ -424,7 +411,7 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
         <!-- 搜索框 -->
         <ElInput
           v-model="searchText"
-          placeholder="搜索变量..."
+          :placeholder="$t('variableSelector.search_variables_placeholder')"
           clearable
           class="mb-3"
         >
@@ -456,7 +443,7 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
                   <div class="variable-name">{{ variable.name }}</div>
                   <div class="variable-meta">
                     <ElTag size="small" :type="variable.var_type === 'secret' ? 'warning' : 'primary'">
-                      {{ typeLabels[variable.var_type] || variable.var_type }}
+                      {{ getTypeLabel(variable.var_type) }}
                     </ElTag>
                     <span v-if="variable.description" class="variable-desc">
                       {{ variable.description }}
@@ -472,8 +459,8 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
           
           <!-- 空状态 -->
           <div v-if="groupedVariables.length === 0" class="empty-state">
-            <div class="empty-text">暂无可用变量</div>
-            <div class="empty-hint">您可以在开始节点中定义对话变量</div>
+            <div class="empty-text">{{ $t('variableSelector.no_available_variables') }}</div>
+            <div class="empty-hint">{{ $t('variableSelector.define_variables_hint') }}</div>
           </div>
         </div>
       </div>
@@ -537,6 +524,10 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
         .group-title {
           font-weight: 600;
           color: var(--el-text-color-primary);
+          
+          body[theme='dark'] & {
+            color: #e4e8ee;
+          }
         }
       }
       
@@ -551,6 +542,11 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
           &:hover {
             background-color: var(--el-fill-color-light);
             border-color: var(--el-color-primary);
+            
+            body[theme='dark'] & {
+              background-color: var(--flow-node-default-over-color, #25303e);
+              border-color: var(--flow-node-boder-default-over, #314265);
+            }
           }
           
           .variable-info {
@@ -560,6 +556,10 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
               font-weight: 500;
               color: var(--el-text-color-primary);
               margin-bottom: 4px;
+              
+              body[theme='dark'] & {
+                color: #e4e8ee;
+              }
             }
             
             .variable-meta {
@@ -574,6 +574,10 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                
+                body[theme='dark'] & {
+                  color: #d3dce9;
+                }
               }
             }
           }
@@ -586,6 +590,12 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
             padding: 2px 6px;
             border-radius: 4px;
             border: 1px solid var(--el-border-color);
+            
+            body[theme='dark'] & {
+              background-color: #1f2329;
+              border-color: var(--el-border-color);
+              color: var(--el-color-primary-light-3);
+            }
           }
         }
       }
@@ -596,14 +606,26 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
       padding: 32px 16px;
       color: var(--el-text-color-secondary);
       
+      body[theme='dark'] & {
+        color: #d3dce9;
+      };
+      
       .empty-text {
         font-size: 14px;
         margin-bottom: 8px;
+        
+        body[theme='dark'] & {
+          color: #d3dce9;
+        }
       }
       
       .empty-hint {
         font-size: 12px;
         color: var(--el-text-color-placeholder);
+        
+        body[theme='dark'] & {
+          color: #8d98aa;
+        }
       }
     }
   }
@@ -613,5 +635,24 @@ watch([() => props.flowId, () => props.conversationId, () => props.currentStepId
 <style>
 .variable-selector-popover {
   padding: 12px !important;
+}
+
+/* 深色主题下的弹出框样式 */
+body[theme='dark'] .variable-selector-popover {
+  background: #1f2329 !important;
+  border-color: var(--el-border-color) !important;
+}
+
+body[theme='dark'] .variable-selector-popover .el-input__wrapper {
+  background: #1f2329 !important;
+  border-color: var(--el-border-color) !important;
+}
+
+body[theme='dark'] .variable-selector-popover .el-input__inner {
+  color: #e4e8ee !important;
+}
+
+body[theme='dark'] .variable-selector-popover .el-input__inner::placeholder {
+  color: var(--el-text-color-placeholder) !important;
 }
 </style> 

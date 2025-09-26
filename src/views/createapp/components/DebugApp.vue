@@ -2,7 +2,8 @@
 import CommonFooter from '@/components/commonFooter/CommonFooter.vue';
 import Bubble from '@/components/bubble/index.vue';
 import DialogueFlow from '@/components/dialoguePanel/DialogueFlow.vue';
-import FileAttachment from '@/components/dialoguePanel/FileAttachment.vue';
+// FileAttachment组件不再单独使用，DialoguePanel会处理文件显示
+import DialoguePanel from '@/components/dialoguePanel/DialoguePanel.vue';
 import {
   useHistorySessionStore,
   useLangStore,
@@ -10,21 +11,25 @@ import {
   useChangeThemeStore,
 } from '@/store';
 import { storeToRefs } from 'pinia';
-import { computed, h, ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { api } from '@/apis';
-import marked from '@/utils/marked';
-import userAvatar from '@/assets/svgs/dark_user.svg';
-import robotAvatar from '@/assets/svgs/robot.svg';
+// marked工具也不再需要，DialoguePanel会处理markdown
+// 原有的用户和机器人头像不再需要，DialoguePanel会自己处理
 import DefaultAgentIcon from '@/assets/svgs/defaultIcon.webp';
 import SendDisabledIcon from '@/assets/svgs/send_disabled.svg';
 import SendEnableIcon from '@/assets/svgs/send_enabled.svg';
 import { fetchStream } from '@/utils/fetchStream';
 import { useScrollBottom } from '@/hooks/useScrollBottom';
-import dayjs from 'dayjs';
+// dayjs移除，DialoguePanel会处理时间格式化
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import i18n from '@/i18n';
+import type {
+  ConversationItem,
+  RobotConversationItem,
+} from '@/views/dialogue/types';
 
-
+const { t } = i18n.global;
 let isDebugSuccess = false;
 
 interface DebugConfig {
@@ -67,37 +72,98 @@ const { generateSession, getHistorySession } = useHistorySessionStore();
 
 
 async function initDebugSession() {
-  const { conversationList } = useSessionStore();
-  if (conversationList.length === 0) return;
-  await generateSession();
+  await generateSession(true);
   await getHistorySession();
   currentSelectedSession.value = historySession.value[0].conversationId;
 }
 
-async function deleteSession(id: string) {
+/**
+ * 删除会话
+ */
+async function toDeleteSession(id: string) {
+  // 先停止生成
+  stopStream();
   const [, res] = await api.deleteSession({ conversationList: [id] });
   if (res) {
+    currentSelectedSession.value = '';
+    // 清理当前分支的对话数据
     conversations.value = [];
   }
 }
 
 const dialogueInput = ref('');
 
-const markedContent = computed(
-  () => (text: string) => marked.parse(text) as string,
-);
-
-function renderMarkdown(text: string) {
-  return h('div', {
-    id: 'markdown-preview',
-    innerHTML: text,
-  });
-}
+// markdown处理函数已移除，因为DialoguePanel会自己处理
 
 const chatContainerRef = ref<HTMLElement | null>(null);
 const { scrollToBottom } = useScrollBottom(chatContainerRef, {
   threshold: 15,
 });
+
+// 🔑 整合目标分支的会话管理功能
+const { pausedStream, sendQuestion } = useSessionStore();
+const { conversationList, isAnswerGenerating, dialogueRef } = storeToRefs(
+  useSessionStore(),
+);
+
+/**
+ * 获取指定字段值
+ * @param item
+ */
+const getItem = <T>(item: ConversationItem, field: string): T | undefined => {
+  if (field in item) {
+    return (item as RobotConversationItem)[field] as T;
+  }
+  return undefined;
+};
+
+/**
+ * @description 处理并过滤文件列表，将文件列表中的字段名统一为指定格式
+ * @param {ConversationItem} ConversationItem - 对话项对象
+ * @param {string} str - 字段名
+ * @returns {Array} 格式化后的文件列表
+ */
+const getFormatFileList = (ConversationItem: any, str: string) => {
+  let fileList: any = getItem(ConversationItem, str);
+  if (!fileList || fileList?.length === 0) return;
+  let newFileList: any = [];
+  fileList?.forEach((file: any) => {
+    if (file.associated === 'answer') {
+      newFileList.push({
+        documentId: file._id,
+        documentName: file.name,
+        documentAbstract: file.abstract,
+        documentType: file.type,
+        documentSize: file.size,
+        sourceUrl: file.sourceUrl,
+        documentOrder: file.order,
+        createdAt: file.created_at,
+        documentAuthor: file.author,
+      });
+    }
+  });
+  return newFileList;
+};
+
+const clearSuggestion = (index: number): void => {
+  if ('search_suggestions' in conversationList.value[index]) {
+    (conversationList.value[index] as any).search_suggestions = undefined;
+  }
+};
+
+const showFileSource = ref(false);
+const curFileList = ref<Array<any>>([]);
+const closeShowFileSource = () => {
+  showFileSource.value = false;
+};
+const openShowFileSource = (fileList: Array<any>) => {
+  showFileSource.value = true;
+  curFileList.value = fileList;
+};
+
+// 🔑 占位变量，用于兼容DialoguePanel
+const user_selected_app = ref();
+const handleReport = () => {};
 
 function useStream() {
   const isStreaming = ref(false);
@@ -197,7 +263,7 @@ function useStream() {
           
           // 2. 然后调用后端停止接口，清理后端连接
           try {
-            const [, res] = await api.stopGeneration()
+            const [, res] = await api.stopGeneration('')
             if (res) {
               // 后端停止成功
             }
@@ -218,12 +284,20 @@ function useStream() {
   };
 
   const stopStream = async () => {
-    const [, res] = await api.stopGeneration();
-    if (res) {
-      isStreaming.value = false;
+    // 🔑 整合两种停止逻辑
+    isStreaming.value = false;
+    if (controller) {
       controller.abort();
+    }
+    
+    // 调用目标分支的停止逻辑
+    pausedStream(conversationList.value.length);
+    
+    // 保留当前分支的API调用
+    const [, res] = await api.stopGeneration('');
+    if (res) {
       const conversation = conversations.value[conversations.value.length - 1];
-      if (conversation.answer[conversation.answerIndex].content === '') {
+      if (conversation && conversation.answer[conversation.answerIndex].content === '') {
         conversation.answer[conversation.answerIndex].content = '对话已终止';
         return;
       }
@@ -359,7 +433,7 @@ function useConversations() {
   const throttledScrollToBottom = () => {
     const now = Date.now();
     if (now - lastScrollTime > SCROLL_THROTTLE_INTERVAL) {
-      scrollToBottom();
+      scrollToBottom(true);
       lastScrollTime = now;
     }
   };
@@ -704,15 +778,16 @@ function useConversations() {
     }
   };
 
-  defineExpose({
-    currentConversationAttachments // 导出附件收集器
-  });
-
   return { conversations, setConversations, stopMemoryMonitoring, currentConversationAttachments };
 }
 
 // 🔑 计算属性：获取当前对话的附件（只在对话完成时显示）
 const { conversations, setConversations, stopMemoryMonitoring, currentConversationAttachments } = useConversations();
+
+// 🔑 导出附件收集器供外部组件使用
+defineExpose({
+  currentConversationAttachments
+});
 
 const getCurrentAttachments = computed(() => {
   if (isStreaming.value) {
@@ -722,63 +797,96 @@ const getCurrentAttachments = computed(() => {
   return currentConversationAttachments.value || [];
 });
 
+/**
+ * 获取对话项的完整文件列表，包括静态文件和动态收集的附件
+ */
+const getCompleteFileList = (item: any, index: number) => {
+  // 获取静态文件
+  const staticFiles = getItem(item, 'files') ?? getFormatFileList(item, 'document') ?? [];
+  
+  // 如果是最后一条机器人消息且对话已完成，添加动态收集的附件
+  if (
+    item.belong === 'robot' && 
+    index === conversationList.value.length - 1 &&
+    !isStreaming.value &&
+    !isAnswerGenerating.value &&
+    currentConversationAttachments.value.length > 0
+  ) {
+    // 将动态附件转换为DialoguePanel期望的格式
+    const dynamicFiles = currentConversationAttachments.value.map((attachment: any) => ({
+      documentId: attachment.file_id,
+      documentName: attachment.filename,
+      documentType: attachment.file_type,
+      documentSize: attachment.file_size,
+      documentAbstract: `来自${attachment.step_name}`, // 标记来源步骤
+      content: attachment.content,
+      variable_name: attachment.variable_name,
+      isDynamic: true // 标记为动态附件
+    }));
+    
+    return [...staticFiles, ...dynamicFiles];
+  }
+  
+  return staticFiles;
+};
+
 const { isStreaming, queryStream, stopStream } = useStream();
 
-async function onSend(q: string) {
-  if (isStreaming.value) return;
-  
-  conversations.value.push({
-    id: `user-${(conversations.value.length % 2) + 1}`,
-    question: q,
-    answer: [],
-    answerIndex: 0,
-    role: 'user',
-  });
-  scrollToBottom(true);
-  
-  const conversationId = currentSelectedSession.value;
-  queryStream(q, conversationId, language.value as 'zh' | 'en');
+/**
+ * 发送消息 - 整合目标分支逻辑
+ */
+const handleSendMessage = async (
+  groupId: string | undefined,
+  question: string,
+  user_selected_flow?: string,
+) => {
+  if (isAnswerGenerating.value) return;
+  const len = conversationList.value.length;
+  if (
+    len > 0 &&
+    !(conversationList.value[len - 1] as RobotConversationItem).isFinish
+  )
+    return;
   dialogueInput.value = '';
+  if (!currentSelectedSession.value) {
+    await generateSession(true);
+  }
+
+  await sendQuestion(
+    undefined,
+    question,
+    route.query.appId as string,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    true,
+  );
+};
+
+// 🔑 保留原有的onSend函数作为兼容性封装
+async function onSend(q: string) {
+  // 统一使用新的发送逻辑
+  await handleSendMessage(undefined, q);
 }
 
 /**
- * 处理鼠标事件
+ * 处理键盘事件
  * @param event
  */
-const handleKeydown = async (event: KeyboardEvent) => {
+const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     if (dialogueInput.value !== '') {
-      await onSend(dialogueInput.value);
+      handleSendMessage(undefined, dialogueInput.value);
     }
   }
 };
 
-async function onRegenerateClick(id: string, question: string) {
-  queryStream(
-    question,
-    currentSelectedSession.value,
-    language.value as 'zh' | 'en',
-    id,
-  );
-}
-
-const bubbleStyles = computed(() => (role: 'user' | 'assistant') => {
-  if (role === 'user') {
-    return {
-      content: {
-        fontSize: '16px',
-        maxWidth: '1000px',
-        backgroundImage:
-          'linear-gradient(to right, rgba(109, 117, 250, 0.2), rgba(90, 179, 255, 0.2))',
-      },
-    };
-  } else if (role === 'assistant') {
-    return {
-      content: { width: '100%', maxWidth: '1000px', padding: '24px' },
-    };
-  }
-});
+// onRegenerateClick函数现在通过DialoguePanel的事件处理
+// bubbleStyles函数已移除，因为不再使用Bubble组件
 
 watch(
   () => props.visible,
@@ -831,8 +939,12 @@ watch(
         console.error('Monaco清理失败:', error);
       }
       
-      deleteSession(currentSelectedSession.value);
+      // 🔑 整合两种清理逻辑
+      toDeleteSession(currentSelectedSession.value);
       return;
+    } else {
+      // 🔑 打开时清理对话列表
+      conversationList.value = [];
     }
     
     if (newVisible && !oldVisible) {
@@ -847,7 +959,7 @@ watch(
       class="mcp-debug-dialog"
       :visible="visible"
       :model-value="visible"
-      title="调试"
+      :title="t('flow.debug')"
       @close="emits('update:visible', false)"
       align-center
       destroy-on-close
@@ -860,7 +972,7 @@ watch(
           </div>
 
           <div class="mcp-info" v-if="config.mcps.length">
-            <span>MCP 服务</span>
+            <span>{{ $t('semantic.mcp_service') }}</span>
             <div class="mcp-list">
               <img
                 v-for="mcp in config.mcps"
@@ -875,10 +987,10 @@ watch(
         </div>
 
         <div class="chat-container" ref="chatContainerRef">
-          <div v-if="!conversations.length">
+          <div v-if="!conversationList.length">
             <Bubble
               class="bubble-item"
-              :avatar="config.icon?config.icon:DefaultAgentIcon"
+              :avatar="config.icon ? config.icon : DefaultAgentIcon"
               :styles="{
                 content: {
                   width: '100%',
@@ -889,9 +1001,9 @@ watch(
             >
               <template #content>
                 <div class="custom-content">
-                  你好，我是
+                  {{ $t('main.describe1') }}
                   <div class="gradient-text">{{ config.name }}</div>
-                  ，很高兴为您服务
+                  {{ $t('main.describe2') }}
                 </div>
               </template>
               <template #footer>
@@ -899,125 +1011,50 @@ watch(
               </template>
             </Bubble>
           </div>
-          <Bubble
-            v-else
-            v-for="(
-              { id, role, question, answer, answerIndex, createdAt, flowdata }, idx
-            ) in conversations"
-            :key="id"
-            :avatar="role === 'user' ? userAvatar : (config.icon?config.icon:robotAvatar)"
-            :content="
-              role === 'assistant'
-                ? markedContent(answer[answerIndex].content)
-                : question
+          <DialoguePanel
+            v-for="(item, index) in conversationList"
+            :cid="(item as any).cid"
+            :key="index"
+            :groupId="getItem(item as any, 'groupId') || ''"
+            :type="(item as any).belong"
+            :inputParams="getItem(item as any, 'params') || {}"
+            :content="Array.isArray((item as any).message) ? (item as any).message : [(item as any).message]"
+            :echartsObj="getItem(item as any, 'echartsObj')"
+            :recordList="
+              (item as any).belong === 'robot' && (item as any).messageList ? (item as any).messageList.getRecordIdList() : []
             "
-            :content-render="role === 'assistant' ? renderMarkdown : undefined"
-            :date="
-              role === 'user'
-                ? dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss')
-                : undefined
+            :isCommentList="
+              (item as any).belong === 'robot' && (item as any).messageList ? (item as any).messageList.getCommentList() : []
             "
-            :loading="
-              role === 'assistant' &&
-              answer[answerIndex].content.length === 0 &&
-              idx === conversations.length - 1
-            "
-            class="bubble-item"
-            :styles="bubbleStyles(role)"
-          >
-            <template
-              v-if="
-                (role === 'assistant' && !isStreaming) ||
-                (role === 'assistant' && idx !== conversations.length - 1)
-              "
-              #footer
-            >
-              <!-- 工作流显示 -->
-              <div v-if="flowdata" class="workflow-container">
-                <DialogueFlow 
-                  :flowdata="flowdata" 
-                  :isWorkFlowDebug="true"
-                />
-              </div>
-              
-              <!-- 🔑 附件显示 -->
-              <FileAttachment 
-                v-if="getCurrentAttachments.length > 0 && idx === conversations.length - 1"
-                :files="getCurrentAttachments"
-                style="margin-top: 16px; margin-bottom: 16px;"
-              />
-              
-              <div class="bubble-footer">
-                <div class="action-toolbar">
-                  <div class="left">
-                    <div>
-                      tokens:
-                      {{ answer[answerIndex].metadata?.inputTokens || 0 }}↑ |
-                      {{ answer[answerIndex].metadata?.outputTokens || 0 }}↓ |
-                      {{
-                        answer[answerIndex].metadata?.timeCost
-                          ? Number(
-                              answer[answerIndex].metadata?.timeCost,
-                            ).toFixed(2)
-                          : '0.00'
-                      }}
-                    </div>
-
-                    <!-- <div class="pagination">
-                      <img
-                        class="pagination-arror mr-8"
-                        src="@/assets/svgs/arror_left.svg"
-                      />
-                      <span class="pagination-cur">{{ answerIndex + 1 }}</span>
-                      <span class="pagination-total">
-                        {{ `/${answer.length}` }}
-                      </span>
-                      <img
-                        class="pagination-arror ml-8"
-                        src="@/assets/svgs/arror_right.svg"
-                      />
-                    </div> -->
-
-                    <div
-                      class="regenerate"
-                      v-if="idx == conversations.length - 1"
-                      @click="onRegenerateClick(id, question)"
-                    >
-                      <img
-                        v-if="theme === 'dark'"
-                        src="@/assets/svgs/dark_regenerate.svg"
-                        alt=""
-                      />
-                      <img
-                        v-else
-                        src="@/assets/svgs/light_regenerate.svg"
-                        alt=""
-                      />
-                      <span>重新生成</span>
-                    </div>
-                  </div>
-                  <div class="button-group">
-                    <el-tooltip
-                      placement="top"
-                      :content="$t('feedback.copy')"
-                      effect="light"
-                    >
-                      <img src="@/assets/svgs/dark_copy.svg" />
-                    </el-tooltip>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </Bubble>
+            :messageArray="(item as any).belong === 'robot' && (item as any).messageList ? [(item as any).messageList] : []"
+            :is-finish="getItem(item as any, 'isFinish')"
+            :test="getItem(item as any, 'test')"
+            :metadata="getItem(item as any, 'metadata')"
+            :flowdata="getItem(item as any, 'flowdata')"
+            :created-at="(item as any).createdAt"
+            :current-selected="getItem(item as any, 'currentInd') || 0"
+            :need-regernerate="(item as any).cid === conversationList.slice(-1)[0]?.cid"
+            :user-selected-app="user_selected_app"
+            :search_suggestions="getItem(item as any, 'search_suggestions')"
+            :paramsList="getItem(item as any, 'paramsList')"
+            :fileList="getCompleteFileList(item, index)"
+            :modeOptions="{}"
+            :isWorkFlowDebug="true"
+            @handleReport="handleReport"
+            @handleSendMessage="handleSendMessage"
+            @clearSuggestion="clearSuggestion(index)"
+            @openShowFileSource="openShowFileSource"
+          />
         </div>
 
-        <div v-if="isStreaming" class="stop-button" @click="stopStream">
+        <div v-if="isStreaming || isAnswerGenerating" class="stop-button" @click="stopStream">
           <img src="@/assets/svgs/light_stop_answer.svg" alt="" />
           <div class="stop-button-answer">
             {{ $t('feedback.stop') }}
           </div>
         </div>
-
+        
+        <!-- 调试发送窗口 -->
         <div class="sender">
           <textarea
             ref="inputRef"
@@ -1031,18 +1068,16 @@ watch(
               <img src="@/assets/svgs/upload_light.svg" alt="" />
             </div>
             <div class="send-button">
-               <img
-                v-if="
-                  dialogueInput.length <= 0
-                "
+              <img
+                v-if="dialogueInput.length <= 0"
                 src="@/assets/svgs/send_disabled.svg"
                 alt=""
               />
               <img
                 v-else
-                :src="isStreaming ? SendDisabledIcon : SendEnableIcon"
+                :src="(isStreaming || isAnswerGenerating) ? SendDisabledIcon : SendEnableIcon"
                 alt=""
-                @click="async () => await onSend(dialogueInput)"
+                @click="handleSendMessage(undefined, dialogueInput)"
               />
             </div>
           </div>
@@ -1055,7 +1090,7 @@ watch(
       <template #footer>
         <div class="dialog-footer">
           <el-button type="primary" @click="emits('update:visible', false)">
-            关闭
+            {{ $t('common.close') }}
           </el-button>
         </div>
       </template>
@@ -1137,7 +1172,7 @@ watch(
 
     .chat-container {
       width: 100%;
-      height: 57%;
+      height: 76%;
       min-height: 340px;
       overflow: auto;
 
@@ -1171,61 +1206,6 @@ watch(
           align-items: center;
           padding: 16px 0 0 0;
           margin-top: 20px;
-        }
-
-        .bubble-footer {
-          margin-top: 20px;
-          .action-toolbar {
-            border-top: 1px dashed var(--o-border-color-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 0 0 0;
-
-            img {
-              width: 24px;
-              height: 24px;
-            }
-
-            .left {
-              font-size: 12px;
-              color: var(--o-text-color-tertiary);
-              display: flex;
-              gap: 8px;
-              align-items: center;
-
-              .regenerate {
-                display: flex;
-                align-items: center;
-                cursor: pointer;
-              }
-
-              .pagination {
-                display: flex;
-                img {
-                  width: 16px;
-                  height: 16px;
-                }
-
-                &-arror {
-                  margin: 0;
-                  cursor: pointer;
-                }
-                .ml-8 {
-                  margin-left: 8px;
-                }
-                .mr-8 {
-                  margin-right: 8px;
-                }
-              }
-            }
-
-            .button-group {
-              height: 24px;
-              display: flex;
-              align-items: center;
-            }
-          }
         }
       }
     }
@@ -1320,11 +1300,7 @@ watch(
     border-radius: 4px;
   }
 
-  .workflow-container {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--o-border-color-light);
-  }
+  // workflow-container样式移除，DialoguePanel会处理工作流显示
 }
 </style>
 <style>

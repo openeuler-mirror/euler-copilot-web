@@ -28,19 +28,19 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('settings') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>设置</span>
+                <span>{{ $t('settings.setting') }}</span>
               </template>
               <div class="settingsContent">
                 <el-form :model="formData" label-position="left" label-width="120px">
-                  <el-form-item label="节点名称">
+                  <el-form-item :label="$t('flow.node_config.node_name')">
                     <el-input
                       v-model="formData.name"
-                      placeholder="请输入节点名称"
+                      :placeholder="$t('flow.node_config.node_name_placeholder')"
                       maxlength="50"
                       clearable
                     />
                   </el-form-item>
-                  <el-form-item label="描述">
+                  <el-form-item :label="$t('flow.node_config.node_description')">
                     <el-input
                       v-model="formData.description"
                       type="textarea"

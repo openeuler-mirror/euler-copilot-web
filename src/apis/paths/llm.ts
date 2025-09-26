@@ -32,8 +32,35 @@ const getAddedModels = () => {
   return get<AddedModalList[]>('/api/llm');
 };
 
+/**
+ * 获取 Embedding 配置
+ * @returns
+ */
+const getEmbeddingConfig = () => {
+  return get<{
+    type: string;
+    endpoint: string;
+    api_key: string;
+    model: string;
+    icon?: string;
+  }>('/api/llm/embedding');
+};
+
+/**
+ * 获取 Reranker 配置
+ * @returns
+ */
+const getRerankerConfig = () => {
+  return get<{
+    type: string;
+    name: string;
+  }[]>('/api/llm/reranker');
+};
+
 export const llmApi = {
   getAddedModels,
   getLLMList,
   updateLLMList,
+  getEmbeddingConfig,
+  getRerankerConfig,
 };

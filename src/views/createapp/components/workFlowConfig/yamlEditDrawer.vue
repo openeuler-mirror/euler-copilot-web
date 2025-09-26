@@ -158,9 +158,19 @@ const yamlExpress = ref([
   },
 ]);
 const yamlBaseInfoRule = ref({
-  name: [{ required: true, message: '请输入工作流名称', trigger: 'blur' }],
+  name: [
+    {
+      required: true,
+      message: i18n.global.t('flow.enterWorkflowName'),
+      trigger: 'blur',
+    },
+  ],
   description: [
-    { required: true, message: '请输入工作流描述', trigger: 'blur' },
+  {
+      required: true,
+      message: i18n.global.t('flow.enterWorkflowDesc'),
+      trigger: 'blur',
+    },
   ],
 });
 const activeName = ref([

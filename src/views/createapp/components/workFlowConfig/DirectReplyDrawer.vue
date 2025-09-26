@@ -28,24 +28,24 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('basic') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>基本信息</span>
+                <span>{{ $t('flow.node_config.basic_info') }}</span>
               </template>
               <div class="basic-content">
                 <el-form :model="nodeConfig" label-position="left" label-width="120px">
-                  <el-form-item label="节点名称" required>
+                  <el-form-item :label="$t('flow.node_config.node_name')" required>
                     <el-input
                       v-model="nodeConfig.name"
-                      placeholder="请输入节点名称"
+                      :placeholder="$t('flow.node_config.node_name_placeholder')"
                       maxlength="50"
                       clearable
                     />
                   </el-form-item>
-                  <el-form-item label="节点描述">
+                  <el-form-item :label="$t('flow.node_config.node_description')">
                     <el-input
                       v-model="nodeConfig.description"
                       type="textarea"
                       :rows="3"
-                      placeholder="请输入节点描述"
+                      :placeholder="$t('flow.node_config.node_description_placeholder')"
                       maxlength="200"
                       show-word-limit
                     />
@@ -60,7 +60,7 @@
                 <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('content') }">
                   <IconCaretRight />
                 </el-icon>
-                <span>回复内容</span>
+                <span>{{ $t('app.outputContent') }}</span>
               </template>
                                             <div class="content-section">
                  <!-- 文本编辑器 -->
@@ -69,13 +69,13 @@
                    v-model="nodeConfig.answer"
                    :flow-id="flowId"
                    :current-step-id="nodeId"
-                   placeholder="请输入回复内容，可以使用变量插入功能..."
+                   :placeholder="$t('app.inputContent') + '...'"
                    @variable-inserted="handleFileVariableInserted"
                  />
                 
                 <!-- 字符统计 -->
                 <div class="char-count">
-                  {{ getCharCount() }} 字符
+                  {{ getCharCount() }} {{ $t('common.characters') }}
                 </div>
                 
 
@@ -86,7 +86,7 @@
                     <span class="header-icon">
                       <AttachmentIcon />
                     </span>
-                    <span class="header-title">附件变量</span>
+                    <span class="header-title">{{ $t('flow.file_variables') }}</span>
                     <span class="file-count">({{ nodeConfig.fileVariables.length }})</span>
                   </div>
                   <div class="file-variables-list">
@@ -103,7 +103,7 @@
                       <div class="file-info">
                         <div class="file-name">{{ fileVar.displayName }}</div>
                         <div class="file-variable">{{ formatVariableDisplay(fileVar.variableName) }}</div>
-                        <div class="file-type">{{ fileVar.fileType === 'file' ? '单文件' : '多文件' }}</div>
+                        <div class="file-type">{{ fileVar.fileType === 'file' ? $t('flow.single_file') : $t('flow.multiple_files') }}</div>
                       </div>
                       <div class="file-actions">
                         <el-button 
@@ -111,7 +111,7 @@
                           type="danger" 
                           text 
                           @click="removeFileVariable(index)"
-                          title="移除附件变量"
+                          :title="$t('flow.remove_file_variable')"
                         >
                           ✕
                         </el-button>
@@ -172,19 +172,19 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits(['update:visible', 'saveNode'])
 
-// const { t } = useI18n() // 暂时不使用
+const { t } = useI18n()
 
 // 响应式数据
 const drawerVisible = ref(false)
 const activeName = ref(['basic', 'content'])
-const nodeName = ref('回答')
+const nodeName = ref(t('flow.answer'))
 const textEditorRef = ref()
 
 
 
 // 节点配置
 const nodeConfig = ref<NodeConfig>({
-  name: '回答',
+  name: t('flow.answer'),
   description: '',
   answer: '',
   fileVariables: []
@@ -225,7 +225,7 @@ const initializeNodeData = () => {
     }
     
     nodeConfig.value = {
-      name: props.nodeData.name || '回答',
+      name: props.nodeData.name || t('flow.answer'),
       description: props.nodeData.description || '',
       answer: props.nodeData.parameters?.input_parameters?.answer || '',
       fileVariables: fileVariables
@@ -250,7 +250,7 @@ const handleFileVariableInserted = (variable: any) => {
       // 检查是否已存在相同的文件变量
       const existingIndex = nodeConfig.value.fileVariables?.findIndex(f => f.variableName === variable.name)
       if (existingIndex !== undefined && existingIndex >= 0) {
-        ElMessage.warning(`文件变量 ${variable.name} 已存在，无需重复添加`)
+        ElMessage.warning(t('flow.file_variable_exists', { name: variable.name }))
         return
       }
       
@@ -272,7 +272,7 @@ const handleFileVariableInserted = (variable: any) => {
   // 如果传入的是字符串变量名（向后兼容）
   else if (typeof variable === 'string') {
     // 这里需要根据变量名查找变量类型，暂时跳过
-    console.log('收到字符串变量名:', variable)
+    console.log('Received string variable name:', variable)
   }
 }
 
@@ -309,7 +309,7 @@ const removeFileVariable = (index: number) => {
 
 // 格式化变量显示
 const formatVariableDisplay = (variableName: string) => {
-  return `变量: {{${variableName}}}`
+  return t('flow.variable_format', { name: variableName })
 }
 
 const closeDrawer = () => {
@@ -319,7 +319,7 @@ const closeDrawer = () => {
 const saveNode = () => {
   // 验证必填字段
   if (!nodeConfig.value.name.trim()) {
-    ElMessage.error('请输入节点名称')
+    ElMessage.error(t('flow.node_config.node_name_required'))
     return
   }
 

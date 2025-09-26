@@ -57,8 +57,12 @@
     }
     .apiCenterCardContainer {
       width: 1336px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 250px);
+      
       .apiCenterCardBox {
-        height: calc(100vh - 370px);
+        flex: 1;
         overflow-y: auto;
         width: fit-content;
         display: flex;
@@ -66,7 +70,26 @@
         flex-wrap: wrap;
         box-sizing: border-box;
         gap: 16px;
-        padding-top: 16px;
+        padding: 16px 0;
+        
+        // 自定义滚动条样式
+        &::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        &::-webkit-scrollbar-track {
+          background: var(--o-bg-color-light);
+          border-radius: 4px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+          background: var(--o-border-color);
+          border-radius: 4px;
+        }
+        
+        &::-webkit-scrollbar-thumb:hover {
+          background: var(--o-border-color-dark);
+        }
         .apiCenterCardSingle {
           height: fit-content;
           box-sizing: border-box;
@@ -163,13 +186,13 @@
         }
       }
       .appCenterNoData {
-        top: 100%;
-        position: relative;
         display: flex;
         flex-direction: column;
         gap: 8px;
         align-items: center;
-        margin-top: 16px;
+        justify-content: center;
+        flex: 1;
+        padding: 40px;
         .noDataIcon {
           width: 320px;
           height: 130px;

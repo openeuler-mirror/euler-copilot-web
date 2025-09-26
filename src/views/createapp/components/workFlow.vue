@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import '../../styles/workFlowArrange.scss';
-import { onMounted, ref, watch, onUnmounted, computed } from 'vue';
+import { onMounted, ref, watch, onUnmounted, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { MiniMap } from '@vue-flow/minimap';
-import BranchNode from './workFlowConfig/BranchNode.vue';
 import ChoiceBranchNode from './workFlowConfig/ChoiceBranchNode.vue';
 import VariableAssignNode from './workFlowConfig/VariableAssignNode.vue';
 import LoopNode from './workFlowConfig/LoopNode.vue';
 import LoopNodeDrawer from './workFlowConfig/LoopNodeDrawer.vue';
 import CustomEdge from './workFlowConfig/CustomEdge.vue';
 import CustomNode from './workFlowConfig/CustomNode.vue';
+import CommentNode from './workFlowConfig/CommentNode.vue';
+import PluginNode from './workFlowConfig/PluginNode.vue';
 import CustomControl from './CustomControl.vue';
 import CustomSaENode from './workFlowConfig/CustomSaENode.vue';
 import useDragAndDrop from './workFlowConfig/useDnD';
@@ -20,6 +21,8 @@ import { getId, createNewNode, sanitizeNodeData } from './workFlowConfig/useDnD'
 import WorkFlowDialog from './workFlowConfig/workFlowDialog.vue';
 import WorkFlowDebug from './workFlowDebug.vue';
 import { useLayout } from './workFlowConfig/useLayout';
+import Upload from '@/components/Upload/index.vue';
+import McpServiceDetailDrawer from '@/views/api/components/McpServiceDetail.vue';
 import { useChangeThemeStore } from '@/store';
 import i18n from '@/i18n';
 import {
@@ -29,6 +32,10 @@ import {
   IconPlusCircle,
 } from '@computing/opendesign-icons';
 
+import ApiCallDrawer from './workFlowConfig/ApiCallDrawer.vue';
+import LLMNodeDrawer from './workFlowConfig/LLMNodeDrawer.vue';
+import MCPNodeDrawer from './workFlowConfig/MCPNodeDrawer.vue';
+import RAGNodeDrawer from './workFlowConfig/RAGNodeDrawer.vue';
 import EditYamlDrawer from './workFlowConfig/yamlEditDrawer.vue';
 import VariableBasedStartNodeDrawer from './workFlowConfig/VariableBasedStartNodeDrawer.vue';
 import CodeNodeDrawer from './workFlowConfig/CodeNodeDrawer.vue';
@@ -42,14 +49,17 @@ import { api } from 'src/apis';
 import { listVariables } from '@/api/variable';
 import { StatusInfoTitle } from './types';
 import { useRoute } from 'vue-router';
-import { getSrcIcon, DefaultViewPortZoom } from './types';
+import { getSrcIcon, DefaultViewPortZoom, NodeType } from './types';
 import $bus from 'src/bus/index';
 import CustomLoading from '../../customLoading/index.vue';
 import EditFlowName from './workFlowConfig/editFlowName.vue';
-import NodeListPanel from './workFlowConfig/NodeListPanel.vue';
+import NodeSelector from './workFlowConfig/NodeSelector.vue';
 import EnvironmentVariableDrawer from './workFlowConfig/EnvironmentVariableDrawer.vue';
+import { useLangStore } from '@/store';
 
 const { t } = useI18n();
+const langStore = useLangStore();
+
 const copilotAside = ref<HTMLElement>();
 const isCopilotAsideVisible = ref(false);
 
@@ -66,6 +76,10 @@ const isEditDirectReplyNode = ref(false);
 const isEditChoiceBranchNode = ref(false);
 const isEditVariableAssignNode = ref(false);
 const isEditLoopNode = ref(false);
+const isEditApiCall = ref(false);
+const isEditMCPNode = ref(false);
+const isEditRAGNode = ref(false);
+const isEditLLMNode = ref(false);
 const isEditEnvironmentVariables = ref(false);
 const isEditFileExtractorNode = ref(false);
 const nodeName = ref('');
@@ -76,6 +90,13 @@ const currentChoiceBranchNodeData = ref({});
 const currentVariableAssignNodeData = ref({});
 const currentLoopNodeData = ref({});
 const currentFileExtractorNodeData = ref({});
+const currentPluginNodeData = ref({});
+// 插件详情相关状态
+const pluginDetailDrawerVisible = ref(false);
+const pluginDetailType = ref<'semantic_interface' | 'mcp'>('semantic_interface');
+const selectedPluginServiceId = ref('');
+const getServiceJson = ref('');
+const getServiceName = ref('');
 const flowZoom = ref(1);
 const debugDialogVisible = ref(false);
 const apiServiceList = ref([]);
@@ -96,7 +117,14 @@ const emits = defineEmits(['updateFlowsDebug']);
 const route = useRoute();
 const workFlowList = ref<any[]>([]);
 const props = defineProps(['flowList']);
-const flowObj = ref<{flowId?: string, debug?: boolean, name?: string, nodes?: any[], edges?: any[]}>({});
+const flowObj = ref<{
+  flowId?: string, 
+  debug?: boolean, 
+  name?: string, 
+  nodes?: any[], 
+  edges?: any[], 
+  notes?: any[]
+}>({});
 const nodes = ref<any[]>([]);
 const debugStatus = ref('');
 const debugTime = ref('');
@@ -106,6 +134,20 @@ const isNodeConnect = ref(false);
 const loading = ref(false);
 const apiLoading = ref(false);
 const themeStore = useChangeThemeStore();
+
+// 确保HTML根元素与主题状态同步
+watch(() => themeStore.theme, (newTheme) => {
+  if (newTheme === 'dark') {
+    if (!document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.add('dark');
+    }
+  } else {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+}, { immediate: true });
+
 const connectHandleNodeId = ref('');
 const updateFlowsDebugStatus = ref(false);
 // 添加选中节点状态管理
@@ -125,6 +167,10 @@ const insertMenuData = ref<{
   edgeInfo: any;
   handleInfo?: any;
   direction: 'left' | 'right';
+  contextMenuInfo?: {
+    canvasPosition: { x: number; y: number };
+    originalPosition: { x: number; y: number };
+  };
 }>({
   visible: false,
   position: { x: 0, y: 0 },
@@ -133,12 +179,22 @@ const insertMenuData = ref<{
   direction: 'right'
 });
 
+// 右键菜单相关状态
+const contextMenuVisible = ref(false);
+const contextMenuPosition = ref({ x: 0, y: 0 });
+
+// YAML导入导出相关状态
+const yamlFileInputRef = ref();
+const yamlExportFileName = ref('workflow.yaml');
+
+// 注释相关状态（已简化，注释现在直接在CommentNode中编辑）
+
 // 额外的内置节点类型
 const extraNodeTypes = ref([
   {
     nodeId: 'FileExtract',
     callId: 'FileExtract',
-    name: '文件提取器',
+    name: i18n.global.t('flow.node_names.file_extractor'),
     description: '从文件中提取文本内容，支持多种文件格式',
     type: 'transform',
     serviceId: 'system'
@@ -224,7 +280,9 @@ const handleClose = (flowId?: string) => {
     api.querySingleAppData({ id: route.query.appId as string }).then((res) => {
       //workflowList 数据更新
       workFlowList.value = res[1]?.result.workflows;
-      const foundFlow = workFlowList.value.find((item: any) => item.id === flowId);
+      const foundFlow = workFlowList.value.find(
+        (item: any) => item.id === flowId,
+      );
       if (foundFlow) {
         choiceFlowId(foundFlow);
       }
@@ -242,7 +300,7 @@ const delNode = (id) => {
 };
 
 // 处理变量更新事件 - 仅重新加载对话变量用于开始节点展示
-const handleVariablesUpdated = async () => {  
+const handleVariablesUpdated = async () => {
   // 延迟加载，确保后端数据已经同步
   setTimeout(async () => {
     await loadConversationVariablesForDisplay();
@@ -257,15 +315,15 @@ const loadConversationVariablesForDisplay = async () => {
   
   variablesLoading.value = true;
   
-  try {    
-    // 🔑 重要修改：添加exclude_pattern参数，过滤掉包含step_id的变量（只显示全局对话变量）
+  try {
+    // 只显示全局对话变量
     const convVars: any = await listVariables({ 
-      scope: 'conversation', 
+      scope: 'conversation',
       flow_id: flowObj.value.flowId,
       exclude_pattern: 'step_id'  // 过滤掉包含step_id的变量
     });
     
-    // 修复：支持多种API响应结构
+    // 支持多种API响应结构
     let variables: any[] = [];
     if (convVars?.result?.variables) {
       // 结构1: { result: { variables: [...] } }
@@ -281,7 +339,6 @@ const loadConversationVariablesForDisplay = async () => {
     if (variables && Array.isArray(variables)) {
       // 后端已经过滤了包含step_id的变量，直接使用
       conversationVariablesForDisplay.value = variables;
-      console.log('✅ 开始节点加载的全局对话变量:', conversationVariablesForDisplay.value.length, '个');
     } else {
       conversationVariablesForDisplay.value = [];
     }
@@ -330,6 +387,14 @@ const nodeAndLineConnection = () => {
   // 是否所有节点都已连接
   isNodeAndLineConnect.value = isNodeConnect;
 };
+
+const editCommonDrawer = (name, desc, nodeId, yamlCode) => {
+  yamlContent.value = yamlCode;
+  nodeName.value = name;
+  nodeDesc.value = desc;
+  selectedNodeId.value = nodeId;
+};
+
 // 编辑yaml
 const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
   // 先重置所有抽屉状态，确保不会同时显示多个抽屉
@@ -367,10 +432,6 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditCodeNode.value = true;
-    
-    // 编辑时，需要debug 后才可发布
-    emits('updateFlowsDebug', false);
-    return;
   } else if (currentNode && currentNode.data.callId === 'DirectReply') {
     // 打开直接回复节点编辑器
     currentDirectReplyNodeData.value = {
@@ -388,10 +449,6 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditDirectReplyNode.value = true;
-    
-    // 编辑时，需要debug 后才可发布
-    emits('updateFlowsDebug', false);
-    return;
   } else if (currentNode && currentNode.data.callId === 'Choice') {
     // 打开条件分支节点编辑器
     currentChoiceBranchNodeData.value = {
@@ -401,20 +458,16 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
       parameters: currentNode.data.parameters || {
         input_parameters: { choices: [] },
         output_parameters: { 
-  branch_id: {
-    type: 'string',
-    description: '选中的分支ID'
-  }
-}
+          branch_id: {
+            type: 'string',
+            description: '选中的分支ID'
+          }
+        }
       }
     };
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditChoiceBranchNode.value = true;
-    
-    // 编辑时，需要debug 后才可发布
-    emits('updateFlowsDebug', false);
-    return; // 重要：直接返回，避免继续执行else分支
   } else if (currentNode && currentNode.data.callId === 'VariableAssign') {
     // 打开变量赋值节点编辑器
     currentVariableAssignNodeData.value = {
@@ -429,10 +482,6 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditVariableAssignNode.value = true;
-    
-    // 编辑时，需要debug 后才可发布
-    emits('updateFlowsDebug', false);
-    return;
   } else if (currentNode && currentNode.data.callId === 'FileExtract') {
     // 打开文件提取器节点编辑器
     currentFileExtractorNodeData.value = {
@@ -455,35 +504,96 @@ const editYamlDrawer = (name, desc, yamlCode, nodeId) => {
     nodeYamlId.value = nodeId;
     selectedNodeId.value = nodeId;
     isEditFileExtractorNode.value = true;
-    
-    // 编辑时，需要debug 后才可发布
-    emits('updateFlowsDebug', false);
-    return;
+  } else if (currentNode && currentNode.type === 'plugin-node') {
+    // 显示插件详情，不是编辑
+    showPluginDetails(currentNode.data);
   } else if (currentNode && currentNode.data.callId === 'Loop') {
     // 打开Loop节点编辑器 - 直接调用editLoopNode方法
     editLoopNode(name, desc, currentNode.data.parameters, nodeId);
-    return; // 直接返回，不需要继续执行
+  } else if (currentNode && currentNode.data.callId === 'API') {
+    isEditApiCall.value = true;
+    editCommonDrawer(name, desc, nodeId, yamlCode);
+  } else if (currentNode && currentNode.data.callId === 'LLM') {
+    isEditLLMNode.value = true;
+    editCommonDrawer(name, desc, nodeId, yamlCode);
+  } else if (currentNode && currentNode.data.callId === 'RAG') {
+    isEditRAGNode.value = true;
+    editCommonDrawer(name, desc, nodeId, yamlCode);
+  } else if (currentNode && currentNode.data.callId === 'MCP') {
+    isEditMCPNode.value = true;
+    editCommonDrawer(name, desc, nodeId, yamlCode);
   } else {
     // 打开YAML编辑器（其他节点类型）
-    yamlContent.value = yamlCode;
-    nodeName.value = name;
-    nodeDesc.value = desc;
     isEditYaml.value = true;
-    nodeYamlId.value = nodeId;
-    selectedNodeId.value = nodeId;
+    editCommonDrawer(name, desc, nodeId, yamlCode);
   }
   
   // 编辑时，需要debug 后才可发布
   emits('updateFlowsDebug', false);
 };
+
+// 显示插件详情
+const showPluginDetails = async (pluginData: any) => {
+  selectedPluginServiceId.value = pluginData.serviceId;
+  pluginDetailType.value = pluginData.pluginType;
+  
+  if (pluginData.pluginType === 'semantic_interface') {
+    // 加载语义接口详情数据
+    await getServiceJsonFun(pluginData.serviceId);
+  }
+  
+  pluginDetailDrawerVisible.value = true;
+};
+
+// 获取语义接口JSON数据
+const getServiceJsonFun = async (id: string) => {
+  const [, res] = await api.querySingleApiData({ serviceId: id });
+  if (res) {
+    getServiceJson.value = res.result.apis;
+    getServiceName.value = res.result.name;
+  }
+};
+
+// 关闭插件详情抽屉
+const closePluginDetailDrawer = () => {
+  pluginDetailDrawerVisible.value = false;
+  selectedPluginServiceId.value = '';
+  getServiceJson.value = '';
+  getServiceName.value = '';
+};
+
+// 获取插件Drawer标题
+const getPluginDrawerTitle = () => {
+  if (pluginDetailType.value === 'semantic_interface') {
+    return i18n.global.t('semantic.view_semantic_interface');
+  } else {
+    return 'MCP服务详情';
+  }
+};
+
 // 关闭抽屉
-const closeDrawer = () => {
-  isEditYaml.value = false;
-  // 清除选中状态
-  selectedNodeId.value = '';
+const closeDrawer = (nodeType) => {
+  switch (nodeType) {
+    case NodeType.API:
+      isEditApiCall.value = false;
+      break;
+    case NodeType.LLM:
+      isEditLLMNode.value = false;
+      break;
+    case NodeType.RAG:
+      isEditRAGNode.value = false;
+      break;
+    case NodeType.MCP:
+      isEditMCPNode.value = false;
+      break;
+    default:
+      isEditYaml.value = false;
+  }
   // 清除子工作流节点标识
   isEditingSubFlowNode.value = false;
   currentLoopNodeId.value = '';
+  // 清除选中状态
+  selectedNodeId.value = '';
 };
 
 // 关闭代码节点抽屉
@@ -687,9 +797,6 @@ const editLoopNode = (name, desc, parameters, nodeId) => {
     selectedNodeId.value = nodeId;
     isEditLoopNode.value = true;
   }
-  
-  // 编辑时，需要debug 后才可发布
-  emits('updateFlowsDebug', false);
 };
 
 // 关闭Loop节点抽屉
@@ -753,7 +860,7 @@ const saveSubFlowNode = async (nodeData, nodeId) => {
       } else if (isEditLoopNode.value) {
         closeLoopNodeDrawer();
       } else if (isEditYaml.value) {
-        closeDrawer();
+        closeDrawer(nodeId);
       }
     } else {
       throw new Error('未找到LoopNode组件引用或updateSubFlowNode方法');
@@ -783,6 +890,18 @@ const editSubFlowNode = (nodeName, nodeDesc, nodeParameters, nodeId, loopNodeId)
   isEditLoopNode.value = false;
   
   switch (callId) {
+    case 'API':
+      isEditApiCall.value = true;
+      break;
+    case 'LLM':
+      isEditLLMNode.value = true;
+      break;
+    case 'RAG':
+      isEditRAGNode.value = true;
+      break;
+    case 'MCP':
+      isEditMCPNode.value = true;
+      break;
     case 'Code':
       // 打开代码节点编辑器
       currentCodeNodeData.value = {
@@ -943,6 +1062,7 @@ const handleShowLoopInsertNodeMenu = (insertMenuData) => {
   isLoopInsertNodeMenuVisible.value = true;
 };
 
+
 // 关闭LoopNode InsertNodeMenu
 const closeLoopInsertNodeMenu = () => {
   isLoopInsertNodeMenuVisible.value = false;
@@ -1079,24 +1199,32 @@ const handleLoopNodeZoomUpdate = (event: CustomEvent) => {
   handleZommOnScroll();
 };
 
-onMounted(() => {
+// 查询所有流服务的函数
+const queryAllFlowServices = () => {
   apiLoading.value = true;
   api
     .queryAllFlowService({
       page: 1,
       pageSize: 10,
+      language: langStore.language,
     })
     .then((res) => {
       const services = res[1]?.result.services || [];
-
       apiServiceList.value = services;
       allApiServiceList.value = services;
       apiLoading.value = false;
     });
+};
+
+onMounted(() => {
+  queryAllFlowServices();
   handleChangeZoom(DefaultViewPortZoom);
   
   // 添加LoopNode事件监听器作为备用方案
   document.addEventListener('loopNodeZoomUpdate', handleLoopNodeZoomUpdate);
+  
+  // 添加全局点击事件监听器，用于关闭右键菜单
+  document.addEventListener('click', handleGlobalClick);
 });
 
 onUnmounted(() => {
@@ -1106,6 +1234,9 @@ onUnmounted(() => {
   
   // 清理LoopNode事件监听器
   document.removeEventListener('loopNodeZoomUpdate', handleLoopNodeZoomUpdate);
+  
+  // 清理全局点击事件监听器
+  document.removeEventListener('click', handleGlobalClick);
 });
 
 
@@ -1161,6 +1292,7 @@ const nodesChange = (nodes) => {
     removeSelectedNodes([getSelectedNodes.value[0]]);
   }
   if (nodes?.[0]?.type === 'remove') {
+    // TODO 为什么0.10.0删除了delNode？
     delNode(nodes[0].id);
     // 节点增加删除时直接将工作流debug状态置为false
     emits('updateFlowsDebug', false);
@@ -1180,7 +1312,7 @@ const getCreatedFlow = async (createdFlowObj) => {
     flowObj.value = { ...createdFlowObj };
     workFlowItemName.value = createdFlowObj.name;
     // 回显工作流节点和边
-    redrageFlow(createdFlowObj?.nodes, createdFlowObj?.edges);
+    redrageFlow(createdFlowObj?.nodes, createdFlowObj?.edges, createdFlowObj?.notes || []);
     
     // 重新加载对话变量，确保显示当前flow的正确变量状态
     await loadConversationVariablesForDisplay();
@@ -1235,7 +1367,7 @@ const editFlow = async (item) => {
     
     if (res[1]?.result?.flow) {
       flowObj.value = res[1].result.flow;
-      redrageFlow(flowObj.value.nodes || [], flowObj.value.edges || []);
+      redrageFlow(flowObj.value.nodes || [], flowObj.value.edges || [], flowObj.value.notes || []);
       
       // 加载对话变量用于开始节点展示
       await loadConversationVariablesForDisplay();
@@ -1291,8 +1423,16 @@ watch(
   { deep: true, immediate: true },
 );
 
+// 监听语言变化，重新查询所有流服务
+watch(
+  () => langStore.language,
+  () => {
+    queryAllFlowServices();
+  }
+);
+
 // 回显工作流节点和边
-const redrageFlow = (nodesList, edgesList) => {
+const redrageFlow = (nodesList, edgesList, notesList = []) => {
   const newNodeList = nodesList.map((node) => {
     let newNode = {
       id: node.stepId,
@@ -1395,7 +1535,33 @@ const redrageFlow = (nodesList, edgesList) => {
     // 线分支条件需后续添加
     return newEdge;
   });
-  setNodes(newNodeList);
+  
+  // 处理notes数据，创建注释节点
+  const newNotesList = (notesList || []).map((note: any) => {
+    return {
+      id: note.noteId,
+      type: 'comment',
+      position: note.position,
+      data: {
+        name: '注释',
+        description: note.text,
+        nodeId: 'Comment',
+        callId: 'Comment',
+        serviceId: 'comment',
+        isComment: true,
+        width: note.width || 200, // 从后端读取宽度或使用默认值
+        height: note.height || 120, // 从后端读取高度或使用默认值
+        parameters: {
+          input_parameters: {},
+          output_parameters: {}
+        }
+      },
+      deletable: true
+    };
+  });
+  
+  // 合并所有节点（包括工作流节点和注释节点）
+  setNodes([...newNodeList, ...newNotesList]);
   setEdges(newEdgeList);
   // 回显节点和边后，判断各节点连接状态
   nodeAndLineConnection();
@@ -1451,7 +1617,336 @@ const closeInsertNodeMenu = () => {
   insertMenuData.value.visible = false;
   insertMenuData.value.edgeInfo = null;
   insertMenuData.value.handleInfo = null;
+  insertMenuData.value.contextMenuInfo = undefined;
   insertMenuData.value.position = { x: 0, y: 0 };
+};
+
+// 处理画布右键菜单
+const handleContextMenu = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  
+  // 检查是否点击在LoopNode的子画布区域
+  const isInLoopNodeSubCanvas = target.closest('.embeddedFlowCanvas') || target.closest('.vue-flow-like-canvas');
+  
+  // 如果在LoopNode子画布内，不处理（让LoopNode自己处理）
+  if (isInLoopNodeSubCanvas) {
+    return;
+  }
+  
+  // 检查是否点击在节点上，如果是则不显示右键菜单
+  if (target.closest('.vue-flow__node') || target.closest('[data-id]')) {
+    return;
+  }
+  
+  // 检查是否在有效的画布区域
+  const isValidTarget = target.classList.contains('vue-flow__pane') || 
+                       target.classList.contains('vue-flow__viewport') ||
+                       target.classList.contains('vue-flow__background') ||
+                       target.closest('.vue-flow__background') ||
+                       target.closest('.vue-flow__pane') ||
+                       target.closest('.vue-flow') ||
+                       target.classList.contains('workFlowContainerRight') ||
+                       target.closest('.workFlowContainerRight');
+  
+  // 排除不应该显示菜单的区域
+  const isExcludedArea = target.closest('.copilot-aside-new') ||
+                        target.closest('.workFlowOps') ||
+                        target.closest('.noWorkFlow') ||
+                        target.closest('.context-menu-dropdown');
+  
+  if (!isValidTarget || isExcludedArea) {
+    return;
+  }
+  
+  if (debugDialogVisible.value) {
+    return; // 调试模式下不显示右键菜单
+  }
+  
+  if (!flowObj.value?.flowId) {
+    return; // 没有选择工作流时不显示右键菜单
+  }
+  
+  event.preventDefault();
+  
+  // 获取鼠标相对于页面的位置
+  contextMenuPosition.value = {
+    x: event.clientX,
+    y: event.clientY
+  };
+  
+  contextMenuVisible.value = true;
+};
+
+// 关闭右键菜单
+const closeContextMenu = () => {
+  contextMenuVisible.value = false;
+};
+
+// 全局点击事件处理，关闭右键菜单
+const handleGlobalClick = (event: MouseEvent) => {
+  // 检查点击是否在右键菜单外部
+  const target = event.target as HTMLElement;
+  if (!target.closest('.context-menu-dropdown')) {
+    closeContextMenu();
+  }
+};
+
+// 右键菜单选项处理
+const handleAddNode = () => {
+  // 获取Vue Flow画布的viewport信息
+  const viewport = getViewport();
+  
+  // 将页面坐标转换为画布坐标
+  const vueFlowElement = document.querySelector('.vue-flow__viewport');
+  const containerRect = vueFlowElement?.getBoundingClientRect();
+  
+  if (!containerRect) {
+    closeContextMenu();
+    return;
+  }
+  
+  // 计算相对于Vue Flow容器的坐标（用于菜单显示）
+  const containerX = contextMenuPosition.value.x - containerRect.left;
+  const containerY = contextMenuPosition.value.y - containerRect.top;
+  
+  // 计算实际的画布坐标（用于节点插入）
+  const canvasX = (contextMenuPosition.value.x - containerRect.left - viewport.x) / viewport.zoom;
+  const canvasY = (contextMenuPosition.value.y - containerRect.top - viewport.y) / viewport.zoom;
+  
+  // 更新插入菜单数据，在右键点击位置显示节点选择菜单
+  insertMenuData.value = {
+    visible: true,
+    position: {
+      x: containerX,
+      y: containerY
+    },
+    edgeInfo: null,
+    handleInfo: undefined,
+    direction: 'right',
+    // 添加右键菜单特有的画布位置信息
+    contextMenuInfo: {
+      canvasPosition: { x: canvasX, y: canvasY },
+      originalPosition: contextMenuPosition.value
+    }
+  };
+  
+  closeContextMenu();
+};
+
+const handleAddComment = () => {
+  // 直接创建注释节点，不再使用输入框
+  // 获取Vue Flow画布的viewport信息
+  const viewport = getViewport();
+  const vueFlowElement = document.querySelector('.vue-flow__viewport');
+  const containerRect = vueFlowElement?.getBoundingClientRect();
+  
+  if (!containerRect) {
+    ElMessage.error('无法获取画布位置信息');
+    closeContextMenu();
+    return;
+  }
+  
+  // 将页面坐标转换为画布坐标
+  const canvasX = (contextMenuPosition.value.x - containerRect.left - viewport.x) / viewport.zoom;
+  const canvasY = (contextMenuPosition.value.y - containerRect.top - viewport.y) / viewport.zoom;
+  
+  // 创建注释节点
+  const commentNodeId = getId();
+  const commentNode = {
+    id: commentNodeId,
+    type: 'comment',
+    position: { x: canvasX - 100, y: canvasY - 30 }, // 调整位置使其居中
+    data: {
+      name: '注释',
+      description: '', // 空描述，用户需要点击编辑
+      nodeId: 'Comment',
+      callId: 'Comment',
+      serviceId: 'comment',
+      isComment: true, // 标识为注释节点
+      width: 200, // 默认宽度
+      height: 120, // 默认高度
+      parameters: {
+        input_parameters: {},
+        output_parameters: {}
+      }
+    },
+    deletable: true
+  };
+  
+  // 添加注释节点到画布
+  setNodes([...getNodes.value, commentNode]);
+  
+  // 触发工作流状态更新
+  emits('updateFlowsDebug', false);
+  updateFlowsDebugStatus.value = false;
+  
+  closeContextMenu();
+  ElMessage.success('注释添加成功，点击注释可编辑内容');
+};
+
+const handleDebugWorkflow = () => {
+  // 调用现有的调试功能
+  handleDebugDialogOps(true);
+  closeContextMenu();
+};
+
+const handleExportYAML = async () => {
+  try {
+    if (!flowObj.value?.flowId) {
+      ElMessage.warning('请先选择工作流');
+      return;
+    }
+    
+    // 先保存当前工作流
+    await saveFlow();
+    
+    // 获取当前工作流的完整数据
+    const response = await api.querySingleFlowTopology({
+      appId: route.query?.appId,
+      flowId: flowObj.value.flowId,
+    });
+    
+    if (response[1]?.result?.flow) {
+      const flowData = response[1].result.flow;
+      
+      // 转换为YAML格式的数据结构
+      const yamlData = {
+        name: flowData.name,
+        description: flowData.description || '',
+        nodes: flowData.nodes?.map(node => ({
+          stepId: node.stepId,
+          name: node.name,
+          description: node.description,
+          callId: node.callId,
+          nodeId: node.nodeId,
+          serviceId: node.serviceId,
+          position: node.position,
+          parameters: node.parameters
+        })) || [],
+        edges: flowData.edges?.map(edge => ({
+          edgeId: edge.edgeId,
+          sourceNode: edge.sourceNode,
+          targetNode: edge.targetNode,
+          branchId: edge.branchId
+        })) || [],
+        notes: flowData.notes?.map(note => ({
+          noteId: note.noteId,
+          text: note.text,
+          position: note.position,
+          width: note.width || 200,
+          height: note.height || 120
+        })) || []
+      };
+      
+      // 转换为YAML字符串
+      const yamlString = JSON.stringify(yamlData, null, 2);
+      
+      // 创建下载链接
+      const blob = new Blob([yamlString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = yamlExportFileName.value || `${flowData.name || 'workflow'}.yaml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      ElMessage.success('工作流YAML导出成功');
+    }
+  } catch (error) {
+    ElMessage.error('导出YAML失败');
+  }
+  closeContextMenu();
+};
+
+const handleImportYAML = () => {
+  // 触发文件选择
+  if (yamlFileInputRef.value) {
+    yamlFileInputRef.value.click();
+  }
+  closeContextMenu();
+};
+
+// 处理YAML文件导入
+const handleYAMLFileImport = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  
+  if (!file) {
+    return;
+  }
+  
+  try {
+    const text = await file.text();
+    let yamlData;
+    
+    try {
+      yamlData = JSON.parse(text);
+    } catch (parseError) {
+      ElMessage.error('YAML文件格式错误，请确保是有效的JSON格式');
+      return;
+    }
+    
+    // 验证YAML数据结构
+    if (!yamlData.nodes || !Array.isArray(yamlData.nodes)) {
+      ElMessage.error('YAML文件格式错误：缺少nodes数组');
+      return;
+    }
+    
+    if (!yamlData.edges || !Array.isArray(yamlData.edges)) {
+      ElMessage.error('YAML文件格式错误：缺少edges数组');
+      return;
+    }
+    
+    // 清空当前画布
+    setNodes([]);
+    setEdges([]);
+    
+    // 导入节点和边
+    redrageFlow(yamlData.nodes, yamlData.edges, yamlData.notes || []);
+    
+    // 更新工作流名称（如果提供）
+    if (yamlData.name && flowObj.value) {
+      flowObj.value.name = yamlData.name;
+      workFlowItemName.value = yamlData.name;
+    }
+    
+    // 触发保存
+    await saveFlow();
+    
+    ElMessage.success('工作流YAML导入成功');
+    
+  } catch (error) {
+    ElMessage.error('导入YAML失败');
+  } finally {
+    // 清空文件输入
+    target.value = '';
+  }
+};
+
+// 注释相关函数已简化，现在直接在CommentNode中编辑
+
+// 更新注释节点数据
+const updateCommentNodeData = (nodeId: string, newData: any) => {
+  const currentNodes = getNodes.value;
+  const nodeIndex = currentNodes.findIndex(node => node.id === nodeId);
+  
+  if (nodeIndex !== -1) {
+    // 创建新的节点数组，更新指定节点的数据
+    const updatedNodes = [...currentNodes];
+    updatedNodes[nodeIndex] = {
+      ...updatedNodes[nodeIndex],
+      data: newData
+    };
+    
+    // 更新节点列表
+    setNodes(updatedNodes);
+    
+    // 触发工作流状态更新
+    emits('updateFlowsDebug', false);
+    updateFlowsDebugStatus.value = false;
+  }
 };
 
 // 处理来自Handle位置的插入节点事件
@@ -1517,8 +2012,8 @@ const handleInsertNodeFromHandle = (handleInfo) => {
 const executeInsertNode = (nodeMetaData) => {
   
   try {
-    // 支持从边插入或从Handle插入两种模式
-    if (!insertMenuData.value.edgeInfo && !insertMenuData.value.handleInfo) {
+    // 支持从边插入、从Handle插入和从右键菜单插入三种模式
+    if (!insertMenuData.value.edgeInfo && !insertMenuData.value.handleInfo && !insertMenuData.value.contextMenuInfo) {
       return;
     }
     
@@ -1587,7 +2082,7 @@ const executeInsertNode = (nodeMetaData) => {
           data: { sourceStatus: 'default', targetStatus: 'default' }
         }
       ];
-    } else {
+    } else if (insertMenuData.value.handleInfo) {
       // 从Handle插入模式
       const handleInfo = insertMenuData.value.handleInfo;
       
@@ -1674,10 +2169,23 @@ const executeInsertNode = (nodeMetaData) => {
         
         newEdges = [...currentEdges, ...newBranchEdges];
       }
+    } else if (insertMenuData.value.contextMenuInfo) {
+      // 从右键菜单插入模式（新增逻辑）
+      const contextMenuInfo = insertMenuData.value.contextMenuInfo;
+      
+      // 直接使用计算好的画布坐标
+      newNodePosition = {
+        x: contextMenuInfo.canvasPosition.x - 100, // 节点宽度的一半，使节点中心对准点击位置
+        y: contextMenuInfo.canvasPosition.y - 40   // 节点高度的一半
+      };
+      
+      // 右键菜单插入是独立的节点，不需要连接到现有的边
+      newEdges = [...currentEdges];
     }
     
     // 使用公共函数创建新节点
     const newNode = createNewNode(nodeMetaData, newNodePosition, newNodeId);
+    
     
     // 添加新节点和更新边
     setNodes([...currentNodes, newNode]);
@@ -1858,8 +2366,10 @@ const saveFlow = async (updateNodeParameter?, debug?) => {
     }
 
     // 第二步：保存主工作流（原有逻辑）
-    // 将对应的节点和边存储格式改造
-    let updateNodes = getNodes.value.map((item) => {
+    // 将对应的节点和边存储格式改造，过滤掉注释节点
+    let updateNodes = getNodes.value
+      .filter(item => item.type !== 'comment' && !item.data?.isComment)
+      .map((item) => {
       const { ...otherItem } = item.data;
       let newItem = {
         enable: true,
@@ -2029,6 +2539,17 @@ const saveFlow = async (updateNodeParameter?, debug?) => {
       };
     });
 
+    // 处理notes数据，收集注释节点
+    const updateNotes = getNodes.value
+      .filter(node => node.type === 'comment' && node.data?.isComment)
+      .map(commentNode => ({
+        noteId: commentNode.id,
+        text: commentNode.data.description || '',
+        position: commentNode.position,
+        width: commentNode.data.width || 200,
+        height: commentNode.data.height || 120
+      }));
+
     // 处理节点参数更新
     if (updateNodeParameter) {
       updateNodes.forEach((item) => {
@@ -2116,6 +2637,7 @@ const saveFlow = async (updateNodeParameter?, debug?) => {
           ...flowObj.value,
           nodes: updateNodes,
           edges: updateEdges,
+          notes: updateNotes,
           focusPoint: {
             x: 800,
             y: 800,
@@ -2127,8 +2649,11 @@ const saveFlow = async (updateNodeParameter?, debug?) => {
     if (response[1]?.result) {
       queryFlow('update');
       const updatedCurFlow = response[1].result.flow;
-      isNodeConnect.value = response[1].result.connectivity;
-      redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges);
+      isNodeConnect.value = updatedCurFlow.connectivity;
+      if (!isNodeConnect.value) {
+        ElMessage.error(i18n.global.t('semantic.check_connect'));
+      }
+      redrageFlow(updatedCurFlow?.nodes, updatedCurFlow?.edges, updatedCurFlow?.notes || []);
     }
 
   } catch (error) {
@@ -2194,29 +2719,21 @@ defineExpose({
       <transition name="transition-fade">
         <div class="copilot-aside-new" v-if="isCopilotAsideVisible">
           <CustomLoading :loading="apiLoading"></CustomLoading>
-          <!-- Tab切换 -->
-          <div class="aside-tabs">
-            <div class="tab-item active">
-              节点
-            </div>
-            <div class="tab-item disabled">
-              应用
-            </div>
-          </div>
           
           <div class="aside-content">
-            <NodeListPanel
+            <NodeSelector
               :api-service-list="apiServiceList"
               :search-placeholder="$t('semantic.interface_search')"
               :enable-drag="true"
               :on-drag-start="handleNodeDragStart"
               :extra-node-types="extraNodeTypes"
+              @drag-start="handleNodeDragStart"
             />
           </div>
         </div>
       </transition>
     </aside>
-    <div class="workFlowContainerRight">
+    <div class="workFlowContainerRight" @contextmenu="handleContextMenu">
       <!-- vue-flow画布节点等区域 -->
       <CustomLoading :loading="loading"></CustomLoading>
       <VueFlow
@@ -2233,11 +2750,13 @@ defineExpose({
         @paneScroll="handleZommOnScroll"
         @viewportChangeEnd="viewportChangeEndFunc"
         @mouseup="cancelConnectStatus"
+        @pane-context-menu="handleContextMenu"
       >
         <Background
           :color="themeStore.theme === 'dark' ? '#3e4551' : '#dfe5ef'"
           :size="2"
           :gap="8"
+          @contextmenu="handleContextMenu"
         />
         <MiniMap
           v-if="workFlowList.length"
@@ -2263,16 +2782,28 @@ defineExpose({
             @insertNodeFromHandle="handleInsertNodeFromHandle"
           ></CustomNode>
         </template>
-
-        <!-- 自定义分支节点 -->
-        <template #node-branch="branchNodeProps">
-          <BranchNode
-            v-bind="branchNodeProps"
+        
+        <!-- 注释节点 -->
+        <template #node-comment="commentNodeProps">
+          <CommentNode
+            v-bind="commentNodeProps"
             :disabled="debugDialogVisible"
-            :selected="selectedNodeId === branchNodeProps.id"
+            :selected="selectedNodeId === commentNodeProps.id"
             @delNode="delNode"
-            @editYamlDrawer="editYamlDrawer"
-          ></BranchNode>
+            @updateNodeData="updateCommentNodeData"
+          ></CommentNode>
+        </template>
+        
+        <!-- 插件节点 -->
+        <template #node-plugin-node="pluginNodeProps">
+          <PluginNode
+            v-bind="pluginNodeProps"
+            :disabled="debugDialogVisible"
+            :selected="selectedNodeId === pluginNodeProps.id"
+            @viewDetails="() => showPluginDetails(pluginNodeProps.data)"
+            @deleteNode="() => delNode(pluginNodeProps.id)"
+            @insertNodeFromHandle="handleInsertNodeFromHandle"
+          ></PluginNode>
         </template>
 
         <!-- 条件分支节点 -->
@@ -2435,7 +2966,7 @@ defineExpose({
         <el-tooltip
           v-if="!isNodeAndLineConnect && !isNodeConnect"
           effect="dark"
-          :content="$t('semantic.publish_condition')"
+          :content="$t('semantic.check_connect')"
           placement="top"
         >
           <div class="debugBtn isDebugDis"></div>
@@ -2450,7 +2981,9 @@ defineExpose({
         <!-- 这里显示调试最终结果与耗时 -->
         <div class="debugStatus" v-if="debugStatus">
           <div class="icon" :class="`${debugStatus}Icon`"></div>
-          <div class="resultText">{{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}</div>
+          <div class="resultText">
+            {{ $t(`flow.${StatusInfoTitle[debugStatus]}`) }}
+          </div>
           <span
             class="time"
             :class="`${debugStatus}Bg`"
@@ -2459,6 +2992,7 @@ defineExpose({
             {{ debugTime }}
           </span>
         </div>
+        
       </div>
       <!-- 暂无工作流展示 -->
       <div class="noWorkFlow" v-else>
@@ -2517,6 +3051,58 @@ defineExpose({
     :conversationId="conversationId"
   ></VariableBasedStartNodeDrawer>
   
+  <!-- 自定义api调用抽屉 -->
+  <ApiCallDrawer
+    v-if="isEditApiCall"
+    :appId="route.query?.appId"
+    :flowId="flowObj?.flowId"
+    :yamlContent="yamlContent"
+    :nodeName="nodeName"
+    :nodeDesc="nodeDesc"
+    :nodeYamlId="nodeYamlId"
+    @closeDrawer="closeDrawer(NodeType.API)"
+    @saveNode="saveNode"
+  ></ApiCallDrawer>
+
+  <!-- 自定义大模型抽屉 -->
+  <LLMNodeDrawer
+    v-if="isEditLLMNode"
+    :appId="route.query?.appId"
+    :flowId="flowObj?.flowId"
+    :yamlContent="yamlContent"
+    :nodeName="nodeName"
+    :nodeDesc="nodeDesc"
+    :nodeYamlId="nodeYamlId"
+    @closeDrawer="closeDrawer(NodeType.LLM)"
+    @saveNode="saveNode"
+  ></LLMNodeDrawer>
+
+  <!-- 自定义知识库抽屉 -->
+  <RAGNodeDrawer
+    v-if="isEditRAGNode"
+    :appId="route.query?.appId"
+    :flowId="flowObj?.flowId"
+    :yamlContent="yamlContent"
+    :nodeName="nodeName"
+    :nodeDesc="nodeDesc"
+    :nodeYamlId="nodeYamlId"
+    @closeDrawer="closeDrawer(NodeType.RAG)"
+    @saveNode="saveNode"
+  ></RAGNodeDrawer>
+
+  <!-- 自定义知识库抽屉 -->
+  <MCPNodeDrawer
+    v-if="isEditMCPNode"
+    :appId="route.query?.appId"
+    :flowId="flowObj?.flowId"
+    :yamlContent="yamlContent"
+    :nodeName="nodeName"
+    :nodeDesc="nodeDesc"
+    :nodeYamlId="nodeYamlId"
+    @closeDrawer="closeDrawer(NodeType.MCP)"
+    @saveNode="saveNode"
+  ></MCPNodeDrawer>
+
   <!-- 代码节点编辑器 - 基于变量逻辑 -->
   <CodeNodeDrawer
     :visible="isEditCodeNode"
@@ -2622,6 +3208,84 @@ defineExpose({
     :flowId="flowObj?.flowId"
     @closeDrawer="closeEnvironmentVariables"
   />
+  
+  <!-- 语义接口详情抽屉 -->
+  <el-drawer
+    v-if="pluginDetailType === 'semantic_interface'"
+    v-model="pluginDetailDrawerVisible"
+    :title="getPluginDrawerTitle()"
+    :show-close="false"
+    header-class="drawerHeader"
+    destroy-on-close
+    direction="rtl"
+    :before-close="closePluginDetailDrawer"
+  >
+    <div class="drawerContent">
+      <div style="height: 100%">
+        <Upload
+          type="get"
+          @closeDrawer="closePluginDetailDrawer"
+          :serviceId="selectedPluginServiceId"
+          :getServiceJson="getServiceJson"
+          :getServiceName="getServiceName"
+        />
+      </div>
+    </div>
+  </el-drawer>
+  
+  <!-- MCP服务详情抽屉 -->
+  <McpServiceDetailDrawer
+    v-if="pluginDetailType === 'mcp'"
+    v-model:visible="pluginDetailDrawerVisible"
+    :service-id="selectedPluginServiceId"
+  />
+  
+  <!-- 画布右键菜单 -->
+  <div
+    v-if="contextMenuVisible"
+    :style="{
+      position: 'fixed',
+      left: contextMenuPosition.x + 'px',
+      top: contextMenuPosition.y + 'px',
+      zIndex: 9999
+    }"
+    class="context-menu-dropdown"
+  >
+    <div class="custom-context-menu">
+      <div class="context-menu-item" @click="handleAddNode">
+        <el-icon><IconPlusCircle /></el-icon>
+        <span>{{ t('contextMenu.add_node') }}</span>
+      </div>
+      <div class="context-menu-item" @click="handleAddComment">
+        <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M9 22a1 1 0 0 1-1-1v-3H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6.1l-3.7 3.71c-.2.19-.45.29-.7.29H9z"/></svg></el-icon>
+        <span>{{ t('contextMenu.add_comment') }}</span>
+      </div>
+      <div class="context-menu-item" @click="handleDebugWorkflow">
+        <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a9 9 0 0 0-9 9v1a1 1 0 0 0 2 0v-1a7 7 0 0 1 14 0v1a1 1 0 0 0 2 0v-1a9 9 0 0 0-9-9Z"/><path fill="currentColor" d="M8 10a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Zm8 0a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/><path fill="currentColor" d="M12 15a3 3 0 0 1-3-3H7a5 5 0 0 0 10 0h-2a3 3 0 0 1-3 3Z"/></svg></el-icon>
+        <span>{{ t('contextMenu.debug_workflow') }}</span>
+      </div>
+      <div class="context-menu-divider"></div>
+      <div class="context-menu-item" @click="handleExportYAML">
+        <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 7V3.5L18.5 9z"/></svg></el-icon>
+        <span>{{ t('contextMenu.export_yaml') }}</span>
+      </div>
+      <div class="context-menu-item" @click="handleImportYAML">
+        <el-icon><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 7V3.5L18.5 9z"/><path fill="currentColor" d="M12 11.5L9.5 14H11v4h2v-4h1.5z"/></svg></el-icon>
+        <span>{{ t('contextMenu.import_yaml') }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 注释输入框已移除，现在直接在CommentNode中编辑 -->
+  
+  <!-- 隐藏的文件输入元素，用于YAML导入 -->
+  <input
+    ref="yamlFileInputRef"
+    type="file"
+    accept=".yaml,.yml,.json"
+    style="display: none;"
+    @change="handleYAMLFileImport"
+  />
 </template>
 
 <style lang="scss" scoped>
@@ -2640,7 +3304,7 @@ defineExpose({
   z-index: 1000;
   
   &.collapsed {
-    width: 30px;
+    width: 20px;
     height: 120px;
     
     &:hover {
@@ -2733,36 +3397,6 @@ defineExpose({
   flex-direction: column;
   overflow: hidden;
   
-  .aside-tabs {
-    display: flex;
-    padding: 12px 20px;
-    border-bottom: 1px solid #e1e4e8;
-    background: #f8f9fa;
-    
-    .tab-item {
-      padding: 8px 16px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #586069;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-      
-      &.active {
-        color: #6395fd;
-        border-bottom-color: #6395fd;
-      }
-      
-      &.disabled {
-        color: #c0c4cc;
-        cursor: not-allowed;
-      }
-      
-      &:hover:not(.disabled) {
-        color: #6395fd;
-      }
-    }
-  }
   
   .aside-content {
     flex: 1;
@@ -2772,52 +3406,53 @@ defineExpose({
   }
 }
 
-// 环境变量按钮样式
+// 环境变量按钮样式 - 使用专门的环境变量CSS变量
 .envBtn {
   width: 32px;
   height: 32px;
-  background: #ffffff;
-  border: 1px solid #e0e7ff;
+  background: var(--flow-env-default);
   border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 12px;
-  color: #486bf7;
-  cursor: pointer;
+  color: #0277ff;
+  border: 1px solid #e1e4e8;
   
   &:hover {
-    background: #dbeafe;
-    border-color: #93c5fd;
-    color: #2563eb; 
+    background: var(--flow-env-hover);
+    color: #0277ff;
+    border-color: #0277ff;
   }
   &:active {
-    background: #bfdbfe;
+    background: var(--flow-env-active);
+    color: #0277ff;
   }
-}
-.envBtn.isEnvDis {
-  background: #f9fafb;
-  border-color: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
+  
+  &.isEnvDis {
+    background: var(--flow-env-dis);
+    cursor: not-allowed;
+    color: #9ca3af;
+    border-color: #e1e4e8;
+  }
 }
 
 // 深色主题支持
 .dark {
   .node-panel-toggle {
-    background: linear-gradient(135deg, #4c1d95 0%, #6b21a8 100%);
-    border-color: #374151;
-    box-shadow: 0 4px 12px rgba(76, 29, 149, 0.3);
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border-color: #4a5568;
+    box-shadow: 0 4px 12px rgba(45, 55, 72, 0.3);
     
     &.collapsed {
       &:hover {
-        box-shadow: 0 6px 20px rgba(76, 29, 149, 0.4);
+        box-shadow: 0 6px 20px rgba(45, 55, 72, 0.4);
       }
     }
     
     &.expanded {
       &:hover {
-        background: linear-gradient(135deg, #3c1361 0%, #581c87 100%);
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
       }
     }
     
@@ -2828,49 +3463,134 @@ defineExpose({
     background: #2d3748;
     border-color: #4a5568;
     
-    .aside-tabs {
-      background: #374151;
-      border-bottom-color: #4a5568;
-      
-      .tab-item {
-        color: #a0aec0;
-        
-        &.active {
-          color: #6395fd;
-          border-bottom-color: #6395fd;
-        }
-        
-        &.disabled {
-          color: #718096;
-          cursor: not-allowed;
-        }
-        
-        &:hover:not(.disabled) {
-          color: #e2e8f0;
-        }
-      }
-    }
   }
   
+  // 环境变量按钮在深色主题下的样式调整
   .envBtn {
-    background: #1e3a8a;
-    border-color: #3730a3;
-    color: #60a5fa;
+    color: #0277ff;
+    border-color: rgba(255, 255, 255, 0.1);
     
     &:hover {
-      background: #1e40af;
-      border-color: #4338ca;
-      color: #93c5fd;
+      color: #0277ff;
+      border-color: #0277ff;
     }
+    
     &:active {
-      background: #1d4ed8;
+      color: #0277ff;
     }
     
     &.isEnvDis {
-      background: #374151;
-      border-color: #4b5563;
       color: #6b7280;
+      border-color: rgba(255, 255, 255, 0.1);
     }
   }
+}
+
+/* 插件详情抽屉样式 */
+.drawerHeader {
+  color: pink;
+  background-color: #5481de !important;
+  margin-bottom: 0px !important;
+  .header {
+    background-color: pink;
+  }
+}
+
+.drawerContent {
+  overflow-y: scroll;
+  height: calc(100% - 40px);
+}
+
+:deep(.el-drawer__header) {
+  .drawerHeader {
+    width: 100%;
+    height: 24px;
+    line-height: 24px;
+    color: var(--o-text-color-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .el-drawer__title {
+    color: var(--o-text-color-primary) !important;
+  }
+}
+
+:deep(.el-drawer__body) {
+  .drawerBody {
+    height: 100%;
+    textarea {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+/* 右键菜单样式 */
+.context-menu-dropdown {
+  pointer-events: auto;
+}
+
+.custom-context-menu {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 4px 0;
+  min-width: 160px;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f5f7fa;
+    color: #409eff;
+  }
+  
+  .el-icon {
+    font-size: 16px;
+  }
+  
+  span {
+    font-size: 14px;
+  }
+}
+
+.context-menu-divider {
+  height: 1px;
+  background-color: #e4e7ed;
+  margin: 4px 0;
+}
+
+/* 注释输入框样式已移除，现在直接在CommentNode中编辑 */
+
+/* 深色主题支持 */
+.dark {
+  .custom-context-menu {
+    background-color: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .context-menu-item {
+    color: #e2e8f0;
+    
+    &:hover {
+      background-color: #4a5568;
+      color: #409eff;
+    }
+  }
+  
+  .context-menu-divider {
+    background-color: #4a5568;
+  }
+  
+  /* 注释输入框深色样式已移除 */
 }
 </style>

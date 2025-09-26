@@ -7,7 +7,7 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 // PURPOSE.
 // See the Mulan PSL v2 for more details.
-import { get, post } from 'src/apis/server';
+import { get, post, put } from 'src/apis/server';
 import type { FcResponse } from 'src/apis/server';
 
 /**
@@ -24,6 +24,7 @@ export const authorizeUser = (): Promise<
           organization: string;
           revision_number: string | null;
           is_admin: boolean;
+          auto_execute?: boolean;
         }>
       | undefined
     ),
@@ -133,6 +134,41 @@ function queryAuthUrl(action: string) {
   }>('/api/auth/redirect', { action });
 }
 
+/**
+ * 获取用户偏好设置
+ * @returns
+ */
+export const getUserPreferences = (): Promise<
+  [
+    any,
+    (
+      | FcResponse<{
+          reasoningModelPreference?: any;
+          embeddingModelPreference?: any;
+          rerankerPreference?: any;
+          chainOfThoughtPreference?: boolean;
+        }>
+      | undefined
+    ),
+  ]
+> => {
+  return get('/api/user/preferences');
+};
+
+/**
+ * 更新用户偏好设置
+ * @param preferences
+ * @returns
+ */
+export const updateUserPreferences = (preferences: {
+  reasoningModelPreference?: any;
+  embeddingModelPreference?: any;
+  rerankerPreference?: any;
+  chainOfThoughtPreference?: boolean;
+}): Promise<[any, FcResponse<unknown> | undefined]> => {
+  return put('/api/user/preferences', preferences);
+};
+
 export const accountApi = {
   authorizeUser,
   authorizeLogout,
@@ -141,4 +177,6 @@ export const accountApi = {
   refreshToken,
   updateRevision,
   queryAuthUrl,
+  getUserPreferences,
+  updateUserPreferences,
 };

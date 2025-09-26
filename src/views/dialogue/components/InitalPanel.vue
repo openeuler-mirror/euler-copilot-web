@@ -91,10 +91,24 @@ onMounted(() => {
           >
             <img :src="defaultIcon" alt="" />
             <div class="eg-list-item__text">
-              <p>{{ $t('main.' + item.key) }}</p>
-              <span class="eg-list-item__text-desc">
-                {{ $t('main.' + item.insertMessage) }}
-              </span>
+              <el-tooltip 
+                :content="$t('main.' + item.key)" 
+                placement="top" 
+                :disabled="false"
+                effect="dark"
+              >
+                <p>{{ $t('main.' + item.key) }}</p>
+              </el-tooltip>
+              <el-tooltip 
+                :content="$t('main.' + item.insertMessage)" 
+                placement="bottom" 
+                :disabled="false"
+                effect="dark"
+              >
+                <span class="eg-list-item__text-desc">
+                  {{ $t('main.' + item.insertMessage) }}
+                </span>
+              </el-tooltip>
             </div>
           </li>
         </ul>
@@ -337,6 +351,7 @@ onMounted(() => {
         min-width: 169px;
         max-width: 218px;
         width: calc(50% - 4px);
+        height: 80px; /* 固定高度，避免错位 */
         background: var(--o-bg-color-base);
         overflow: hidden;
         border-radius: 8px;
@@ -360,6 +375,15 @@ onMounted(() => {
           font-weight: 700;
           color: var(--o-text-color-primary);
           line-height: 24px;
+          flex: 1;
+          min-width: 0; /* 允许flex item收缩 */
+
+          p {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0;
+          }
 
           &-desc {
             font-size: 14px;
@@ -368,6 +392,9 @@ onMounted(() => {
             line-height: 22px;
             margin-top: 4px;
             margin-bottom: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
         }
 

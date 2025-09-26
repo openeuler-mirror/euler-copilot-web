@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     v-model="visible"
-    title="循环"
+    :title="$t('flow.node_names.loop')"
     :size="800"
     :close-on-click-modal="true"
     class="loop-node-drawer"
@@ -15,24 +15,24 @@
             <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('basic') }">
               <IconCaretRight />
             </el-icon>
-            <span>基本信息</span>
+            <span>{{ $t('flow.node_config.basic_info') }}</span>
           </template>
           <div class="basic-content">
             <el-form :model="nodeConfig" label-position="left" label-width="120px">
-              <el-form-item label="节点名称" required>
+              <el-form-item :label="$t('flow.node_config.node_name')" required>
                 <el-input
                   v-model="nodeConfig.name"
-                  placeholder="请输入节点名称"
+                  :placeholder="$t('flow.node_config.node_name_placeholder')"
                   maxlength="50"
                   clearable
                 />
               </el-form-item>
-              <el-form-item label="节点描述">
+              <el-form-item :label="$t('flow.node_config.node_description')">
                 <el-input
                   v-model="nodeConfig.description"
                   type="textarea"
                   :rows="3"
-                  placeholder="请输入节点描述"
+                  :placeholder="$t('flow.node_config.node_description_placeholder')"
                   maxlength="200"
                   show-word-limit
                 />
@@ -47,7 +47,7 @@
             <el-icon class="el-collapse-item__arrow" :class="{ 'is-active': activeName.includes('settings') }">
               <IconCaretRight />
             </el-icon>
-            <span>循环设置</span>
+            <span>{{ $t('flow.node_config.loop_settings') }}</span>
           </template>
           <div class="settings-content">
             <!-- 循环变量 -->
@@ -57,7 +57,7 @@
                 <div class="variables-section">
                   <!-- 变量标题 -->
                   <div class="variables-header">
-                    <div class="variables-title">循环变量</div>
+                    <div class="variables-title">{{ $t('flow.node_config.loop_variables') }}</div>
                     <el-button
                       v-if="variables.length > 0"
                       type="primary" 
@@ -66,7 +66,7 @@
                       @click="handleAddVariable"
                       class="add-btn"
                     >
-                      添加变量
+                      {{ $t('flow.node_config.add_variable') }}
                     </el-button>
                   </div>
 
@@ -85,7 +85,7 @@
                             <div class="name-section">
                               <el-input
                                 v-model="variable.name"
-                                placeholder="输入变量名"
+                                :placeholder="$t('flow.node_config.input_variable_name')"
                                 size="small"
                                 @change="updateVariables"
                               />
@@ -94,16 +94,16 @@
                             <!-- 类型选择 -->
                             <el-select
                               v-model="variable.type"
-                              placeholder="选择类型"
+                              :placeholder="$t('flow.node_config.select_type')"
                               size="small"
                               class="type-select"
                               @change="handleTypeChange(variable, index)"
                             >
-                              <el-option label="字符串" value="string" />
-                              <el-option label="数字" value="number" />
-                              <el-option label="布尔值" value="boolean" />
-                              <el-option label="对象" value="object" />
-                              <el-option label="引用变量" value="reference" />
+                              <el-option :label="$t('flow.node_config.type_string')" value="string" />
+                              <el-option :label="$t('flow.node_config.type_number')" value="number" />
+                              <el-option :label="$t('flow.node_config.type_boolean')" value="boolean" />
+                              <el-option :label="$t('flow.node_config.type_object')" value="object" />
+                              <el-option :label="$t('flow.node_config.type_reference')" value="reference" />
                             </el-select>
                           </div>
 
@@ -118,7 +118,7 @@
                                   :current-step-id="currentStepId"
                                   :supported-scopes="['conversation', 'system', 'env']"
                                   :self-variables="variables"
-                                  self-scope-label="循环变量"
+                                  :self-scope-label="$t('flow.node_config.loop_variable_scope')"
                                   :show-variable-name="false"
                                   :show-label="false"
                                   :show-actions="false"
@@ -127,7 +127,7 @@
                                   :no-border-radius="true"
                                   :transparent-background="true"
                                   output-format="raw"
-                                  selector-placeholder="选择要引用的变量"
+                                  :selector-placeholder="$t('flow.node_config.select_reference_variable')"
                                   @variable-selected="updateVariables"
                                 />
                               </div>
@@ -138,7 +138,7 @@
                                 <el-input
                                   v-if="variable.type === 'string'"
                                   v-model="variable.value"
-                                  placeholder="输入字符串值"
+                                  :placeholder="$t('flow.node_config.input_string_value')"
                                   size="small"
                                   @change="updateVariables"
                                 />
@@ -146,7 +146,7 @@
                                 <el-input-number
                                   v-else-if="variable.type === 'number'"
                                   v-model="variable.value"
-                                  placeholder="输入数字值"
+                                  :placeholder="$t('flow.node_config.input_number_value')"
                                   size="small"
                                   @change="updateVariables"
                                   style="width: 100%;"
@@ -155,7 +155,7 @@
                                 <el-select
                                   v-else-if="variable.type === 'boolean'"
                                   v-model="variable.value"
-                                  placeholder="选择布尔值"
+                                  :placeholder="$t('flow.node_config.select_boolean_value')"
                                   size="small"
                                   @change="updateVariables"
                                 >
@@ -168,7 +168,7 @@
                                   v-model="variable.value"
                                   type="textarea"
                                   :rows="3"
-                                  placeholder="输入JSON格式的对象"
+                                  :placeholder="$t('flow.node_config.input_json_object')"
                                   size="small"
                                   @change="updateVariables"
                                 />
@@ -183,7 +183,7 @@
                             class="danger-button"
                             @click="removeVariable(index)"
                             type="button"
-                            title="删除变量"
+                            :title="$t('flow.node_config.delete_variable')"
                           >
                             <Delete />
                           </button>
@@ -200,7 +200,7 @@
                         class="add-first-variable-btn"
                       >
                         <Plus class="btn-icon" />
-                        添加变量
+                        {{ $t('flow.node_config.add_variable') }}
                       </button>
                     </div>
                   </div>
@@ -211,7 +211,7 @@
             <!-- 循环终止条件 -->
             <div class="section">
               <div class="section-header">
-                <h3 class="section-title">循环终止条件</h3>
+                <h3 class="section-title">{{ $t('flow.node_config.loop_stop_condition') }}</h3>
               </div>
               
               <div v-if="stopConditionBranch.conditions.length > 0">
@@ -227,7 +227,7 @@
                   :conversation-id="''"
                   :current-step-id="currentStepId"
                   :self-variables="variables"
-                  self-scope-label="循环变量"
+                  :self-scope-label="$t('flow.node_config.loop_variable_scope')"
                   @remove-branch="handleRemoveBranch"
                   @add-condition="handleAddConditionFromCard"
                   @remove-condition="handleRemoveCondition"
@@ -242,7 +242,7 @@
                   class="add-first-condition-btn"
                 >
                   <Plus class="btn-icon" />
-                  添加终止条件
+                  {{ $t('flow.node_config.add_stop_condition') }}
                 </button>
               </div>
             </div>
@@ -250,7 +250,7 @@
             <!-- 最大循环次数 -->
             <div class="section no-border">
               <div class="section-header">
-                <h3 class="section-title">最大循环次数</h3>
+                <h3 class="section-title">{{ $t('flow.node_config.max_iterations') }}</h3>
               </div>
               
               <div class="max-iteration-form">
@@ -272,8 +272,8 @@
     
     <template #footer>
       <div class="drawer-footer">
-        <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleSave">保存</el-button>
+        <el-button @click="handleCancel">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="handleSave">{{ $t('common.confirm') }}</el-button>
       </div>
     </template>
   </el-drawer>
@@ -286,6 +286,7 @@ import { Plus, Delete } from '@element-plus/icons-vue';
 import { IconCaretRight } from '@computing/opendesign-icons';
 import VariableChooser from '../../../../components/VariableChooser.vue';
 import ChoiceBranchCard from './ChoiceBranchCard.vue';
+import i18n from '@/i18n';
 
 interface LoopVariable {
   name: string;
@@ -346,7 +347,7 @@ const activeTab = ref('settings');
 const variables = ref<LoopVariable[]>([]);
 const stopConditionBranch = ref<StopConditionBranch>({
   branch_id: 'stop_condition_branch',
-  name: '循环终止条件',
+  name: i18n.global.t('flow.node_names.loop_condition'),
   logic: 'and',
   conditions: [],
   is_default: false
@@ -355,43 +356,43 @@ const maxIteration = ref(10);
 
 // 为ChoiceBranchCard提供的数据
 const valueTypeOptions = ref([
-  { label: '字符串', value: 'string' },
-  { label: '数值', value: 'number' },
-  { label: '数组', value: 'list' },
-  { label: '布尔值', value: 'bool' },
-  { label: '对象', value: 'dict' }
+  { label: i18n.global.t('flow.node_config.type_string'), value: 'string' },
+  { label: i18n.global.t('flow.node_config.type_number'), value: 'number' },
+  { label: i18n.global.t('flow.node_config.type_list'), value: 'list' },
+  { label: i18n.global.t('flow.node_config.type_boolean'), value: 'bool' },
+  { label: i18n.global.t('flow.node_config.type_object'), value: 'dict' }
 ]);
 
 const operatorOptions = ref({
   string: [
-    { label: '等于', value: 'string_equal' },
-    { label: '不等于', value: 'string_not_equal' },
-    { label: '包含', value: 'string_contains' },
-    { label: '不包含', value: 'string_not_contains' }
+    { label: i18n.global.t('opertion.string_equal'), value: 'string_equal' },
+    { label: i18n.global.t('opertion.string_not_equal'), value: 'string_not_equal' },
+    { label: i18n.global.t('opertion.string_contains'), value: 'string_contains' },
+    { label: i18n.global.t('opertion.string_not_contains'), value: 'string_not_contains' }
   ],
   number: [
-    { label: '等于', value: 'number_equal' },
-    { label: '不等于', value: 'number_not_equal' },
-    { label: '大于', value: 'number_greater_than' },
-    { label: '小于', value: 'number_less_than' },
-    { label: '大于等于', value: 'number_greater_than_or_equal' },
-    { label: '小于等于', value: 'number_less_than_or_equal' }
+    { label: i18n.global.t('opertion.number_equal'), value: 'number_equal' },
+    { label: i18n.global.t('opertion.number_not_equal'), value: 'number_not_equal' },
+    { label: i18n.global.t('opertion.number_greater_than'), value: 'number_greater_than' },
+    { label: i18n.global.t('opertion.number_less_than'), value: 'number_less_than' },
+    { label: i18n.global.t('opertion.number_greater_than_or_equal'), value: 'number_greater_than_or_equal' },
+    { label: i18n.global.t('opertion.number_less_than_or_equal'), value: 'number_less_than_or_equal' }
   ],
   list: [
-    { label: '等于', value: 'list_equal' },
-    { label: '不等于', value: 'list_not_equal' },
-    { label: '包含', value: 'list_contains' },
-    { label: '不包含', value: 'list_not_contains' }
+    { label: i18n.global.t('opertion.equal'), value: 'list_equal' },
+    { label: i18n.global.t('opertion.not_equal'), value: 'list_not_equal' },
+    { label: i18n.global.t('opertion.contains'), value: 'list_contains' },
+    { label: i18n.global.t('opertion.does_not_contain'), value: 'list_not_contains' }
   ],
   bool: [
-    { label: '等于', value: 'bool_equal' },
-    { label: '不等于', value: 'bool_not_equal' }
+    { label: i18n.global.t('opertion.bool_equal'), value: 'bool_equal' },
+    { label: i18n.global.t('opertion.bool_not_equal'), value: 'bool_not_equal' }
   ],
   dict: [
-    { label: '等于', value: 'dict_equal' },
-    { label: '不等于', value: 'dict_not_equal' },
-    { label: '包含键', value: 'dict_contains_key' },
-    { label: '不包含键', value: 'dict_not_contains_key' }
+    { label: i18n.global.t('opertion.dict_equal'), value: 'dict_equal' },
+    { label: i18n.global.t('opertion.dict_not_equal'), value: 'dict_not_equal' },
+    { label: i18n.global.t('opertion.dict_contains_key'), value: 'dict_contains_key' },
+    { label: i18n.global.t('opertion.dict_not_contains_key'), value: 'dict_not_contains_key' }
   ]
 });
 
@@ -608,7 +609,7 @@ const handleSave = () => {
   );
   
   if (duplicates.length > 0) {
-    ElMessage.error('变量名不能重复');
+    ElMessage.error(i18n.global.t('flow.node_config.duplicate_variable_name'));
     return;
   }
   
@@ -626,7 +627,7 @@ const handleSave = () => {
         variablesObj[variable.name] = {
           type: variable.type,
           value: variable.value,
-          description: `循环变量: ${variable.name}`
+          description: `${i18n.global.t('flow.node_config.loop_variable_scope')}: ${variable.name}`
         };
       }
     }
@@ -671,7 +672,7 @@ const handleSave = () => {
   
   emit('save', saveData);
   visible.value = false;
-  ElMessage.success('循环节点保存成功');
+  ElMessage.success(i18n.global.t('flow.node_config.loop_node_save_success'));
 };
 
 // 监听数据变化
@@ -736,18 +737,28 @@ onMounted(() => {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--el-text-color-primary);
   margin-bottom: 16px;
+  
+  body[theme='dark'] & {
+    color: #e4e8ee;
+  }
 }
 
 .description-content {
   padding: 12px 16px;
-  background-color: #f8f9fa;
+  background-color: var(--el-fill-color-extra-light);
   border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--el-border-color-light);
   font-size: 14px;
   line-height: 1.5;
-  color: #495057;
+  color: var(--el-text-color-primary);
+  
+  body[theme='dark'] & {
+    background-color: #1f2329;
+    border-color: var(--el-border-color);
+    color: #e4e8ee;
+  }
 }
 
 .description-section {
@@ -772,8 +783,16 @@ onMounted(() => {
     height: 48px;
     line-height: 48px;
     padding: 0 16px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e4e7ed;
+    background-color: var(--el-fill-color-extra-light);
+    
+    body[theme='dark'] & {
+      background-color: #1f2329;
+    };
+    border-bottom: 1px solid var(--el-border-color-light);
+    
+    body[theme='dark'] & {
+      border-bottom-color: var(--el-border-color);
+    };
     
     .el-collapse-item__arrow {
       margin-right: 8px;
@@ -791,7 +810,11 @@ onMounted(() => {
   
   .el-collapse-item__content {
     padding: 16px;
-    background-color: #ffffff;
+    background-color: var(--el-bg-color);
+    
+    body[theme='dark'] & {
+      background-color: #1f2329;
+    };
   }
 }
 
@@ -855,8 +878,12 @@ onMounted(() => {
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
   margin-bottom: 6px;
+  
+  body[theme='dark'] & {
+    color: #d3dce9;
+  }
 }
 
 .variable-actions,
@@ -878,12 +905,20 @@ onMounted(() => {
 
 .help-text {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
+  
+  body[theme='dark'] & {
+    color: #d3dce9;
+  }
 }
 
 .empty-state {
   text-align: center;
-  color: #9ca3af;
+  color: var(--el-text-color-secondary);
+  
+  body[theme='dark'] & {
+    color: #d3dce9;
+  }
 }
 
 .empty-text {
@@ -893,11 +928,17 @@ onMounted(() => {
 
 .add-first-condition-btn {
   width: 100%;
-  background: white;
-  border: 2px dashed #d1d5db;
+  background: var(--el-bg-color);
+  border: 2px dashed var(--el-border-color);
   border-radius: 8px;
   padding: 16px;
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
+  
+  body[theme='dark'] & {
+    background: #1f2329;
+    border-color: var(--el-border-color);
+    color: #d3dce9;
+  };
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -908,14 +949,19 @@ onMounted(() => {
   gap: 8px;
   
   &:hover {
-    border-color: #409eff;
-    color: #409eff;
-    background: #f0f8ff;
+    border-color: var(--el-color-primary);
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+    
+    body[theme='dark'] & {
+      background: var(--flow-node-default-over-color, #25303e);
+      border-color: var(--flow-node-boder-default-over, #314265);
+    }
   }
   
   &:focus {
     outline: none;
-    border-color: #409eff;
+    border-color: var(--el-color-primary);
     box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
   }
   
@@ -931,24 +977,37 @@ onMounted(() => {
 }
 
 .placeholder-text {
-  color: #9ca3af;
+  color: var(--el-text-color-secondary);
   font-size: 14px;
   margin: 0;
+  
+  body[theme='dark'] & {
+    color: #d3dce9;
+  }
 }
 
 .drawer-footer {
   padding: 16px 20px;
-  border-top: 1px solid #e1e4e8;
+  border-top: 1px solid var(--el-border-color-light);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  background: var(--el-bg-color);
+  
+  body[theme='dark'] & {
+    border-top-color: var(--el-border-color);
+  }
 }
 
 /* 变量卡片样式 - 参考ChoiceBranchCard设计 */
 .variables-card {
   border-radius: 8px;
   margin-bottom: 16px;
-  background: #ffffff;
+  background: var(--el-bg-color);
+  
+  body[theme='dark'] & {
+    background: #1f2329;
+  }
 }
 
 .variables-card .variables-section {
@@ -964,9 +1023,13 @@ onMounted(() => {
 
 .variables-card .variables-title {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--el-text-color-primary);
   font-size: 16px;
   margin-bottom: 16px;
+  
+  body[theme='dark'] & {
+    color: #e4e8ee;
+  }
 }
 
 .variables-card .add-btn {
@@ -993,11 +1056,16 @@ onMounted(() => {
 .variables-card .variable-setting-col {
   flex: 1;
   min-width: 0;
-  background: #f8f9fa;
-  border: 1px solid #e4e7ed;
+  background: var(--el-fill-color-extra-light);
+  border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
   overflow: hidden;
   transition: background-color 0.2s ease;
+  
+  body[theme='dark'] & {
+    background: var(--o-bash-bg, #2a2f37);
+    border-color: var(--el-border-color);
+  }
 }
 
 .variables-card .variable-delete-col {
@@ -1016,11 +1084,15 @@ onMounted(() => {
 }
 
 .variables-card .variable-row:not(:last-child) {
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--el-border-color-light);
   margin-left: 2px;
   margin-right: 2px;
   padding-left: 0;
   padding-right: 0;
+  
+  body[theme='dark'] & {
+    border-bottom-color: var(--el-border-color);
+  }
 }
 
 .variables-card .variable-row.name-row {
@@ -1029,8 +1101,12 @@ onMounted(() => {
 
 .variables-card .name-section {
   flex: 3;
-  border-right: 1px solid #e4e7ed;
+  border-right: 1px solid var(--el-border-color-light);
   padding-right: 12px;
+  
+  body[theme='dark'] & {
+    border-right-color: var(--el-border-color);
+  }
 }
 
 .variables-card .name-section :deep(.el-input__wrapper) {
@@ -1083,19 +1159,29 @@ onMounted(() => {
 
 .variables-card .empty-state {
   text-align: center;
-  color: #9ca3af;
+  color: var(--el-text-color-secondary);
+  
+  body[theme='dark'] & {
+    color: #d3dce9;
+  }
 }
 
 .variables-card .add-first-variable-btn {
   width: 100%;
-  background: white;
-  border: 2px dashed #d1d5db;
+  background: var(--el-bg-color);
+  border: 2px dashed var(--el-border-color);
   border-radius: 8px;
   padding: 16px;
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  
+  body[theme='dark'] & {
+    background: #1f2329;
+    border-color: var(--el-border-color);
+    color: #d3dce9;
+  };
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -1104,14 +1190,18 @@ onMounted(() => {
 }
 
 .variables-card .add-first-variable-btn:hover {
-  border-color: #409eff;
+  border-color: var(--el-color-primary);
   color: #409eff;
-  background: #f0f8ff;
+    background: var(--el-color-primary-light-9);
+    
+    body[theme='dark'] & {
+      background: var(--flow-node-default-over-color, #25303e);
+    };
 }
 
 .variables-card .add-first-variable-btn:focus {
   outline: none;
-  border-color: #409eff;
+  border-color: var(--el-color-primary);
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
 
@@ -1125,7 +1215,7 @@ onMounted(() => {
 }
 
 .variables-card .variables-section:has(.action-buttons .danger-button:hover) .variable-setting-col {
-  background-color: #eee8e9;
+  background-color: var(--el-color-danger-light-9);
   transition: none;
 }
 

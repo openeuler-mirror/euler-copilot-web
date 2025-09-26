@@ -30,7 +30,7 @@ export function processZhLocale(appLocale: string): string {
     // country codes, assume they use Simplified Chinese.
     // For other cases, assume they use Traditional.
     if (['hans', 'cn', 'sg', 'my'].includes(region)) {
-      return 'zh_cn';
+      return 'zh';
     }
 
     return 'zh_tw';

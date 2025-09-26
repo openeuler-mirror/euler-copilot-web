@@ -65,7 +65,7 @@ const branches = computed(() => {
   return choices.map((choice, index) => {
     return {
       id: choice.branch_id || `branch_${index}`,
-      name: choice.name || `分支 ${index + 1}`,
+      name: choice.name || `${t('choiceBranch.status.branch_prefix')} ${index + 1}`,
       isDefault: choice.is_default || false,
       conditions: choice.conditions || [],
       logic: choice.logic || 'and'
@@ -169,40 +169,8 @@ const setConnectStatus = (type) => {
 };
 
 // 操作符中文映射
-const operatorLabels = {
-  'string_equal': '等于',
-  'string_not_equal': '不等于',
-  'string_contains': '包含',
-  'string_not_contains': '不包含',
-  'string_starts_with': '开始于',
-  'string_ends_with': '结束于',
-  'string_length_equal': '长度等于',
-  'string_length_greater_than': '长度大于',
-  'string_length_greater_than_or_equal': '长度大于等于',
-  'string_length_less_than': '长度小于',
-  'string_length_less_than_or_equal': '长度小于等于',
-  'string_regex_match': '正则匹配',
-  'number_equal': '等于',
-  'number_not_equal': '不等于',
-  'number_greater_than': '大于',
-  'number_less_than': '小于',
-  'number_greater_than_or_equal': '大于等于',
-  'number_less_than_or_equal': '小于等于',
-  'list_equal': '等于',
-  'list_not_equal': '不等于',
-  'list_contains': '包含',
-  'list_not_contains': '不包含',
-  'list_length_equal': '长度等于',
-  'list_length_greater_than': '长度大于',
-  'list_length_greater_than_or_equal': '长度大于等于',
-  'list_length_less_than': '长度小于',
-  'list_length_less_than_or_equal': '长度小于等于',
-  'bool_equal': '等于',
-  'bool_not_equal': '不等于',
-  'dict_equal': '等于',
-  'dict_not_equal': '不等于',
-  'dict_contains_key': '包含键',
-  'dict_not_contains_key': '不包含键',
+const getOperatorLabel = (operatorKey: string): string => {
+  return t(`choiceBranch.operators.${operatorKey}`, operatorKey);
 };
 
 // 解析变量引用，提取变量名
@@ -254,7 +222,7 @@ const formatValueByType = (value, dataType, isReference = false) => {
 // 格式化条件显示
 const formatConditions = (conditions, logic) => {
   if (!conditions || conditions.length === 0) {
-    return '条件未设置';
+    return t('choiceBranch.status.condition_not_set');
   }
   
   // 过滤掉无效条件（left.value为null的条件）
@@ -266,7 +234,7 @@ const formatConditions = (conditions, logic) => {
   });
   
   if (validConditions.length === 0) {
-    return '条件未设置';
+    return t('choiceBranch.status.condition_not_set');
   }
   
   const conditionTexts = validConditions.map(condition => {
@@ -275,7 +243,7 @@ const formatConditions = (conditions, logic) => {
     
     // 获取操作符中文
     const operatorKey = condition.operator || condition.operate;
-    let operatorLabel = operatorLabels[operatorKey];
+    let operatorLabel = getOperatorLabel(operatorKey);
     
     // 如果没有找到映射，提供简单的后备显示
     if (!operatorLabel) {
@@ -312,14 +280,14 @@ const formatConditions = (conditions, logic) => {
     return `${leftValue} ${operatorLabel} ${rightValue}`;
   });
   
-  const logicText = logic === 'and' ? ' 且 ' : ' 或 ';
+  const logicText = logic === 'and' ? ` ${t('choiceBranch.logic_operators.and_text')} ` : ` ${t('choiceBranch.logic_operators.or_text')} `;
   return conditionTexts.join(logicText);
 };
 
 // 格式化条件显示为HTML（带标签样式）
 const formatConditionsHtml = (conditions, logic) => {
   if (!conditions || conditions.length === 0) {
-    return '<span class="no-condition">条件未设置</span>';
+    return `<span class="no-condition">${t('choiceBranch.status.condition_not_set')}</span>`;
   }
   
   // 过滤掉无效条件（left.value为null的条件）
@@ -331,7 +299,7 @@ const formatConditionsHtml = (conditions, logic) => {
   });
   
   if (validConditions.length === 0) {
-    return '<span class="no-condition">条件未设置</span>';
+    return `<span class="no-condition">${t('choiceBranch.status.condition_not_set')}</span>`;
   }
   
   const conditionTexts = validConditions.map(condition => {
@@ -341,11 +309,11 @@ const formatConditionsHtml = (conditions, logic) => {
     
     // 获取操作符中文 - 添加操作符样式
     const operatorKey = condition.operator || condition.operate;
-    let operatorLabel = operatorLabels[operatorKey];
+    let operatorLabel = getOperatorLabel(operatorKey);
     
     // 如果没有找到映射，提供简单的后备显示
-    if (!operatorLabel) {
-      console.warn(`[Choice显示] 未找到操作符映射: ${operatorKey}`);
+    if (operatorLabel === operatorKey) {
+      console.warn(`[Choice显示]`, t('choiceBranch.console.operator_mapping_not_found'), operatorKey);
       switch(operatorKey) {
         case 'number_less_than_or_equal':
           operatorLabel = '<=';
@@ -386,7 +354,7 @@ const formatConditionsHtml = (conditions, logic) => {
     return `${leftHtml} ${operatorHtml} ${rightHtml}`;
   });
   
-  const logicText = logic === 'and' ? ' <span class="logic-text">且</span> ' : ' <span class="logic-text">或</span> ';
+  const logicText = logic === 'and' ? ` <span class="logic-text">${t('choiceBranch.logic_operators.and_text')}</span> ` : ` <span class="logic-text">${t('choiceBranch.logic_operators.or_text')}</span> `;
   return conditionTexts.join(logicText);
 };
 
@@ -520,7 +488,7 @@ const handleBranchInsertNode = (event: Event, branchId: string) => {
             </div>
             <div class="branchContent">
               <div class="branchCondition">
-                <span class="defaultText">其他所有情况</span>
+                <span class="defaultText">{{ t('choiceBranch.tips.other_cases') }}</span>
               </div>
             </div>
 
@@ -549,7 +517,7 @@ const handleBranchInsertNode = (event: Event, branchId: string) => {
 
         <!-- 空状态 -->
         <div class="emptyBranches" v-else>
-          <div class="emptyText">点击编辑添加分支条件</div>
+          <div class="emptyText">{{ t('choiceBranch.tips.click_edit_add_branch') }}</div>
         </div>
       </div>
       
@@ -604,7 +572,7 @@ const handleBranchInsertNode = (event: Event, branchId: string) => {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   min-width: 320px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
     border-color: #6395fd;
@@ -1091,14 +1059,14 @@ const handleBranchInsertNode = (event: Event, branchId: string) => {
   }
 }
 
-// 深色主题支持
+// 深色主题支持 - 使用用户指定的颜色规范
 .dark {
   .choiceBranchNodeStyle {
-    background: #1f2937;
-    border-color: #374151;
+    background: #353f58 !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
     
     .title .label {
-      color: #f3f4f6;
+      color: #ffffff !important;
     }
     
     .branchItem {

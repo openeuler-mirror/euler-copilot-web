@@ -255,13 +255,28 @@ function createNewNode(nodeMetaData, position, customNodeId = null) {
   const nodeId = customNodeId || getId();
   const cleanNodeData = sanitizeNodeData(nodeMetaData, nodeId);
   
+  // 确定节点类型
+  let nodeType = 'custom'; // 默认类型
+  if (nodeMetaData.type === 'plugin-node') {
+    nodeType = 'plugin-node';
+  } else if (nodeMetaData.callId === 'Choice') {
+    nodeType = 'Choice';
+  } else if (nodeMetaData.callId === 'Loop') {
+    nodeType = 'Loop';
+  } else if (nodeMetaData.callId === 'VariableAssign') {
+    nodeType = 'VariableAssign';
+  }
+  
   return {
     id: nodeId,
-    type: nodeMetaData.callId === 'Choice' ? 'Choice' : 
-          nodeMetaData.callId === 'Loop' ? 'Loop' :
-          nodeMetaData.callId === 'VariableAssign' ? 'VariableAssign' : 'custom',
+    type: nodeType,
     position,
-    data: {
+    data: nodeMetaData.type === 'plugin-node' ? {
+      // 插件节点的完整数据结构
+      ...nodeMetaData.data,
+      nodeId: nodeId
+    } : {
+      // 常规节点的数据结构
       name: cleanNodeData.name,
       description: cleanNodeData.description,
       nodeId: cleanNodeData.nodeId,

@@ -85,12 +85,41 @@ body[theme='dark'] {
   --flow-debug-hover: url('../../assets/svgs/dark_debug_hover.svg');
   --flow-debug-active: url('../../assets/svgs/dark_debug_active.svg');
   --flow-debug-dis: url('../../assets/svgs/dark_debug_dis.svg');
+  
+  // 环境变量按钮专用变量 - 使用纯色背景
+  --flow-env-default: #374151;
+  --flow-env-hover: #4b5563;
+  --flow-env-active: #374151;
+  --flow-env-dis: #6b7280;
   // 这里是不同种类的展开收起图标
   --expand-fold-default: url('../../assets/svgs/dark_expand_fold.svg');
   --expand-fold-hover: url('../../assets/svgs/dark_expand_fold_hover.svg');
   --expand-fold-active: url('../../assets/svgs/dark_expand_fold_active.svg');
   --o-scrollbar-thumb: #576372;
   --o-apiBox-bg: rgb(253, 254, 255);
+  
+  // 深色模式下的组件颜色变量
+  --o-bg-color-base: #1f2329;
+  --o-text-color-primary: #e4e8ee;
+  --o-text-color-secondary: #a3a6ad;
+  --o-text-color-regular: #8d98aa;
+  --o-border-color: #3e4551;
+  --o-border-color-light: #3e4551;
+  --o-border-color-lighter: #2a2f37;
+  --o-color-primary: #6395fd;
+  --o-color-primary-light-3: #79a6ff;
+  --o-color-primary-light-7: #4d7fff;
+  --o-color-primary-light-8: #3d73ff;
+  --o-color-primary-light-9: #2d66ff;
+  --o-fill-color-extra-light: #2a2f37;
+  --o-fill-color-light: #343a43;
+  --o-color-success: #67c23a;
+  --o-color-success-light-9: #1f2b1a;
+  --o-color-warning: #e6a23c;
+  --o-color-warning-light-9: #2b261a;
+  --o-color-danger: #f56c6c;
+  --o-color-danger-light-9: #2b1f1f;
+  --o-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 body[theme='light'] {
@@ -187,6 +216,12 @@ body[theme='light'] {
   --flow-debug-hover: url('../../assets/svgs/light_debug_hover.svg');
   --flow-debug-active: url('../../assets/svgs/light_debug_active.svg');
   --flow-debug-dis: url('../../assets/svgs/light_debug_dis.svg');
+  
+  // 环境变量按钮专用变量 - 使用纯色背景
+  --flow-env-default: #ffffff;
+  --flow-env-hover: #f8f9fa;
+  --flow-env-active: #e9ecef;
+  --flow-env-dis: #f8f9fa;
   // 这里是不同种类的展开收起图标
   --expand-fold-default: url('../../assets/svgs/light_expand_fold.svg');
   --expand-fold-hover: url('../../assets/svgs/light_expand_fold_hover.svg');
@@ -194,6 +229,29 @@ body[theme='light'] {
   --o-scrollbar-thumb: #c3cedf;
   --o-apiBox-bg: rgb(253, 254, 255);
   --el-drawer-padding-primary: 24px !important;
+  
+  // 浅色模式下的组件颜色变量
+  --o-bg-color-base: #ffffff;
+  --o-text-color-primary: #303133;
+  --o-text-color-secondary: #606266;
+  --o-text-color-regular: #909399;
+  --o-border-color: #dcdfe6;
+  --o-border-color-light: #dcdfe6;
+  --o-border-color-lighter: #e4e7ed;
+  --o-color-primary: #409eff;
+  --o-color-primary-light-3: #79bbff;
+  --o-color-primary-light-7: #c6e2ff;
+  --o-color-primary-light-8: #ecf2ff;
+  --o-color-primary-light-9: #f2f6fc;
+  --o-fill-color-extra-light: #f8f9fa;
+  --o-fill-color-light: #f5f7fa;
+  --o-color-success: #67c23a;
+  --o-color-success-light-9: #f0f9ff;
+  --o-color-warning: #e6a23c;
+  --o-color-warning-light-9: #fdf6ec;
+  --o-color-danger: #f56c6c;
+  --o-color-danger-light-9: #fef0f0;
+  --o-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 body {

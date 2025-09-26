@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount, inject } from 'vue';
 import JSONMonacoEditor from '@/components/JSONMonacoEditor.vue';
-import FileAttachment from './FileAttachment.vue';
 import { storeToRefs } from 'pinia';
 import { useChangeThemeStore, useHistorySessionStore } from '@/store/';
 
 const { params } = storeToRefs(useHistorySessionStore());
 const themeStore = useChangeThemeStore();
+
+// 🔑 注入全局文件附件注册函数
+const registerFileAttachment = inject<(file: any) => void>('registerFileAttachment', () => {});
+const registerFileAttachments = inject<(files: any[]) => void>('registerFileAttachments', () => {});
 
 const CODE_STYLE = {
   width: '100%',
@@ -110,19 +113,22 @@ const formatCodeData = (data: any) => {
     // 将文件数据添加到本地文件附件列表（仅用于FlowCode组件内显示）
     data.files.forEach((fileData: any) => {
       if (fileData.file_id && fileData.filename && fileData.content) {
-        fileAttachments.value.push({
+        const fileAttachment = {
           file_id: fileData.file_id,
           filename: fileData.filename,
           file_type: fileData.file_type,
           file_size: fileData.file_size,
           variable_name: fileData.variable_name,
           content: fileData.content
-        });
+        };
+        fileAttachments.value.push(fileAttachment);
+        
+        // 🔑 注册到全局文件附件收集器
+        if (registerFileAttachment) {
+          registerFileAttachment(fileAttachment);
+        }
       }
     });
-    
-    // 🔑 移除全局收集器添加逻辑，文件收集统一由DebugApp的step.output事件处理
-    // 避免重复添加到全局收集器
     
     // 创建一个不含base64内容的显示版本
     const displayData = {
@@ -147,18 +153,22 @@ const formatCodeData = (data: any) => {
     // 将文件数据添加到本地文件附件列表（仅用于FlowCode组件内显示）
     data.files.forEach((fileData: any) => {
       if (fileData.file_id && fileData.filename && fileData.content) {
-        fileAttachments.value.push({
+        const fileAttachment = {
           file_id: fileData.file_id,
           filename: fileData.filename,
           file_type: fileData.file_type,
           file_size: fileData.file_size,
           variable_name: fileData.variable_name,
           content: fileData.content
-        });
+        };
+        fileAttachments.value.push(fileAttachment);
+        
+        // 🔑 注册到全局文件附件收集器
+        if (registerFileAttachment) {
+          registerFileAttachment(fileAttachment);
+        }
       }
     });
-    
-    // 🔑 移除全局收集器添加逻辑，避免重复
     
     // 创建一个不含base64内容的显示版本
     const displayData = {
@@ -178,20 +188,22 @@ const formatCodeData = (data: any) => {
   
   // 🔑 新增：检测单个文件对象（DirectReply FILE类型输出）
   if (typeof data === 'object' && data.file_id && data.filename && data.content) {
-
     
     // 将文件数据添加到本地文件附件列表（仅用于FlowCode组件内显示）
-    fileAttachments.value.push({
+    const fileAttachment = {
       file_id: data.file_id,
       filename: data.filename,
       file_type: data.file_type,
       file_size: data.file_size,
       variable_name: data.variable_name,
       content: data.content
-    });
+    };
+    fileAttachments.value.push(fileAttachment);
     
-    // 🔑 移除全局收集器添加逻辑，文件收集统一由DebugApp的step.output事件处理
-    // 避免重复添加到全局收集器
+    // 🔑 注册到全局文件附件收集器
+    if (registerFileAttachment) {
+      registerFileAttachment(fileAttachment);
+    }
     
     // 返回文件信息的摘要，不显示base64内容
     return JSON.stringify({
@@ -211,6 +223,11 @@ const formatCodeData = (data: any) => {
     const fileData = data.content;
     if (fileData.file_id && fileData.filename && fileData.content) {
       fileAttachments.value.push(fileData);
+      
+      // 🔑 注册到全局文件附件收集器
+      if (registerFileAttachment) {
+        registerFileAttachment(fileData);
+      }
     }
     
     // 返回文件信息的摘要，不显示base64内容
@@ -498,11 +515,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     
-    <!-- 🔑 新增：文件附件区域 -->
-    <FileAttachment
-      v-if="fileAttachments.length > 0"
-      :files="fileAttachments"
-    />
+    <!-- 🔑 文件附件已移至DialoguePanel统一显示，不在FlowCode组件内显示 -->
   </div>
 </template>
 
